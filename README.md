@@ -1,2 +1,2 @@
-# DAZZMARV
+# DAMARVEL
 long read assembler 
