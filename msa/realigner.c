@@ -1,23 +1,23 @@
 /*****************************************************************************************\
-*                                                                                         *
-*  These routines improve a multi-alignment of DNA sequences                              *
-*                                                                                         *
-*  This is a re-implementation of realigner, the original by Eric Anson, ~1997 and the    *
-*    algorithm design by Anson and Myers.  This code is pretty much a complete rewrite    *
-*    although the spirit of the original code is retained with some coding refinements    *
-*    to improve space and time performance.  The code is also modularized and commented   *
-*    so that other hackers can potentially integrate the code directly into another       *
-*    program.                                                                             *
-*                                                                                         *
-*  Routines have been added to build an initial multialignment from pairwise overlaps     *
-*    and to deliver columns and rows of the multi-alignment.  The construction routines   *
-*    are space inefficient and could use a D&C alignment delivering approach but I have   *
-*    not as yet had the time to craft such a complicated code.                            *
-*                                                                                         *
-*  Author:  Gene Myers                                                                    *
-*  Date  :  March 2007                                                                    *
-*                                                                                         *
-\*****************************************************************************************/
+ * *                                                                                         *
+ * *  These routines improve a multi-alignment of DNA sequences                              *
+ * *                                                                                         *
+ * *  This is a re-implementation of realigner, the original by Eric Anson, ~1997 and the    *
+ * *    algorithm design by Anson and Myers.  This code is pretty much a complete rewrite    *
+ * *    although the spirit of the original code is retained with some coding refinements    *
+ * *    to improve space and time performance.  The code is also modularized and commented   *
+ * *    so that other hackers can potentially integrate the code directly into another       *
+ * *    program.                                                                             *
+ * *                                                                                         *
+ * *  Routines have been added to build an initial multialignment from pairwise overlaps     *
+ * *    and to deliver columns and rows of the multi-alignment.  The construction routines   *
+ * *    are space inefficient and could use a D&C alignment delivering approach but I have   *
+ * *    not as yet had the time to craft such a complicated code.                            *
+ * *                                                                                         *
+ * *  Author:  Gene Myers                                                                    *
+ * *  Date  :  March 2007                                                                    *
+ * *                                                                                         *
+ * \*****************************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -49,19 +49,19 @@
 #define N_CODE    5         /* Code for N's must be the last code */
 
 /* Internally a multi-alignment is represented as a sparse matrix of symbols
-   that are in doubly-linked, circular, and anchored column and fragment sequence
-   lists.  The anchors of the column lists are themselves doubly-linked into
-   a sequential list and further contain summary information on the frequency of
-   characters in the column (ACGT-N --> 0-5).  The list of columns is terminated at each
-   end by an anchor ('first' and 'last') with an empty column.  The anchors of each
-   fragment are in a singly-linked list, in no particular order, have a '\0' char
-   as their letter, and further contain a pointer to the column anchor containing
-   the fragment's first character.
-
-   NB: Leading and trailing '-'s are removed from fragments when they are read
-   in.  This may give rise to an empty fragment.  These are not removed, but
-   simply checked for where necessary and then ignored.
-*/
+ *    that are in doubly-linked, circular, and anchored column and fragment sequence
+ *       lists.  The anchors of the column lists are themselves doubly-linked into
+ *          a sequential list and further contain summary information on the frequency of
+ *             characters in the column (ACGT-N --> 0-5).  The list of columns is terminated at each
+ *                end by an anchor ('first' and 'last') with an empty column.  The anchors of each
+ *                   fragment are in a singly-linked list, in no particular order, have a '\0' char
+ *                      as their letter, and further contain a pointer to the column anchor containing
+ *                         the fragment's first character.
+ *
+ *                            NB: Leading and trailing '-'s are removed from fragments when they are read
+ *                               in.  This may give rise to an empty fragment.  These are not removed, but
+ *                                  simply checked for where necessary and then ignored.
+ *                                  */
 
 typedef struct re_symbol
   { struct re_symbol *up;     /* double column chain links */
@@ -117,7 +117,7 @@ static void setup_encode()
 
 
 /* Uniform list space of symbol, column and fragment records
-     (one macro defines all)                                   */
+ *      (one macro defines all)                                   */
 
 static int avail_cells = 0;
 
@@ -195,9 +195,9 @@ Re_Contig *Re_Read_Contig(FILE *input, FILE *comments)
   frags    = NULL;
 
   /* NB: The "trick" in this code is that elements containing blank are initially
-     placed in a column and then removed after the succeeding column is built.  This
-     allows one to easily detect when a new fragment is starting, i.e. blank in the
-     previous column & non-blank in the current column of a *corresponding* row.     */
+ *      placed in a column and then removed after the succeeding column is built.  This
+ *           allows one to easily detect when a new fragment is starting, i.e. blank in the
+ *                previous column & non-blank in the current column of a *corresponding* row.     */
 
   do
     { if (firstcol != curcol)        /* Not first time through this loop ==> saw a blank line */
@@ -222,9 +222,9 @@ Re_Contig *Re_Read_Contig(FILE *input, FILE *comments)
                 fputc('\n',comments);
               sym = fgetc(input);
             }
-    
+
           /* Add new, initially empty column */
-    
+
           prevcol = curcol;
           curcol  = new_column();
           curcol->up = curcol->down = (re_symbol *) curcol;
@@ -235,11 +235,11 @@ Re_Contig *Re_Read_Contig(FILE *input, FILE *comments)
               curcol->count[i] = 0;
           }
           curcol->depth = 0;
-    
+
           /* Add symbols to the new column (including blanks), traversing previous one
-             in synchrony in order to detect new fragment beginnings.  If a new fragment
-             begins with -'s, turn them into blanks and delay starting the fragment       */
-    
+ *              in synchrony in order to detect new fragment beginnings.  If a new fragment
+ *                           begins with -'s, turn them into blanks and delay starting the fragment       */
+
           p   = (re_symbol *) prevcol->down;
           row = 0;
           if (sym != EOF)
@@ -248,7 +248,7 @@ Re_Contig *Re_Read_Contig(FILE *input, FILE *comments)
                 e->down = (re_symbol *) curcol;
                 e->up   = curcol->up;
                 e->down->up = e->up->down = e;
-      
+
                 if (sym != ' ')
                   { if (p == (re_symbol *) prevcol || p->letter == ' ') /* New fragment?  */
                       if (sym == '-')                                /* Starts with -? */
@@ -274,16 +274,16 @@ Re_Contig *Re_Read_Contig(FILE *input, FILE *comments)
                       }
                   }
                 e->letter = sym;
-    
+
                 if (p != (re_symbol *) prevcol) /* Keep from running off the end */
                   p = p->down;
                 sym  = fgetc(input);
                 row += 1;
               }
-    
+
           /* Purge blank symbols from the previous column, and
-             if a fragment ends with -'s peel them back.        */
-    
+ *              if a fragment ends with -'s peel them back.        */
+
           { re_symbol *q, *r;
             re_column *c;
 
@@ -361,13 +361,13 @@ void Re_Print_Contig(Re_Contig *contig, FILE *output, int samerows)
   rowrec    *top;
 
   /* We keep an array, row[0..maxrows-1], that expands as necessary so that we
-     can have a record row[i] for each row in which a fragment will be displayed.
-     Each fragment is printed in a row in such a way that fragments in a given row
-     are separated by at least one blank.  At a given column, the top row 'top'
-     that contains a fragment is maintained.  A list of the rows to which
-     a new fragment can be assigned is in the singly linked list anchored at
-     avail and the list is ordered according to increasing row number. Integer
-     indices into rows are used for the avail list as it may be moved by realloc.  */
+ *      can have a record row[i] for each row in which a fragment will be displayed.
+ *           Each fragment is printed in a row in such a way that fragments in a given row
+ *                are separated by at least one blank.  At a given column, the top row 'top'
+ *                     that contains a fragment is maintained.  A list of the rows to which
+ *                          a new fragment can be assigned is in the singly linked list anchored at
+ *                               avail and the list is ordered according to increasing row number. Integer
+ *                                    indices into rows are used for the avail list as it may be moved by realloc.  */
 
   if (maxrows == 0)
     { rowrec *r;
@@ -451,7 +451,7 @@ void Re_Print_Contig(Re_Contig *contig, FILE *output, int samerows)
 #endif
 
       /* Advance all active row pointers and rebuild avail
-         list of all unallocated rows in the range row..top */
+ *          list of all unallocated rows in the range row..top */
 
       avail = (top+1) - row;
       for (r = top; r >= row; r--)
@@ -516,7 +516,7 @@ void Re_Print_Structure(Re_Contig *contig, FILE *output)
   re_fragment *f;
   re_symbol   *s;
   int          i;
- 
+
   fprintf(output,"\nContig dump:\n");
   for (c = ((re_contig *) contig)->first; c != NULL; c = c->succ)
     { fprintf(output,"Column %p: ",c);
@@ -542,7 +542,7 @@ void Re_Free_Contig(Re_Contig *contig)
   re_symbol   *s;
 
   /* Each fragment list can be linked onto its free list as a
-     linked block, as can the entire list of column anchors    */
+ *      linked block, as can the entire list of column anchors    */
 
   for (f = ctg->frags; f != NULL; f = g)
     { g = f->link;
@@ -588,7 +588,7 @@ Re_Contig *Re_Start_Contig(int id, char *seq)
         for (i = 0; i <= MAX_CODE; i++)
           c->count[i] = 0;
       }
-      c->count[encode[*s]] = 1;
+      c->count[encode[(int)(*s)]] = 1;
 
       e->prev = f;
       f->next = e;
@@ -621,8 +621,8 @@ Re_Contig *Re_Start_Contig(int id, char *seq)
 }
 
 /* Add the bread-sequence of overlap o to contig contig, where seq is
-   the oriented sequence of the bread.  It is assumed that the aread
-   sequence seeded the multi-alignment with a call to re_start_contig. */
+ *    the oriented sequence of the bread.  It is assumed that the aread
+ *       sequence seeded the multi-alignment with a call to re_start_contig. */
 
 void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
 { static re_fragment *last;
@@ -653,7 +653,7 @@ void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
     setup_encode();
 
   /* Find reference read in fragment list.  Linear scan save always check for the
-     last one => preorder traversal of overlap tree is linear time over all adds!   */
+ *      last one => preorder traversal of overlap tree is linear time over all adds!   */
 
   { int aid;
 
@@ -662,7 +662,7 @@ void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
       base = last;
     else
       { re_fragment *f;
-  
+
         for (f = ctg->frags; f != NULL; f = f->link)
           if (f->row == aid)
             { base = f;
@@ -678,7 +678,7 @@ void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
   }
 
   /* Determine the range [cstart,cfinis) of columns against which to realign
-     and the left and right margin counts the new read.                       */
+ *      and the left and right margin counts the new read.                       */
 
   { re_symbol *s;
     re_column *c;
@@ -724,14 +724,13 @@ void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
         lmargin += 1;
       }
   }
- 
+
   /* Setup the cost of comparing each symbol against a relevant column in score */
 
   { re_column *c;
 
     for (c = cstart; c != cfinis; c = c->succ)
-      { int        i, cnt, max, nemp;
-        re_symbol *s;
+      { int        i, cnt, max;
 
         cnt = c->depth - c->count[N_CODE];
         if (cnt != 0)
@@ -787,9 +786,9 @@ void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
   }
 
   /* Do the d.p. in the forward direction computing successive
-     column vectors, delivering the final one in 'ncol'           */
+ *      column vectors, delivering the final one in 'ncol'           */
 
-  { int        i, j;
+  { int        i;
     re_column *c;
 
     ncol    = matrix;
@@ -805,7 +804,7 @@ void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
 
     seq += (o->path.bbpos-1);
     for (i = 1; i <= blen; i++)
-      cseq[i] = encode[seq[i]];
+      cseq[i] = encode[(int)(seq[i])];
 
     lmargin = 2*bandsize-lmargin;
     for (c = cstart; c != cfinis; c = c->succ)
@@ -894,7 +893,7 @@ void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
   }
 
   /* Trace back through matrix and interweave fragment
-     always placing it at the bottom of each column       */
+ *      always placing it at the bottom of each column       */
 
   { int          j;
     re_symbol   *s, *p;
@@ -926,10 +925,10 @@ void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
         if (cbck[j] == INS)
           { re_column *c;
             re_symbol *u, *t;
- 
+
             /* Add a new column between mincol and its successor that
-               contains the non-dash char of the read and a column of
-               '-'s for each read not ending at the boundary          */
+ *                contains the non-dash char of the read and a column of
+ *                               '-'s for each read not ending at the boundary          */
 
             c = new_column();
             c->pred = mincol;
@@ -983,7 +982,7 @@ void Re_Add_Overlap(Re_Contig *contig, Overlap *o, char *seq, int bandsize)
             s = p;
 
             mincol->depth += 1;
-            mincol->count[encode[seq[j]]] += 1;
+            mincol->count[encode[(int)(seq[j])]] += 1;
 
             mincol = mincol->pred;
             cbck  -= blen;
@@ -1028,7 +1027,7 @@ char *Re_Next_Read(int *id)
     return (NULL);
 
   { re_symbol *s;
-    int        len; 
+    int        len;
 
     len = 0;
     for (s = Next_Fragment->next; s != (re_symbol *) Next_Fragment; s = s->next)
@@ -1074,7 +1073,7 @@ char *Re_Next_Column(int **ids)
     }
 
   { re_symbol *s;
-    int        i, j, len; 
+    int        i, j, len;
 
     j = 0;
     for (i = 0; i < lastlen; i++)
@@ -1116,7 +1115,7 @@ char *Re_Next_Column(int **ids)
   *ids = idvect;
   return (column);
 }
- 
+
 static void Re_Align_Fragment(re_fragment *read, int bandsize)
 { static double *matrix = NULL;
   static char   *trace  = NULL;
@@ -1142,7 +1141,7 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
     setup_encode();
 
   /* Strip fragment from structure, compute its padded length, and
-     determine the range of columns against which to realign it. */
+ *      determine the range of columns against which to realign it. */
 
   { re_symbol *s;
     re_column *c;
@@ -1165,7 +1164,7 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
         cfinis = cfinis->succ;
       }
   }
- 
+
   /* Setup the cost of comparing each symbol against a relevant column in score */
 
   { re_column *c;
@@ -1174,7 +1173,6 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
     pemp = (cstart->depth == 0);
     for (c = cstart; c != cfinis; c = c->succ)
       { int        i, cnt, max, nemp;
-        re_symbol *s;
 
         cnt = c->depth - c->count[N_CODE];
         if (cnt != 0)
@@ -1233,7 +1231,7 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
     }
 
   /* Do the d.p. in the forward direction computing successive
-     band vectors, delivering the final one in 'crow'           */
+ *      band vectors, delivering the final one in 'crow'           */
 
   { int        i;
     re_symbol *s;
@@ -1251,7 +1249,7 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
 
         nrow = crow + (bandwidth+1);
         cbck = cbck + (bandwidth+1);
-  
+
         e = encode[s->letter];
         c = ccol;
 
@@ -1320,7 +1318,7 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
   }
 
   /* Determine the endpoint of the best path not ending in a
-     deletion: index + column pointer (minpos, mincol)        */
+ *      deletion: index + column pointer (minpos, mincol)        */
 
   { int i, minval;
 
@@ -1345,7 +1343,7 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
 #endif
 
   /* Trace back through matrix and interweave fragment
-     always placing it at the bottom of each column       */
+ *      always placing it at the bottom of each column       */
 
   { re_symbol *s;
 
@@ -1376,7 +1374,7 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
               { re_symbol *p;
 
                 /* Remove the '-' from the read (rather
-                   than align it against a new column of '-'s)  */
+ *                    than align it against a new column of '-'s)  */
 
                 p = s;
                 s = s->next;
@@ -1387,10 +1385,10 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
             else
               { re_column *c;
                 re_symbol *u, *t;
- 
+
                 /* Add a new column between mincol and its successor that
-                   contains the non-dash char of the read and a column of
-                   '-'s for each read not ending at the boundary          */
+ *                    contains the non-dash char of the read and a column of
+ *                                       '-'s for each read not ending at the boundary          */
 
                 c = new_column();
                 c->pred = mincol;
@@ -1450,7 +1448,7 @@ static void Re_Align_Fragment(re_fragment *read, int bandsize)
 int Re_Consensus_Score(Re_Contig *contig)
 { int        i, max, score;
   re_column *c;
-  
+
   score = 0;
   for (c = ((re_contig *) contig)->first->succ; c != NULL; c = c->succ)
     { max = c->count[DASH_CODE];
@@ -1470,7 +1468,7 @@ static int total_iterations;
 /* Return how much the consensus score was improved by */
 
 int Re_Align_Contig(Re_Contig *contig, int bandsize)
-{ static re_column *bprelft = NULL;
+{ static re_column* bprelft = NULL;
   static re_column *bprergt, *bsufrgt, *bsuflft;
 
   re_contig *ctg = (re_contig *) contig;
@@ -1480,8 +1478,8 @@ int Re_Align_Contig(Re_Contig *contig, int bandsize)
   /* If first time, create column padding for each end of consensus */
 
   if (bprelft == NULL)
-    { int        i, j;
-      re_column *c, *btop;
+    { int        j;
+      re_column *c;
 
       bprelft = (re_column *) malloc(sizeof(re_column)*2*bandsize);
       bprergt = bprelft + (bandsize-1);
@@ -1496,7 +1494,7 @@ int Re_Align_Contig(Re_Contig *contig, int bandsize)
           c->depth = 0;
         }
    }
-  
+
   /* Splice in the border padding (Bandwidth empty columns to simplify boundary cases) */
 
   bprergt->succ = ctg->first->succ;

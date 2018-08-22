@@ -27,7 +27,7 @@
 
 #include "lib.ext/types.h"
 #include "lib.ext/bitarr.h"
-#include "utils/LAanalyze.h"
+#include "utils/CTanalyze.h"
 
 #undef DEBUG_STEP1A
 #undef DEBUG_STEP1B

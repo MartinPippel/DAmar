@@ -39,6 +39,7 @@ typedef struct
     int* msa_smax;      // mem for msa_seq[i] allocated
     int* msa_lgaps;     // number of leading gaps in seq[i]
     int* msa_len;       // length of seq[i]
+    int* msa_ids;       // ids for the added sequences
 
     int* track;
     int tmax;
@@ -62,11 +63,11 @@ msa* msa_init();
 void msa_free(msa* m);
 void msa_reset(msa* m);
 
-void msa_add(msa* m, char* seq, int pb, int pe, int sb, int se, ovl_trace* trace, int tlen);
+void msa_add(msa* m, char* seq, int pb, int pe, int sb, int se, ovl_trace* trace, int tlen, int id);
 
 char* msa_consensus(msa* m, int dashes);
 
-void msa_print(msa* m, FILE* fileOut);
+void msa_print(msa* m, FILE* fileOut, int b, int e);
 void msa_print_v(msa* m, FILE* fileOut);
-void msa_print_profile(msa* m, FILE* fileOut, int colorize);
-
+void msa_print_profile(msa* m, FILE* fileOut, int b, int e, int colorize);
+void msa_print_simple( msa* m, FILE* filemsa, FILE* filerids, int b, int e );
