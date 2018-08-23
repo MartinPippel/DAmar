@@ -23,7 +23,7 @@ function createSlurmStats()
 {
     slurm_id=$1
 
-    runTable=$(sacct -n -j ${slurm_id} -X -P --format="JobID%30,JobName,Partition,State,NCPUS,ElapsedRaw,CPUTimeRAW,Timelimit,ReqMem")        
+    runTable=$(sacct -n -j ${slurm_id} -X -P --format="JobID%30,JobName,Partition,State,NCPUS,ElapsedRaw,CPUTimeRAW,Timelimit,ReqMem,Submit,End")        
 
         if [[ -z ${runTable} ]]
         then
@@ -39,6 +39,8 @@ function createSlurmStats()
     partition=$(echo "${runTable}" |awk -F \| '{if($3 == "gpu") gpu+=1; else if ($3 == batch) batch+=1; else if ($3 == long) long+=1; else if ($3 == bigmem) bigmem+=1; else other+=1} END {printf "%d|%d|%d|%d|%d\n", batch, bigmem, gpu, long, other}')
     ReqMem=$(echo "${runTable}" | head -n1 | awk -F \| '{print $9}')
     NCPUS=$(echo "${runTable}" | head -n1 | awk -F \| '{print $5}')
+	Submit=$(echo "${runTable}" | awk -F \| '{print $10}' | xargs -i date -d {} +%s | sort -n | head -n1)
+	End=$(echo "${runTable}" | awk -F \| '{print $11}' | xargs -i date -d {} +%s | sort -n -r | head -n1)
 
     ## extract things from intermediate results - i.e. it only wroking for completed jobs
     runTableIntermediate=$(sacct -n -j ${slurm_id} -p --unit M --format="JobID%30,JobName,AveVMSize,AveRSS,NTasks,AveCPUFreq,ConsumedEnergy,AveDiskRead,AveDiskWrite" | awk -F \| '{if ($2=="batch") print $0}' | sed -e "s:M|:|:g")
@@ -72,10 +74,10 @@ function createSlurmStats()
     echo "____AveCPUFreq ${AveCPUFreq}          #Min|Max|Avg (Average weighted CPU frequency of all tasks in job - in GHz)"
     echo "ConsumedEnergy ${ConsumedEnergy}          #Min|Max|Avg (Total energy consumed by all tasks in job - in joules)"
     echo "___AveDiskRead ${AveDiskRead}          #Min|Max|Avg (Average number of bytes read by all tasks in job - in Mb)"
-    echo "__AveDiskWrite ${AveDiskWrite}          #Min|Max|Avg (Average number of bytes written by all tasks in job - in Mb)"    
+    echo "__AveDiskWrite ${AveDiskWrite}          #Min|Max|Avg (Average number of bytes written by all tasks in job - in Mb)"
+	echo "sittingInQueue $(awk -v b=${Submit} -v e=${end} '{printf "%d|%1.f|%.1f", e-b, (e-b)/60, (e-b)/3600}')		#sec|min|hours  the job is sitting in the queue"    
 }
 
-### get mask stats >>>>>>> DBdust <<<<<<<<<
 DB="${RAW_DB} ${FIX_DB}"
 marvelPhases="mask fix scrub filt tour corr"
 

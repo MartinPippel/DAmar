@@ -14,3 +14,5 @@ config.log
 config.status
 configure.scan
 configure
+/.cproject
+/.project
