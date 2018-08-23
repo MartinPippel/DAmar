@@ -75,7 +75,7 @@ function createSlurmStats()
     echo "ConsumedEnergy ${ConsumedEnergy}          #Min|Max|Avg (Total energy consumed by all tasks in job - in joules)"
     echo "___AveDiskRead ${AveDiskRead}          #Min|Max|Avg (Average number of bytes read by all tasks in job - in Mb)"
     echo "__AveDiskWrite ${AveDiskWrite}          #Min|Max|Avg (Average number of bytes written by all tasks in job - in Mb)"
-	echo "sittingInQueue $(awk -v b=${Submit} -v e=${end} '{printf "%d|%1.f|%.1f", e-b, (e-b)/60, (e-b)/3600}')		#sec|min|hours  the job is sitting in the queue"    
+	echo "sittingInQueue $(awk -v b=${Submit} -v e=${End} '{printf "%d|%1.f|%.1f", e-b, (e-b)/60, (e-b)/3600}')		#sec|min|hours  the job is sitting in the queue"    
 }
 
 DB="${RAW_DB} ${FIX_DB}"
