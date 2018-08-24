@@ -16,3 +16,4 @@ configure.scan
 configure
 /.cproject
 /.project
+/.pydevproject

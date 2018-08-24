@@ -1,17 +1,10 @@
 #!/bin/bash 
 
 config=$1
-faFolder=$2
 
 if [[ ! -f ${config} ]]
 then 
   echo "config ${config} not available"
-  exit 1
-fi
-
-if [[ ! -d ${faFolder} ]]
-then 
-  echo "dir ${faFolder} not available"
   exit 1
 fi
 
@@ -82,8 +75,7 @@ function createSlurmStats()
 
     printf "%15s %25s         %s\n" "SlurmID" 	"${slurm_id}" 
     printf "%15s %25s         %s\n" "NumJobs" 	"${numJobs}"
-    printf "%15s %25s         %s\n" "FinJobs" 	"$((${numJobs}-${failJobs}))"
-    printf "%15s %25s         %s\n" "FailedJobs" 	"${failJobs}"
+    printf "%15s %25s         %s\n" "NumFailedJobs" 	"${failJobs}"
     if [[ ${failJobs} -gt 0 ]]
     then 
         echo "$runTable" | grep -v -e COMPLETED | sed -e "s:^:#:"
@@ -103,23 +95,23 @@ function createSlurmStats()
     printf "%15s %25s         %s\n" "sittingInQueue" 	"$(echo "${Submit} ${End}" | awk '{printf "%d|%1.f|%.1f", $2-$1, ($2-$1)/60, ($2-$1)/3600}')"          "#sec|min|hours  the job is sitting in the queue"    
 }
 
-DB="${RAW_DB} ${FIX_DB}"
-marvelPhases="mask fix scrub filt tour corr"
+DB=(${RAW_DB} ${FIX_DB})
+marvelPhases=(mask fix scrub filt tour corr)
+marvelJobs=(DBdust datander TANmask Catrack daligner LAmerge LArepeat TKmerge createSubDir LAfilter LAq createDB LAseparate repcomp forcealign TKcombine TKhomogenize LAstitch LAgap OGbuild OGtour tour2fasta OGlayout OGbuild OGtour tour2fasta OGlayout LAcorrect paths2rids)
 
-maskJobs="DBdust datander TANmask Catrack daligner LAmerge LArepeat TKmerge"
-filtJobs="createSubDir LAfilter LAq"
-scrubJobs="createDB LAseparate repcomp forcealign TKcombine TKhomogenize LAstitch LAgap"
-tourJobs="OGbuild OGtour tour2fasta OGlayout"
-corrJobs="LAcorrect paths2rids"
-
-allJobs="${maskJobs} ${filtJobs} ${scrubJobs} ${tourJobs} ${corrJobs}"
-for db in ${DB}
-do 
-    for job in $allJobs
+dbCount=0
+while [ "x${DB[dbCount]}" != "x" ]
+do
+	db=${DB[dbCount]}
+	jobCount=0
+	while [ "x${marvelJobs[jobCount]}" != "x" ]
     do
-        for phase in ${marvelPhases}
+		job=${marvelJobs[jobCount]}
+		phaseCount=0            	        
+        while [ "x${marvelPhases[phaseCount]}" != "x" ]
         do
-            folder=log_${phase}_${job}_${db}
+        	phase=${marvelPhases[phaseCount]}
+        	folder=log_${phase}_${job}_${db}
             if [[ -d ${folder} ]] 
             then    
                 
@@ -164,11 +156,168 @@ do
                     fi
                 done        
             fi
+            phaseCount=$((${phaseCount}+1))
         done
+        jobCount=$((${jobCount}+1))
     done
+    dbCount=$((${dbCount}+1))
 done
 
 ### todo
 #### 1 update overall stats (if neccessary)
+reportVariables=(NumJobs NumFailedJobs CumElapsedTime CumCPUTime sittingInQueue)
+# header
+header=$(printf "%20s %15s" "marvelPhase" "numSlurmJobs")
+reportCount=0   	
+while [ "x${reportVariables[reportCount]}" != "x" ]
+do
+	if [[ ${reportVariables[reportCount]} =~ Num ]]
+	then
+		header="${header}$(printf " %15s" "${reportVariables[reportCount]}")"
+	else
+		header="${header}$(printf " %25s" "${reportVariables[reportCount]}[s|m|h]")"
+	fi						      			
+	reportCount=$(( $reportCount + 1 ))
+done        		        
+
+dbCount=0
+while [ "x${DB[dbCount]}" != "x" ]
+do 
+	db=${DB[dbCount]}
+    phaseCount=0
+    phaseReport=""            	        
+    while [ "x${marvelPhases[phaseCount]}" != "x" ]
+    do
+    	phase=${marvelPhases[phaseCount]}    	    	    	
+		jobCount=0		
+		while [ "x${marvelJobs[jobCount]}" != "x" ]
+        do
+        	appliedJobs[${jobCount}]=0
+            jobCount=$(( $jobCount + 1 ))
+        done		
+		jobCount=0
+		body=""
+		while [ "x${marvelJobs[jobCount]}" != "x" ]
+    	do	
+    		job=${marvelJobs[jobCount]}
+    		found=0
+    		# reset reported Vars		 	
+	    	reportCount=0   	
+	    	while [ "x${reportVariables[reportCount]}" != "x" ]
+	        do
+	        	appliedReportVariables[${reportCount}]=0
+	            reportCount=$(( $reportCount + 1 ))
+	        done                
+    		    		       	
+        	for f in stats/${phase}_${job}_${db}_*.txt
+        	do 
+        		if [[ -f ${f} ]]
+				then
+					found=1
+            		reportCount=0
+            		appliedJobs[${jobCount}]=$((${appliedJobs[jobCount]}+1))        				            		   	
+    				while [ "x${reportVariables[reportCount]}" != "x" ]
+        			do
+        				tmp=$(grep -e ${reportVariables[${reportCount}]} $f | awk '{print $2}' |  awk -F \| '{print $1}')
+						appliedReportVariables[${reportCount}]=$((${appliedReportVariables[reportCount]}+${tmp}))
+            			reportCount=$(( $reportCount + 1 ))            			
+        			done                
+				fi
+        	done
+   
+			# report stats for individual phases 
+			if [[ ${found} -eq 1 ]]
+			then		   	
+		   		body="${body}$(printf "%20s %15s" "${marvelJobs[jobCount]}" "${appliedJobs[jobCount]}")"
+				reportCount=0   	
+				while [ "x${reportVariables[reportCount]}" != "x" ]
+    			do
+    				if [[ ${reportVariables[reportCount]} =~ Num ]]
+    				then
+    					body="${body}$(printf " %15s" "${appliedReportVariables[reportCount]}")"
+    				else
+    					body="${body}$(printf " %25s" "$(echo ${appliedReportVariables[reportCount]} | awk '{printf "%d|%.1f|%.1f\n", $1, $1/60, $1/3600}')")"
+    				fi		        				     				
+        			reportCount=$(( $reportCount + 1 ))
+    			done   
+    			     
+    			body="${body}\n"        							    	
+			fi
+       		jobCount=$(( $jobCount + 1 ))
+    	done 
+		if [[ -n ${body} ]]
+		then
+			printf "%b\n" "${header}" > stats/all_${phase}_${db}.txt
+			printf "%b" "${body}" >> stats/all_${phase}_${db}.txt
+			### sum up all steps of current phase 
+			tmpPhase="$(printf "%20s %15s" "ALL_${phase}_PHASES" "$(printf "%b" "${body}" | awk '{s+=$2} END {print s}')")"
+			reportCount=0   	
+			while [ "x${reportVariables[reportCount]}" != "x" ]
+			do
+				if [[ ${reportVariables[reportCount]} =~ Num ]]
+				then
+					tmpPhase="${tmpPhase}$(printf " %15s" "$(printf "%b" "${body}" | awk -v off=${reportCount} '{s+=$(3+off)} END {print s}')")"					
+				else
+					tmpPhase="${tmpPhase}$(printf " %25s" "$(printf "%b" "${body}" | awk -v off=${reportCount} '{print $(3+off)}' | awk -F \| '{s+=$1; m+=$2; h+=$3} END {printf "%d|%.1f|%.1f\n", s, m, h}')")"					
+				fi		        				     				
+				reportCount=$(( $reportCount + 1 ))
+			done   
+			tmpPhase="${tmpPhase}\n"
+			phaseReport="${phaseReport}${tmpPhase}"
+			printf "%b" "${tmpPhase}" >> stats/all_${phase}_${db}.txt		
+		fi 
+	    phaseCount=$(( $phaseCount + 1 ))   	                    
+    done
+	printf "%b\n" "${header}" > stats/all_phases_${db}.txt
+	printf "%b" "${phaseReport}" >> stats/all_phases_${db}.txt	
+	### sum up all phases
+	tmpPhase=$(printf "%20s %15s" "ALL_PHASES" "$(printf "%b" "${phaseReport}" | awk '{s+=$2} END {print s}')")
+	reportCount=0   	
+	while [ "x${reportVariables[reportCount]}" != "x" ]
+	do
+		if [[ ${reportVariables[reportCount]} =~ Num ]]
+		then
+			tmpPhase="${tmpPhase}$(printf " %15s" "$(printf "%b" "${phaseReport}" | awk -v off=${reportCount} '{s+=$(3+off)} END {print s}')")"					
+		else
+			tmpPhase="${tmpPhase}$(printf " %25s" "$(printf "%b" "${phaseReport}" | awk -v off=${reportCount} '{print $(3+off)}' | awk -F \| '{s+=$1; m+=$2; h+=$3} END {printf "%d|%.1f|%.1f\n", s, m, h}')")"					
+		fi		        				     				
+		reportCount=$(( $reportCount + 1 ))
+	done   
+	tmpPhase="${tmpPhase}\n"
+	printf "%b" "${tmpPhase}" >> stats/all_phases_${db}.txt     
+    dbCount=$(( $dbCount + 1 ))
+done
+
 #### 2 create fasta stats (haploid/diploid size, ng50s, etc)
-#### 3 store config parameter 
+
+db=${DB%.db}
+gsize=${GSIZE}
+i=$((${#GSIZE}-1))
+if [[ "${GSIZE: -1}" =~ [gG] ]]
+then
+ gsize=$((${GSIZE:0:$i}*1000*1000*1000))
+fi
+if [[ "${GSIZE: -1}" =~ [mM] ]]
+then
+ gsize=$((${GSIZE:0:$i}*1000*1000))
+fi
+if [[ "${GSIZE: -1}" =~ [kK] ]]
+then
+ gsize=$((${GSIZE:0:$i}*1000))
+fi
+
+for x in ${FIX_FILT_SUFFIX}_dalign ${FIX_FILT_SUFFIX}_repcomp ${FIX_FILT_SUFFIX}_forcealign
+do
+	if [[ -d ${x}/tour ]]
+	then
+		mkdir -p stats/contigs/${x}
+		
+		cat	${x}/tour/*.fasta > stats/contigs/${x}/${x}.fasta
+		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${x} ${gsize} stats/contigs/${x} stats/contigs/${x}/${x}.fasta  
+		cat stats/contigs/${x}/${x}.haploid.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.haploid.stats
+		cat stats/contigs/${x}/${x}.bubbles.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.bubbles.stats
+		cat stats/contigs/${x}/${x}.spurs.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.spurs.stats
+		
+		 cp stats/contigs/${x}/$config stats/contigs/${x}/
+	fi	
+done 
