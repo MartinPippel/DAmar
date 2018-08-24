@@ -191,28 +191,28 @@ function setLAfilterOptions()
 {
     FILT_LAFILTER_OPT=""
 
-    if [[ -z ${FIX_FILT_FSUFFIX} ]]
+    if [[ -z ${FIX_FILT_OUTDIR} ]]
     then
-        FIX_FILT_FSUFFIX="filtered"
+        FIX_FILT_OUTDIR="filtered"
     fi
 
     if [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 1 ]]
     then 
-        if [[ $(echo ${FIX_FILT_FSUFFIX} | awk -F _ '{print $NF}') != "dalign" ]]
+        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "dalign" ]]
         then
-            FIX_FILT_FSUFFIX="${FIX_FILT_FSUFFIX}_dalign"
+            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_dalign"
         fi
     elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 2 ]]
     then 
-        if [[ $(echo ${FIX_FILT_FSUFFIX} | awk -F _ '{print $NF}') != "repcomp" ]]
+        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "repcomp" ]]
         then
-            FIX_FILT_FSUFFIX="${FIX_FILT_FSUFFIX}_repcomp"
+            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_repcomp"
         fi
     elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 3 ]]
     then 
-        if [[ $(echo ${FIX_FILT_FSUFFIX} | awk -F _ '{print $NF}') != "forcealign" ]]
+        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "forcealign" ]]
         then
-            FIX_FILT_FSUFFIX="${FIX_FILT_FSUFFIX}_forcealign"
+            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_forcealign"
         fi
     fi
 }
@@ -283,9 +283,9 @@ then
         ### find and set OGbuild options 
         setOGbuildOptions
         ### create OGbuild commands
-        echo "if [[ -d ${FIX_FILT_FSUFFIX}/tour ]]; then rm -rf ${FIX_FILT_FSUFFIX}/tour; fi" > tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "mkdir -p ${FIX_FILT_FSUFFIX}/tour" >> tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "${MARVEL_PATH}/bin/OGbuild${TOUR_OGBUILD_OPT} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.filt.las ${FIX_FILT_FSUFFIX}/tour/${FIX_DB%.db}.filt" >> tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "if [[ -d ${FIX_FILT_OUTDIR}/tour ]]; then rm -rf ${FIX_FILT_OUTDIR}/tour; fi" > tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "mkdir -p ${FIX_FILT_OUTDIR}/tour" >> tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/OGbuild${TOUR_OGBUILD_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las ${FIX_FILT_OUTDIR}/tour/${FIX_DB%.db}.filt" >> tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
     ### OGtour
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -302,11 +302,11 @@ then
         ### find and set OGbuild options 
         setOGtourOptions
         ### create OGbuild commands    
-        for x in ${FIX_FILT_FSUFFIX}/tour/*[0-9].graphml; 
+        for x in ${FIX_FILT_OUTDIR}/tour/*[0-9].graphml; 
         do 
             if [[ -s ${x} ]]
             then
-                echo "${MARVEL_PATH}/scripts/OGtour.py${TOUR_OGTOUR_OPT} ${FIX_FILT_FSUFFIX}/${FIX_DB} $x"
+                echo "${MARVEL_PATH}/scripts/OGtour.py${TOUR_OGTOUR_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB} $x"
             fi 
         done > tour_02_OGtour_block_${FIX_DB%.db}.${slurmID}.plan        
     ### tour2fasta
@@ -325,11 +325,11 @@ then
         ### find and set OGbuild options 
         settour2fastaOptions
         
-        for x in ${FIX_FILT_FSUFFIX}/tour/*[0-9].tour.paths;
+        for x in ${FIX_FILT_OUTDIR}/tour/*[0-9].tour.paths;
         do 
             if [[ -s ${x} ]]
             then
-                echo "${MARVEL_PATH}/scripts/tour2fasta.py${TOUR_2FASTA_OPT} ${FIX_FILT_FSUFFIX}/${FIX_DB} ${x%.tour.paths}.graphml $x"
+                echo "${MARVEL_PATH}/scripts/tour2fasta.py${TOUR_2FASTA_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB} ${x%.tour.paths}.graphml $x"
             fi
         done > tour_03_tour2fasta_block_${FIX_DB%.db}.${slurmID}.plan
     ### OGlayout
@@ -348,7 +348,7 @@ then
         ### find and set OGbuild options 
         setOGlayoutOptions   
 
-        for x in ${FIX_FILT_FSUFFIX}/tour/*[0-9].tour.paths; 
+        for x in ${FIX_FILT_OUTDIR}/tour/*[0-9].tour.paths; 
         do 
             if [[ -s ${x} ]]
             then
@@ -369,7 +369,7 @@ then
             setLAfilterOptions
         fi
         ### run marvelStats 
-        echo "${SUBMIT_SCRIPTS_PATH}/marvelStats.sh ${configFile} ${FIX_FILT_FSUFFIX}/tour > ${FIX_FILT_FSUFFIX}/stats.${FIX_FILT_FSUFFIX}.log" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "${SUBMIT_SCRIPTS_PATH}/marvelStats.sh ${configFile} ${FIX_FILT_OUTDIR}/tour > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.log" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
     else
         (>&2 echo "step ${currentStep} in FIX_TOUR_TYPE ${FIX_TOUR_TYPE} not supported")
         (>&2 echo "valid steps are: #type-0 steps: 1-OGbuild, 2-OGtour, 3-tour2fasta, 4-OGlayout, 5-marvelStats")

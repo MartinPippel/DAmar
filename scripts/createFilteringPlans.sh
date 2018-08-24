@@ -167,28 +167,28 @@ function setLAfilterOptions()
 {
     FILT_LAFILTER_OPT=""
 
-    if [[ -z ${FIX_FILT_FSUFFIX} ]]
+    if [[ -z ${FIX_FILT_OUTDIR} ]]
     then
-        FIX_FILT_FSUFFIX="filtered"
+        FIX_FILT_OUTDIR="filtered"
     fi
 
     if [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 1 ]]
     then 
-        if [[ $(echo ${FIX_FILT_FSUFFIX} | awk -F _ '{print $NF}') != "dalign" ]]
+        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "dalign" ]]
         then
-            FIX_FILT_FSUFFIX="${FIX_FILT_FSUFFIX}_dalign"
+            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_dalign"
         fi
     elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 2 ]]
     then 
-        if [[ $(echo ${FIX_FILT_FSUFFIX} | awk -F _ '{print $NF}') != "repcomp" ]]
+        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "repcomp" ]]
         then
-            FIX_FILT_FSUFFIX="${FIX_FILT_FSUFFIX}_repcomp"
+            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_repcomp"
         fi
     elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 3 ]]
     then 
-        if [[ $(echo ${FIX_FILT_FSUFFIX} | awk -F _ '{print $NF}') != "forcealign" ]]
+        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "forcealign" ]]
         then
-            FIX_FILT_FSUFFIX="${FIX_FILT_FSUFFIX}_forcealign"
+            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_forcealign"
         fi
     fi
 
@@ -441,7 +441,7 @@ then
 
         setLAfilterOptions
 
-        echo "if [[ -d ${FIX_FILT_FSUFFIX} ]]; then mv ${FIX_FILT_FSUFFIX} ${FIX_FILT_FSUFFIX}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_FILT_FSUFFIX} && ln -s -r .${FIX_DB%db}.* ${FIX_DB%db}.db ${FIX_FILT_FSUFFIX}" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.plan 
+        echo "if [[ -d ${FIX_FILT_OUTDIR} ]]; then mv ${FIX_FILT_OUTDIR} ${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_FILT_OUTDIR} && ln -s -r .${FIX_DB%db}.* ${FIX_DB%db}.db ${FIX_FILT_OUTDIR}" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.plan 
     ### LAfilter
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -477,38 +477,38 @@ then
                     addOpt=""
                     if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
                     then
-                        addOpt=" -a ${FIX_FILT_FSUFFIX}/symDiscardOvl.round1.${x}.txt"
+                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round1.${x}.txt"
                     fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt_R1.las"
+                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R1.las"
                 done > filt.round1_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
             # last filter job
             elif [[ $rnd -eq ${FIX_FILT_LAFILTER_RMSYMROUNDS} ]]
             then
                 # create merged set of discarded ovls 
-                cat ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.txt
+                cat ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt
 
                 for x in $(seq 1 ${fixblocks})
                 do 
                     addOpt=""
                     if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
                     then
-                        addOpt=" -a ${FIX_FILT_FSUFFIX}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.txt"
+                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt"
                     fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt.las"
+                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
                 done > filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
             # intermediate filter round
             else
                 # create merged set of discarded ovls 
-                cat ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.txt
+                cat ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt
 
                 for x in $(seq 1 ${fixblocks})
                 do 
                     addOpt=""
                     if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
                     then
-                        addOpt=" -a ${FIX_FILT_FSUFFIX}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.txt"
+                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt"
                     fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt_R$((${rnd}+1)).las"
+                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R$((${rnd}+1)).las"
                 done > filt.round$((${rnd}+1))_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
             fi  
         else 
@@ -518,9 +518,9 @@ then
                 addOpt=""
                 if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
                 then
-                addOpt=" -a ${FIX_FILT_FSUFFIX}/discardOvlTipCov${FIX_FILT_LAFILTER_MINTIPCOV}.${x}.txt"
+                addOpt=" -a ${FIX_FILT_OUTDIR}/discardOvlTipCov${FIX_FILT_LAFILTER_MINTIPCOV}.${x}.txt"
                 fi
-                echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt.las"
+                echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
             done > filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
         fi    
     #### LAq
@@ -549,15 +549,15 @@ then
 
                 if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
                 then 
-                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -b ${x} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt.las"
+                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
                 elif [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
                 then 
-                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -b ${x} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt.las"
+                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
                 elif [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
                 then 
-                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -b ${x} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt.las"                    
+                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"                    
                 else 
-                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -b ${x} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt.las"    
+                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"    
                 fi                   
         done > filt_03_LAq_block_${FIX_DB%.db}.${slurmID}.plan               
     #### TKmerge    
@@ -584,15 +584,15 @@ then
         ### create TKmerge command
         if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
         then             
-            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
+            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
         elif [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
         then             
-            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
+            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
         elif [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
         then             
-            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
+            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
         else
-            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
+            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
         fi                               
     #### LAmerge
     elif [[ ${currentStep} -eq 5 ]]
@@ -610,7 +610,7 @@ then
         ### find and set LAmerge options 
         setLAmergeOptions
         
-        echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} -S filt ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.filt.las" > filt_05_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan             
+        echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las" > filt_05_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan             
     else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
         (>&2 echo "valid steps are: #type-0 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAq, 4-TKmerge, 5-LAmerge")
@@ -630,7 +630,7 @@ then
 
         setLAfilterOptions        
 
-        echo "if [[ -d ${FIX_FILT_FSUFFIX} ]]; then mv ${FIX_FILT_FSUFFIX} ${FIX_FILT_FSUFFIX}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_FILT_FSUFFIX} && ln -s -r .${FIX_DB%db}.* ${FIX_DB%db}.db ${FIX_FILT_FSUFFIX}" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.plan         
+        echo "if [[ -d ${FIX_FILT_OUTDIR} ]]; then mv ${FIX_FILT_OUTDIR} ${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_FILT_OUTDIR} && ln -s -r .${FIX_DB%db}.* ${FIX_DB%db}.db ${FIX_FILT_OUTDIR}" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.plan         
     ### LAfilter
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -667,38 +667,38 @@ then
                     addOpt=""
                     if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
                     then
-                        addOpt=" -a ${FIX_FILT_FSUFFIX}/symDiscardOvl.round1.${x}.txt"
+                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round1.${x}.txt"
                     fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt_R1.las"
+                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R1.las"
                 done > filt.round1_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
             # last filter job
             elif [[ $rnd -eq ${FIX_FILT_LAFILTER_RMSYMROUNDS} ]]
             then
                 # create merged set of discarded ovls 
-                cat ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.txt
+                cat ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt
 
                 for x in $(seq 1 ${fixblocks})
                 do 
                     addOpt=""
                     if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
                     then
-                        addOpt=" -a ${FIX_FILT_FSUFFIX}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.txt"
+                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt"
                     fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt.las"
+                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
                 done > filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
             # intermediate filter round
             else
                 # create merged set of discarded ovls 
-                cat ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.txt
+                cat ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt
 
                 for x in $(seq 1 ${fixblocks})
                 do 
                     addOpt=""
                     if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
                     then
-                        addOpt=" -a ${FIX_FILT_FSUFFIX}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_FSUFFIX}/symDiscardOvl.round${rnd}.txt"
+                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt"
                     fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt_R$((${rnd}+1)).las"
+                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R$((${rnd}+1)).las"
                 done > filt.round$((${rnd}+1))_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
             fi  
         else 
@@ -708,9 +708,9 @@ then
                 addOpt=""
                 if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
                 then
-                addOpt=" -a ${FIX_FILT_FSUFFIX}/discardOvlTipCov${FIX_FILT_LAFILTER_MINTIPCOV}.${x}.txt"
+                addOpt=" -a ${FIX_FILT_OUTDIR}/discardOvlTipCov${FIX_FILT_LAFILTER_MINTIPCOV}.${x}.txt"
                 fi
-                echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.${x}.filt.las"
+                echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
             done > filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
         fi    
     #### LAmerge
@@ -729,7 +729,7 @@ then
         ### find and set LAmerge options 
         setLAmergeOptions
         
-        echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} -S filt ${FIX_FILT_FSUFFIX}/${FIX_DB%.db} ${FIX_FILT_FSUFFIX}/${FIX_DB%.db}.filt.las" > filt_03_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan             
+        echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las" > filt_03_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan             
     else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
         (>&2 echo "valid steps are: #type-0 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAq, 4-TKmerge, 5-LAmerge")
