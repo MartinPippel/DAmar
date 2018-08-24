@@ -318,6 +318,6 @@ do
 		cat stats/contigs/${x}/${x}.bubbles.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.bubbles.stats
 		cat stats/contigs/${x}/${x}.spurs.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.spurs.stats
 		
-		 cp stats/contigs/${x}/$config stats/contigs/${x}/
+		 cp $config stats/contigs/${x}/
 	fi	
 done 
