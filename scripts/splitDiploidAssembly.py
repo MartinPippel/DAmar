@@ -77,7 +77,7 @@ for fn in fIn:
         sreads = args["sreads"]
         length = args["length"]
 
-        if e1 == e2:
+        if e1 == e2 and e1 != -1:
           fout_b.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, bcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
           fout_b.write("\n{}\n".format(wrap_seq(seq, 100)))
           bcount+=1            
@@ -94,6 +94,6 @@ for fn in fIn:
         hcount+=1        
     f.close()
     
-f.close(fout_b)
-f.close(fout_s)
-f.close(fout_h)
+fout_b.close()
+fout_s.close()
+fout_h.close()
