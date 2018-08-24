@@ -1,14 +1,10 @@
 #!/usr/bin/env python
-
-
+from __future__ import print_function
 import os
 import itertools
 import sys
 import string
 import operator
-
-from __future__ import print_function
-import sys
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -63,8 +59,8 @@ if n_size < ng_size/2:
     ng_total= n_total
     ng_count= n_count
 else:
-    while gtotal < ng_size / 2:
-        ng_total += arrSizes[gcount][2]
+    while ng_total < ng_size / 2:
+        ng_total += arrSizes[ng_count][2]
         ng_count += 1
 
 i = 1
@@ -142,7 +138,7 @@ for i in range( len(arrSizes) ):
       firstNg100=0    
     sys.stdout.write("\n")
  
-print("{} in {} ... ng50 {} ... asm size {}".format(ng_total, ng_count, arrSizes[ng_gcount-1][2], ng_size))
+print("{} in {} ... ng50 {} ... asm size {}".format(ng_total, ng_count, arrSizes[ng_count-1][2], ng_size))
 print("{} in {} ... n50 {}  ... asm size {}".format(n_total, n_count, arrSizes[n_count-1][2], n_size))
 print("longest_3 {} {} {}".format(arrSizes[0][2], arrSizes[1][2], arrSizes[2][2]))
 print("contigs lt200k {} lt1M {} ge1M {} ge5M {} ge10M {} ge20M {}".format(nSmallContigs,nlt1MContigs,n1MContigs,n5MContigs,n10MContigs,n20MContigs))

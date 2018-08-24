@@ -56,6 +56,10 @@ fout_h = open("{}/{}.haploid.fasta".format(outDir,prefix), "w")
 fout_b = open("{}/{}.bubbles.fasta".format(outDir,prefix), "w")
 fout_s = open("{}/{}.spurs.fasta".format(outDir,prefix), "w")
 
+bcount = 0
+scount = 0 
+hcount = 0
+
 for fn in fIn:
     f=open(fn, 'r')
 
@@ -74,17 +78,20 @@ for fn in fIn:
         length = args["length"]
 
         if e1 == e2:
-          fout_b.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, dcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
-          fout_b.write("\n{}\n".format(wrap_seq(seq, 100)))            
+          fout_b.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, bcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
+          fout_b.write("\n{}\n".format(wrap_seq(seq, 100)))
+          bcount+=1            
           continue
 
         if e1 != -1 or e2 != -1 and length < 100000:
-          fout_s.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, dcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
-          fout_s.write("\n{}\n".format(wrap_seq(seq, 100)))            
+          fout_s.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, scount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
+          fout_s.write("\n{}\n".format(wrap_seq(seq, 100)))
+          scount+=1            
           continue
 
         fout_h.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, hcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
-        fout_h.write("\n{}\n".format(wrap_seq(seq, 100)))        
+        fout_h.write("\n{}\n".format(wrap_seq(seq, 100)))
+        hcount+=1        
     f.close()
     
 f.close(fout_b)
