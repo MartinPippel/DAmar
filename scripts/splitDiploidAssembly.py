@@ -83,7 +83,7 @@ for fn in fIn:
           bcount+=1            
           continue
 
-        if e1 != -1 or e2 != -1 and length < 100000:
+        if (e1 != -1 or e2 != -1) and length < 100000:
           fout_s.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, scount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
           fout_s.write("\n{}\n".format(wrap_seq(seq, 100)))
           scount+=1            

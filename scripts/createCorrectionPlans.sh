@@ -351,10 +351,10 @@ then
             setLAfilterOptions
         fi
         ### run marvelStats 
-        echo "${SUBMIT_SCRIPTS_PATH}/marvelStats.sh ${configFile} ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.${COR_DIR}.log" > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "${SUBMIT_SCRIPTS_PATH}/marvelStats2.sh ${configFile} > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.${COR_DIR}.log" > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.plan
     else
         (>&2 echo "step ${currentStep} in FIX_CORR_TYPE ${FIX_CORR_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-0 steps: 1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-marvelStats")
+        (>&2 echo "valid steps are: #type-0 steps: 1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-marvelStats2")
         exit 1            
     fi
 else

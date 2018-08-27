@@ -369,7 +369,7 @@ then
             setLAfilterOptions
         fi
         ### run marvelStats 
-        echo "${SUBMIT_SCRIPTS_PATH}/marvelStats.sh ${configFile} ${FIX_FILT_OUTDIR}/tour > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.log" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "${SUBMIT_SCRIPTS_PATH}/marvelStats2.sh ${configFile} > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.log" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
     else
         (>&2 echo "step ${currentStep} in FIX_TOUR_TYPE ${FIX_TOUR_TYPE} not supported")
         (>&2 echo "valid steps are: #type-0 steps: 1-OGbuild, 2-OGtour, 3-tour2fasta, 4-OGlayout, 5-marvelStats")
