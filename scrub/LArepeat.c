@@ -33,7 +33,6 @@
 
 // constants
 
-#define MAX_COVERAGE 100        // max for coverage histogram
 #define MIN_OVERLAP_GROUPS 1000 // min number of groups for coverage estimate
 
 #define EDGE_TAGGING_DIST   1000        // max distance of the repeat to the repeat ends
@@ -44,6 +43,7 @@
 #define DEFAULT_RP_MERGE_DIST -1
 #define DEFAULT_COV -1
 #define DEFAULT_COV_MAX_READS -1
+#define DEFAULT_MAX_COVERAGE 100        // max for coverage histogram
 
 #define DEF_ARG_IC 0
 #define DEF_ARG_O  0
@@ -64,10 +64,11 @@ typedef struct
     int inccov;   // include coverage in the resulting track
     int min_aln_len;
     int inc_Iovls;
+    int max_cov;
 
     // coverage pass
 
-    int64 cov_histo[ MAX_COVERAGE ];
+    int64 *cov_histo;
     int64 cov_bases;
     int64 cov_inactive_bases;
     char* cov_read_active;
@@ -126,7 +127,8 @@ static void pre_coverage( RepeatContext* ctx )
 
     ctx->cov_read_active = (char*)malloc( DB_READ_MAXLEN( ctx->db ) );
 
-    bzero( ctx->cov_histo, sizeof( int64 ) * MAX_COVERAGE );
+    ctx->cov_histo = malloc(sizeof( int64 ) * ctx->max_cov);
+    bzero( ctx->cov_histo, sizeof( int64 ) * ctx->max_cov );
 }
 
 static void post_coverage( RepeatContext* ctx )
@@ -137,7 +139,7 @@ static void post_coverage( RepeatContext* ctx )
     ctx->avg_rlen = ctx->bases / ctx->reads;
 
     int j;
-    for ( j = 1; j < MAX_COVERAGE; j++ )
+    for ( j = 1; j < ctx->max_cov; j++ )
     {
         if ( cov < ctx->cov_histo[ j ] )
         {
@@ -150,7 +152,7 @@ static void post_coverage( RepeatContext* ctx )
     free( ctx->cov_read_active );
 
 #ifdef VERBOSE
-    for ( j = 0; j < MAX_COVERAGE; j++ )
+    for ( j = 0; j < ctx->max_cov; j++ )
     {
         printf( "COV %d READS %lld\n", j, ctx->cov_histo[ j ] );
     }
@@ -160,6 +162,7 @@ static void post_coverage( RepeatContext* ctx )
             ctx->cov_inactive_bases, (int)( 100.0 * ctx->cov_inactive_bases / ctx->cov_bases ), ctx->cov_bases );
     printf( "AVG_RLEN %d\n", ctx->avg_rlen );
 #endif
+    free(ctx->cov_histo);
 }
 
 static int handler_coverage( void* _ctx, Overlap* ovl, int novl )
@@ -211,7 +214,7 @@ static int handler_coverage( void* _ctx, Overlap* ovl, int novl )
         cov = 0;
     }
 
-    if ( cov < MAX_COVERAGE )
+    if ( cov < ctx->max_cov )
     {
         ctx->cov_histo[ cov ]++;
     }
@@ -505,6 +508,7 @@ static void usage()
     printf( "         -c ... expected coverage (%d)\n", DEFAULT_COV );
     printf( "         -m ... merge distance in bp (%d)\n", DEFAULT_RP_MERGE_DIST );
     printf( "         -n ... # of a reads used for coverage estimate (%d)\n", DEFAULT_COV_MAX_READS );
+    printf( "         -M ... maximum coverage (%d)\n", DEFAULT_MAX_COVERAGE);
 }
 
 int main( int argc, char* argv[] )
@@ -529,6 +533,7 @@ int main( int argc, char* argv[] )
     rctx.inccov         = DEF_ARG_IC;
     rctx.min_aln_len    = DEF_ARG_O;
     rctx.inc_Iovls      = 0;
+    rctx.max_cov		= DEFAULT_MAX_COVERAGE;
 
     int COV_ONLY = 0;
 
@@ -536,7 +541,7 @@ int main( int argc, char* argv[] )
 
     opterr = 0;
 
-    while ( ( c = getopt( argc, argv, "Ch:l:m:c:n:t:b:o:EI" ) ) != -1 )
+    while ( ( c = getopt( argc, argv, "Ch:l:m:c:n:t:b:o:EIM:" ) ) != -1 )
     {
         switch ( c )
         {
@@ -552,6 +557,10 @@ int main( int argc, char* argv[] )
 
             case 'C':
                 rctx.inccov = 1;
+                break;
+
+            case 'M':
+                rctx.max_cov = atoi(optarg);
                 break;
 
             case 'b':
@@ -614,6 +623,13 @@ int main( int argc, char* argv[] )
         fprintf( stderr, "could not open '%s'\n", pcPathOverlaps );
         exit( 1 );
     }
+
+    if(rctx.max_cov < DEFAULT_MAX_COVERAGE)
+    {
+        fprintf( stderr, "maximum coverage cannot be smallert than '%d'\n", DEFAULT_MAX_COVERAGE );
+        exit( 1 );
+    }
+
 
     // init
 
