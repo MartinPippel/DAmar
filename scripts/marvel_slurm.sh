@@ -1,7 +1,11 @@
 #!/bin/bash 
 
 configFile=$1
-Id=1
+Id=$2
+if [[ -z "$Id" ]]
+then
+  Id=1
+fi
 
 if [[ ! -f ${configFile} ]]
 then 
