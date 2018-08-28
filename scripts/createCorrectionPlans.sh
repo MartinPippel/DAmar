@@ -350,8 +350,10 @@ then
         then
             setLAfilterOptions
         fi
-        ### run marvelStats 
-        echo "${SUBMIT_SCRIPTS_PATH}/marvelStats2.sh ${configFile} > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.${COR_DIR}.log" > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.plan
+        ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+        bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile} > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.${COR_DIR}.log
+        ### create assemblyStats plan 
+        echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} >> ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.${COR_DIR}.log" > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.plan
     else
         (>&2 echo "step ${currentStep} in FIX_CORR_TYPE ${FIX_CORR_TYPE} not supported")
         (>&2 echo "valid steps are: #type-0 steps: 1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-marvelStats2")

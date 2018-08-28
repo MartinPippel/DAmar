@@ -240,7 +240,8 @@ void trim_overlap(TRIM* trim, Overlap* ovl)
 
     if (aet - abt < MIN_TRIM_LENGTH || bet - bbt < MIN_TRIM_LENGTH)
     {
-#ifdef DEBUG_TRIM    		printf("DISCARD alignment due to short trim lengths!\n");
+#ifdef DEBUG_TRIM
+    		printf("DISCARD alignment due to short trim lengths!\n");
     	    printf("%6d (%5d) %c %6d (%5d) " ANSI_COLOR_GREEN "OVL" ANSI_COLOR_RESET " %5d..%5d %5d..%5d " ANSI_COLOR_GREEN "TRIM" ANSI_COLOR_RESET " %5d..%5d %5d..%5d\n",
     	            a, DB_READ_LEN(trim->db, ovl->aread), ovl->flags & OVL_COMP ? 'c' : 'n', b, DB_READ_LEN(trim->db, ovl->bread),
     	            ovl->path.abpos, ovl->path.aepos,

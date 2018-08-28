@@ -368,8 +368,10 @@ then
         then
             setLAfilterOptions
         fi
-        ### run marvelStats 
-        echo "${SUBMIT_SCRIPTS_PATH}/marvelStats2.sh ${configFile} > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.log" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
+        ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+        bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile} > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.log
+        ### create assemblyStats plan 
+        echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} >> ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.log" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
     else
         (>&2 echo "step ${currentStep} in FIX_TOUR_TYPE ${FIX_TOUR_TYPE} not supported")
         (>&2 echo "valid steps are: #type-0 steps: 1-OGbuild, 2-OGtour, 3-tour2fasta, 4-OGlayout, 5-marvelStats")

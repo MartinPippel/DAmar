@@ -47,7 +47,7 @@
 #endif
 
 #undef DEBUG_REPEAT_EXTENSION
-#define DEBUG_CHAIN
+#undef DEBUG_CHAIN
 
 #define REMOVE_STITCH_OVL ( 1 << 0 )
 #define REMOVE_MOD_OVL ( 1 << 1 )
@@ -78,6 +78,7 @@ typedef struct
 	int nSymDiscard;
 	int nMultiMapper;
 	int nMultiMapperBases;
+	int nCovFilt, nCovFiltBases;
 
 	// settings
 	int nStitched;
@@ -91,6 +92,9 @@ typedef struct
 	int rm_aggressive; // -M
 	int do_trim;
 	int downsample;
+	int lowCoverageFilter;
+	int hghCoverageFilter;
+	char* cov_read_active;
 
 	int removeFlags; 	// 1 << 0 ... stitched overlaps, 1 << 1 ... module overlaps, 1 << 2 .. trace points, 1 << 3 .. non-identity overlaps,
 										// 1 << 4 .. remove B-read repeat overlaps, if a proper overlap between A and B exist i.e A ------------ or A ------------ or A ------------ or A   ------------
@@ -308,7 +312,7 @@ static int getRepeatBases(FilterContext *ctx, Overlap *ovl, int read)
 
 	assert(ovl->aread == read || ovl->bread == read);
 
-	int aLen = ovl->path.aepos - ovl->path.abpos;
+//	int aLen = ovl->path.aepos - ovl->path.abpos;
 	int bLen = ovl->path.bepos - ovl->path.bbpos;
 
 	// get repeats track
@@ -394,6 +398,7 @@ static int cmp_ovls_abeg(const void* a, const void* b)
 	return cmp;
 }
 
+#ifdef DEBUG_CHAIN
 static void printChain(Chain *chain)
 {
 	printf("CHAIN: nvols %d, %7d vs %7d %s\n", chain->novl, chain->ovls[0]->aread, chain->ovls[0]->bread, (chain->ovls[0]->flags & OVL_COMP) ? "COMP" : "NORM");
@@ -404,6 +409,7 @@ static void printChain(Chain *chain)
 				chain->ovls[i]->path.bepos, chain->ovls[i]->path.diffs * 100.0 / (chain->ovls[i]->path.aepos - chain->ovls[i]->path.abpos));
 	}
 }
+#endif
 
 static int contained(int ab, int ae, int bb, int be)
 {
@@ -425,7 +431,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 	if (n < 2)
 		return;
 
+#ifdef DEBUG_CHAIN
 	printf("chain(%d,%d,%d) CHAIN: n%d m%d\n", ovls->aread, ovls->bread, n, ctx->curChains, ctx->maxChains);
+#endif
 
 	int aread, bread;
 	int alen, blen;
@@ -440,7 +448,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 	int nremain = n;
 
 // mark contained overlaps
+#ifdef DEBUG_CHAIN
 	printf("mark contained overlaps\n");
+#endif
 	{
 		int j;
 		for (i = 0; i < n; i++)
@@ -468,8 +478,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		}
 	}
 
+#ifdef DEBUG_CHAIN
 	printf("nremain %d\n", nremain);
-
+#endif
 	if (nremain < 1)
 		return;
 
@@ -542,7 +553,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		}
 
 		Chain *chain = ctx->ovlChains + ctx->curChains;
+#ifdef DEBUG_CHAIN
 		printf("chain: nOvl: %d, maxOvl %d, nremain: %d\n", chain->novl, chain->maxOvl, nremain);
+#endif
 
 		if (chain->ovls == NULL)
 		{
@@ -550,15 +563,18 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 			chain->maxOvl = 10;
 			chain->ovls = (Overlap**) malloc(sizeof(Overlap*) * chain->maxOvl);
 
+#ifdef DEBUG_CHAIN
 			printf("chain: nOvl: %d, maxOvl %d\n", chain->novl, chain->maxOvl);
+#endif
 		}
 
 		chain->ovls[0] = ovls + longestUniqOvlIdx;
 		chain->ovls[0]->flags |= OVL_TEMP;
 		chain->novl++;
 		nremain--;
+#ifdef DEBUG_CHAIN
 		printf("chain: nOvl: %d, maxOvl %d, nremain %d\n", chain->novl, chain->maxOvl, nremain);
-
+#endif
 		int ab1, ae1;
 		int bb1, be1;
 
@@ -752,8 +768,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 				chain->ovls[chain->novl]->flags |= OVL_TEMP;
 				chain->novl++;
 				nremain--;
+#ifdef DEBUG_CHAIN
 				printf("chain: nOvl: %d, maxOvl %d nremain %d\n", chain->novl, chain->maxOvl, nremain);
-
+#endif
 				ab1 = ab2;
 				ae1 = ae2;
 				bb1 = bb2;
@@ -807,8 +824,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 					{
 						Overlap * ovl = ovls + i;
 
+#ifdef DEBUG_CHAIN
 						printf("LEFT: Check ovl: a[%d, %d] b[%d,%d]\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos);
-
+#endif
 						ab2 = ovl->path.abpos;
 						ae2 = ovl->path.aepos;
 
@@ -973,8 +991,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 				chain->ovls[chain->novl]->flags |= OVL_TEMP;
 				chain->novl++;
 				nremain--;
+#ifdef DEBUG_CHAIN
 				printf("chain: nOvl: %d, maxOvl %d nremain %d\n", chain->novl, chain->maxOvl, nremain);
-
+#endif
 				ab1 = ab2;
 				ae1 = ae2;
 				bb1 = bb2;
@@ -1000,13 +1019,16 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 			}
 		}
 
+#ifdef DEBUG_CHAIN
 		printf("chain: nOvl: %d, maxOvl %d nremain: %d\n", chain->novl, chain->maxOvl, nremain);
-
+#endif
 		// find possible ovls that could be added to chain (i.e. fill gaps)
 
 		if (chain->novl > 1 && nremain > 0)
 		{
+#ifdef DEBUG_CHAIN
 			printf("find possible ovls that could be added to chain (i.e. fill gaps)\n");
+#endif
 			int chainIdx = 0;
 			int chainLastIdx = chain->novl - 1;
 			int j;
@@ -1044,7 +1066,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 						chain->ovls[chain->novl] = ovl;
 						chain->novl++;
 						nremain--;
+#ifdef DEBUG_CHAIN
 						printf("chain: nOvl: %d, maxOvl %d nremain %d\n", chain->novl, chain->maxOvl, nremain);
+#endif
 					}
 
 					if (ovl->path.abpos > chain->ovls[j + 1]->path.abpos)
@@ -1062,7 +1086,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		if (nremain)
 		{
 			// mark remaining ovls as DISC if the overlap with a chain overlap !!
+#ifdef DEBUG_CHAIN
 			printf("// mark remaining ovls as DISC if they overlap with a chain overlap !!\n");
+#endif
 			int chainIdx = 0;
 			int chainLastIdx = chain->novl - 1;
 			int j;
@@ -1079,7 +1105,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 					{
 						ovl->flags |= OVL_DISCARD;
 						nremain--;
+#ifdef DEBUG_CHAIN
 						printf("DISCARD [%d, %d] [%d, %d] nremain %d\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, nremain);
+#endif
 					}
 
 					if (j + 1 < chain->novl && ovl->path.abpos > chain->ovls[j + 1]->path.abpos)
@@ -1095,7 +1123,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		int valid = 1;
 		if (ctx->curChains)
 		{
+#ifdef DEBUG_CHAIN
 			printf("DO SANITY CHECK\n");
+#endif
 			int j;
 			for (i = 0; i < ctx->curChains && valid; i++)
 			{
@@ -1108,7 +1138,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 								|| (chain->ovls[j]->path.bbpos > ctx->ovlChains[i].ovls[0]->path.bbpos
 										&& chain->ovls[j]->path.bepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.bepos))
 						{
+#ifdef DEBUG_CHAIN
 							printf("CHAIN is invalid - DISCARD\n");
+#endif
 							valid = 0;
 							break;
 						}
@@ -1128,10 +1160,12 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 			}
 			chain->novl = 0;
 		}
-
+#ifdef DEBUG_CHAIN
 		printf("curChain: %d, remain unchained OVls: %d\n", ctx->curChains, nremain);
+#endif
 	}
 
+#ifdef DEBUG_CHAIN
 	printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
 	for (i = 0; i < ctx->curChains; i++)
 	{
@@ -1144,13 +1178,16 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 					(ctx->ovlChains[i].ovls[j]->flags & OVL_COMP) ? "COMP" : "NORM");
 		}
 	}
+#endif
 
 	// sort chains according to alignment lengths
 	if (ctx->curChains > 1)
 	{
+#ifdef DEBUG_CHAIN
 		printf("SORT CHAINS (longest first):\n");
+#endif
 		qsort(ctx->ovlChains, ctx->curChains, sizeof(Chain), cmp_chain_len);
-
+#ifdef DEBUG_CHAIN
 		printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
 		for (i = 0; i < ctx->curChains; i++)
 		{
@@ -1163,44 +1200,8 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 						(ctx->ovlChains[i].ovls[j]->flags & OVL_COMP) ? "COMP" : "NORM");
 			}
 		}
+#endif
 	}
-
-	// evaluate user input: nMaxProperChains and get rid (DISCARD all overlaps) of chains that are not wanted
-	// if nMaxProperChains == 0, then only THE best chain is kept, all others are discarded
-	// if nMaxProperChains == 1, then only THE best chain in forward as well as in reverse complement orientation are kept
-	// otherwise keep all chains
-
-	if (ctx->nMaxProperChains == 0)
-	{
-		int j;
-		for (i = 1; i < ctx->curChains; i++)
-			for (j = 0; j < ctx->ovlChains[i].novl; j++)
-				ctx->ovlChains[i].ovls[j]->flags |= OVL_DISCARD;
-	}
-	else if (ctx->nMaxProperChains == 1)
-	{
-		int j;
-		int keptOtherOri = 0;
-		for (i = 1; i < ctx->curChains; i++)
-		{
-			if (!keptOtherOri && ((ctx->ovlChains[0].ovls[0]->flags & OVL_COMP) != (ctx->ovlChains[i].ovls[0]->flags & OVL_COMP)))
-			{
-				keptOtherOri = 1;
-				continue;
-			}
-
-			for (j = 0; j < ctx->ovlChains[i].novl; j++)
-				ctx->ovlChains[i].ovls[j]->flags |= OVL_DISCARD;
-		}
-	}
-	else
-	{
-		printf("keep all chains\n");
-	}
-	// reset chain and ovl counter
-	for (i = 0; i < ctx->curChains; i++)
-		ctx->ovlChains[i].novl = 0;
-	ctx->curChains = 0;
 }
 
 static int stitch(Overlap* ovls, int n, int fuzz, int aggressive)
@@ -2536,6 +2537,185 @@ static void filter_post(FilterContext* ctx)
 	}
 }
 
+static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
+{
+
+	int j, k , l;
+	j = k = 0;
+
+    int64 cov;
+    int64 bases = 0;
+
+    bzero( ctx->cov_read_active, DB_READ_MAXLEN( ctx->db ) );
+
+	while (j < novl)
+	{
+		while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
+		{
+			k++;
+		}
+
+        if ( !( DB_READ_FLAGS( ctx->db, ovl[ j ].bread ) & DB_BEST ) )
+        {
+            continue;
+        }
+
+        if ( ovl[ j ].aread == ovl[ j ].bread )
+            continue;
+
+		chain(ctx, ovl + j, k - j + 1);
+
+		if (ctx->curChains > 0)
+		{
+			Chain *bestChain = ctx->ovlChains;
+
+			int properBeg = 0;
+			int properEnd = 0;
+			int gapBasesInA = 0;
+			int gapBasesInB = 0;
+			int itsBasesInA = 0;
+			int itsBasesInB = 0;
+			int overlapBases = 0;
+
+			// check for proper begin
+			if (MIN(bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bbpos) < 1000)
+				properBeg = 1;
+			// check for proper end
+			if (bestChain->ovls[bestChain->novl - 1]->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread)
+					|| bestChain->ovls[bestChain->novl - 1]->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
+				properEnd = 1;
+
+			if (properBeg && properEnd)
+			{
+				int i, its_a, its_b;
+				overlapBases = MAX(bestChain->ovls[0]->path.aepos - bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bepos - bestChain->ovls[0]->path.bbpos);
+
+				for (i = 1; i < bestChain->novl; i++)
+				{
+					its_a = its_b = 0;
+					overlapBases += MAX(bestChain->ovls[i]->path.aepos - bestChain->ovls[i]->path.abpos, bestChain->ovls[i]->path.bepos - bestChain->ovls[i]->path.bbpos);
+					// check for intersection in A
+					if (bestChain->ovls[i]->path.abpos < bestChain->ovls[i - 1]->path.aepos)
+					{
+						its_a = bestChain->ovls[i - 1]->path.aepos - bestChain->ovls[i]->path.abpos;
+						if (its_a > 1000)
+						{
+							itsBasesInA = -1;
+							break;
+						}
+						itsBasesInA += its_a;
+					}
+					// check for gap in A
+					else
+					{
+						int gap = bestChain->ovls[i]->path.abpos - bestChain->ovls[i - 1]->path.aepos;
+						if (gap > 1000)
+						{
+							gapBasesInA = -1;
+							break;
+						}
+						gapBasesInA += gap;
+					}
+					// check for intersection in B
+					if (bestChain->ovls[i]->path.bbpos < bestChain->ovls[i - 1]->path.bepos)
+					{
+						its_b = bestChain->ovls[i - 1]->path.bepos - bestChain->ovls[i]->path.bbpos;
+						if (its_b > 1000)
+						{
+							itsBasesInB = -1;
+							break;
+						}
+						itsBasesInB += its_b;
+					}
+					// check for gap in B
+					else
+					{
+						int gap = bestChain->ovls[i]->path.bbpos - bestChain->ovls[i - 1]->path.bepos;
+						if (gap > 1000)
+						{
+							gapBasesInB = -1;
+							break;
+						}
+						gapBasesInB += gap;
+					}
+					overlapBases -= MAX(its_a, its_b);
+				}
+			}
+
+			// if there is a proper chain between A and B reads, then discard all overlaps between A and B for the repcomp step, (otherwise do repcomp)
+			if (properBeg && properEnd
+					&& itsBasesInA >= 0&& itsBasesInB >=0 && gapBasesInA >=0 && gapBasesInB >=0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB) && overlapBases >= ctx->nMinAlnLength)
+			{
+				for ( l = 0; l < bestChain->novl; l++ )
+				{
+					bases += bestChain->ovls[l]->path.aepos - bestChain->ovls[l]->path.abpos;
+
+					memset( ctx->cov_read_active + bestChain->ovls[l]->path.abpos, 1, bestChain->ovls[l]->path.aepos - bestChain->ovls[l]->path.abpos );
+				}
+			}
+		}
+		else
+		{
+			int properBeg = 0;
+			int properEnd = 0;
+
+			// check for proper begin
+			if (MIN(ovl->path.abpos, ovl->path.bbpos) < 1000)
+				properBeg = 1;
+
+			// check for proper end
+			if (ovl->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread) || ovl->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
+				properEnd = 1;
+
+			if(properBeg && properEnd && (ovl->path.aepos - ovl->path.abpos) > ctx->nMinAlnLength)
+			{
+				bases += ovl->path.aepos - ovl->path.abpos;
+
+				memset( ctx->cov_read_active + ovl->path.abpos, 1, ovl->path.aepos - ovl->path.abpos );
+			}
+		}
+		j = k + 1;
+	}
+
+
+	int trimABeg, trimAEnd;
+
+	trimABeg = 0;
+	trimAEnd = DB_READ_LEN(ctx->db, ovl->aread);
+
+	if (ctx->trackTrim)
+		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimABeg, &trimAEnd);
+
+	int active = 0;
+	for ( j = trimABeg; j < trimAEnd; j++ )
+	{
+		active += ctx->cov_read_active[ j ];
+	}
+
+	if ( active > 0 )
+	{
+		cov = bases / active;
+	}
+	else
+	{
+		cov = 0;
+	}
+
+	if(cov >= ctx->lowCoverageFilter && cov <= ctx->hghCoverageFilter)
+	{
+		for(j=0; j<novl; j++)
+		{
+			ovl[j].flags |= OVL_DISCARD;
+			ctx->nCovFilt++;
+			ctx->nCovFiltBases+= ovl[j].path.aepos - ovl[j].path.abpos;
+
+
+		}
+		printf("COV FILT OUT READ %d (novl: %d) cov: %lld range [%d, %d]\n", ovl->aread, novl, cov, ctx->lowCoverageFilter, ctx->hghCoverageFilter);
+
+	}
+}
+
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 {
 	FilterContext* ctx = (FilterContext*) _ctx;
@@ -2562,6 +2742,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			trim_overlap(ctx->trim, ovl + j);
 		}
 	}
+
+	if(ctx->lowCoverageFilter < ctx->hghCoverageFilter)
+		filterByCoverage(ctx, ovl, novl);
 
 	if (ctx->stitch >= 0)
 	{
@@ -2594,6 +2777,43 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			}
 
 			chain(ctx, ovl + j, k - j + 1);
+			{
+				// evaluate user input: nMaxProperChains and get rid (DISCARD all overlaps) of chains that are not wanted
+				// if nMaxProperChains == 0, then only THE best chain is kept, all others are discarded
+				// if nMaxProperChains == 1, then only THE best chain in forward as well as in reverse complement orientation are kept
+				// otherwise keep all chains
+
+				int a, b;
+				if (ctx->nMaxProperChains == 0)
+				{
+					for (a = 1; a < ctx->curChains; a++)
+						for (b = 0; b < ctx->ovlChains[a].novl; b++)
+							ctx->ovlChains[a].ovls[b]->flags |= OVL_DISCARD;
+				}
+				else if (ctx->nMaxProperChains == 1)
+				{
+					int keptOtherOri = 0;
+					for (a = 1; a < ctx->curChains; a++)
+					{
+						if (!keptOtherOri && ((ctx->ovlChains[0].ovls[0]->flags & OVL_COMP) != (ctx->ovlChains[a].ovls[0]->flags & OVL_COMP)))
+						{
+							keptOtherOri = 1;
+							continue;
+						}
+
+						for (b = 0; b < ctx->ovlChains[a].novl; b++)
+							ctx->ovlChains[a].ovls[b]->flags |= OVL_DISCARD;
+					}
+				}
+				else
+				{
+					printf("keep all chains\n");
+				}
+				// reset chain and ovl counter
+				for (a = 0; a < ctx->curChains; a++)
+					ctx->ovlChains[a].novl = 0;
+				ctx->curChains = 0;
+			}
 
 			j = k + 1;
 		}
@@ -2975,7 +3195,9 @@ static void usage()
 	fprintf(stderr, "                0 only THE best chain is kept, all others are discarded\n");
 	fprintf(stderr, "                1 only THE best chain in forward as well as in reverse complement orientation are kept\n");
 	fprintf(stderr, "                otherwise keep all chains\n");
-
+	fprintf(stderr, "         -c ... discard overlaps that don't show given coverage range. Intention get rid of contamination by coverage\n");
+	fprintf(stderr, "                e.g. -c -1000  ... discard overlaps that where A-read has lower than 1000x coverage \n");
+	fprintf(stderr, "                	  -c  1000  ... discard overlaps that where A-read has higher than 1000x coverage \n");
 }
 
 static int opt_repeat_count(int argc, char** argv, char opt)
@@ -3056,6 +3278,9 @@ int main(int argc, char* argv[])
 	fctx.discardedBreads = NULL;
 	fctx.removeMultiMappers = 0;
 	fctx.nMaxProperChains = -1;
+	fctx.lowCoverageFilter = -1;
+	fctx.hghCoverageFilter = -1;
+	fctx.cov_read_active = NULL;
 
 	int c;
 
@@ -3066,7 +3291,7 @@ int main(int argc, char* argv[])
 	}
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "TvLpwWy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:N:C:")) != -1)
+	while ((c = getopt(argc, argv, "TvLpwWy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:N:C:c:")) != -1)
 	{
 		switch (c)
 		{
@@ -3093,6 +3318,29 @@ int main(int argc, char* argv[])
 		case 'a':
 			pathOutDiscardedOvls = optarg;
 			break;
+
+		case 'c':
+			{
+				int tmp = atoi(optarg);
+				if(tmp == 0)
+				{
+					fprintf(stderr, "[ERROR]: Unsupported coverage filer -c [%d].\n", tmp);
+					usage();
+					exit(1);
+				}
+				if (tmp < 0)
+				{
+					fctx.lowCoverageFilter = 0;
+					fctx.hghCoverageFilter = abs(tmp);
+				}
+				else
+				{
+					fctx.lowCoverageFilter = tmp;
+					fctx.hghCoverageFilter = INT_MAX;
+				}
+			}
+			break;
+
 
 		case 'A':
 			pathInDiscardedOvls = optarg;
@@ -3232,6 +3480,9 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "could not open %s\n", pcPathReadsIn);
 		exit(1);
 	}
+
+	if(fctx.lowCoverageFilter < fctx.hghCoverageFilter)
+		fctx.cov_read_active = (char*)malloc( DB_READ_MAXLEN( fctx.db ) );
 
 	int i;
 	for (i = 0; i < DB_NREADS(&db); i++)
