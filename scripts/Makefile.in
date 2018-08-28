@@ -2,10 +2,10 @@
 include ../Makefile.settings
 
 ALL =
-SCRIPTS = rid2bid.py DBprepare.py paths2rids.py marvelStats.sh marvelStats2.sh n50.py splitDiploidAssembly.py \
+SCRIPTS = rid2bid.py DBprepare.py paths2rids.py marvelStats.sh n50.py splitDiploidAssembly.py \
           createAndSubmitMarvelSlurmJobs.sh	createCommandPlan.sh createCorrectionPlans.sh createFilteringPlans.sh \
           createReadPatchingPlans.sh createRepmaskPlans.sh createScrubbingPlans.sh createSubmitScripts.sh createTouringPlans.sh \
-          marvel_slurm.sh
+          marvel_slurm.sh slurmStats.sh assemblyStats.sh
 
 all: $(ALL)
 
