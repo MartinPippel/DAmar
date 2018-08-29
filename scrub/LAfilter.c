@@ -47,7 +47,7 @@
 #endif
 
 #undef DEBUG_REPEAT_EXTENSION
-#define DEBUG_CHAIN
+#undef DEBUG_CHAIN
 
 #define REMOVE_STITCH_OVL ( 1 << 0 )
 #define REMOVE_MOD_OVL ( 1 << 1 )
