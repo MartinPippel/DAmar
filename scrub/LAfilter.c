@@ -2692,11 +2692,14 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 		j = k + 1;
 	}
 
+
+
 	int active = 0;
 	for ( j = trimABeg; j < trimAEnd; j++ )
 	{
 		active += ctx->cov_read_active[ j ];
 	}
+	printf("bases %lld active %d\n", bases, active);
 
 	if ( active > 0 )
 	{
