@@ -78,7 +78,7 @@ typedef struct
 	int nSymDiscard;
 	int nMultiMapper;
 	int nMultiMapperBases;
-	int nCovFilt, nCovFiltBases;
+	int nCovFiltReads, nCovFiltOverlaps, nCovFiltBases;
 
 	// settings
 	int nStitched;
@@ -2759,11 +2759,10 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 		for(j=0; j<novl; j++)
 		{
 			ovl[j].flags |= OVL_DISCARD;
-			ctx->nCovFilt++;
 			ctx->nCovFiltBases+= ovl[j].path.aepos - ovl[j].path.abpos;
-
-
 		}
+		ctx->nCovFiltReads++;
+		ctx->nCovFiltOverlaps += novl;
 		printf("COV FILT OUT READ %d (novl: %d) cov: %lld range [%d, %d] active: %d\n", ovl->aread, novl, cov, ctx->lowCoverageFilter, ctx->hghCoverageFilter, active);
 
 	}
