@@ -2612,8 +2612,6 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 				get_trim(ctx->db, ctx->trackTrim, bestChain->ovls[0]->bread, &trimBBeg, &trimBEnd);
 
 
-			printf("%d vs %d nchain %d\n", bestChain->ovls[0]->aread, bestChain->ovls[0]->bread, bestChain->novl);
-
 			int properBeg = 0;
 			int properEnd = 0;
 			int gapBasesInA = 0;
@@ -2687,8 +2685,6 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 				}
 			}
 
-			printf("properBeg %d properEnd %d overlapBases %d\n", properBeg, properEnd, overlapBases);
-
 			// if there is a proper chain between A and B reads, then discard all overlaps between A and B for the repcomp step, (otherwise do repcomp)
 			if (properBeg && properEnd
 					&& itsBasesInA >= 0&& itsBasesInB >=0 && gapBasesInA >=0 && gapBasesInB >=0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB) && overlapBases >= ctx->nMinAlnLength)
@@ -2744,7 +2740,6 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 	{
 		active += ctx->cov_read_active[ j ];
 	}
-	printf("bases %lld active %d\n", bases, active);
 
 	if ( active > 0 )
 	{
