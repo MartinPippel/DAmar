@@ -2593,7 +2593,7 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 			k++;
 		}
 
-        if ( !( DB_READ_FLAGS( ctx->db, ovl[ j ].bread ) & DB_BEST ) || ovl[ j ].aread == ovl[ j ].bread)
+        if (ovl[ j ].aread == ovl[ j ].bread)
         {
         	j = k + 1;
             continue;
