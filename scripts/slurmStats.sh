@@ -221,7 +221,7 @@ do
         				tmp=$(grep -e ${reportVariables[${reportCount}]} $f | awk '{print $2}' |  awk -F \| '{print $1}')
         				if [[ "x${tmp}" == "x" ]]
         				then
-							(>&2 echo "Unable to get variable ${reportVariables[${reportCount}]}")
+							(>&2 echo "Unable to get variable ${reportVariables[${reportCount}]} from file $f")
             				exit 1
         				fi
 						appliedReportVariables[${reportCount}]=$((${appliedReportVariables[reportCount]}+${tmp}))

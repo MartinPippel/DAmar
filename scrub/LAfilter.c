@@ -78,7 +78,8 @@ typedef struct
 	int nSymDiscard;
 	int nMultiMapper;
 	int nMultiMapperBases;
-	int nCovFiltReads, nCovFiltOverlaps, nCovFiltBases;
+	int nCovFiltReads;
+	int64 nCovFiltOverlaps, nCovFiltBases;
 
 	// settings
 	int nStitched;
@@ -2529,7 +2530,7 @@ static void filter_post(FilterContext* ctx)
 
 	if (ctx->nCovFiltReads)
 	{
-		printf("coverage filtered reads %4d -> overlaps       %10d ->   %10d bases\n", ctx->nCovFiltReads, ctx->nCovFiltOverlaps, ctx->nCovFiltBases);
+		printf("coverage filtered reads %4d -> overlaps %10lld -> bases %10lld\n", ctx->nCovFiltReads, ctx->nCovFiltOverlaps, ctx->nCovFiltBases);
 	}
 
 #endif
