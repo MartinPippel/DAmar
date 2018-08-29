@@ -2599,18 +2599,17 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
             continue;
         }
 
+		trimBBeg = 0;
+		trimBEnd = DB_READ_LEN(ctx->db, ovl[j]->bread);
+
+		if (ctx->trackTrim)
+			get_trim(ctx->db, ctx->trackTrim, ovl[j]->bread, &trimBBeg, &trimBEnd);
+
 		chain(ctx, ovl + j, k - j + 1, trimABeg, trimAEnd);
 
 		if (ctx->curChains > 0)
 		{
 			Chain *bestChain = ctx->ovlChains;
-
-			trimBBeg = 0;
-			trimBEnd = DB_READ_LEN(ctx->db, bestChain->ovls[0]->bread);
-
-			if (ctx->trackTrim)
-				get_trim(ctx->db, ctx->trackTrim, bestChain->ovls[0]->bread, &trimBBeg, &trimBEnd);
-
 
 			int properBeg = 0;
 			int properEnd = 0;
@@ -2621,7 +2620,7 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 			int overlapBases = 0;
 
 			// check for proper begin
-			if (MIN(trimABeg - bestChain->ovls[0]->path.abpos, trimBBeg - bestChain->ovls[0]->path.bbpos) < 1000)
+			if (MIN(bestChain->ovls[0]->path.abpos - trimABeg, bestChain->ovls[0]->path.bbpos) - trimBBeg < 1000)
 				properBeg = 1;
 			// check for proper end
 			if (MIN(trimAEnd - bestChain->ovls[bestChain->novl - 1]->path.aepos,
@@ -2716,7 +2715,7 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 			int properEnd = 0;
 
 			// check for proper begin
-			if (MIN(trimABeg - ovl->path.abpos, trimBBeg - ovl->path.bbpos) < 1000)
+			if (MIN(ovl->path.abpos - trimABeg, ovl->path.bbpos - trimBBeg) < 1000)
 				properBeg = 1;
 
 			// check for proper end
@@ -2760,11 +2759,11 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 
 
 		}
-		printf("COV FILT OUT READ %d (novl: %d) cov: %lld range [%d, %d]\n", ovl->aread, novl, cov, ctx->lowCoverageFilter, ctx->hghCoverageFilter);
+		printf("COV FILT OUT READ %d (novl: %d) cov: %lld range [%d, %d] active: %d\n", ovl->aread, novl, cov, ctx->lowCoverageFilter, ctx->hghCoverageFilter, active);
 
 	}
 	else
-		printf("COV READ %d (novl: %d) cov: %lld range [%d, %d]\n", ovl->aread, novl, cov, ctx->lowCoverageFilter, ctx->hghCoverageFilter);
+		printf("COV READ %d (novl: %d) cov: %lld range [%d, %d] active: %d\n", ovl->aread, novl, cov, ctx->lowCoverageFilter, ctx->hghCoverageFilter, active);
 }
 
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
