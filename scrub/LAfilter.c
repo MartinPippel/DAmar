@@ -2527,6 +2527,11 @@ static void filter_post(FilterContext* ctx)
 		printf("symmetrically remove discarded overlaps          %10d\n", ctx->nSymDiscard);
 	}
 
+	if (ctx->nCovFilt)
+	{
+		printf("coverage filtered reads %4d -> overlaps       %10d\n", ctx->nCovFilt, ctx->nCovFiltBases);
+	}
+
 #endif
 
 	if (ctx->trim)
