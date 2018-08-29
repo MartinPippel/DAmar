@@ -47,7 +47,7 @@
 #endif
 
 #undef DEBUG_REPEAT_EXTENSION
-#undef DEBUG_CHAIN
+#define DEBUG_CHAIN
 
 #define REMOVE_STITCH_OVL ( 1 << 0 )
 #define REMOVE_MOD_OVL ( 1 << 1 )
@@ -421,14 +421,12 @@ static int contained(int ab, int ae, int bb, int be)
 	return 0;
 }
 
-static void chain(FilterContext *ctx, Overlap *ovls, int n)
+static void chain(FilterContext *ctx, Overlap *ovls, int n, int trim_ab, int trim_ae)
 {
 	/// TODO hard coded
 	int MIN_OVL_LOOKAHEAD = 2000;
 	int MAX_OVL_LOOKAHEAD = 10000;
 	int STRIDE_OVL_LOOKAHEAD = 2000;
-	int MIN_ANCHOR = 800;
-	int MIN_CHAIN_LEN = 3000;
 
 	int trim_bb, trim_be;
 
@@ -442,7 +440,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		trim_be = DB_READ_LEN(ctx->db, ovls->bread);
 	}
 #ifdef DEBUG_CHAIN
-	printf("chain(%d,%d,%d) CHAIN: n%d m%d chim [%d, %d] trim [%d, %d]\n", ovls->aread, ovls->bread, n, ctx->curChains, ctx->maxChains, chimerBeg, chimerEnd, trim_ab, trim_ae);
+	printf("chain(%d,%d,%d) CHAIN: n%d m%d trim [%d, %d]\n", ovls->aread, ovls->bread, n, ctx->curChains, ctx->maxChains, trim_ab, trim_ae);
 #endif
 	if (n < 2)
 	{
@@ -487,7 +485,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 #endif
 
 	if (nremain == 0)
-		return 0;
+		return;
 
 // mark contained overlaps
 #ifdef DEBUG_CHAIN
@@ -2601,7 +2599,7 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
             continue;
         }
 
-		chain(ctx, ovl + j, k - j + 1);
+		chain(ctx, ovl + j, k - j + 1, trimABeg, trimAEnd);
 
 		if (ctx->curChains > 0)
 		{
@@ -2827,6 +2825,15 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		int k;
 		j = k = 0;
 
+		int trimABeg, trimAEnd;
+
+		trimABeg = 0;
+		trimAEnd = DB_READ_LEN(ctx->db, ovl->aread);
+
+		if (ctx->trackTrim)
+			get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimABeg, &trimAEnd);
+
+
 		while (j < novl)
 		{
 			while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
@@ -2834,7 +2841,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				k++;
 			}
 
-			chain(ctx, ovl + j, k - j + 1);
+			chain(ctx, ovl + j, k - j + 1, trimABeg, trimAEnd);
 			{
 				// evaluate user input: nMaxProperChains and get rid (DISCARD all overlaps) of chains that are not wanted
 				// if nMaxProperChains == 0, then only THE best chain is kept, all others are discarded
