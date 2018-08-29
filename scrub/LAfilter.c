@@ -2555,13 +2555,11 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 			k++;
 		}
 
-        if ( !( DB_READ_FLAGS( ctx->db, ovl[ j ].bread ) & DB_BEST ) )
+        if ( !( DB_READ_FLAGS( ctx->db, ovl[ j ].bread ) & DB_BEST ) || ovl[ j ].aread == ovl[ j ].bread)
         {
+        	j = k + 1;
             continue;
         }
-
-        if ( ovl[ j ].aread == ovl[ j ].bread )
-            continue;
 
 		chain(ctx, ovl + j, k - j + 1);
 
@@ -3197,7 +3195,7 @@ static void usage()
 	fprintf(stderr, "                otherwise keep all chains\n");
 	fprintf(stderr, "         -c ... discard overlaps that don't show given coverage range. Intention get rid of contamination by coverage\n");
 	fprintf(stderr, "                e.g. -c -1000  ... discard overlaps that where A-read has lower than 1000x coverage \n");
-	fprintf(stderr, "                	  -c  1000  ... discard overlaps that where A-read has higher than 1000x coverage \n");
+	fprintf(stderr, "                     -c  1000  ... discard overlaps that where A-read has higher than 1000x coverage \n");
 }
 
 static int opt_repeat_count(int argc, char** argv, char opt)
