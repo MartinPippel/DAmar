@@ -423,21 +423,42 @@ static int contained(int ab, int ae, int bb, int be)
 
 static void chain(FilterContext *ctx, Overlap *ovls, int n)
 {
-	/// TODO hard coded - was taken from LAanalyze which is adapted for contig vs contig alignments
-	int MIN_OVL_LOOKAHEAD = 5000;
-	int MAX_OVL_LOOKAHEAD = 30000;
-	int STRIDE_OVL_LOOKAHEAD = 5000;
+	/// TODO hard coded
+	int MIN_OVL_LOOKAHEAD = 2000;
+	int MAX_OVL_LOOKAHEAD = 10000;
+	int STRIDE_OVL_LOOKAHEAD = 2000;
+	int MIN_ANCHOR = 800;
+	int MIN_CHAIN_LEN = 3000;
 
-	if (n < 2)
-		return;
+	int trim_bb, trim_be;
 
+	if (ctx->trackTrim)
+	{
+		get_trim(ctx->db, ctx->trackTrim, ovls->bread, &trim_bb, &trim_be);
+	}
+	else
+	{
+		trim_bb = 0;
+		trim_be = DB_READ_LEN(ctx->db, ovls->bread);
+	}
 #ifdef DEBUG_CHAIN
-	printf("chain(%d,%d,%d) CHAIN: n%d m%d\n", ovls->aread, ovls->bread, n, ctx->curChains, ctx->maxChains);
+	printf("chain(%d,%d,%d) CHAIN: n%d m%d chim [%d, %d] trim [%d, %d]\n", ovls->aread, ovls->bread, n, ctx->curChains, ctx->maxChains, chimerBeg, chimerEnd, trim_ab, trim_ae);
 #endif
+	if (n < 2)
+	{
+		return;
+	}
 
 	int aread, bread;
 	int alen, blen;
 	int i;
+
+	// reset OVL_TEMP flag
+	for (i = 0; i < n; i++)
+	{
+		if (ovls[i].flags & OVL_TEMP)
+			ovls[i].flags &= ~OVL_TEMP;
+	}
 
 	aread = ovls->aread;
 	bread = ovls->bread;
@@ -446,6 +467,27 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 	blen = DB_READ_LEN(ctx->db, bread);
 
 	int nremain = n;
+
+#ifdef DEBUG_CHAIN
+	printf("find detect already excluded overlaps\n");
+#endif
+	{
+		for (i = 0; i < n; i++)
+		{
+			Overlap *ovl_i = ovls + i;
+
+			if (ovl_i->flags & (OVL_CONT))
+			{
+				nremain--;
+			}
+		}
+	}
+#ifdef DEBUG_CHAIN
+	printf("nremain %d\n", nremain);
+#endif
+
+	if (nremain == 0)
+		return 0;
 
 // mark contained overlaps
 #ifdef DEBUG_CHAIN
@@ -457,21 +499,21 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		{
 			Overlap *ovl_i = ovls + i;
 
-			if (ovl_i->flags & (OVL_CONT | OVL_DISCARD))
+			if (ovl_i->flags & (OVL_CONT | OVL_TEMP))
 				continue;
 
 			for (j = i + 1; j < n; j++)
 			{
 				Overlap *ovl_j = ovls + j;
 
-				if (ovl_j->flags & (OVL_CONT | OVL_DISCARD))
+				if (ovl_j->flags & (OVL_CONT | OVL_TEMP))
 					continue;
 
 				if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos)
 						&& contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
 				{
 					nremain--;
-					ovl_j->flags |= (OVL_CONT | OVL_DISCARD);
+					ovl_j->flags |= (OVL_TEMP);
 				}
 			}
 
@@ -481,8 +523,8 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 #ifdef DEBUG_CHAIN
 	printf("nremain %d\n", nremain);
 #endif
-	if (nremain < 1)
-		return;
+
+	assert(nremain >= 1);
 
 	while (nremain > 0)
 	{
@@ -496,7 +538,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		{
 			Overlap *ovl = ovls + i;
 
-			if (ovl->flags & (OVL_CONT | OVL_DISCARD | OVL_TEMP))
+			if (ovl->flags & (OVL_CONT | OVL_TEMP))
 			{
 				continue;
 			}
@@ -526,7 +568,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 			}
 		}
 
-		if (longestUniqOvlBases < MAX(ctx->twidth, ctx->nMinNonRepeatBases) && longestOvlBases > longestUniqOvlBases)
+		assert(longestOvlIdx >= 0);
+
+		if (longestUniqOvlBases < ctx->twidth && longestOvlBases > longestUniqOvlBases)
 		{
 #ifdef DEBUG_CHAIN
 			printf("Number of unique bases to low. Use longest overlap.\n");
@@ -575,6 +619,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 #ifdef DEBUG_CHAIN
 		printf("chain: nOvl: %d, maxOvl %d, nremain %d\n", chain->novl, chain->maxOvl, nremain);
 #endif
+
 		int ab1, ae1;
 		int bb1, be1;
 
@@ -638,14 +683,6 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 						{
 #ifdef DEBUG_CHAIN
 							printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> is part of another chain\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-							continue;
-						}
-
-						if (ovl->flags & OVL_DISCARD)
-						{
-#ifdef DEBUG_CHAIN
-							printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> discarded\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
 #endif
 							continue;
 						}
@@ -771,6 +808,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 #ifdef DEBUG_CHAIN
 				printf("chain: nOvl: %d, maxOvl %d nremain %d\n", chain->novl, chain->maxOvl, nremain);
 #endif
+
 				ab1 = ab2;
 				ae1 = ae2;
 				bb1 = bb2;
@@ -827,6 +865,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 #ifdef DEBUG_CHAIN
 						printf("LEFT: Check ovl: a[%d, %d] b[%d,%d]\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos);
 #endif
+
 						ab2 = ovl->path.abpos;
 						ae2 = ovl->path.aepos;
 
@@ -853,14 +892,6 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 						{
 #ifdef DEBUG_CHAIN
 							printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> is part of another chain\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-							continue;
-						}
-
-						if (ovl->flags & OVL_DISCARD)
-						{
-#ifdef DEBUG_CHAIN
-							printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> discarded\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
 #endif
 							continue;
 						}
@@ -994,6 +1025,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 #ifdef DEBUG_CHAIN
 				printf("chain: nOvl: %d, maxOvl %d nremain %d\n", chain->novl, chain->maxOvl, nremain);
 #endif
+
 				ab1 = ab2;
 				ae1 = ae2;
 				bb1 = bb2;
@@ -1022,6 +1054,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 #ifdef DEBUG_CHAIN
 		printf("chain: nOvl: %d, maxOvl %d nremain: %d\n", chain->novl, chain->maxOvl, nremain);
 #endif
+
 		// find possible ovls that could be added to chain (i.e. fill gaps)
 
 		if (chain->novl > 1 && nremain > 0)
@@ -1035,7 +1068,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 			for (i = 0; i < n; i++)
 			{
 				Overlap *ovl = ovls + i;
-				if ((ovl->flags & (OVL_TEMP | OVL_CONT | OVL_DISCARD)) || ((ovl->flags & OVL_COMP) != (chain->ovls[chainIdx]->flags & OVL_COMP)))
+				if ((ovl->flags & (OVL_TEMP | OVL_CONT)) || ((ovl->flags & OVL_COMP) != (chain->ovls[chainIdx]->flags & OVL_COMP)))
 					continue;
 
 				if (ovl->path.abpos < chain->ovls[chainIdx]->path.abpos)
@@ -1085,7 +1118,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 
 		if (nremain)
 		{
-			// mark remaining ovls as DISC if the overlap with a chain overlap !!
+			// mark remaining ovls as OVL_TEMP if the overlap with a chain overlap !!
 #ifdef DEBUG_CHAIN
 			printf("// mark remaining ovls as DISC if they overlap with a chain overlap !!\n");
 #endif
@@ -1095,7 +1128,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 			for (i = 0; i < n; i++)
 			{
 				Overlap *ovl = ovls + i;
-				if ((ovl->flags & (OVL_TEMP | OVL_CONT | OVL_DISCARD)) || ((ovl->flags & OVL_COMP) != (chain->ovls[chainIdx]->flags & OVL_COMP)))
+				if ((ovl->flags & (OVL_TEMP | OVL_CONT)) || ((ovl->flags & OVL_COMP) != (chain->ovls[chainIdx]->flags & OVL_COMP)))
 					continue;
 
 				for (j = chainIdx; j <= chainLastIdx; j++)
@@ -1103,10 +1136,10 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 					if (intersect(chain->ovls[j]->path.abpos, chain->ovls[j]->path.aepos, ovl->path.abpos, ovl->path.aepos)
 							|| intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, ovl->path.bbpos, ovl->path.bepos))
 					{
-						ovl->flags |= OVL_DISCARD;
+						ovl->flags |= OVL_TEMP;
 						nremain--;
 #ifdef DEBUG_CHAIN
-						printf("DISCARD [%d, %d] [%d, %d] nremain %d\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, nremain);
+						printf("OVL_TEMP [%d, %d] [%d, %d] nremain %d\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, nremain);
 #endif
 					}
 
@@ -1153,13 +1186,9 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 			ctx->curChains++;
 		else
 		{
-			int j;
-			for (j = 0; j < chain->novl; j++)
-			{
-				chain->ovls[j]->flags |= OVL_DISCARD;
-			}
 			chain->novl = 0;
 		}
+
 #ifdef DEBUG_CHAIN
 		printf("curChain: %d, remain unchained OVls: %d\n", ctx->curChains, nremain);
 #endif
@@ -1187,6 +1216,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		printf("SORT CHAINS (longest first):\n");
 #endif
 		qsort(ctx->ovlChains, ctx->curChains, sizeof(Chain), cmp_chain_len);
+
 #ifdef DEBUG_CHAIN
 		printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
 		for (i = 0; i < ctx->curChains; i++)
@@ -2672,6 +2702,19 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 					memset( ctx->cov_read_active + bestChain->ovls[l]->path.abpos, 1, bestChain->ovls[l]->path.aepos - bestChain->ovls[l]->path.abpos );
 				}
 			}
+			// reset chain and ovl counter
+			for (l = 0; l < ctx->curChains; l++)
+			{
+				int m;
+				// reset OVL_TEMP flag ovl
+				for (m = j; m < k - j +1; m++)
+				{
+					if (ovl[m].flags & OVL_TEMP)
+						ovl[m].flags &= ~OVL_TEMP;
+				}
+				ctx->ovlChains[l].novl = 0;
+			}
+			ctx->curChains = 0;
 		}
 		else
 		{
