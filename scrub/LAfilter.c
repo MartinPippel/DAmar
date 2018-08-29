@@ -2600,10 +2600,10 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
         }
 
 		trimBBeg = 0;
-		trimBEnd = DB_READ_LEN(ctx->db, ovl[j]->bread);
+		trimBEnd = DB_READ_LEN(ctx->db, ovl[j].bread);
 
 		if (ctx->trackTrim)
-			get_trim(ctx->db, ctx->trackTrim, ovl[j]->bread, &trimBBeg, &trimBEnd);
+			get_trim(ctx->db, ctx->trackTrim, ovl[j].bread, &trimBBeg, &trimBEnd);
 
 		chain(ctx, ovl + j, k - j + 1, trimABeg, trimAEnd);
 
