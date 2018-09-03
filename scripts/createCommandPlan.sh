@@ -67,6 +67,22 @@ then
         (>&2 echo "createCorrectionPlans.sh failed some how. Stop here.")
         exit 1      
     fi
+elif [[ ${currentPhase} -eq 6 ]]
+then 
+    ${SUBMIT_SCRIPTS_PATH}/createContigAnalyzePlans.sh ${configFile} ${currentStep} ${slurmID}
+    if [ $? -ne 0 ]
+    then 
+        (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createContigAnalyzePlans.sh failed some how. Stop here.")
+        exit 1      
+    fi
+elif [[ ${currentPhase} -eq 7 ]]
+then 
+    ${SUBMIT_SCRIPTS_PATH}/createPacBioArrowPlans.sh ${configFile} ${currentStep} ${slurmID}
+    if [ $? -ne 0 ]
+    then 
+        (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createPacBioArrowPlans.sh failed some how. Stop here.")
+        exit 1      
+    fi    
 else
     echo "unknown assembly phase: ${currentPhase}"
     exit 1
