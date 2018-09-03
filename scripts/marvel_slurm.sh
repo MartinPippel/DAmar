@@ -42,6 +42,14 @@ elif [[ ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -gt 0 ]]
 then 
     currentPhase=5
     currentStep=${FIX_CORR_SUBMIT_SCRIPTS_FROM}        
+elif [[ ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+then 
+    currentPhase=6
+    currentStep=${COR_CONTIG_SUBMIT_SCRIPTS_FROM}        
+elif [[ ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+then 
+    currentPhase=7
+    currentStep=${PB_ARROW_SUBMIT_SCRIPTS_FROM}        
 else 
     echo "nothing to do"
     exit 0

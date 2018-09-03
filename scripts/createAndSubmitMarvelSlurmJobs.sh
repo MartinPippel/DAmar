@@ -71,15 +71,21 @@ function getPhaseFilePrefix()
     elif [[ ${currentPhase} -eq 5 ]]
     then
         echo "corr"
+    elif [[ ${currentPhase} -eq 6 ]]
+    then
+        echo "cont"
+    elif [[ ${currentPhase} -eq 7 ]]
+    then
+        echo "arrow"       
     else
-        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (0-mask, 1-fix, 2-scrub, 3-filt, 4-tour, 5-corr)")
+        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (0-mask, 1-fix, 2-scrub, 3-filt, 4-tour, 5-corr, 6-cont, 7-arrow)")
         exit 1
     fi
 }
 
 function getCurrentDB()
 {
-    if [[ ${currentPhase} -lt 2 ]]
+    if [[ ${currentPhase} -lt 2 || ${currentPhase} -eq 7 ]]
     then 
         echo "${RAW_DB%.db}"
     else
@@ -421,7 +427,26 @@ then
         sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o corr_step${currentStep}_${FIX_DB%.db}.out -e corr_step${currentStep}_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     fi
-fi 
+fi
+
+if [[ ${currentPhase} -eq 6 && ${foundNext} -eq 0 ]]
+then 
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} ]]
+    then 
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o cont_step${currentStep}_${CONT_DB%.db}.out -e cont_step${currentStep}_${CONT_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+    fi
+fi
+
+if [[ ${currentPhase} -eq 7 && ${foundNext} -eq 0 ]]
+then 
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${PB_ARROW_SUBMIT_SCRIPTS_FROM} ]]
+    then 
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o arrow_step${currentStep}_${CONT_DB%.db}.out -e arrow_step${currentStep}_${CONT_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+    fi
+fi  
+ 
 
 if [[ ${foundNext} -eq 0 ]]
 then

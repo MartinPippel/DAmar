@@ -1,7 +1,7 @@
 /*
  * analyzeContigs.c
  *
- *  assigned contigs into following sets: haploid, alternative, repeat
+ *  assign contigs into following sets: haploid, alternative, repeat
  *
  *  use:
  *  		self alignment information from contigs
@@ -5849,7 +5849,7 @@ static void usage()
 	printf("         -t         ... trim track for fixed reads (default: none)\n");
 	printf("         -C DB OVL  ... contig database and contig overlaps, required to classify contigs\n");
 	printf("         -F DB OVL  ... fixed read database and fixed read overlaps, required to extract all b-reads for blasr mapping\n");
-	printf("         -D DB 			... corrected read database\n");
+	printf("         -D DB 		... corrected read database\n");
 	printf("         -d         ... write classified contigs ands stats file into -d directoryName (default: cwd)\n");
 }
 

@@ -150,7 +150,7 @@ do
 
                     blacklist="$slurm_id ${blacklist}"
 
-                    if [[ ! -f stats/${phase}_${job}_${db}_${slurm_id}.txt ]]
+                    if [[ ! -s stats/${phase}_${job}_${db}_${slurm_id}.txt ]]
                     then
                         createSlurmStats $slurm_id > stats/${phase}_${job}_${db}_${slurm_id}.txt
                     fi
