@@ -431,7 +431,7 @@ fi
 
 if [[ ${currentPhase} -eq 6 && ${foundNext} -eq 0 ]]
 then 
-    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} ]]
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${COR_CONTIG_SUBMIT_SCRIPTS_TO} ]]
     then 
         sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o cont_step${currentStep}_${CONT_DB%.db}.out -e cont_step${currentStep}_${CONT_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
@@ -440,13 +440,12 @@ fi
 
 if [[ ${currentPhase} -eq 7 && ${foundNext} -eq 0 ]]
 then 
-    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${PB_ARROW_SUBMIT_SCRIPTS_FROM} ]]
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]]
     then 
         sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o arrow_step${currentStep}_${CONT_DB%.db}.out -e arrow_step${currentStep}_${CONT_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     fi
 fi  
- 
 
 if [[ ${foundNext} -eq 0 ]]
 then
