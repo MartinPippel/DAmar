@@ -197,11 +197,13 @@ then
         
         # sanity checks
    		numFiles=0 
-   		for x in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}.pbalign.bam   		
+		for x in ${PB_ARROW_BAM}/*.subreads.bam   		
    		do
-   			if [[ ! -f ${x} || ! -s ${x} ]]
+        	name=$(basename ${x%.subreads.bam})
+        	file=${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}.pbalign.bam
+        	if [[ ! -f ${file} || ! -s ${file} ]]
    			then
-   				(>&2 echo "WARNING - file ${x} not available or empty")
+   				(>&2 echo "WARNING - file ${file} not available or empty")
    			else
    				numFiles=$((${numFiles}+1))
    			fi      						
@@ -213,9 +215,11 @@ then
 	       	exit 1	
 		fi
 		
-		for x in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}.pbalign.bam   		
+		for x in ${PB_ARROW_BAM}/*.subreads.bam   		
    		do
-   			echo "bamtools split -in  ${x} -reference"			   			   		
+        	name=$(basename ${x%.subreads.bam})
+        	file=${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}.pbalign.bam
+        	echo "bamtools split -in  ${file} -reference"			   			   		
 		done > arrow_03_bamtools_block_${RAW_DB}.${slurmID}.plan
 		
     ### 4-bamseparate
