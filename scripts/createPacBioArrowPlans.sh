@@ -237,7 +237,7 @@ then
 	       	exit 1
 	    fi
 	    
-		echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header); do mkdir -p ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\$x; mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/*.REF_\${x}.bam ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x}; find \$(pwd)/${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x} -name \"*.bam\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof; done" > arrow_04_bamseparate_single_${RAW_DB}.${slurmID}.plan	    
+		echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header); do mkdir -p ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\$x; mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/*.REF_\${x}.bam ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x}; find \$(pwd)/${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x} -name \"*.bam\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x}/in.fof; done" > arrow_04_bamseparate_single_${RAW_DB}.${slurmID}.plan	    
 	### 5-bamMerge 
     elif [[ ${currentStep} -eq 5 ]]
     then
