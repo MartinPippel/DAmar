@@ -46,7 +46,7 @@ elif [[ ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -gt 0 ]]
 then 
     currentPhase=6
     currentStep=${COR_CONTIG_SUBMIT_SCRIPTS_FROM}        
-elif [[ ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+elif [[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=7
     currentStep=${PB_ARROW_SUBMIT_SCRIPTS_FROM}        
