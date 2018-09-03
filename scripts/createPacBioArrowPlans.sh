@@ -108,9 +108,9 @@ then
 		echo "if [[ -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]; then mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}" > arrow_01_prepInFasta_single_${RAW_DB}.${slurmID}.plan
 		if [[ -n ${PB_ARROW_MAKEUNIQUEHEADER} && ${PB_ARROW_MAKEUNIQUEHEADER} -eq 1 ]]
 		then
-			echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk -v count=1 '{if ($1 ~ /^>/) {print $1\"_\"; count+=1;} else print $1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${RAW_DB}.${slurmID}.plan
+			echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${RAW_DB}.${slurmID}.plan
 		else
-			echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk '{ print $1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${RAW_DB}.${slurmID}.plan
+			echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${RAW_DB}.${slurmID}.plan
 		fi
 		
 		echo "sawriter ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${RAW_DB}.${slurmID}.plan
