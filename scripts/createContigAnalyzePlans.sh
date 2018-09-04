@@ -525,6 +525,11 @@ then
     COR_DIR=correction
 fi
 
+if [[ -z ${ANALYZE_DIR} ]]
+then 
+    ANALYZE_DIR=analyze
+fi
+
 ### set filter directory
 
 if [[ -z ${FIX_FILT_OUTDIR} ]]
