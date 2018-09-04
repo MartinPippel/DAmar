@@ -30,7 +30,7 @@ then
  gsize=$((${GSIZE:0:$i}*1000))
 fi
 
-for x in ${FIX_FILT_OUTDIR}_dalign ${FIX_FILT_OUTDIR}_repcomp ${FIX_FILT_OUTDIR}_forcealign
+for x in ${FIX_FILT_OUTDIR}_dalign ${FIX_FILT_OUTDIR}_repcomp ${FIX_FILT_OUTDIR}_forcealign ${FIX_FILT_OUTDIR}
 do
 	if [[ -d ${x}/tour ]]
 	then
