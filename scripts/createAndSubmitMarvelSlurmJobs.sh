@@ -88,6 +88,9 @@ function getCurrentDB()
     if [[ ${currentPhase} -lt 2 || ${currentPhase} -eq 7 ]]
     then 
         echo "${RAW_DB%.db}"
+	elif [[ ${currentPhase} -eq 6 ]]
+    then 
+        echo "${CONT_DB%.db}"        
     else
         echo "${FIX_DB%.db}"
     fi
