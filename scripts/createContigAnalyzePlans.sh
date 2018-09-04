@@ -574,10 +574,10 @@ then
         
         echo "if [[ -d ${FIX_FILT_OUTDIR}/${ANALYZE_DIR} ]]; then mv ${FIX_FILT_OUTDIR}/${ANALYZE_DIR} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" > cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
         # link FIX- RAW- and COR-DB into working directory 
-        echo "ln -s -r .${RAW_DB%db}.* ${RAW_DB%db}.db ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan        
         echo "ln -s -r .${FIX_DB%db}.* ${FIX_DB%db}.db ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
         echo "ln -s -r .${COR_DB%db}.* ${COR_DB%db}.db ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
-
+		echo "ln -s -r .${RAW_DB%db}.* ${RAW_DB%db}.db ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
+		
 		first=1
 		for x in ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs/*.fasta
 		do 
@@ -602,18 +602,13 @@ then
         for x in ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs/*.fasta
         do  
             echo "${DACCORD_PATH}/bin/fastaidrename < ${x} | awk '{print \$1}' > ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/\$(basename \${x%.fasta})_dazzler.fasta"            
-        done >> scrub_01_createDB_single_${FIX_DB%.db}.${slurmID}.plan        
+		done >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan        
 
         # create dazzler db
     	first=1 
         for x in ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs/*.fasta
         do
-        	if [[ ! -f ${x} ]]
-			then 
-				(>&2 echo "missing corrected contigs $x in directory ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/")
-    			exit 1
-			fi
-	        if [[ ${first} -eq 1 ]]
+            if [[ ${first} -eq 1 ]]
 	        then
 	        	first=0
 				echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/\$(basename \${x%.fasta})_dazzler.fasta"
@@ -621,7 +616,7 @@ then
 	        else
 	        	echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/\$(basename \${x%.fasta})_dazzler.fasta"
 	        fi              
-		done >> scrub_01_createDB_single_${CONT_DB}.${slurmID}.plan       
+		done >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan       
     ### DBdust
     elif [[ ${currentStep} -eq 2 ]]
     then
