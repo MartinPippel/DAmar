@@ -56,10 +56,6 @@ fout_h = open("{}/{}.haploid.fasta".format(outDir,prefix), "w")
 fout_b = open("{}/{}.bubbles.fasta".format(outDir,prefix), "w")
 fout_s = open("{}/{}.spurs.fasta".format(outDir,prefix), "w")
 
-bcount = 0
-scount = 0 
-hcount = 0
-
 for fn in fIn:
     f=open(fn, 'r')
 
@@ -73,20 +69,17 @@ for fn in fIn:
         length = args["length"]
 
         if e1 == e2 and e1 != -1:
-          fout_b.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, bcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
+          fout_b.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
           fout_b.write("\n{}\n".format(wrap_seq(seq, 100)))
-          bcount+=1            
           continue
 
         if (e1 != -1 or e2 != -1) and length < 100000:
-          fout_s.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, scount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
+          fout_s.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
           fout_s.write("\n{}\n".format(wrap_seq(seq, 100)))
-          scount+=1            
           continue
 
-        fout_h.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, hcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
+        fout_h.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
         fout_h.write("\n{}\n".format(wrap_seq(seq, 100)))
-        hcount+=1        
     f.close()
     
 fout_b.close()
