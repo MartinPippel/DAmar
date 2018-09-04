@@ -575,7 +575,7 @@ then
         echo "if [[ -d ${FIX_FILT_OUTDIR}/${ANALYZE_DIR} ]]; then mv ${FIX_FILT_OUTDIR}/${ANALYZE_DIR} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" > cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
         # link FIX- RAW- and COR-DB into working directory 
         echo "ln -s -r .${FIX_DB%db}.* ${FIX_DB%db}.db ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
-        echo "ln -s -r .${COR_DB%db}.* ${COR_DB%db}.db ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
+        echo "ln -s -r ${FIX_FILT_OUTDIR}/${COR_DIR}/.${COR_DB%db}.* ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%db}.db ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
 		echo "ln -s -r .${RAW_DB%db}.* ${RAW_DB%db}.db ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}" >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
 		
 		first=1
