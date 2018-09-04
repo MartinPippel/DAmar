@@ -659,11 +659,12 @@ then
         done     
         ### find and set datander options 
         setDatanderOptions
+        d=$(pwd)
         ### create datander commands
         contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
         for x in $(seq 1 ${contigblocks})
         do 
-            echo "d=$(pwd) && cd ${d}/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${MARVEL_PATH}/bin/datander${CONTIG_DATANDER_OPT} ${CONT_DB%.db}.${x} && cd ${d}"
+            echo "cd ${d}/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${MARVEL_PATH}/bin/datander${CONTIG_DATANDER_OPT} ${CONT_DB%.db}.${x} && cd ${d}"
 		done > cont_04_datander_block_${CONT_DB%.db}.${slurmID}.plan
 	### TANmask
     elif [[ ${currentStep} -eq 5 ]]
@@ -708,6 +709,7 @@ then
         setDalignerOptions
         contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
         cmdLine=1
+        d=$(pwd)
         ### create daligner commands
         for x in $(seq 1 ${contigblocks})
         do 
@@ -722,17 +724,17 @@ then
             else
                 NUMACTL=""
             fi
-            cmd="cd $(pwd)/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${CONT_DB%.db}.${x}"
+            cmd="cd ${d}/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${CONT_DB%.db}.${x}"
             cmdLine=$((${cmdLine}+1))
             count=0
             for y in $(seq ${x} ${fixblocks})
             do  
-                if [[ $count -lt ${COR_CONTIG_DALIGNER_DAL} ]]
+            	if [[ $count -lt ${COR_CONTIG_DALIGNER_DAL} ]]
                 then
                     cmd="${cmd} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${y}"
                     count=$((${count}+1))
                 else    
-                    echo "${cmd}"
+                    echo "${cmd} && cd $d"
                     if [[ -n ${COR_CONTIG_DALIGNER_NUMACTL} && ${COR_CONTIG_DALIGNER_NUMACTL} -gt 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
@@ -744,12 +746,12 @@ then
                     else
                         NUMACTL=""
                     fi
-                    cmd="d=$(pwd) && cd ${d}/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x} ${CONT_DB%.db}.${y} && cd ${d}"
+                    cmd="cd ${d}/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x} ${CONT_DB%.db}.${y}"
                     cmdLine=$((${cmdLine}+1))
                     count=1
                 fi
             done
-            echo "${cmd}"
+            echo "${cmd} && cd ${d}"
 		done > cont_07_daligner_block_${CONT_DB%.db}.${slurmID}.plan
 	### LAfilter - identity overlaps   
     elif [[ ${currentStep} -eq 8 ]]
