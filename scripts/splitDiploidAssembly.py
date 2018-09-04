@@ -66,7 +66,7 @@ for fn in fIn:
         path = args["path"]
         reads = args["reads"]
         sreads = args["sreads"]
-        length = int(args["length"])
+        length = int(args["length"][0])
 
         if e1 == e2 and e1 != -1:
           fout_b.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
