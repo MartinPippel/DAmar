@@ -663,7 +663,7 @@ then
         contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
         for x in $(seq 1 ${contigblocks})
         do 
-            echo "cd $(pwd)/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${MARVEL_PATH}/bin/datander${CONTIG_DATANDER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}"
+            echo "cd $(pwd)/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${MARVEL_PATH}/bin/datander${CONTIG_DATANDER_OPT} ${CONT_DB%.db}.${x}"
 		done > cont_04_datander_block_${CONT_DB%.db}.${slurmID}.plan
 	### TANmask
     elif [[ ${currentStep} -eq 5 ]]
@@ -722,7 +722,7 @@ then
             else
                 NUMACTL=""
             fi
-            cmd="cd $(pwd)/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}"
+            cmd="cd $(pwd)/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${CONT_DB%.db}.${x}"
             cmdLine=$((${cmdLine}+1))
             count=0
             for y in $(seq ${x} ${fixblocks})
@@ -744,7 +744,7 @@ then
                     else
                         NUMACTL=""
                     fi
-                    cmd="cd $(pwd)/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${y}"
+                    cmd="cd $(pwd)/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x} ${CONT_DB%.db}.${y}"
                     cmdLine=$((${cmdLine}+1))
                     count=1
                 fi
