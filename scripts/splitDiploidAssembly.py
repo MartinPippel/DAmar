@@ -63,11 +63,6 @@ hcount = 0
 for fn in fIn:
     f=open(fn, 'r')
 
-    if "filtered" in f.name:
-        faprefix = f.name.split(".")[1] + "_"
-    else:
-        faprefix = ""
-
     for (name, args, seq) in fasta_iter(f):
         ends = args["ends"]
         (e1, e2) = [ int(x) for x in ends ]
@@ -78,18 +73,18 @@ for fn in fIn:
         length = args["length"]
 
         if e1 == e2 and e1 != -1:
-          fout_b.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, bcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
+          fout_b.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, bcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
           fout_b.write("\n{}\n".format(wrap_seq(seq, 100)))
           bcount+=1            
           continue
 
         if (e1 != -1 or e2 != -1) and length < 100000:
-          fout_s.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, scount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
+          fout_s.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, scount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
           fout_s.write("\n{}\n".format(wrap_seq(seq, 100)))
           scount+=1            
           continue
 
-        fout_h.write(">contig_{}{}_{} path={} ends={} length={} reads={} sreads={}".format(faprefix, hcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
+        fout_h.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, hcount, len(seq), path[0], ",".join(ends), ",".join(length), ",".join(reads), ",".join(sreads)))
         fout_h.write("\n{}\n".format(wrap_seq(seq, 100)))
         hcount+=1        
     f.close()

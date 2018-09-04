@@ -36,8 +36,13 @@ do
 	then
 		mkdir -p stats/contigs/${x}
 		
-		cat	${x}/tour/*.fasta > stats/contigs/${x}/${x}.fasta
+		for y in ${x}/tour/*.fasta
+		do
+			name=$(basename ${y%.fasta})
+			sed -e "s:>path_:>${name}_:" $y  
+		done > stats/contigs/${x}/${x}.fasta
 		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${x} ${gsize} stats/contigs/${x} stats/contigs/${x}/${x}.fasta  
+		cat stats/contigs/${x}/${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.stats
 		cat stats/contigs/${x}/${x}.haploid.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.haploid.stats
 		cat stats/contigs/${x}/${x}.bubbles.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.bubbles.stats
 		cat stats/contigs/${x}/${x}.spurs.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.spurs.stats
