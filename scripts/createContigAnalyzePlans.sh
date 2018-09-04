@@ -596,12 +596,12 @@ then
 		## create a proper dazzler fasta header
         for x in ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs/*.fasta
         do  
-            echo "${DACCORD_PATH}/bin/fastaidrename < ${x} | awk '{print \$1}' > ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/$(basename ${x%.fasta})_dazzler.fasta"            
+            echo "${DACCORD_PATH}/bin/fastaidrename < ${x} | awk '{print \$1}' > ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/\$(basename \${x%.fasta})_dazzler.fasta"            
         done >> scrub_01_createDB_single_${FIX_DB%.db}.${slurmID}.plan        
 
         # create dazzler db
     	first=1 
-        for x in ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/*.fasta
+        for x in ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs/*.fasta
         do
         	if [[ ! -f ${x} ]]
 			then 
@@ -611,10 +611,10 @@ then
 	        if [[ ${first} -eq 1 ]]
 	        then
 	        	first=0
-				echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB} ${x}"
+				echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/\$(basename \${x%.fasta})_dazzler.fasta"
 				echo "${MARVEL_PATH}/bin/DBsplit ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB}"	        		
 	        else
-	        	echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB} ${x}"
+	        	echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/\$(basename \${x%.fasta})_dazzler.fasta"
 	        fi              
 		done >> scrub_01_createDB_single_${CONT_DB}.${slurmID}.plan       
     ### DBdust
