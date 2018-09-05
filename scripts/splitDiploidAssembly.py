@@ -1,11 +1,14 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 import glob
 import os
 import itertools
 import sys 
 import string
 import operator
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 def fasta_iter(fh):
     faiter = (x[1] for x in itertools.groupby(fh, lambda line: line[0] == ">"))
@@ -71,6 +74,8 @@ for fn in fIn:
         if e1 == e2 and e1 != -1:
           fout_b.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
           fout_b.write("\n{}\n".format(wrap_seq(seq, 100)))
+          if (length > 500000):
+              eprint("WARNING Found very long alternative Contig (bubble): {} lenght: {}.".format(name, length))
           continue
 
         if (e1 != -1 or e2 != -1) and length < 100000:

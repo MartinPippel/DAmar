@@ -12,6 +12,21 @@ fi
 
 source ${configFile}
 
+gsize=${GSIZE}
+i=$((${#GSIZE}-1))
+if [[ "${GSIZE: -1}" =~ [gG] ]]
+then
+ gsize=$((${GSIZE:0:$i}*1000*1000*1000))
+fi
+if [[ "${GSIZE: -1}" =~ [mM] ]]
+then
+ gsize=$((${GSIZE:0:$i}*1000*1000))
+fi
+if [[ "${GSIZE: -1}" =~ [kK] ]]
+then
+ gsize=$((${GSIZE:0:$i}*1000))
+fi
+
 function setPBalignOptions()
 {
     ARROW_PBALIGN_OPT=""
@@ -63,7 +78,7 @@ function setArrowOptions()
 	fi		
 }
 
-#type-0 steps: 1-prepInFasta, 2-pbalign, 3-bamsplit, 4-bamseparate, 5-bamMerge, 6-arrow
+myTypes=("steps: 1-prepInFasta, 2-pbalign, 3-bamsplit, 4-bamseparate, 5-bamMerge, 6-arrow, 7-assemblyStats")
 if [[ ${PB_ARROW_TYPE} -eq 0 ]]
 then 
     ### 1-prepInFasta
@@ -374,13 +389,78 @@ then
    			
    			echo "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && arrow${ARROW_ARROW_OPT}${gff}${vcf}${fq} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta -w ${x} -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam"	
 		done > arrow_06_arrow_block_${RAW_DB}.${slurmID}.plan					
+	### 7-assemblyStats 
+    elif [[ ${currentStep} -eq 7 ]]
+    then
+        ### clean up plans 
+        for x in $(ls arrow_07_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        if [[ -n ${PB_ARROW_OUTDIR} ]] 
+        then 
+        	if [[ ! -d stats/contigs/${PB_ARROW_OUTDIR} || ! -f stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}.haploid.header || ! -f stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}.spurs.header || ! -f stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}.bubbles.header ]]
+        	then 
+	        	(>&2 echo "ERROR - stats folder or assembly staticstics are missing. Run last step of touring first.")
+    	    	exit 1        			
+        	fi
+        	
+        	### clean up previous results
+        	echo "if [[ -f stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.elog ]]; then mv stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.elog stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S').elog; fi" > arrow_07_assemblyStats_single_${RAW_DB}.${slurmID}.plan        	
+        	for x in spurs bubbles haploid
+        	do
+        		for y in stats fasta		
+        		do
+        			echo "if [[ -f stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.${y} ]]; then mv stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.${y} stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S').${x}.${y}; fi"
+        			if [[ "$y" == "stats" ]]
+        			then
+        				continue
+        			fi 	
+        	
+        			for z in $(cat stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}.${x}.header)
+		        	do
+		        		name=$(echo ${z} | awk -F \_ '{$NF=""; print $0}')
+		        		pathID=$(echo ${z} | awk -F \_ '{print $NF}')
+		        		
+		        		arrowExtension=""
+		        		a=1
+		        		while [[ $a -lt ${PB_ARROW_RUNID} ]]
+		        		do
+		        			arrowExtension="${arrowExtension}_arrow"
+		        			a=$(($a+1))	
+		        		done
+		        		
+		        		if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}_CORR_${pathID}${arrowExtension} ]]
+		        		then 
+		        			echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}_CORR_${pathID}${arrowExtension}." >> stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.elog >> stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.elog
+		        			continue
+		        		fi  
+		        		
+						if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}_CORR_${pathID}${arrowExtension}/ALL_${name}_CORR_${pathID}${arrowExtension}.arrow.fa ]]
+		        		then 
+		        		 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}_CORR_${pathID}${arrowExtension}/ALL_${name}_CORR_${pathID}${arrowExtension}.arrow.fa." >> stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.elog
+		        			continue
+		        		fi  
+		        		
+		        		echo "cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}_CORR_${pathID}${arrowExtension}/ALL_${name}_CORR_${pathID}${arrowExtension}.arrow.fa >> stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.${y}"						        		
+		        	done
+	        	done
+	        echo "cat stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.${y} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.stats"	
+			done  > arrow_07_assemblyStats_single_${RAW_DB}.${slurmID}.plan        	
+    	else
+        	(>&2 echo "ERROR - Variable PB_ARROW_OUTDIR is not set")
+        	exit 1
+    	fi        	
     else
         (>&2 echo "step ${currentStep} in PB_ARROW_TYPE ${PB_ARROW_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-0 steps: 1-prepInFasta, 2-pbalign, 3-bamsplit, 4-bamseparate, 5-bamMerge, 6-arrow")
+        (>&2 echo "valid steps are: ${myTypes[${PB_ARROW_TYPE}]}")
         exit 1            
     fi    
 else
-    echo "unknown PB_ARROW_TYPE ${PB_ARROW_TYPE}"
+    (>&2 echo "unknown PB_ARROW_TYPE ${PB_ARROW_TYPE}")
+    (>&2 echo "supported types")
+    x=0; while [ $x -lt ${#myTypes[*]} ]; do (>&2 echo "${myTypes[${x}]}"); done 
     exit 1
 fi
 

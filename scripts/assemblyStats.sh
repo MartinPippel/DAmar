@@ -43,10 +43,15 @@ do
 		done > stats/contigs/${x}/${x}.fasta
 		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${x} ${gsize} stats/contigs/${x} stats/contigs/${x}/${x}.fasta  
 		cat stats/contigs/${x}/${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.stats
+		## create statistic files
 		cat stats/contigs/${x}/${x}.haploid.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.haploid.stats
 		cat stats/contigs/${x}/${x}.bubbles.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.bubbles.stats
 		cat stats/contigs/${x}/${x}.spurs.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.spurs.stats
-		
-		cp $config stats/contigs/${x}/
+		## create header files
+		grep -e ">" stats/contigs/${x}/${x}.haploid.fasta | awk '{print $1}' | sed -e 's:^>::' > stats/contigs/${x}/${x}.haploid.header
+		grep -e ">" stats/contigs/${x}/${x}.bubbles.fasta | awk '{print $1}' | sed -e 's:^>::' > stats/contigs/${x}/${x}.bubbles.header
+		grep -e ">" stats/contigs/${x}/${x}.spurs.fasta | awk '{print $1}' | sed -e 's:^>::' > stats/contigs/${x}/${x}.spurs.header
+		## copy config file
+		cp $config stats/contigs/${x}/${config%%.*}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
 	fi	
 done 
