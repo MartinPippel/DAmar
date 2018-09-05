@@ -420,7 +420,7 @@ then
         	
         			for z in $(cat stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}.${x}.header)
 		        	do
-		        		name=$(echo ${z} | awk -F \_ '{$NF=""; print $0}')
+		        		name=$(echo ${z} | awk -F \_ '{$NF=""; OF="_"; print $0}')
 		        		pathID=$(echo ${z} | awk -F \_ '{print $NF}')
 		        		
 		        		arrowExtension=""
@@ -446,7 +446,7 @@ then
 		        		echo "cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}_CORR_${pathID}${arrowExtension}/ALL_${name}_CORR_${pathID}${arrowExtension}.arrow.fa >> stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.${y}"						        		
 		        	done
 	        	done
-	        echo "cat stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.${y} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.stats"	
+	    	echo "if [[ -s stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.${y} ]]; then cat stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.${y} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.stats; else touch stats/contigs/${PB_ARROW_OUTDIR}/${PB_ARROW_OUTDIR}_arrow_run${PB_ARROW_RUNID}.${x}.stats; fi"	
 			done  > arrow_07_assemblyStats_single_${RAW_DB}.${slurmID}.plan        	
     	else
         	(>&2 echo "ERROR - Variable PB_ARROW_OUTDIR is not set")
