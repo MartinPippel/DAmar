@@ -15,6 +15,31 @@ fi
 
 source ${configFile}
 
+## do some general sanity checks
+	
+if [[ -z "${PROJECT_ID}" ]]
+then 
+    (>&2 echo "ERROR - You have to specify a project id. Set variable PROJECT_ID")
+    exit 1
+fi
+
+if [[ -d "${PATCHING_DIR}" ]]
+then 
+    (>&2 echo "ERROR - You have to set PATCHING_DIR.")
+    exit 1
+fi
+
+if [[ -z "${ASSMEBLY_DIR}" ]]
+then 
+    (>&2 echo "ERROR - You have to set ASSMEBLY_DIR")
+    exit 1
+fi
+
+if [[ -z "${DB_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set DB_PATH. Location of the initial databases MARVEL and DAZZLER.")
+    exit 1
+fi
 
 ## find entry point to create first plan and submit that stuff 
 

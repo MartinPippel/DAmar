@@ -55,9 +55,8 @@ else:
         fIn = [ filein ]
 
 # create ouptut file handler 
-fout_h = open("{}/{}.haploid.fasta".format(outDir,prefix), "w")
-fout_b = open("{}/{}.bubbles.fasta".format(outDir,prefix), "w")
-fout_s = open("{}/{}.spurs.fasta".format(outDir,prefix), "w")
+fout_p = open("{}/{}.p.fasta".format(outDir,prefix), "w")
+fout_a = open("{}/{}.a.fasta".format(outDir,prefix), "w")
 
 for fn in fIn:
     f=open(fn, 'r')
@@ -72,21 +71,20 @@ for fn in fIn:
         length = int(args["length"][0])
 
         if e1 == e2 and e1 != -1:
-          fout_b.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
-          fout_b.write("\n{}\n".format(wrap_seq(seq, 100)))
+          fout_a.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
+          fout_a.write("\n{}\n".format(wrap_seq(seq, 100)))
           if (length > 500000):
               eprint("WARNING Found very long alternative Contig (bubble): {} lenght: {}.".format(name, length))
           continue
 
         if (e1 != -1 or e2 != -1) and length < 100000:
-          fout_s.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
-          fout_s.write("\n{}\n".format(wrap_seq(seq, 100)))
+          fout_a.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
+          fout_a.write("\n{}\n".format(wrap_seq(seq, 100)))
           continue
 
-        fout_h.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
-        fout_h.write("\n{}\n".format(wrap_seq(seq, 100)))
+        fout_p.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
+        fout_p.write("\n{}\n".format(wrap_seq(seq, 100)))
     f.close()
     
-fout_b.close()
-fout_s.close()
-fout_h.close()
+fout_p.close()
+fout_a.close()

@@ -267,13 +267,27 @@ function setDatanderOptions()
     fi
 }
 
-# type_0 - steps: 1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LArepeat, 8-TKmerge
+## ensure some paths
+if [[ -z "${MARVEL_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set MARVEL_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+if [[ -z "${DAZZLER_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set DAZZLER_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+myTypes=("1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LAmerge, 8-LArepeat, 9-TKmerge, 10-daligner, 11-LAmerge, 12-LArepeat, 13-TKmerge")
+# type_0 - steps: 1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LAmerge, 8-LArepeat, 9-TKmerge, 10-daligner, 11-LAmerge, 12-LArepeat, 13-TKmerge
 if [[ ${RAW_REPMASK_TYPE} -eq 0 ]]
 then 
     if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
-        for x in $(ls mask_01_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -285,24 +299,26 @@ then
             echo "${MARVEL_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DB%.db}.${x}"
             echo "${DAZZLER_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DAZZ_DB%.db}.${x}"
         done > mask_01_DBdust_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_01_DBdust_block_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_01_DBdust_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 2 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_02_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_02_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
         ### find and set Catrack options 
         setCatrackOptions
         ### create Catrack command
-        (
-        echo "${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} dust" 
-        echo "${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} dust"
-        ) > mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} dust" > mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} dust" >> mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.plan         
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 3 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_03_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -313,10 +329,11 @@ then
         do 
             echo "${MARVEL_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${RAW_DB%.db}.${x}"
         done > mask_03_datander_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_03_datander_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 4 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_04_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -327,10 +344,11 @@ then
         do 
             echo "${MARVEL_PATH}/bin/TANmask${REPMASK_TANMASK_OPT} ${RAW_DB%.db} ${RAW_REPMASK_DATANDER_FOLDER}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${x}.las" 
         done > mask_04_TANmask_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_04_TANmask_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 5 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_05_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -340,10 +358,11 @@ then
             setCatrackOptions
         fi
         ### create Catrack command
-        echo "${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} ${RAW_REPMASK_TANMASK_TRACK}" > mask_05_Catrack_single_${RAW_DB%.db}.${slurmID}.plan    
+        echo "${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} ${RAW_REPMASK_TANMASK_TRACK}" > mask_05_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_05_Catrack_single_${RAW_DB%.db}.${slurmID}.version    
     elif [[ ${currentStep} -eq 6 ]]
     then
-        for x in $(ls mask_06_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -388,10 +407,11 @@ then
 
             echo ""
         done > mask_06_daligner_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_06_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
-        for x in $(ls mask_07_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -400,11 +420,12 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${x}.mask1.las $(getSubDirName ${RAW_REPMASK_DALIGNER_RUNID} ${x})"
-        done > mask_07_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan        
+        done > mask_07_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan      
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_07_LAmerge_block_${RAW_DB%.db}.${slurmID}.version  
     elif [[ ${currentStep} -eq 8 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_07_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -415,10 +436,11 @@ then
         do 
             echo "${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.mask1.las"
         done > mask_08_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_08_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 9 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_09_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -426,11 +448,12 @@ then
         setTKmergeOptions
         setLArepeatOptions 0
         ### create TKmerge commands
-        echo "${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK}" > mask_09_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan    
+        echo "${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK}" > mask_09_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_09_TKmerge_single_${RAW_DB%.db}.${slurmID}.version    
     elif [[ ${currentStep} -eq 10 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
     then
         ### clean up plans 
-        for x in $(ls mask_10_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_10_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -477,10 +500,11 @@ then
 
             echo ""
         done > mask_10_daligner_block_${RAW_DB%.db}.${slurmID}.plan 
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_10_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 11 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
     then
         ### clean up plans 
-        for x in $(ls mask_11_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_11_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -490,6 +514,7 @@ then
         do 
             echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${x}.mask2.las $(getSubDirName ${RAW_REPMASK_DALIGNER_RUNID} ${x})"
         done > mask_11_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_11_LAmerge_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 12 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
     then 
         ### clean up plans 
@@ -504,6 +529,7 @@ then
         do 
             echo "${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.mask2.las"
         done > mask_12_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_12_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 13 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
     then 
         ### clean up plans 
@@ -515,14 +541,17 @@ then
         setTKmergeOptions
         setLArepeatOptions 1
         ### create TKmerge commands
-        echo "${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK}" > mask_13_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan    
+        echo "${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK}" > mask_13_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_13_TKmerge_single_${RAW_DB%.db}.${slurmID}.version    
     else 
         (>&2 echo "step ${currentStep} in RAW_REPMASK_TYPE ${RAW_REPMASK_TYPE} not supported")
-        (>&2 echo "valid steps are: # type_0 - steps: 1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LAmerge, 8-LArepeat, 9-TKmerge, 10-daligner, 11-LAmerge, 12-LArepeat, 13-TKmerge")
+        (>&2 echo "valid steps are: ${myTypes[${RAW_REPMASK_TYPE}]}")
         exit 1        
     fi    
 else
-    echo "unknown RAW_REPMASK_TYPE ${RAW_REPMASK_TYPE}"
+    (>&2 echo "unknown RAW_REPMASK_TYPE ${RAW_REPMASK_TYPE}")
+    (>&2 echo "supported types")
+    x=0; while [ $x -lt ${#myTypes[*]} ]; do (>&2 echo "${myTypes[${x}]}"); done
     exit 1
 fi
 

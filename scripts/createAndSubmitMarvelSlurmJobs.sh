@@ -35,16 +35,16 @@ source ${configFile}
 
 function getPhaseFilePrefix()
 {
-    if [[ ${currentPhase} -eq 0 ]]
+    if [[ ${currentPhase} -eq 1 || ${currentPhase} -eq 3 ]]
     then
         echo "mask"
-    elif [[ ${currentPhase} -eq 1 ]]
-    then
-        echo "fix"
     elif [[ ${currentPhase} -eq 2 ]]
     then
+        echo "fix"
+    elif [[ ${currentPhase} -eq 4 ]]
+    then
         echo "scrub"
-    elif [[ ${currentPhase} -eq 3 ]]
+    elif [[ ${currentPhase} -eq 5 ]]
     then
         if [[ ${FIX_FILT_TYPE} -eq 0 && ${currentStep} -eq 2 && -n ${FIX_FILT_LAFILTER_RMSYMROUNDS} && ${FIX_FILT_LAFILTER_RMSYMROUNDS} -gt 0 ]]
         then
@@ -65,30 +65,30 @@ function getPhaseFilePrefix()
         else     
             echo "filt"
         fi
-    elif [[ ${currentPhase} -eq 4 ]]
-    then
-        echo "tour"
-    elif [[ ${currentPhase} -eq 5 ]]
-    then
-        echo "corr"
     elif [[ ${currentPhase} -eq 6 ]]
     then
-        echo "cont"
+        echo "tour"
     elif [[ ${currentPhase} -eq 7 ]]
+    then
+        echo "corr"
+    elif [[ ${currentPhase} -eq 8 ]]
+    then
+        echo "cont"
+    elif [[ ${currentPhase} -eq 9 ]]
     then
         echo "arrow"       
     else
-        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (0-mask, 1-fix, 2-scrub, 3-filt, 4-tour, 5-corr, 6-cont, 7-arrow)")
+        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow)")
         exit 1
     fi
 }
 
 function getCurrentDB()
 {
-    if [[ ${currentPhase} -lt 2 || ${currentPhase} -eq 7 ]]
+    if [[ ${currentPhase} -lt 3 ]]
     then 
         echo "${RAW_DB%.db}"
-	elif [[ ${currentPhase} -eq 6 ]]
+	elif [[ ${currentPhase} -eq 8 ]]
     then 
         echo "${CONT_DB%.db}"        
     else

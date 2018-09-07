@@ -518,8 +518,6 @@ function setCTanalyzeOptions()
     fi	
 }
 
-fixblocks=$(getNumOfDbBlocks ${FIX_DB%.db}.db)
-
 if [[ -z ${COR_DIR} ]]
 then 
     COR_DIR=correction
@@ -534,23 +532,34 @@ fi
 
 if [[ -z ${FIX_FILT_OUTDIR} ]]
 then
-    FIX_FILT_OUTDIR="filtered"
+    FIX_FILT_OUTDIR="m1"
 fi
 
-if [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 1 ]]
-then 
-    FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_dalign"
-elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 2 ]]
-then 
-    FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_repcomp"
-elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 3 ]]
-then 
-    FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_forcealign"
-else 
-	(>&2 echo "ERROR - Unknown scrubbing type ${FIX_SCRUB_TYPE}: set variable ${FIX_SCRUB_TYPE} to 0 (dalign), 1 (repcomp), 2 (forcealign)")
-	exit 1 		
+if [[ -f ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db ]]
+then
+	contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
 fi
 
+## ensure some paths
+if [[ -z "${MARVEL_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set MARVEL_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+if [[ -z "${DAZZLER_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set DAZZLER_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+if [[ -z "${DACCORD_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set DACCORD_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+myTypes=("1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAfilter, 9-LAseparate, 10-forcealign, 11-LAmerge, 12-LArepeat, 13-TKmerge, 14-TKcombine, 15-LAfilter, 16-LAmerge, 17-CTanalyze")
 #type-0 steps: 1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAfilter, 9-LAseparate, 10-forcealign, 11-LAmerge, 12-LArepeat, 13-TKmerge, 14-TKcombine, 15-LAfilter, 16-LAmerge, 17-CTanalyze
 if [[ ${COR_CONTIG_TYPE} -eq 0 ]]
 then 
@@ -616,7 +625,9 @@ then
 	        else
 	        	echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/$(basename ${x%.fasta})_dazzler.fasta"
 	        fi              
-		done >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan       
+		done >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.version
+		echo "DAZZ_DB $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.version       
     ### DBdust
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -629,12 +640,13 @@ then
         ### find and set DBdust options 
         setDBdustOptions
         ### create DBdust commands 
-        contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
         for x in $(seq 1 ${contigblocks})
         do 
             echo "${MARVEL_PATH}/bin/DBdust${CONTIG_DBDUST_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}"
             echo "${DAZZLER_PATH}/bin/DBdust${CONTIG_DBDUST_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB%.db}.${x}"
 		done > cont_02_DBdust_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_02_DBdust_block_${CONT_DB%.db}.${slurmID}.version
+		echo "DAZZ_DB $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> cont_02_DBdust_block_${CONT_DB%.db}.${slurmID}.version
 	##$ Catrack
  	elif [[ ${currentStep} -eq 3 ]]
     then 
@@ -648,7 +660,9 @@ then
         setCatrackOptions
         ### create Catrack command
         echo "${MARVEL_PATH}/bin/Catrack${CONTIG_CATRACK_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} dust" > cont_03_Catrack_single_${CONT_DB%.db}.${slurmID}.plan
-        echo "${DAZZLER_PATH}/bin/Catrack${CONTIG_CATRACK_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB%.db} dust" >> cont_03_Catrack_single_${CONT_DB%.db}.${slurmID}.plan        
+        echo "${DAZZLER_PATH}/bin/Catrack${CONTIG_CATRACK_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB%.db} dust" >> cont_03_Catrack_single_${CONT_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_03_Catrack_single_${CONT_DB%.db}.${slurmID}.version
+		echo "DAZZ_DB $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> cont_03_Catrack_single_${CONT_DB%.db}.${slurmID}.version       
     ### datander
     elif [[ ${currentStep} -eq 4 ]]
     then 
@@ -661,11 +675,11 @@ then
         setDatanderOptions
         d=$(pwd)
         ### create datander commands
-        contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
         for x in $(seq 1 ${contigblocks})
         do 
-            echo "cd ${d}/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${MARVEL_PATH}/bin/datander${CONTIG_DATANDER_OPT} ${CONT_DB%.db}.${x} && cd ${d}"
+            echo "cd ${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${MARVEL_PATH}/bin/datander${CONTIG_DATANDER_OPT} ${CONT_DB%.db}.${x} && cd ${d}"
 		done > cont_04_datander_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_04_datander_block_${CONT_DB%.db}.${slurmID}.version
 	### TANmask
     elif [[ ${currentStep} -eq 5 ]]
     then 
@@ -677,11 +691,11 @@ then
         ### find and set TANmask options 
         setTANmaskOptions
         ### create TANmask commands
-        contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
         for x in $(seq 1 ${contigblocks})
         do 
             echo "${MARVEL_PATH}/bin/TANmask${CONTIG_TANMASK_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_DATANDER_FOLDER}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${x}.las" 
 		done > cont_05_TANmask_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_05_TANmask_block_${CONT_DB%.db}.${slurmID}.version
 	### Catrack	
     elif [[ ${currentStep} -eq 6 ]]
     then 
@@ -697,6 +711,7 @@ then
         fi
         ### create Catrack command
         echo "${MARVEL_PATH}/bin/Catrack${CONTIG_CATRACK_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${COR_CONTIG_TANMASK_TRACK}" > cont_06_Catrack_single_${CONT_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_06_Catrack_single_${CONT_DB%.db}.${slurmID}.version
    	### daligner 
     elif [[ ${currentStep} -eq 7 ]]
     then
@@ -707,7 +722,6 @@ then
         done 
         ### find and set daligner options 
         setDalignerOptions
-        contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
         cmdLine=1
         d=$(pwd)
         ### create daligner commands
@@ -724,10 +738,10 @@ then
             else
                 NUMACTL=""
             fi
-            cmd="cd ${d}/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${CONT_DB%.db}.${x}"
+            cmd="cd ${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${CONT_DB%.db}.${x}"
             cmdLine=$((${cmdLine}+1))
             count=0
-            for y in $(seq ${x} ${fixblocks})
+            for y in $(seq ${x} ${contigblocks})
             do  
             	if [[ $count -lt ${COR_CONTIG_DALIGNER_DAL} ]]
                 then
@@ -746,13 +760,14 @@ then
                     else
                         NUMACTL=""
                     fi
-                    cmd="cd ${d}/${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x} ${CONT_DB%.db}.${y}"
+                    cmd="cd ${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x} ${CONT_DB%.db}.${y}"
                     cmdLine=$((${cmdLine}+1))
                     count=1
                 fi
             done
             echo "${cmd} && cd ${d}"
 		done > cont_07_daligner_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_07_daligner_block_${CONT_DB%.db}.${slurmID}.version
 	### LAfilter - identity overlaps   
     elif [[ ${currentStep} -eq 8 ]]
     then
@@ -764,11 +779,11 @@ then
 
         mkdir -p ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/identity
     	### create LAfilter commands - filter out identity overlaps - has to be done because repcomp and forcealign will loose those
-    	contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
-        for x in $(seq 1 ${contigblocks})
+    	for x in $(seq 1 ${contigblocks})
         do  
             echo "${MARVEL_PATH}/bin/LAfilter -p -R 3 ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_DALIGNER_RUNID} ${x})/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${x}.las ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/identity/${CONT_DB%.db}.${x}.identity.las"
 		done > cont_08_LAfilter_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_08_LAfilter_block_${CONT_DB%.db}.${slurmID}.version
 	#### LAseparate 
     elif [[ ${currentStep} -eq 9 ]]
     then
@@ -781,7 +796,6 @@ then
         ### find and set repcomp options         
         setDalignerOptions
         setLAseparateOptions 1
-        contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
         for x in $(seq 1 ${contigblocks}); 
         do 
             sdir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_DALIGNER_RUNID} ${x})
@@ -797,6 +811,7 @@ then
                 echo "${MARVEL_PATH}/bin/LAseparate${CONTIG_LASEPARATE_OPT} ${CONT_DB%.db} ${sdir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ${sdir}_ForForceAlign/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ${sdir}_NoForceAlign/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las"                
             done 
 		done > cont_09_LAseparate_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_09_LAseparate_block_${CONT_DB%.db}.${slurmID}.version
     #### forcealign 
     elif [[ ${currentStep} -eq 10 ]]
     then
@@ -851,6 +866,7 @@ then
                 fi
             done 
 		done > cont_10_forcealign_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "forcealign $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_10_forcealign_block_${CONT_DB%.db}.${slurmID}.version
     #### LAmerge
     elif [[ ${currentStep} -eq 11 ]]
     then
@@ -864,11 +880,11 @@ then
         setLAmergeOptions
         setForcealignOptions
         ### create LAmerge commands
-        contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)       
         for x in $(seq 1 ${contigblocks}); 
         do  
             echo "${MARVEL_PATH}/bin/LAmerge${CONTIG_LAMERGE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}.forcealign.las ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_FORCEALIGN_RUNID} ${x}) ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_DALIGNER_RUNID} ${x})_NoForceAlign ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/identity"
-		done > cont_11_LAmerge_block_${CONT_DB%.db}.${slurmID}.plan   
+		done > cont_11_LAmerge_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_11_LAmerge_block_${CONT_DB%.db}.${slurmID}.version   
     #### LArepeat
     elif [[ ${currentStep} -eq 12 ]]
     then
@@ -879,8 +895,7 @@ then
         done 
 
         setLArepeatOptions
-        contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)
-
+        
         if [[ ${numRepeatTracks} -eq 0 ]]
         then 
             exit 1
@@ -889,11 +904,12 @@ then
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
             ### create LArepeat commands
-            for y in $(seq 1 ${fixblocks})
+            for y in $(seq 1 ${contigblocks})
             do 
                 echo "${MARVEL_PATH}/bin/LArepeat${CONTIG_LAREPEAT_OPT[$x]} -b ${y} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${y}.forcealign.las"
             done
-		done > cont_12_LArepeat_block_${CONT_DB%.db}.${slurmID}.plan      
+		done > cont_12_LArepeat_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_12_LArepeat_block_${CONT_DB%.db}.${slurmID}.version      
     #### TKmerge 
     elif [[ ${currentStep} -eq 13 ]]
     then
@@ -921,7 +937,8 @@ then
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
             echo "${MARVEL_PATH}/bin/TKmerge${CONTIG_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} $(echo ${CONTIG_LAREPEAT_OPT[${x}]} | awk '{print $NF}')" 
-		done > cont_13_TKmerge_single_${CONT_DB%.db}.${slurmID}.plan       
+		done > cont_13_TKmerge_single_${CONT_DB%.db}.${slurmID}.plan  
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_13_TKmerge_single_${CONT_DB%.db}.${slurmID}.version     
     #### TKcombine 
     elif [[ ${currentStep} -eq 14 ]]
     then
@@ -948,7 +965,8 @@ then
             tmp=$(echo ${CONTIG_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${tmp}_${COR_CONTIG_TANMASK_TRACK} ${tmp} ${COR_CONTIG_TANMASK_TRACK}"
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${tmp}_${COR_CONTIG_TANMASK_TRACK}_dust ${tmp}_${COR_CONTIG_TANMASK_TRACK} dust" 
-		done > cont_14_TKcombine_single_${CONT_DB%.db}.${slurmID}.plan         
+		done > cont_14_TKcombine_single_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_14_TKcombine_single_${CONT_DB%.db}.${slurmID}.version         
 	### LAfilter
     elif [[ ${currentStep} -eq 15 ]]
     then
@@ -969,6 +987,7 @@ then
         do 
             echo "${MARVEL_PATH}/bin/LAfilter${CONTIG_LAFILTER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}.forcealign.las ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}.filt.las"
 		done > cont_15_LAfilter_block_${CONT_DB%.db}.${slurmID}.plan 
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_15_LAfilter_block_${CONT_DB%.db}.${slurmID}.version
 	### LAmerge
     elif [[ ${currentStep} -eq 16 ]]
     then
@@ -982,6 +1001,7 @@ then
         setLAmergeOptions
         
         echo "${MARVEL_PATH}/bin/LAmerge${CONT_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las" > cont_16_LAmerge_single_${CONT_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_16_LAmerge_single_${CONT_DB%.db}.${slurmID}.version
 	### CTanalyze
 	elif [[ ${currentStep} -eq 17 ]]
     then
@@ -994,14 +1014,17 @@ then
         ### find and set CTanalyze options 
         setCTanalyzeOptions
 		echo "${MARVEL_PATH}/bin/CTanalyze${CONT_CTANALYZE_OPT} -C ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las -F ${FIX_FILT_OUTDIR}/${FIX_DB%.DB} ${FIX_FILT_OUTDIR}/${FIX_DB%.DB}.filt.las -D ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}" > cont_17_CTanalyze_single_${CONT_DB%.db}.${slurmID}.plan
-        
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_17_CTanalyze_single_${CONT_DB%.db}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in COR_CONTIG_TYPE ${COR_CONTIG_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-0 steps: 1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAfilter, 9-LAseparate, 10-forcealign, 11-LAmerge, 12-LArepeat, 13-TKmerge, 14-TKcombine, 15-LAfilter, 16-LAmerge, 17-CTanalyze")
+        (>&2 echo "valid steps are: ${myTypes[${RAW_REPMASK_TYPE}]}")
         exit 1            
     fi
 else
-    echo "unknown COR_CONTIG_TYPE ${COR_CONTIG_TYPE}"
+    (>&2 echo "unknown COR_CONTIG_TYPE ${COR_CONTIG_TYPE}")
+    (>&2 echo "supported types")
+    x=0; while [ $x -lt ${#myTypes[*]} ]; do (>&2 echo "${myTypes[${x}]}"); done 
+    
     exit 1
 fi
 

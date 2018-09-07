@@ -1,14 +1,21 @@
 #!/bin/bash 
 
 config=$1
+phase=$2
 
 if [[ ! -f ${config} ]]
 then 
-  echo "config ${config} not available"
+  (>&2 echo "config ${config} not available")
   exit 1
 fi
 
 source ${config}
+
+if [[ -z "${PROJECT_ID}" ]]
+then 
+    (>&2 echo "ERROR - You have to specify a project id. Set variable PROJECT_ID")
+    exit 1
+fi
 
 mkdir -p stats
 
@@ -30,28 +37,191 @@ then
  gsize=$((${GSIZE:0:$i}*1000))
 fi
 
-for x in ${FIX_FILT_OUTDIR}_dalign ${FIX_FILT_OUTDIR}_repcomp ${FIX_FILT_OUTDIR}_forcealign ${FIX_FILT_OUTDIR}
-do
-	if [[ -d ${x}/tour ]]
+if [[ ${phase} -eq 6 ]] ## raw assembly stats  (last step in touring)
+then 
+	if [[ -d ${FIX_FILT_OUTDIR}/tour ]]
 	then
-		mkdir -p stats/contigs/${x}
+		path=stats/contigs/${FIX_FILT_OUTDIR}/raw
+		mkdir -p ${path}
 		
-		for y in ${x}/tour/*.fasta
+		for y in ${FIX_FILT_OUTDIR}/tour/*.fasta
 		do
 			name=$(basename ${y%.fasta})
 			sed -e "s:>path_:>${name}_:" $y  
-		done > stats/contigs/${x}/${x}.fasta
-		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${x} ${gsize} stats/contigs/${x} stats/contigs/${x}/${x}.fasta  
-		cat stats/contigs/${x}/${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.stats
+		done > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.fasta
+		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${PROJECT_ID}_${FIX_FILT_OUTDIR}_r ${gsize} ${path} ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.fasta  
+
 		## create statistic files
-		cat stats/contigs/${x}/${x}.haploid.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.haploid.stats
-		cat stats/contigs/${x}/${x}.bubbles.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.bubbles.stats
-		cat stats/contigs/${x}/${x}.spurs.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > stats/contigs/${x}/${x}.spurs.stats
+		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.stats
+		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.stats
+		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.stats
+		
 		## create header files
-		grep -e ">" stats/contigs/${x}/${x}.haploid.fasta | awk '{print $1}' | sed -e 's:^>::' > stats/contigs/${x}/${x}.haploid.header
-		grep -e ">" stats/contigs/${x}/${x}.bubbles.fasta | awk '{print $1}' | sed -e 's:^>::' > stats/contigs/${x}/${x}.bubbles.header
-		grep -e ">" stats/contigs/${x}/${x}.spurs.fasta | awk '{print $1}' | sed -e 's:^>::' > stats/contigs/${x}/${x}.spurs.header
+		grep -e ">" ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta | awk '{print $1}' | sed -e 's:^>::' > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.header
+		grep -e ">" ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta | awk '{print $1}' | sed -e 's:^>::' > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.header
+		
 		## copy config file
-		cp $config stats/contigs/${x}/${config%%.*}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
+		cp $config ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
+	else
+		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/tour not available")
+  		exit 1
 	fi	
-done 
+elif [[ ${phase} -eq 7 ]] ## marvel corrected assembly stats  (last step in correction)
+then
+	if [[ -d ${FIX_FILT_OUTDIR}/correction/contigs ]]
+	then
+		path=stats/contigs/${FIX_FILT_OUTDIR}/corr
+		mkdir -p ${path}
+		
+		for y in ${FIX_FILT_OUTDIR}/correction/contigs/*.fasta
+		do
+			cat $y  
+		done > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta
+		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${PROJECT_ID}_${FIX_FILT_OUTDIR}_r ${gsize} ${path} ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta  
+
+		## create statistic files
+		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.stats
+		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.p.stats
+		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.a.stats
+		
+		## copy config file
+		cp $config ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
+	else
+		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/correction/contigs not available")
+  		exit 1
+	fi
+	
+elif [[ ${phase} -eq 8 ]] ## marvel corrected assembly stats after contig analysis  (last step after CTanalysis)
+then
+	#todo 
+elif [[ ${phase} -eq 8 ]] ## assembly stats after PacBio Arrow Correction 
+then
+	if [[ -d ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]
+	then
+		
+		rawPath=stats/contigs/${FIX_FILT_OUTDIR}/raw
+		arrowPath=stats/contigs/${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID}
+		fext="a"
+		if [[ ${PB_ARROW_RUNID} -eq 2 ]]
+		then 
+			fext="A"
+		elif [[ ${PB_ARROW_RUNID} -gt 2 ]]
+		then 
+			fext="@"		
+		fi
+		
+		if [[ ! -d ${rawPath} || ! -f ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta || ! -f ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta ]]
+        then 
+	     	(>&2 echo "ERROR - stats folder or assembly staticstics are missing. Run last step of touring first.")
+    	    exit 1        			
+        fi
+
+		## primary 
+		for z in $(cat ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.header)
+		do
+			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
+			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
+			
+			arrowExtension=""
+			a=1
+			while [[ $a -lt ${PB_ARROW_RUNID} ]]
+			do
+				arrowExtension="${arrowExtension}_arrow"
+				a=$(($a+1))	
+			done
+			
+			if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension} ]]
+			then 
+				echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.elog
+				continue
+			fi  
+			
+			if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa ]]
+			then 
+			 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.elog
+				continue
+			fi  
+			
+			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa						        		
+		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta
+		## alternate
+		for z in $(cat ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.header)
+		do
+			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
+			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
+			
+			arrowExtension=""
+			a=1
+			while [[ $a -lt ${PB_ARROW_RUNID} ]]
+			do
+				arrowExtension="${arrowExtension}_arrow"
+				a=$(($a+1))	
+			done
+			
+			if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension} ]]
+			then 
+				echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.elog
+				continue
+			fi  
+			
+			if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa ]]
+			then 
+			 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.elog
+				continue
+			fi  
+			
+			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa						        		
+		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta
+		## all 	
+        for z in $(cat ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.header)
+		do
+			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
+			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
+			
+			arrowExtension=""
+			a=1
+			while [[ $a -lt ${PB_ARROW_RUNID} ]]
+			do
+				arrowExtension="${arrowExtension}_arrow"
+				a=$(($a+1))	
+			done
+			
+			if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension} ]]
+			then 
+				echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.elog
+				continue
+			fi  
+			
+			if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa ]]
+			then 
+			 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.elog
+				continue
+			fi  
+			
+			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa						        		
+		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta	
+        
+        if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta ]]
+        then 
+        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.stats
+    	fi
+        	
+        if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta ]]
+        then
+        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.stats
+    	fi 
+       	
+        if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta ]]
+        then
+        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.stats
+    	fi	 
+	else
+		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} not available")
+  		exit 1
+	fi		
+else
+	(>&2 echo "Unknow Phase: ${phase}")
+	exit 1	
+fi
+			
+	

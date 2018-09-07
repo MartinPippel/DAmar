@@ -96,7 +96,7 @@ function createSlurmStats()
 }
 
 DB=(${RAW_DB} ${FIX_DB})
-marvelPhases=(mask fix scrub filt tour corr)
+marvelPhases=(mask fix scrub filt tour corr cont arrow)
 marvelJobs=(DBdust datander TANmask Catrack daligner LAmerge LArepeat TKmerge createSubDir LAfilter LAq createDB LAseparate repcomp forcealign TKcombine TKhomogenize LAstitch LAgap OGbuild OGtour tour2fasta OGlayout OGbuild OGtour tour2fasta OGlayout LAcorrect paths2rids)
 
 dbCount=0

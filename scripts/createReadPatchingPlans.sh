@@ -377,9 +377,14 @@ function setLAqOptions()
     fi
 }
 
+## 1st argument ptype
 function setLAfixOptions()
 {
-    FIX_LAFIX_OPT=""
+	ptype=$1
+	
+	RAW_FIX_LAFIX_PATH=patchedReads_${ptype}
+	
+	FIX_LAFIX_OPT=""
     if [[ -n ${RAW_FIX_LAFIX_GAP} && ${RAW_FIX_LAQ_MINSEG} -ne 0 ]]
     then
         FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -g ${RAW_FIX_LAFIX_GAP}"
@@ -392,9 +397,9 @@ function setLAfixOptions()
     then
         FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -l"
     fi
-    if [[ -n ${RAW_FIX_LAFIX_REPEAT} ]]
+    if [[ -n ${RAW_FIX_LAFIX_USEREPEAT} ]]
     then
-        FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -r${RAW_FIX_LAFIX_REPEAT}"
+    	FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -rfrepeats_c${RAW_COV}_l${RAW_FIX_LAREPEAT_LEAVE_COV}h${RAW_FIX_LAREPEAT_ENTER_COV}_${ptype}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust"        
     fi
     if [[ -n ${RAW_FIX_LAFIX_MAXCHIMERLEN} && ${RAW_FIX_LAFIX_MAXCHIMERLEN} -ne 0 ]]
     then
@@ -417,27 +422,12 @@ function setLAfixOptions()
     then
         FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -d"
     fi
-
-    ptype=""
-    if [[ ${RAW_PATCH_TYPE} -eq 0 ]]
-    then 
-        ptype="_dalign"
-    elif [[ ${RAW_PATCH_TYPE} -eq 1 ]]
-    then 
-        ptype="_repcomp"
-    elif [[ ${RAW_PATCH_TYPE} -eq 2 ]]
-    then 
-        ptype="_forcealign"        
-    else
-        (>&2 echo "Unknown RAW_PATCH_TYPE=${RAW_PATCH_TYPE} !!!")
-        exit 1            
-    fi 
-
-    FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}${ptype}"
+    
+    FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_${ptype}"
 
     if [[ -n ${RAW_FIX_LAFIX_TRIM} && ${RAW_FIX_LAFIX_TRIM} -ne 0 ]]
     then
-        FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -t trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}${ptype}"
+        FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -t trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_${ptype}"
     fi
     
     if [[ -n ${RAW_FIX_LAFIX_CONVERTRACKS} ]]
@@ -447,12 +437,6 @@ function setLAfixOptions()
             FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -c $x"
         done
     fi
-
-    ### create LAfix commands
-    if [[ -z ${RAW_FIX_LAFIX_PATH} ]]
-    then
-        RAW_FIX_LAFIX_PATH=patchedReads
-    fi 
 }
 
 function setForcealignOptions()
@@ -491,6 +475,7 @@ function setForcealignOptions()
     fi
 }
 
+# first argument LAseparate type
 function setLAseparateOptions()
 {
     FIX_LASEPARATE_OPT=""
@@ -502,8 +487,17 @@ function setLAseparateOptions()
     then 
         FIX_LASEPARATE_OPT="${FIX_LASEPARATE_OPT} -l${RAW_FIX_LASEPARATE_RLEN}"
     fi 
-    if [[ -n ${RAW_FIX_LASEPARATE_REPEAT} ]]
+    if [[ -n ${RAW_FIX_LASEPARATE_USREPEAT} && ${RAW_FIX_LASEPARATE_USREPEAT} -gt 0 ]]
     then 
+    	ptype=""
+    	if [[ "$1" -eq 0 ]]
+    	then 
+    		ptype="dalign"
+    	elif [[ "$1" -eq 0 ]]
+    	then 
+    		ptype="repcomp"
+    	fi
+    	RAW_FIX_LASEPARATE_REPEAT="frepeats_c${RAW_COV}_l${RAW_FIX_LAREPEAT_LEAVE_COV}h${RAW_FIX_LAREPEAT_ENTER_COV}_${ptype}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust"
         FIX_LASEPARATE_OPT="${FIX_LASEPARATE_OPT} -r${RAW_FIX_LASEPARATE_REPEAT}"
     fi 
 
@@ -513,6 +507,33 @@ function setLAseparateOptions()
 
 nblocks=$(getNumOfDbBlocks)
 
+## ensure some paths
+if [[ -z "${MARVEL_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set MARVEL_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+if [[ -z "${DAZZLER_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set DAZZLER_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+if [[ -z "${REPCOMP_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set REPCOMP_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+if [[ -z "${DACCORD_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set DACCORD_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+
+myTypes=("1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix" "1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix, 12-LAseparate, 13-repcomp, 14-LAmerge, 15-LArepeat, 16-TKmerge, 17-TKcombine, 18-TKhomogenize, 19-TKcombine, 21-LAq, 21-TKmerge, 22-LAfix, 23-LAseparate, 24-forcealign, 25-LAmerge, 26-LArepeat, 27-TKmerge, 28-TKcombine, 29-TKhomogenize, 30-TKcombine, 31-LAq, 32-TKmerge, 33-LAfix")
 #type-0 - steps: 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix
 if [[ ${RAW_PATCH_TYPE} -eq 0 ]]
 then 
@@ -571,6 +592,7 @@ then
             done
             echo "${cmd}"
         done > fix_01_daligner_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
@@ -584,7 +606,8 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las $(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})"
-        done > fix_02_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan         
+        done > fix_02_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan  
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_02_LAmerge_block_${RAW_DB%.db}.${slurmID}.version       
     elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
@@ -600,7 +623,8 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LArepeat${FIX_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las"
-        done > fix_03_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan         
+        done > fix_03_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan 
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_LArepeat_block_${RAW_DB%.db}.${slurmID}.version        
     elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
@@ -619,7 +643,8 @@ then
             setTKmergeOptions
         fi
         ### create TKmerge command
-        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}" > fix_04_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan         
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}" > fix_04_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan      
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_TKmerge_single_${RAW_DB%.db}.${slurmID}.version   
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
@@ -654,6 +679,7 @@ then
             echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_05_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
             echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_05_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         fi 
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_05_TKcombine_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 6 ]]
     then
         ### clean up plans 
@@ -670,7 +696,8 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/TKhomogenize -i ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -I h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las"
-        done > fix_06_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.plan         
+        done > fix_06_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_06_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.version         
     elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
@@ -689,10 +716,10 @@ then
         echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} \#.h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" > fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
-        (echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" 
-        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK}" 
-        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} dust"
-        ) >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan 
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK}" >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} dust" >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan        
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
@@ -706,7 +733,8 @@ then
         for x in $(seq 1 ${nblocks})
         do  
             echo "${MARVEL_PATH}/bin/LAfilter -p -R 3 ${RAW_DB%.db} $(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${x}.las identity/${RAW_DB%.db}.${x}.identity.las"
-        done > fix_08_LAfilter_block_${RAW_DB%.db}.${slurmID}.plan       
+        done > fix_08_LAfilter_block_${RAW_DB%.db}.${slurmID}.plan   
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_08_LAfilter_block_${RAW_DB%.db}.${slurmID}.version    
     elif [[ ${currentStep} -eq 9 ]]
     then
         ### clean up plans 
@@ -720,7 +748,8 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign ${RAW_DB%.db} -b ${x} ${RAW_DB%.db}.${x}.dalign.las"
-        done > fix_09_LAq_block_${RAW_DB%.db}.${slurmID}.plan                 
+        done > fix_09_LAq_block_${RAW_DB%.db}.${slurmID}.plan 
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_09_LAq_block_${RAW_DB%.db}.${slurmID}.version                
     elif [[ ${currentStep} -eq 10 ]]
     then
         ### clean up plans 
@@ -738,9 +767,9 @@ then
             setTKmergeOptions
         fi
         ### create TKmerge command
-        (echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign"
-        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign"
-        ) > fix_10_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan               
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign" > fix_10_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign" >> fix_10_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan       
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_10_TKmerge_block_${RAW_DB%.db}.${slurmID}.version               
     ### find and set TKmerge options    
     elif [[ ${currentStep} -eq 11 ]]
     then
@@ -750,31 +779,279 @@ then
             rm $x
         done 
         ### find and set LAfix options 
-        setLAfixOptions
-        mkdir -p ${RAW_FIX_LAFIX_PATH}_dalign
+        setLAfixOptions dalign
+        mkdir -p ${RAW_FIX_LAFIX_PATH}
 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las ${RAW_FIX_LAFIX_PATH}_dalign/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
-        done > fix_11_LAfix_block_${RAW_DB%.db}.${slurmID}.plan                 
+            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+        done > fix_11_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_11_LAfix_block_${RAW_DB%.db}.${slurmID}.version                 
     else 
         (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-0: 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix")
+        (>&2 echo "valid steps are: ${myTypes[${RAW_PATCH_TYPE}]}")
         exit 1        
     fi     
-#type-1 steps [2-13] : 2-LAseparate, 3-repcomp, 4-LAmerge, 5-LArepeat, 6-TKmerge, 7-TKcombine, 8-TKhomogenize, 9-TKcombine, 10-LAq, 11-TKmerge, 12-LAfix
+#type-1 steps   [ 1-11 :  1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix                # experimental pipeline     
+#                12-22 : 12-LAseparate, 13-repcomp, 14-LAmerge, 15-LArepeat, 16-TKmerge, 17-TKcombine, 18-TKhomogenize, 19-TKcombine, 21-LAq, 21-TKmerge, 22-LAfix
+#                23-33]: 23-LAseparate, 24-forcealign, 25-LAmerge, 26-LArepeat, 27-TKmerge, 28-TKcombine, 29-TKhomogenize, 30-TKcombine, 31-LAq, 32-TKmerge, 33-LAfix
 elif [[ ${RAW_PATCH_TYPE} -eq 1 ]]
 then
-    if [[ ${currentStep} -eq 1 ]]
+  	if [[ ${currentStep} -eq 1 ]]
     then
-        (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported. type-0 must be run in advance")
-        exit 1
+        ### clean up plans 
+        for x in $(ls fix_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        ### find and set daligner options 
+        setDalignerOptions
+        ### create daligner commands
+        cmdLine=1
+        for x in $(seq 1 ${nblocks})
+        do 
 
-    #### LAseparate 
+            if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]]
+            then
+                if [[ $((${cmdLine} % 2)) -eq  0 ]]
+                then
+                    NUMACTL="numactl -m0 -N0 "
+                else
+                    NUMACTL="numactl -m1 -N1 "    
+                fi
+            else
+                NUMACTL=""
+            fi
+            cmd="${NUMACTL}${MARVEL_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DB%.db}.${x}"
+            cmdLine=$((${cmdLine}+1))
+            count=0
+
+            for y in $(seq ${x} ${nblocks})
+            do  
+                if [[ $count -lt ${RAW_FIX_DALIGNER_DAL} ]]
+                then
+                    cmd="${cmd} ${RAW_DB%.db}.${y}"
+                    count=$((${count}+1))
+                else    
+                    echo "${cmd}"
+                    if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]]
+                    then
+                        if [[ $((${cmdLine} % 2)) -eq  0 ]]
+                        then
+                            NUMACTL="numactl -m0 -N0 "
+                        else
+                            NUMACTL="numactl -m1 -N1 "    
+                        fi
+                    else
+                        NUMACTL=""
+                    fi
+                    cmd="${NUMACTL}${MARVEL_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DB%.db}.${x} ${RAW_DB%.db}.${y}"
+                    cmdLine=$((${cmdLine}+1))
+                    count=1
+                fi
+            done
+            echo "${cmd}"
+        done > fix_01_daligner_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
         for x in $(ls fix_02_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        ### find and set LAmerge options 
+        setLAmergeOptions
+        ### create LAmerge commands
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las $(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})"
+        done > fix_02_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan  
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_02_LAmerge_block_${RAW_DB%.db}.${slurmID}.version       
+    elif [[ ${currentStep} -eq 3 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        if [ -z ${FIX_LAREPEAT_OPT} ]
+        then 
+            setLArepeatOptions
+        fi
+        ### create LArepeat commands
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "${MARVEL_PATH}/bin/LArepeat${FIX_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las"
+        done > fix_03_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan 
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_LArepeat_block_${RAW_DB%.db}.${slurmID}.version        
+    elif [[ ${currentStep} -eq 4 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        # we need the name of the repeat track, especially if the plan starts with step4
+        if [[ -z ${FIX_LAREPEAT_OPT} ]]
+        then 
+            setLArepeatOptions
+        fi
+        ### find and set TKmerge options 
+        if [[ -z ${FIX_TKMERGE_OPT} ]]
+        then 
+            setTKmergeOptions
+        fi
+        ### create TKmerge command
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}" > fix_04_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan      
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_TKmerge_single_${RAW_DB%.db}.${slurmID}.version   
+    elif [[ ${currentStep} -eq 5 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done     
+        # we need the name of the repeat track, especially if the plan starts with step5
+        if [[ -z ${FIX_LAREPEAT_OPT} ]]
+        then 
+            setLArepeatOptions
+        fi
+        ### find and set TKcombine options
+        setTKcombineOptions 1
+        ### set repmask tracks 
+        if [[ ${#RAW_REPMASK_LAREPEAT_COV[*]} -ne ${#RAW_REPMASK_BLOCKCMP[*]} ]]
+        then 
+            (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE}: arrays RAW_REPMASK_LAREPEAT_COV and RAW_REPMASK_BLOCKCMP must have same number of elements")
+            exit 1
+        fi
+        RAW_REPMASK_REPEATTRACK=""
+        for x in $(seq 1 ${#RAW_REPMASK_BLOCKCMP[*]})
+        do
+            idx=$(($x-1))
+            RAW_REPMASK_REPEATTRACK="${RAW_REPMASK_REPEATTRACK} ${RAW_REPMASK_LAREPEAT_REPEATTRACK}_B${RAW_REPMASK_BLOCKCMP[${idx}]}C${RAW_REPMASK_LAREPEAT_COV[${idx}]}"
+        done 
+        ### create TKcombine command        
+        if [[ -n ${RAW_REPMASK_REPEATTRACK} ]]
+        then
+            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_REPEATTRACK}" > fix_05_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+        else
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_05_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_05_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+        fi 
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_05_TKcombine_single_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 6 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        # we need the name of the repeat track, especially if the plan starts with step6
+        if [[ -z ${FIX_LAREPEAT_OPT} ]]
+        then 
+            setLArepeatOptions
+        fi
+        ### create TKhomogenize commands
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "${MARVEL_PATH}/bin/TKhomogenize -i ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -I h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las"
+        done > fix_06_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_06_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.version         
+    elif [[ ${currentStep} -eq 7 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        # we need the name of the repeat track, especially if the plan starts with step7
+        if [[ -z ${FIX_LAREPEAT_OPT} ]]
+        then 
+            setLArepeatOptions 
+        fi
+        ### find and set TKcombine options
+        setTKcombineOptions 0
+        ### create TKcombine commands
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} \#.h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" > fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+        ### find and set TKcombine options, but ignore the -d flag if it was set
+        setTKcombineOptions 1
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan 
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK}" >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} dust" >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan        
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 8 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+
+        mkdir -p identity
+        ### create LAfilter commands - filter out identity overlaps - has to be done because revcomp and forcealign will loose those 
+        for x in $(seq 1 ${nblocks})
+        do  
+            echo "${MARVEL_PATH}/bin/LAfilter -p -R 3 ${RAW_DB%.db} $(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${x}.las identity/${RAW_DB%.db}.${x}.identity.las"
+        done > fix_08_LAfilter_block_${RAW_DB%.db}.${slurmID}.plan   
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_08_LAfilter_block_${RAW_DB%.db}.${slurmID}.version    
+    elif [[ ${currentStep} -eq 9 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        ### find and set LAq options 
+        setLAqOptions
+        ### create LAq commands
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign ${RAW_DB%.db} -b ${x} ${RAW_DB%.db}.${x}.dalign.las"
+        done > fix_09_LAq_block_${RAW_DB%.db}.${slurmID}.plan 
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_09_LAq_block_${RAW_DB%.db}.${slurmID}.version                
+    elif [[ ${currentStep} -eq 10 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_10_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        # we need the name of the q and trim track names, especially if the plan starts with step11
+        if [[ -z ${FIX_LAREPEAT_OPT} ]]
+        then 
+            setLAqOptions
+        fi  
+        if [[ -z ${FIX_TKMERGE_OPT} ]]
+        then 
+            setTKmergeOptions
+        fi
+        ### create TKmerge command
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign" > fix_10_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign" >> fix_10_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan       
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_10_TKmerge_block_${RAW_DB%.db}.${slurmID}.version               
+    ### find and set TKmerge options    
+    elif [[ ${currentStep} -eq 11 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_11_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        ### find and set LAfix options 
+        setLAfixOptions dalign
+        mkdir -p ${RAW_FIX_LAFIX_PATH}
+
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+        done > fix_11_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_11_LAfix_block_${RAW_DB%.db}.${slurmID}.version
+    #### LAseparate 
+    elif [[ ${currentStep} -eq 12 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_12_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -796,12 +1073,13 @@ then
                 fi
                 echo "${MARVEL_PATH}/bin/LAseparate${FIX_LASEPARATE_OPT} ${RAW_DB%.db} ${sdir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${sdir}_ForRepComp/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${sdir}_NoRepComp/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"                
             done 
-        done > fix_02_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
+    	done > fix_12_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_12_LAseparate_block_${RAW_DB%.db}.${slurmID}.version
     #### repcomp 
-    elif [[ ${currentStep} -eq 3 ]]
+    elif [[ ${currentStep} -eq 13 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_13_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -849,11 +1127,12 @@ then
                     exit 1
                 fi
             done 
-        done > fix_03_repcomp_block_${RAW_DB%.db}.${slurmID}.plan  
-    elif [[ ${currentStep} -eq 4 ]]
+    	done > fix_13_repcomp_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "repcomp $(git --git-dir=${REPCOMP_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_13_repcomp_block_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 14 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_14_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -864,11 +1143,12 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.repcomp.las $(getSubDirName ${RAW_FIX_REPCOMP_RUNID} ${x}) $(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})_NoRepComp identity/${RAW_DB%.db}.${x}.identity.las"                                                                                                            
-        done > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan  
-    elif [[ ${currentStep} -eq 5 ]]
+    	done > fix_14_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_14_LAmerge_block_${RAW_DB%.db}.${slurmID}.version  
+    elif [[ ${currentStep} -eq 15 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_15_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -880,11 +1160,12 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LArepeat${FIX_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.repcomp.las"
-        done > fix_05_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan         
-    elif [[ ${currentStep} -eq 6 ]]
+    	done > fix_15_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_15_LArepeat_block_${RAW_DB%.db}.${slurmID}.version         
+    elif [[ ${currentStep} -eq 16 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_16_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -899,11 +1180,12 @@ then
             setTKmergeOptions
         fi
         ### create TKmerge command
-        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}" > fix_06_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan         
-    elif [[ ${currentStep} -eq 7 ]]
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}" > fix_16_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_16_TKmerge_single_${RAW_DB%.db}.${slurmID}.version         
+    elif [[ ${currentStep} -eq 17 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_17_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -929,15 +1211,16 @@ then
         ### create TKcombine command        
         if [[ -n ${RAW_REPMASK_REPEATTRACK} ]]
         then
-            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_REPEATTRACK}" > fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_REPEATTRACK}" > fix_17_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         else
-            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
-            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_17_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_17_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         fi 
-    elif [[ ${currentStep} -eq 8 ]]
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_17_TKcombine_single_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 18 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_18_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -950,11 +1233,12 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/TKhomogenize -i ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -I h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.repcomp.las"
-        done > fix_08_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.plan         
-    elif [[ ${currentStep} -eq 9 ]]
+    	done > fix_18_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_18_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.version         
+    elif [[ ${currentStep} -eq 19 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_19_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -966,17 +1250,17 @@ then
         ### find and set TKcombine options
         setTKcombineOptions 0
         ### create TKcombine commands
-        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} \#.h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" > fix_09_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} \#.h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" > fix_19_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
-        (echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" 
-        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK}" 
-        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} dust"
-        ) >> fix_09_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan    
-    elif [[ ${currentStep} -eq 10 ]]
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" >> fix_19_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan 
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK}" >> fix_19_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} dust" >> fix_19_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_19_TKcombine_single_${RAW_DB%.db}.${slurmID}.version    
+    elif [[ ${currentStep} -eq 20 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_10_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_20_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -986,11 +1270,12 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp ${RAW_DB%.db} -b ${x} ${RAW_DB%.db}.${x}.repcomp.las"
-        done > fix_10_LAq_block_${RAW_DB%.db}.${slurmID}.plan                 
-    elif [[ ${currentStep} -eq 11 ]]
+    	done > fix_20_LAq_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_20_LAq_block_${RAW_DB%.db}.${slurmID}.version                 
+    elif [[ ${currentStep} -eq 21 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_11_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_21_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -1004,46 +1289,30 @@ then
             setTKmergeOptions
         fi
         ### create TKmerge command
-        (echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp"
-        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp"
-        ) > fix_11_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan               
-    elif [[ ${currentStep} -eq 12 ]]
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp" > fix_21_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp" >> fix_21_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_21_TKmerge_block_${RAW_DB%.db}.${slurmID}.version               
+    elif [[ ${currentStep} -eq 22 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_12_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_22_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
         ### find and set LAfix options 
-        setLAfixOptions
-        mkdir -p ${RAW_FIX_LAFIX_PATH}_repcomp
+        setLAfixOptions repcomp
+        mkdir -p ${RAW_FIX_LAFIX_PATH}
 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.repcomp.las ${RAW_FIX_LAFIX_PATH}_repcomp/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
-        done > fix_12_LAfix_block_${RAW_DB%.db}.${slurmID}.plan                 
-    else 
-        (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-1 steps [2-12] : 2-LAseparate, 3-repcomp, 4-LAmerge, 5-LArepeat, 6-TKmerge, 7-TKcombine, 8-TKhomogenize, 9-TKcombine, 10-LAq, 11-TKmerge, 12-LAfix")
-        exit 1        
-    fi      
-#type-2 steps [3-14]: 3-LAseparate, 4-forcealign, 5-LAmerge, 6-LArepeat, 7-TKmerge, 8-TKcombine, 9-TKhomogenize, 10-TKcombine, 11-LAq, 12-TKmerge, 13-LAfix
-elif [[ ${RAW_PATCH_TYPE} -eq 2 ]]
-then
-    if [[ ${currentStep} -eq 1 ]]
-    then
-        (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported. type-0 must be run in advance")
-        exit 1
-    elif [[ ${currentStep} -eq 2 ]]
-    then
-        (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported. type-1 must be run in advance")
-        exit 1
-
+            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.repcomp.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+    	done > fix_22_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_22_LAfix_block_${RAW_DB%.db}.${slurmID}.version                 
     #### LAseparate 
-    elif [[ ${currentStep} -eq 3 ]]
+    elif [[ ${currentStep} -eq 23 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_23_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1084,7 +1353,7 @@ then
                     echo "${MARVEL_PATH}/bin/LAseparate${FIX_LASEPARATE_OPT} ${RAW_DB%.db} ${sdir}/${infile} ${sdir}_ForForceAlign/${infile} ${sdir}_NoForceAlign/${infile}"                
                 fi
             done
-        done > fix_03_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
+    	done > fix_23_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
         for x in $(seq 1 ${nblocks}); 
         do 
             sdir=$(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})_NoRepComp
@@ -1099,12 +1368,13 @@ then
                 fi
                 echo "${MARVEL_PATH}/bin/LAseparate${FIX_LASEPARATE_OPT} ${RAW_DB%.db} ${sdir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${sdir}_ForForceAlign/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${sdir}_NoForceAlign/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"                
             done
-        done >> fix_03_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan          
+    	done >> fix_23_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_23_LAseparate_block_${RAW_DB%.db}.${slurmID}.version          
     #### forcealign 
-    elif [[ ${currentStep} -eq 4 ]]
+    elif [[ ${currentStep} -eq 24 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_24_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1156,7 +1426,7 @@ then
                     exit 1
                 fi
             done 
-        done > fix_04_forcealign_block_${RAW_DB%.db}.${slurmID}.plan  
+    	done > fix_24_forcealign_block_${RAW_DB%.db}.${slurmID}.plan  
         for x in $(seq 1 ${nblocks}); 
         do 
             srcDir=$(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})_NoRepComp_ForForceAlign
@@ -1199,11 +1469,12 @@ then
                     exit 1
                 fi
             done 
-        done >> fix_04_forcealign_block_${RAW_DB%.db}.${slurmID}.plan
-    elif [[ ${currentStep} -eq 5 ]]
+    	done >> fix_24_forcealign_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "forcealign $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_24_forcealign_block_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 25 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_25_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1215,11 +1486,12 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.forcealign.las $(getSubDirName ${RAW_FIX_FORCEALIGN_RUNID} ${x}) $(getSubDirName ${RAW_FIX_REPCOMP_RUNID} ${x})_NoForceAlign $(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})_NoRepComp_NoForceAlign identity/${RAW_DB%.db}.${x}.identity.las"                                                                                                            
-        done > fix_05_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan  
-    elif [[ ${currentStep} -eq 6 ]]
+    	done > fix_25_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_25_LAmerge_block_${RAW_DB%.db}.${slurmID}.version  
+    elif [[ ${currentStep} -eq 26 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_26_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1231,11 +1503,12 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LArepeat${FIX_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.forcealign.las"
-        done > fix_06_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan         
-    elif [[ ${currentStep} -eq 7 ]]
+    	done > fix_26_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_26_LArepeat_block_${RAW_DB%.db}.${slurmID}.version         
+    elif [[ ${currentStep} -eq 27 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_27_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1250,11 +1523,12 @@ then
             setTKmergeOptions
         fi
         ### create TKmerge command
-        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}" > fix_07_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan         
-    elif [[ ${currentStep} -eq 8 ]]
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}" > fix_27_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_27_TKmerge_single_${RAW_DB%.db}.${slurmID}.version         
+    elif [[ ${currentStep} -eq 28 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_28_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -1280,15 +1554,16 @@ then
         ### create TKcombine command        
         if [[ -n ${RAW_REPMASK_REPEATTRACK} ]]
         then
-            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_REPEATTRACK}" > fix_08_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_REPEATTRACK}" > fix_28_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         else
-            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_08_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
-            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_08_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_28_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_28_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         fi 
-    elif [[ ${currentStep} -eq 9 ]]
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_28_TKcombine_single_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 29 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_29_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1301,11 +1576,12 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/TKhomogenize -i ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -I h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.forcealign.las"
-        done > fix_09_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.plan         
-    elif [[ ${currentStep} -eq 10 ]]
+    	done > fix_29_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_29_TKhomogenize_block_${RAW_DB%.db}.${slurmID}.version         
+    elif [[ ${currentStep} -eq 30 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_10_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_30_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1317,17 +1593,17 @@ then
         ### find and set TKcombine options
         setTKcombineOptions 0
         ### create TKcombine commands
-        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} \#.h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" > fix_10_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} \#.h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" > fix_30_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
-        (echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" 
-        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK}" 
-        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} dust"
-        ) >> fix_10_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan    
-    elif [[ ${currentStep} -eq 11 ]]
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} h${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}" >> fix_30_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan 
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK}" >> fix_30_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK} dust" >> fix_30_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan       
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_30_TKcombine_single_${RAW_DB%.db}.${slurmID}.version    
+    elif [[ ${currentStep} -eq 31 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_11_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_31_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1337,11 +1613,12 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_forcealign -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_forcealign ${RAW_DB%.db} -b ${x} ${RAW_DB%.db}.${x}.forcealign.las"
-        done > fix_11_LAq_block_${RAW_DB%.db}.${slurmID}.plan                 
-    elif [[ ${currentStep} -eq 12 ]]
+		done > fix_31_LAq_block_${RAW_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_31_LAq_block_${RAW_DB%.db}.${slurmID}.version                 
+    elif [[ ${currentStep} -eq 32 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_12_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_32_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -1355,31 +1632,34 @@ then
             setTKmergeOptions
         fi
         ### create TKmerge command
-        (echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_forcealign"
-        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_forcealign"
-        ) > fix_12_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan               
-    elif [[ ${currentStep} -eq 13 ]]
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_forcealign" > fix_32_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_forcealign" >> fix_32_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_32_TKmerge_block_${RAW_DB%.db}.${slurmID}.version               
+    elif [[ ${currentStep} -eq 33 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_13_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_33_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
         ### find and set LAfix options 
-        setLAfixOptions
-        mkdir -p ${RAW_FIX_LAFIX_PATH}_forcealign
+        setLAfixOptions forcealign
+        mkdir -p ${RAW_FIX_LAFIX_PATH}
 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.forcealign.las ${RAW_FIX_LAFIX_PATH}_forcealign/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
-        done > fix_13_LAfix_block_${RAW_DB%.db}.${slurmID}.plan                 
+            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.forcealign.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+    	done > fix_33_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
+	    echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_33_LAfix_block_${RAW_DB%.db}.${slurmID}.version                 
     else 
         (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-2 steps [3-14]: 3-LAseparate, 4-forcealign, 5-LAmerge, 6-LArepeat, 7-TKmerge, 8-TKcombine, 9-TKhomogenize, 10-TKcombine, 11-LAq, 12-TKmerge, 13-LAfix")
+        (>&2 echo "valid steps are: ${myTypes[${RAW_PATCH_TYPE}]}")
         exit 1        
     fi     
 else
-    echo "unknown RAW_PATCH_TYPE ${RAW_PATCH_TYPE}"
+    (>&2echo "unknown RAW_PATCH_TYPE ${RAW_PATCH_TYPE}")    
+    (>&2 echo "supported types")
+    x=0; while [ $x -lt ${#myTypes[*]} ]; do (>&2 echo "${myTypes[${x}]}"); done
     exit 1
 fi
 

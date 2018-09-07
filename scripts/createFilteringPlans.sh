@@ -12,6 +12,24 @@ fi
 
 source ${configFile}
 
+if [[ -z ${FIX_FILT_SCRUB_TYPE} ]]
+then
+	(>&2 echo "WARNING - Variable FIX_FILT_SCRUB_TYPE is not set. Use default mode: dalign!")
+	FIX_FILT_SCRUB_TYPE=1
+fi
+
+if [[ -z "${PROJECT_ID}" ]]
+then 
+    (>&2 echo "ERROR - You have to specify a project id. Set variable PROJECT_ID")
+    exit 1
+fi
+
+if [[ -d "${MARVEL_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to specify the MARVEL_SOURCE_PATH.")
+    exit 1
+fi
+
 if [[ ! -n "${FIX_FILT_TYPE}" ]]
 then 
     (>&2 echo "cannot create read patching scripts if variable FIX_FILT_TYPE is not set.")
@@ -166,30 +184,10 @@ function setLAqOptions()
 function setLAfilterOptions()
 {
     FILT_LAFILTER_OPT=""
-
+    	
     if [[ -z ${FIX_FILT_OUTDIR} ]]
     then
-        FIX_FILT_OUTDIR="filtered"
-    fi
-
-    if [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 1 ]]
-    then 
-        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "dalign" ]]
-        then
-            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_dalign"
-        fi
-    elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 2 ]]
-    then 
-        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "repcomp" ]]
-        then
-            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_repcomp"
-        fi
-    elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 3 ]]
-    then 
-        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "forcealign" ]]
-        then
-            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_forcealign"
-        fi
+        FIX_FILT_OUTDIR="m1"
     fi
 
     if [[ -n ${FIX_FILT_LAFILTER_NREP} && ${FIX_FILT_LAFILTER_NREP} -ne 0 ]]
@@ -252,13 +250,13 @@ function setLAfilterOptions()
         if [[ -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
         then 
             ptype=""
-            if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
+            if [[ ${FIX_FILT_SCRUB_TYPE} -eq 1 ]]
             then 
                 ptype="dalign"
-            elif [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
+            elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
             then 
                 ptype="repcomp"
-            elif [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
+            elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
             then 
                 ptype="forcealign"
             fi
@@ -307,106 +305,73 @@ function setLAfilterOptions()
         fi
     fi
     
-    if [ -n ${FIX_SCRUB_TYPE} ]
+    if [[ -n ${FIX_FILT_LAFILTER_TRIM} && ${FIX_FILT_LAFILTER_TRIM} -ne 0 ]]
     then
-        if [[ -n ${FIX_FILT_LAFILTER_TRIM} && ${FIX_FILT_LAFILTER_TRIM} -ne 0 ]]
-        then
-            if [[ -z ${SCRUB_LAQ_OPT} ]]
-            then 
-                setLAqOptions
-            fi
+        if [[ -z ${SCRUB_LAQ_OPT} ]]
+        then 
+            setLAqOptions
+        fi
+    fi
+
+    if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
+    then 
+        if [[ -z ${SCRUB_LAREPEAT_OPT} ]]
+        then 
+            setLArepeatOptions
         fi
 
-        if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
+        if [[ ${numRepeatTracks} -eq 0 || $((${FIX_FILT_LAFILTER_REPEAT_IDX}+1)) -gt ${#SCRUB_LAREPEAT_OPT[*]} ]]
         then 
-            if [[ -z ${SCRUB_LAREPEAT_OPT} ]]
-            then 
-                setLArepeatOptions
-            fi
-
-            if [[ ${numRepeatTracks} -eq 0 || $((${FIX_FILT_LAFILTER_REPEAT_IDX}+1)) -gt ${#SCRUB_LAREPEAT_OPT[*]} ]]
-            then 
-                exit 1
-            fi
-        fi
-
-        if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
-        then 
-            FIX_FILT_ENDING="dalignGap"
-            if [[ -n ${FIX_FILT_LAFILTER_TRIM} && ${FIX_FILT_LAFILTER_TRIM} -ne 0 ]]
-            then
-                FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -T"
-            fi
-            if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
-            then 
-                tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_dalign_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
-                FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust
-
-                FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
-            fi
-        elif [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
-        then 
-            FIX_FILT_ENDING="repcompGap"  
-            if [[ -n ${FIX_FILT_LAFILTER_TRIM} && ${FIX_FILT_LAFILTER_TRIM} -ne 0 ]]
-            then
-                FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -T"
-            fi          
-            if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
-            then 
-                tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_repcomp_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
-                FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust
-
-                FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
-            fi
-        elif [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
-        then 
-            FIX_FILT_ENDING="forcealignGap"
-            if [[ -n ${FIX_FILT_LAFILTER_TRIM} && ${FIX_FILT_LAFILTER_TRIM} -ne 0 ]]
-            then
-                FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -T"
-            fi
-            if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
-            then 
-                tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_forcealign_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
-                FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust
-
-                FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
-            fi
-        else
-            (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE} not supported")
             exit 1
         fi
-    else
-        FIX_FILT_ENDING="gap"
-        
+    fi
+
+    if [[ ${FIX_FILT_SCRUB_TYPE} -eq 1 ]]
+    then 
+        FIX_FILT_ENDING="dalignGap"
         if [[ -n ${FIX_FILT_LAFILTER_TRIM} && ${FIX_FILT_LAFILTER_TRIM} -ne 0 ]]
         then
-            if [[ -z ${SCRUB_LAQ_OPT} ]]
-            then 
-                setLAqOptions
-            fi
-        
-            FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -T"
+            FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -T"
         fi
-
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
-            if [[ -z ${SCRUB_LAREPEAT_OPT} ]]
-            then 
-                setLArepeatOptions
-            fi
-
-            if [[ ${numRepeatTracks} -eq 0 || $((${FIX_FILT_LAFILTER_REPEAT_IDX}+1)) -gt ${#SCRUB_LAREPEAT_OPT[*]} ]]
-            then 
-                exit 1
-            fi
-
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_dalign_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
             FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust
 
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
         fi
-    fi
+    elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
+    then 
+        FIX_FILT_ENDING="repcompGap"  
+        if [[ -n ${FIX_FILT_LAFILTER_TRIM} && ${FIX_FILT_LAFILTER_TRIM} -ne 0 ]]
+        then
+            FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -T"
+        fi          
+        if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
+        then 
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_repcomp_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust
+
+            FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
+        fi
+    elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
+    then 
+        FIX_FILT_ENDING="forcealignGap"
+        if [[ -n ${FIX_FILT_LAFILTER_TRIM} && ${FIX_FILT_LAFILTER_TRIM} -ne 0 ]]
+        then
+            FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -T"
+        fi
+        if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
+        then 
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_forcealign_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust
+
+            FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
+        fi
+    else
+        (>&2 echo "step ${currentStep} in FIX_FILT_SCRUB_TYPE ${FIX_FILT_SCRUB_TYPE} not supported")
+        exit 1
+fi
 }
 
 function setTKmergeOptions() 
@@ -427,197 +392,17 @@ function setLAmergeOptions()
     fi
 }
 
-#type-0 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAq, 4-TKmerge, 5-LAmerge
-if [[ ${FIX_FILT_TYPE} -eq 0 ]]
+## ensure some paths
+if [[ -z "${MARVEL_SOURCE_PATH}" ]]
 then 
-    ### create sub-directory and link relevant DB and Track files
-    if [[ ${currentStep} -eq 1 ]]
-    then
-        ### clean up plans 
-        for x in $(ls filt_01_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
+    (>&2 echo "ERROR - You have to set MARVEL_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
 
-        setLAfilterOptions
 
-        echo "if [[ -d ${FIX_FILT_OUTDIR} ]]; then mv ${FIX_FILT_OUTDIR} ${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_FILT_OUTDIR} && ln -s -r .${FIX_DB%db}.* ${FIX_DB%db}.db ${FIX_FILT_OUTDIR}" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.plan 
-    ### LAfilter
-    elif [[ ${currentStep} -eq 2 ]]
-    then
-        ### clean up plans 
-        for x in $(ls filt_02_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
- 
-        if [[ -z ${FILT_LAFILTER_OPT} ]]
-        then 
-            setLAfilterOptions
-        fi
-
-        if [[ -n ${FIX_FILT_LAFILTER_RMSYMROUNDS} && ${FIX_FILT_LAFILTER_RMSYMROUNDS} -gt 0 ]]
-        then
-            ## check what is the current round
-            for rnd in $(seq ${FIX_FILT_LAFILTER_RMSYMROUNDS} -1 0)
-            do
-                if [[ -f filt.round${rnd}_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan ]]
-                then
-                    break;
-                fi
-            done
-
-            echo "stop at round $rnd of ${FIX_FILT_LAFILTER_RMSYMROUNDS}"
-            ### initial filter job 
-            if [[ $rnd -eq 0 ]]
-            then
-                ### create LAfilter commands
-                for x in $(seq 1 ${fixblocks})
-                do 
-                    addOpt=""
-                    if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
-                    then
-                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round1.${x}.txt"
-                    fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R1.las"
-                done > filt.round1_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
-            # last filter job
-            elif [[ $rnd -eq ${FIX_FILT_LAFILTER_RMSYMROUNDS} ]]
-            then
-                # create merged set of discarded ovls 
-                cat ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt
-
-                for x in $(seq 1 ${fixblocks})
-                do 
-                    addOpt=""
-                    if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
-                    then
-                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt"
-                    fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
-                done > filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
-            # intermediate filter round
-            else
-                # create merged set of discarded ovls 
-                cat ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt
-
-                for x in $(seq 1 ${fixblocks})
-                do 
-                    addOpt=""
-                    if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
-                    then
-                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt"
-                    fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R$((${rnd}+1)).las"
-                done > filt.round$((${rnd}+1))_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
-            fi  
-        else 
-            ### create LAfilter commands
-            for x in $(seq 1 ${fixblocks})
-            do 
-                addOpt=""
-                if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
-                then
-                addOpt=" -a ${FIX_FILT_OUTDIR}/discardOvlTipCov${FIX_FILT_LAFILTER_MINTIPCOV}.${x}.txt"
-                fi
-                echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
-            done > filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
-        fi    
-    #### LAq
-    elif [[ ${currentStep} -eq 3 ]]
-    then
-        ### clean up plans 
-        for x in $(ls filt_03_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
-
-        if [[ -z ${FILT_LAFILTER_OPT} ]]
-        then 
-            setLAfilterOptions
-        fi
-
-        ### find and set LAq options 
-        if [[ -z ${SCRUB_LAQ_OPT} ]]
-        then 
-            setLAqOptions
-        fi
-        
-        ### create LAq commands
-        for x in $(seq 1 ${fixblocks})
-        do 
-
-                if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
-                then 
-                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
-                elif [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
-                then 
-                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
-                elif [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
-                then 
-                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"                    
-                else 
-                    echo "${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"    
-                fi                   
-        done > filt_03_LAq_block_${FIX_DB%.db}.${slurmID}.plan               
-    #### TKmerge    
-    elif [[ ${currentStep} -eq 4 ]]
-    then
-        ### clean up plans 
-        for x in $(ls filt_04_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
-
-        if [[ -z ${FILT_LAFILTER_OPT} ]]
-        then 
-            setLAfilterOptions
-        fi
- 
-        # we need the name of the repeat track, especially if the plan starts with step10
-        if [[ -z ${SCRUB_LAQ_OPT} ]]
-        then 
-            setLAqOptions
-        fi
-        setTKmergeOptions
-
-        ### create TKmerge command
-        if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
-        then             
-            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
-        elif [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
-        then             
-            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
-        elif [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
-        then             
-            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
-        else
-            echo "${MARVEL_PATH}/bin/TKmerge${FILT_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} trim2_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}" > filt_04_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
-        fi                               
-    #### LAmerge
-    elif [[ ${currentStep} -eq 5 ]]
-    then
-        ### clean up plans 
-        for x in $(ls filt_05_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
-        
-        if [[ -z ${FILT_LAFILTER_OPT} ]]
-        then 
-            setLAfilterOptions
-        fi
-        ### find and set LAmerge options 
-        setLAmergeOptions
-        
-        echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las" > filt_05_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan             
-    else
-        (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-0 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAq, 4-TKmerge, 5-LAmerge")
-        exit 1            
-    fi
-#type-1 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge
-elif [[ ${FIX_FILT_TYPE} -eq 1 ]]
+myTypes=("1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge")
+#type-0 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge
+elif [[ ${FIX_FILT_TYPE} -eq 0 ]]
 then 
     ### create sub-directory and link relevant DB and Track files
     if [[ ${currentStep} -eq 1 ]]
@@ -630,7 +415,8 @@ then
 
         setLAfilterOptions        
 
-        echo "if [[ -d ${FIX_FILT_OUTDIR} ]]; then mv ${FIX_FILT_OUTDIR} ${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_FILT_OUTDIR} && ln -s -r .${FIX_DB%db}.* ${FIX_DB%db}.db ${FIX_FILT_OUTDIR}" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.plan         
+        echo "if [[ -d ${FIX_FILT_OUTDIR} ]]; then mv ${FIX_FILT_OUTDIR} ${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_FILT_OUTDIR} && ln -s -r .${FIX_DB%db}.* ${FIX_DB%db}.db ${FIX_FILT_OUTDIR}" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.version         
     ### LAfilter
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -713,6 +499,7 @@ then
                 echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
             done > filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
         fi    
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.version
     #### LAmerge
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -729,14 +516,17 @@ then
         ### find and set LAmerge options 
         setLAmergeOptions
         
-        echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las" > filt_03_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan             
+        echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las" > filt_03_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_03_LAmerge_single_${FIX_DB%.db}.${slurmID}.version             
     else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-0 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAq, 4-TKmerge, 5-LAmerge")
+        (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
         exit 1            
     fi    
 else
-    echo "unknown FIX_FILT_TYPE ${FIX_FILT_TYPE}"
+    (>&2 echo "unknown FIX_FILT_TYPE ${FIX_FILT_TYPE}")
+    (>&2 echo "supported types")
+    x=0; while [ $x -lt ${#myTypes[*]} ]; do (>&2 echo "${myTypes[${x}]}"); done
     exit 1
 fi
 

@@ -12,6 +12,24 @@ fi
 
 source ${configFile}
 
+if [[ -z ${FIX_FILT_SCRUB_TYPE} ]]
+then
+	(>&2 echo "WARNING - Variable FIX_FILT_SCRUB_TYPE is not set. Use default mode: dalign!")
+	FIX_FILT_SCRUB_TYPE=1
+fi
+
+if [[ -z "${PROJECT_ID}" ]]
+then 
+    (>&2 echo "ERROR - You have to specify a project id. Set variable PROJECT_ID")
+    exit 1
+fi
+
+if [[ -d "${MARVEL_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to specify the MARVEL_SOURCE_PATH.")
+    exit 1
+fi
+
 if [[ ! -n "${FIX_CORR_TYPE}" ]]
 then 
     (>&2 echo "cannot create touring scripts if variable FIX_CORR_TYPE is not set.")
@@ -105,27 +123,7 @@ function setLAfilterOptions()
 
     if [[ -z ${FIX_FILT_OUTDIR} ]]
     then
-        FIX_FILT_OUTDIR="filtered"
-    fi
-
-    if [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 1 ]]
-    then 
-        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "dalign" ]]
-        then
-            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_dalign"
-        fi
-    elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 2 ]]
-    then 
-        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "repcomp" ]]
-        then
-            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_repcomp"
-        fi
-    elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 3 ]]
-    then 
-        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "forcealign" ]]
-        then
-            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_forcealign"
-        fi
+        FIX_FILT_OUTDIR="m1"
     fi
     
     ## its never used, but the variable is set once the function called for the first time
@@ -204,22 +202,17 @@ function setLAcorrectOptions()
     then
         setLAqOptions
     fi
-    if [ -n ${FIX_SCRUB_TYPE} ]
+
+    if [[ ${FIX_FILT_SCRUB_TYPE} -eq 1 ]]
     then
-        if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
-        then
-            COR_LACORRECT_OPT="${COR_LACORRECT_OPT} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign"
-        elif  [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
-        then
-            COR_LACORRECT_OPT="${COR_LACORRECT_OPT} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp"
-        elif  [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
-        then
-            COR_LACORRECT_OPT="${COR_LACORRECT_OPT} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign"
-        fi            
-    else    
-        COR_LACORRECT_OPT="${COR_LACORRECT_OPT} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}"
-    fi
-        
+        COR_LACORRECT_OPT="${COR_LACORRECT_OPT} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign"
+    elif  [[ ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
+    then
+        COR_LACORRECT_OPT="${COR_LACORRECT_OPT} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp"
+    elif  [[ ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
+    then
+        COR_LACORRECT_OPT="${COR_LACORRECT_OPT} -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign"
+    fi             
 }
 
 function setTourToFastaOptions()
@@ -234,20 +227,15 @@ function setTourToFastaOptions()
         COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -p ${COR_CORR_TOURTOFASTA_PREFIX}"
     fi
     
-    if [ -n ${FIX_SCRUB_TYPE} ]
+    if [[ ${FIX_FILT_SCRUB_TYPE} -eq 1 ]]
     then
-        if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
-        then
-            COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign"
-        elif [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
-        then
-            COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp"
-        elif [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
-        then
-            COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign"
-        fi
-    else
-        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}"
+        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign"
+    elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
+    then
+        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp"
+    elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
+    then
+        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign"
     fi
 }
 
@@ -258,7 +246,8 @@ then
     COR_DIR=correction
 fi
 
-#type-0 steps: 1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-marvelStats
+myTypes=("1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-statistics")
+#type-0 steps: 1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-statistics
 if [[ ${FIX_CORR_TYPE} -eq 0 ]]
 then 
     ### paths2rids
@@ -289,6 +278,7 @@ then
         done
 
         echo "cat ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs/*.paths | awk '{if (NF > 4) print \$0}' | ${MARVEL_PATH}/scripts/paths2rids.py - ${FIX_FILT_OUTDIR}/${FIX_CORR_PATHS2RIDS_FILE}" > corr_01_paths2rids_single_${FIX_DB%.db}.${slurmID}.plan
+        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_01_paths2rids_single_${FIX_DB%.db}.${slurmID}.version
     ### LAcorrect
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -304,6 +294,7 @@ then
         do 
             echo "${MARVEL_PATH}/bin/LAcorrect${COR_LACORRECT_OPT} -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las ${FIX_FILT_OUTDIR}/${COR_DIR}/reads/${FIX_DB%.db}.${x}"
         done > corr_02_LAcorrect_block_${FIX_DB%.db}.${slurmID}.plan
+        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_02_LAcorrect_block_${FIX_DB%.db}.${slurmID}.version
     ### prepare corrected db 
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -319,7 +310,8 @@ then
         fi
 
         echo "if [[ -f ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}.db ]]; then ${MARVEL_PATH}/bin/DBrm ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}; fi" > corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "${MARVEL_PATH}/bin/FA2db -x0 -c source -c correctionq -c postrace ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db} ${FIX_FILT_OUTDIR}/${COR_DIR}/reads/${FIX_DB%.db}.[0-9]*.[0-9]*.fasta" >> corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.plan            
+        echo "${MARVEL_PATH}/bin/FA2db -x0 -c source -c correctionq -c postrace ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db} ${FIX_FILT_OUTDIR}/${COR_DIR}/reads/${FIX_DB%.db}.[0-9]*.[0-9]*.fasta" >> corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.plan
+        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.version            
     elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
@@ -337,7 +329,8 @@ then
             faPrefix=$(basename "${x%.tour.paths}" | sed -e "s:\.:_${FIX_FILT_OUTDIR}_:")
             echo "${MARVEL_PATH}/scripts/tour2fasta.py${COR_TOURTOFASTA_OPT} -p ${faPrefix} -c ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${x%.tour.paths}.graphml ${x}" 
         done > corr_04_tour2fasta_block_${FIX_DB%.db}.${slurmID}.plan
-    ### marvelStats
+        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_04_tour2fasta_block_${FIX_DB%.db}.${slurmID}.version
+    ### statistics
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
@@ -351,16 +344,20 @@ then
             setLAfilterOptions
         fi
         ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
-        bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile} > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.${COR_DIR}.log
+        bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
         ### create assemblyStats plan 
-        echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} >> ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.${COR_DIR}.log" > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 7" > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.plan
+        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in FIX_CORR_TYPE ${FIX_CORR_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-0 steps: 1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-marvelStats2")
+        (>&2 echo "valid steps are: ${myTypes[${FIX_CORR_TYPE}]}")
         exit 1            
     fi
 else
-    echo "unknown FIX_CORR_TYPE ${FIX_CORR_TYPE}"
+    (>&2 echo "unknown FIX_TOUR_TYPE ${FIX_CORR_TYPE}")
+    (>&2 echo "supported types")
+    x=0; while [ $x -lt ${#myTypes[*]} ]; do (>&2 echo "type-${x} steps: ${myTypes[${x}]}"); done    
+    
     exit 1
 fi
 

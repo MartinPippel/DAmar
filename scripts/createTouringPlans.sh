@@ -12,6 +12,24 @@ fi
 
 source ${configFile}
 
+if [[ -z ${FIX_FILT_SCRUB_TYPE} ]]
+then
+	(>&2 echo "WARNING - Variable FIX_FILT_SCRUB_TYPE is not set. Use default mode: dalign!")
+	FIX_FILT_SCRUB_TYPE=1
+fi
+
+if [[ -z "${PROJECT_ID}" ]]
+then 
+    (>&2 echo "ERROR - You have to specify a project id. Set variable PROJECT_ID")
+    exit 1
+fi
+
+if [[ -d "${MARVEL_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to specify the MARVEL_SOURCE_PATH.")
+    exit 1
+fi
+
 if [[ ! -n "${FIX_TOUR_TYPE}" ]]
 then 
     (>&2 echo "cannot create touring scripts if variable FIX_TOUR_TYPE is not set.")
@@ -151,15 +169,15 @@ function setOGbuildOptions()
             setLAqOptions
         fi
 
-        if [ -n ${FIX_SCRUB_TYPE} ]
+        if [ -n ${FIX_FILT_SCRUB_TYPE} ]
         then
-            if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
+            if [[ ${FIX_FILT_SCRUB_TYPE} -eq 1 ]]
             then 
                 TOUR_OGBUILD_OPT="${TOUR_OGBUILD_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign"
-            elif [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
+            elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
             then 
                 TOUR_OGBUILD_OPT="${TOUR_OGBUILD_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp"
-            elif [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
+            elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
             then 
                 TOUR_OGBUILD_OPT="${TOUR_OGBUILD_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign"
             fi
@@ -193,28 +211,11 @@ function setLAfilterOptions()
 
     if [[ -z ${FIX_FILT_OUTDIR} ]]
     then
-        FIX_FILT_OUTDIR="filtered"
+        FIX_FILT_OUTDIR="m1"
     fi
-
-    if [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 1 ]]
-    then 
-        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "dalign" ]]
-        then
-            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_dalign"
-        fi
-    elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 2 ]]
-    then 
-        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "repcomp" ]]
-        then
-            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_repcomp"
-        fi
-    elif [[ -n ${FIX_SCRUB_TYPE} && ${FIX_SCRUB_TYPE} -eq 3 ]]
-    then 
-        if [[ $(echo ${FIX_FILT_OUTDIR} | awk -F _ '{print $NF}') != "forcealign" ]]
-        then
-            FIX_FILT_OUTDIR="${FIX_FILT_OUTDIR}_forcealign"
-        fi
-    fi
+    
+    ## its never used, but the variable is set once the function is called for the first time
+    FILT_LAFILTER_OPT="-v"
 }
 
 function settour2fastaOptions()
@@ -231,21 +232,16 @@ function settour2fastaOptions()
             setLAqOptions
         fi
 
-        if [ -n ${FIX_SCRUB_TYPE} ]
-        then
-            if [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
-            then 
-                TOUR_2FASTA_OPT="${TOUR_2FASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign"
-            elif [[ ${FIX_SCRUB_TYPE} -eq 2 ]]
-            then 
-                TOUR_2FASTA_OPT="${TOUR_2FASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp"
-            elif [[ ${FIX_SCRUB_TYPE} -eq 3 ]]
-            then 
-                TOUR_2FASTA_OPT="${TOUR_2FASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign"
-            fi
-        else
-            TOUR_2FASTA_OPT="${TOUR_2FASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}"
-        fi
+        if [[ ${FIX_FILT_SCRUB_TYPE} -eq 1 ]]
+        then 
+            TOUR_2FASTA_OPT="${TOUR_2FASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign"
+        elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
+        then 
+            TOUR_2FASTA_OPT="${TOUR_2FASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp"
+        elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
+        then 
+            TOUR_2FASTA_OPT="${TOUR_2FASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign"
+        fi        
     fi
 }
 
@@ -267,7 +263,15 @@ function setOGlayoutOptions()
     fi
 }
 
-#type-0 steps: 1-OGbuild, 2-OGtour, 3-tour2fasta, 4-OGlayout, 5-marvelStats
+## ensure some paths
+if [[ -z "${MARVEL_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set MARVEL_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
+myTypes=("1-OGbuild, 2-OGtour, 3-tour2fasta, 4-OGlayout, 5-statistics")
+#type-0 steps: 1-OGbuild, 2-OGtour, 3-tour2fasta, 4-OGlayout, 5-statistics
 if [[ ${FIX_TOUR_TYPE} -eq 0 ]]
 then 
     ### OGbuild
@@ -284,8 +288,9 @@ then
         setOGbuildOptions
         ### create OGbuild commands
         echo "if [[ -d ${FIX_FILT_OUTDIR}/tour ]]; then rm -rf ${FIX_FILT_OUTDIR}/tour; fi" > tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "mkdir -p ${FIX_FILT_OUTDIR}/tour" >> tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "${MARVEL_PATH}/bin/OGbuild${TOUR_OGBUILD_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las ${FIX_FILT_OUTDIR}/tour/${FIX_DB%.db}.filt" >> tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "mkdir -p ${FIX_FILT_OUTDIR}/tour" >> tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan        
+        echo "${MARVEL_PATH}/bin/OGbuild${TOUR_OGBUILD_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las ${FIX_FILT_OUTDIR}/tour/${PROJECT_ID}_${FIX_FILT_OUTDIR}" >> tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_01_OGbuild_single_${FIX_DB%.db}.${slurmID}.version
     ### OGtour
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -308,7 +313,8 @@ then
             then
                 echo "${MARVEL_PATH}/scripts/OGtour.py${TOUR_OGTOUR_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB} $x"
             fi 
-        done > tour_02_OGtour_block_${FIX_DB%.db}.${slurmID}.plan        
+    	done > tour_02_OGtour_block_${FIX_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_02_OGtour_block_${FIX_DB%.db}.${slurmID}.version        
     ### tour2fasta
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -324,14 +330,14 @@ then
         fi
         ### find and set OGbuild options 
         settour2fastaOptions
-        
         for x in ${FIX_FILT_OUTDIR}/tour/*[0-9].tour.paths;
         do 
             if [[ -s ${x} ]]
             then
                 echo "${MARVEL_PATH}/scripts/tour2fasta.py${TOUR_2FASTA_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB} ${x%.tour.paths}.graphml $x"
             fi
-        done > tour_03_tour2fasta_block_${FIX_DB%.db}.${slurmID}.plan
+    	done > tour_03_tour2fasta_block_${FIX_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_03_tour2fasta_block_${FIX_DB%.db}.${slurmID}.version
     ### OGlayout
     elif [[ ${currentStep} -eq 4 ]]
     then
@@ -354,8 +360,9 @@ then
             then
                 echo "${MARVEL_PATH}/bin/OGlayout${TOUR_OGLAYOUT_OPT} ${x%.paths}.graphml ${x%.paths}.layout.dot" 
             fi
-        done > tour_04_OGlayout_block_${FIX_DB%.db}.${slurmID}.plan
-    ### marvelStats
+    	done > tour_04_OGlayout_block_${FIX_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_04_OGlayout_block_${FIX_DB%.db}.${slurmID}.version
+    ### statistics
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
@@ -369,17 +376,19 @@ then
             setLAfilterOptions
         fi
         ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
-        bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile} > ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.log
-        ### create assemblyStats plan 
-        echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} >> ${FIX_FILT_OUTDIR}/stats.${FIX_FILT_OUTDIR}.log" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
+        bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+        ### create assemblyStats plan
+        echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 6" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
     else
         (>&2 echo "step ${currentStep} in FIX_TOUR_TYPE ${FIX_TOUR_TYPE} not supported")
-        (>&2 echo "valid steps are: #type-0 steps: 1-OGbuild, 2-OGtour, 3-tour2fasta, 4-OGlayout, 5-marvelStats")
+        (>&2 echo "valid steps are: ${myTypes[${FIX_TOUR_TYPE}]}")
         exit 1            
     fi
 else
-    echo "unknown FIX_TOUR_TYPE ${FIX_TOUR_TYPE}"
-    exit 1
+    (>&2 echo "unknown FIX_TOUR_TYPE ${FIX_TOUR_TYPE}")
+    (>&2 echo "supported types")
+    x=0; while [ $x -lt ${#myTypes[*]} ]; do (>&2 echo "type-${x} steps: ${myTypes[${x}]}"); done    
 fi
 
 exit 0
