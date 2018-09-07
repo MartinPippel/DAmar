@@ -416,7 +416,7 @@ function setLAseparateOptions()
     then 
         FIX_LASEPARATE_OPT="${FIX_LASEPARATE_OPT} -l${RAW_FIX_LASEPARATE_RLEN}"
     fi 
-    if [[ -n ${RAW_FIX_LASEPARATE_USREPEAT} && ${RAW_FIX_LASEPARATE_USREPEAT} -gt 0 ]]
+    if [[ -n ${RAW_FIX_LASEPARATE_USREPEAT} ]]
     then 
     	ptype=""
     	if [[ "$1" -eq 0 ]]
