@@ -222,13 +222,13 @@ function setLArepeatOptions()
         FIX_LAREPEAT_OPT="${FIX_LAREPEAT_OPT} -t ${RAW_FIX_LAREPEAT_REPEATTRACK}"
     else
         ptype=""
-        if [[ ${RAW_PATCH_TYPE} -eq 0 ]]
+        if [[ $1 -eq 1 ]]
         then 
             ptype="_dalign"
-        elif [[ ${RAW_PATCH_TYPE} -eq 1 ]]
+        elif [[ $1 -eq 2 ]]
         then 
             ptype="_repcomp"
-        elif [[ ${RAW_PATCH_TYPE} -eq 2 ]]
+        elif [[ $1 -eq 3 ]]
         then 
             ptype="_forcealign"        
         else
@@ -267,77 +267,6 @@ function setTKcombineOptions()
     then
         FIX_TKCOMBINE_OPT="${FIX_TKCOMBINE_OPT} -v"
     fi
-}
-
-function setLAfilterOptions()
-{
-    FIX_LAFILTER_OPT=""
-    if [[ -n ${RAW_FIX_LAFILTER_NREP} && ${RAW_FIX_LAFILTER_NREP} -ne 0 ]]
-    then
-        FIX_LAFILTER_OPT="${FIX_LAFILTER_OPT} -n ${RAW_FIX_LAFILTER_NREP}"
-    fi
-    if [[ -n ${RAW_FIX_LAFILTER_VERBOSE} && ${RAW_FIX_LAFILTER_VERBOSE} -ne 0 ]]
-    then
-        FIX_LAFILTER_OPT="${FIX_LAFILTER_OPT} -v"
-    fi
-    if [[ -n ${RAW_FIX_LAFILTER_PURGE} && ${RAW_FIX_LAFILTER_PURGE} -ne 0 ]]
-    then
-        FIX_LAFILTER_OPT="${FIX_LAFILTER_OPT} -p"
-    fi
-    if [[ -n ${RAW_FIX_LAFILTER_OLEN} && ${RAW_FIX_LAFILTER_OLEN} -ne 0 ]]
-    then
-        FIX_LAFILTER_OPT="${FIX_LAFILTER_OPT} -o ${RAW_FIX_LAFILTER_OLEN}"
-    fi    
-    if [[ -n ${RAW_FIX_LAFILTER_RLEN} && ${RAW_FIX_LAFILTER_RLEN} -ne 0 ]]
-    then
-        FIX_LAFILTER_OPT="${FIX_LAFILTER_OPT} -l ${RAW_FIX_LAFILTER_RLEN}"
-    fi   
-
-    # we need the name of the repeat track, especially if the plan starts with step8
-    if [[ ${RAW_PATCH_TYPE} -eq 0 ]]
-    then
-       if [[ -z ${FIX_LAREPEAT_OPT} ]]
-       then 
-            setLArepeatOptions
-        fi       
-        RAW_FIX_LAFILTER_REPEATTRACK=f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust
-        FIX_LAFILTER_OPT="${FIX_LAFILTER_OPT} -r ${RAW_FIX_LAFILTER_REPEATTRACK}"
-    fi
-}
-
-function setLAstitchOptions()
-{   
-    FIX_STITCH_OPT=""
-    if [[ -n ${RAW_FIX_LASTITCH_FUZZ} && ${RAW_FIX_LASTITCH_FUZZ} -ne 0 ]]
-    then
-        FIX_STITCH_OPT="${FIX_STITCH_OPT} -f ${RAW_FIX_LASTITCH_FUZZ}"
-    fi
-    if [[ -n ${RAW_FIX_LASTITCH_ANCHOR} && ${RAW_FIX_LASTITCH_ANCHOR} -ne 0 ]]
-    then
-        FIX_STITCH_OPT="${FIX_STITCH_OPT} -a ${RAW_FIX_LASTITCH_ANCHOR}"
-    fi
-    if [[ -n ${RAW_FIX_LASTITCH_PRELOAD} && ${RAW_FIX_LASTITCH_PRELOAD} -ne 0 ]]
-    then
-        FIX_STITCH_OPT="${FIX_STITCH_OPT} -L"
-    fi
-    if [[ -n ${RAW_FIX_LASTITCH_PURGE} && ${RAW_FIX_LASTITCH_PURGE} -ne 0 ]]
-    then
-        FIX_STITCH_OPT="${FIX_STITCH_OPT} -p"
-    fi
-    if [[ -n ${RAW_FIX_LASTITCH_LOWCOMPLEXITY} ]]
-    then
-        FIX_STITCH_OPT="${FIX_STITCH_OPT} -t ${RAW_FIX_LASTITCH_LOWCOMPLEXITY}"
-    fi
-    if [[ -n ${RAW_FIX_LASTITCH_VERBOSE} ]]
-    then
-        FIX_STITCH_OPT="${FIX_STITCH_OPT} -v"
-    fi
-    # we need the name of the repeat track, especially if the plan starts with step9
-    if [[ -z ${FIX_LAREPEAT_OPT} ]]
-    then 
-        setLArepeatOptions
-    fi       
-    FIX_STITCH_OPT="${FIX_STITCH_OPT} -r f${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust"
 }
 
 function setLAqOptions()
@@ -615,10 +544,7 @@ then
         do            
             rm $x
         done 
-        if [ -z ${FIX_LAREPEAT_OPT} ]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 1
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
@@ -633,10 +559,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step4
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 1
         ### find and set TKmerge options 
         if [[ -z ${FIX_TKMERGE_OPT} ]]
         then 
@@ -653,10 +576,7 @@ then
             rm $x
         done     
         # we need the name of the repeat track, especially if the plan starts with step5
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 1
         ### find and set TKcombine options
         setTKcombineOptions 1
         ### set repmask tracks 
@@ -688,10 +608,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step6
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 1
         ### create TKhomogenize commands
         for x in $(seq 1 ${nblocks})
         do 
@@ -706,10 +623,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step7
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions 
-        fi
+        setLArepeatOptions 1
         ### find and set TKcombine options
         setTKcombineOptions 0
         ### create TKcombine commands
@@ -875,10 +789,7 @@ then
         do            
             rm $x
         done 
-        if [ -z ${FIX_LAREPEAT_OPT} ]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 1
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
@@ -893,10 +804,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step4
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 1
         ### find and set TKmerge options 
         if [[ -z ${FIX_TKMERGE_OPT} ]]
         then 
@@ -913,10 +821,7 @@ then
             rm $x
         done     
         # we need the name of the repeat track, especially if the plan starts with step5
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 1
         ### find and set TKcombine options
         setTKcombineOptions 1
         ### set repmask tracks 
@@ -948,10 +853,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step6
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 1
         ### create TKhomogenize commands
         for x in $(seq 1 ${nblocks})
         do 
@@ -966,10 +868,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step7
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions 
-        fi
+        setLArepeatOptions 1
         ### find and set TKcombine options
         setTKcombineOptions 0
         ### create TKcombine commands
@@ -1152,10 +1051,7 @@ then
         do            
             rm $x
         done 
-        if [ -z ${FIX_LAREPEAT_OPT} ]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 2
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
@@ -1170,10 +1066,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step4
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 2
         ### find and set TKmerge options 
         if [[ -z ${FIX_TKMERGE_OPT} ]]
         then 
@@ -1190,10 +1083,7 @@ then
             rm $x
         done     
         # we need the name of the repeat track, especially if the plan starts with step5
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 2
         ### find and set TKcombine options
         setTKcombineOptions 1
         ### set repmask tracks 
@@ -1225,10 +1115,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step6
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 2
         ### create TKhomogenize commands
         for x in $(seq 1 ${nblocks})
         do 
@@ -1243,10 +1130,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step7
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions 
-        fi
+        setLArepeatOptions 2
         ### find and set TKcombine options
         setTKcombineOptions 0
         ### create TKcombine commands
@@ -1495,10 +1379,7 @@ then
         do            
             rm $x
         done 
-        if [ -z ${FIX_LAREPEAT_OPT} ]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 3
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
@@ -1513,10 +1394,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step4
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 3
         ### find and set TKmerge options 
         if [[ -z ${FIX_TKMERGE_OPT} ]]
         then 
@@ -1533,10 +1411,7 @@ then
             rm $x
         done     
         # we need the name of the repeat track, especially if the plan starts with step5
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 3
         ### find and set TKcombine options
         setTKcombineOptions 1
         ### set repmask tracks 
@@ -1568,10 +1443,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step6
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions
-        fi
+        setLArepeatOptions 3
         ### create TKhomogenize commands
         for x in $(seq 1 ${nblocks})
         do 
@@ -1586,10 +1458,7 @@ then
             rm $x
         done 
         # we need the name of the repeat track, especially if the plan starts with step7
-        if [[ -z ${FIX_LAREPEAT_OPT} ]]
-        then 
-            setLArepeatOptions 
-        fi
+        setLArepeatOptions 3
         ### find and set TKcombine options
         setTKcombineOptions 0
         ### create TKcombine commands

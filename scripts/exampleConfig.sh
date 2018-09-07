@@ -5,8 +5,8 @@ MARVEL_SOURCE_PATH="/projects/dazzler/pippel/prog/MARVEL/DAMARVEL"
 MARVEL_PATH="/projects/dazzler/pippel/prog/MARVEL/DAMARVEL-build"
 
 ### REPCOMP PATH
-REMPCOMP_SOURCE_PATH="/projects/dazzler/pippel/prog/repcomp"
-REMPCOMP_PATH="/projects/dazzler/pippel/prog/repcomp-build"
+REPCOMP_SOURCE_PATH="/projects/dazzler/pippel/prog/repcomp"
+REPCOMP_PATH="/projects/dazzler/pippel/prog/repcomp-build"
 
 ### DACCORD PATH - used progs: fastaidrename, forcealign
 DACCORD_SOURCE_PATH="/projects/dazzler/pippel/prog/daccord/"
@@ -159,9 +159,9 @@ RAW_REPMASK_CATRACK_OVERWRITE=1
 RAW_REPMASK_DALIGNER_RUNID=0
 RAW_REPMASK_DALIGNER_VERBOSE=1
 RAW_REPMASK_DALIGNER_BIAS=${REPMASK_DBDUST_BIAS}
-RAW_REPMASK_DALIGNER_IDENTITY_OVLS=1
+RAW_REPMASK_DALIGNER_IDENTITY_OVLS=0
 RAW_REPMASK_DALIGNER_KMER=14
-RAW_REPMASK_DALIGNER_OLEN=500
+RAW_REPMASK_DALIGNER_OLEN=700
 RAW_REPMASK_DALIGNER_ERR=0.7
 RAW_REPMASK_DALIGNER_MASK="dust ${RAW_REPMASK_TANMASK_TRACK}"
 # LArepeat
@@ -186,7 +186,8 @@ while [[ $x -lt ${#RAW_REPMASK_BLOCKCMP[*]} ]]
 do 
 	RAW_FIX_DALIGNER_MASK="${RAW_FIX_DALIGNER_MASK} ${RAW_REPMASK_LAREPEAT_REPEATTRACK}_B${RAW_REPMASK_BLOCKCMP[${x}]}C${RAW_REPMASK_LAREPEAT_COV[${x}]}"
 	x=$(($x+1))
-done 
+done
+RAW_FIX_DALIGNER_NUMACTL=1
 #  LAmerge
 RAW_FIX_LAMERGE_NFILES=64
 # LArepeat
@@ -218,10 +219,10 @@ RAW_FIX_FORCEALIGN_NUMACTL=1
 RAW_FIX_FORCEALIGN_MAXDIST=250
 RAW_FIX_FORCEALIGN_BORDER=25
 RAW_FIX_FORCEALIGN_CORRELATION=0.65
-LAq
+# LAq
 RAW_FIX_LAQ_MINSEG=1
 RAW_FIX_LAQ_QTRIMCUTOFF=35 # thats always related to a 100 bp trace spacing and will adjusted appropriately if it differs 
-LAfix
+# LAfix
 #RAW_FIX_LAFIX_QUAL=30    # default is 28, only increase if data has very low quality 
 RAW_FIX_LAFIX_GAP=-1
 RAW_FIX_LAFIX_MLEN=4000

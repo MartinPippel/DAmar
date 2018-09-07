@@ -41,27 +41,27 @@ if [[ ${phase} -eq 6 ]] ## raw assembly stats  (last step in touring)
 then 
 	if [[ -d ${FIX_FILT_OUTDIR}/tour ]]
 	then
-		path=stats/contigs/${FIX_FILT_OUTDIR}/raw
-		mkdir -p ${path}
+		p=stats/contigs/${FIX_FILT_OUTDIR}/raw
+		mkdir -p ${p}
 		
 		for y in ${FIX_FILT_OUTDIR}/tour/*.fasta
 		do
 			name=$(basename ${y%.fasta})
 			sed -e "s:>path_:>${name}_:" $y  
-		done > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.fasta
-		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${PROJECT_ID}_${FIX_FILT_OUTDIR}_r ${gsize} ${path} ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.fasta  
+		done > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.fasta
+		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${PROJECT_ID}_${FIX_FILT_OUTDIR}_r ${gsize} ${p} ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.fasta  
 
 		## create statistic files
-		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.stats
-		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.stats
-		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.stats
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.stats
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.stats
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.stats
 		
 		## create header files
-		grep -e ">" ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta | awk '{print $1}' | sed -e 's:^>::' > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.header
-		grep -e ">" ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta | awk '{print $1}' | sed -e 's:^>::' > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.header
+		grep -e ">" ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta | awk '{print $1}' | sed -e 's:^>::' > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.header
+		grep -e ">" ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta | awk '{print $1}' | sed -e 's:^>::' > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.header
 		
 		## copy config file
-		cp $config ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
+		cp $config ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
 	else
 		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/tour not available")
   		exit 1
@@ -70,22 +70,22 @@ elif [[ ${phase} -eq 7 ]] ## marvel corrected assembly stats  (last step in corr
 then
 	if [[ -d ${FIX_FILT_OUTDIR}/correction/contigs ]]
 	then
-		path=stats/contigs/${FIX_FILT_OUTDIR}/corr
-		mkdir -p ${path}
+		p=stats/contigs/${FIX_FILT_OUTDIR}/corr
+		mkdir -p ${p}
 		
 		for y in ${FIX_FILT_OUTDIR}/correction/contigs/*.fasta
 		do
 			cat $y  
-		done > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta
-		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${PROJECT_ID}_${FIX_FILT_OUTDIR}_r ${gsize} ${path} ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta  
+		done > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta
+		${SUBMIT_SCRIPTS_PATH}/splitDiploidAssembly.py ${PROJECT_ID}_${FIX_FILT_OUTDIR}_r ${gsize} ${p} ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta  
 
 		## create statistic files
-		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.stats
-		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.p.stats
-		cat ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.a.stats
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.stats
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.p.stats
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.a.stats
 		
 		## copy config file
-		cp $config ${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
+		cp $config ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
 	else
 		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/correction/contigs not available")
   		exit 1
@@ -94,7 +94,7 @@ then
 elif [[ ${phase} -eq 8 ]] ## marvel corrected assembly stats after contig analysis  (last step after CTanalysis)
 then
 	#todo 
-elif [[ ${phase} -eq 8 ]] ## assembly stats after PacBio Arrow Correction 
+elif [[ ${phase} -eq 9 ]] ## assembly stats after PacBio Arrow Correction 
 then
 	if [[ -d ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]
 	then
@@ -110,14 +110,14 @@ then
 			fext="@"		
 		fi
 		
-		if [[ ! -d ${rawPath} || ! -f ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta || ! -f ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta ]]
+		if [[ ! -d ${rawPath} || ! -f ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta || ! -f ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta ]]
         then 
 	     	(>&2 echo "ERROR - stats folder or assembly staticstics are missing. Run last step of touring first.")
     	    exit 1        			
         fi
 
 		## primary 
-		for z in $(cat ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.header)
+		for z in $(cat ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.header)
 		do
 			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
 			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
@@ -145,7 +145,7 @@ then
 			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa						        		
 		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta
 		## alternate
-		for z in $(cat ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.header)
+		for z in $(cat ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.header)
 		do
 			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
 			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
@@ -173,7 +173,7 @@ then
 			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}CORR_${pathID}${arrowExtension}/ALL_${name}CORR_${pathID}${arrowExtension}.arrow.fa						        		
 		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta
 		## all 	
-        for z in $(cat ${rawPath}/${path}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.header)
+        for z in $(cat ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.header)
 		do
 			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
 			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
