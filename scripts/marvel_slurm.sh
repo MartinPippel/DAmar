@@ -41,6 +41,12 @@ then
     exit 1
 fi
 
+# file must be present 
+function realpath()
+{
+	echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+}
+
 ## find entry point to create first plan and submit that stuff 
 
 if [[ ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
@@ -85,4 +91,17 @@ else
     exit 0
 fi
 
-${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} ${currentStep} ${Id}
+realPathConfigFile=$(realpath "${configFile}")
+
+cwd=$(pwd)
+if [[ ${currentPhase} -lt 3 ]]
+then 
+	cd ${PATCHING_DIR}
+	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
+	cd ${cwd}
+elif [[ ${currentPhase} -lt 10 ]]
+then
+	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
+	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
+	cd ${cwd}
+fi
