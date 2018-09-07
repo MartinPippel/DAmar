@@ -3,9 +3,12 @@ include ../Makefile.settings
 
 ALL =
 SCRIPTS = rid2bid.py DBprepare.py paths2rids.py marvelStats.sh n50.py splitDiploidAssembly.py \
-          createAndSubmitMarvelSlurmJobs.sh	createCommandPlan.sh createCorrectionPlans.sh createFilteringPlans.sh \
-          createReadPatchingPlans.sh createRepmaskPlans.sh createScrubbingPlans.sh createSubmitScripts.sh createTouringPlans.sh \
-          marvel_slurm.sh slurmStats.sh assemblyStats.sh createPacBioArrowPlans.sh createContigAnalyzePlans.sh
+		  marvel_slurm.sh createAndSubmitMarvelSlurmJobs.sh createCommandPlan.sh createSubmitScripts.sh \
+		  createRepmaskPlans.sh createReadPatchingPlans.sh \
+          createRepmaskPlans2.sh createScrubbingPlans.sh createFilteringPlans.sh createTouringPlans.sh \
+          createCorrectionPlans.sh createContigAnalyzePlans.sh \
+          createPacBioArrowPlans.sh \
+          slurmStats.sh assemblyStats.sh exampleConfig.sh
 
 all: $(ALL)
 
