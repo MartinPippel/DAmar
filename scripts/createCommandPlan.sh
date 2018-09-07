@@ -7,7 +7,7 @@ slurmID=$4
 
 cwd=$(pwd)
 echo "createCommandPlan.sh ${configFile} ${currentPhase} ${currentStep} ${slurmID}"
-echo ${cwd} 
+echo "cwd ${cwd}" 
 
 if [[ ! -f ${configFile} ]]
 then 
@@ -35,7 +35,7 @@ then
 		ln -s -r ${DB_PATH}/${RAW_DB%db}.db ${DB_PATH}/.${RAW_DB%db}.idx ${DB_PATH}/.${RAW_DB%db}.bps .
 		ln -s -r ${DB_PATH}/${RAW_DAZZ_DB%db}.db ${DB_PATH}/.${RAW_DAZZ_DB%db}.idx ${DB_PATH}/.${RAW_DAZZ_DB%db}.bps .
 	fi		
-    ${SUBMIT_SCRIPTS_PATH}/createRepmaskPlans.sh ../${configFile} ${currentStep} ${slurmID}
+    ${SUBMIT_SCRIPTS_PATH}/createRepmaskPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createRepmaskPlans.sh failed some how. Stop here.")
@@ -44,7 +44,7 @@ then
     cd ${cwd}
 elif [[ ${currentPhase} -eq 2 ]]
 then 
-	cd ${PATCHING_DIR} && ${SUBMIT_SCRIPTS_PATH}/createReadPatchingPlans.sh ../${configFile} ${currentStep} ${slurmID} && cd ${cwd}
+	cd ${PATCHING_DIR} && ${SUBMIT_SCRIPTS_PATH}/createReadPatchingPlans.sh ${configFile} ${currentStep} ${slurmID} && cd ${cwd}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createReadPatchingPlans.sh failed some how. Stop here.")
@@ -69,7 +69,7 @@ then
 		ln -s -r ${DB_PATH}/${RAW_DB%db}.db ${DB_PATH}/.${RAW_DB%db}.idx ${DB_PATH}/.${RAW_DB%db}.bps .
 		ln -s -r ${DB_PATH}/${RAW_DAZZ_DB%db}.db ${DB_PATH}/.${RAW_DAZZ_DB%db}.idx ${DB_PATH}/.${RAW_DAZZ_DB%db}.bps .
 	fi
-    ${SUBMIT_SCRIPTS_PATH}/createRepmaskPlans2.sh ../../${configFile} ${currentStep} ${slurmID}
+    ${SUBMIT_SCRIPTS_PATH}/createRepmaskPlans2.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createScrubbingPlans2.sh failed some how. Stop here.")
@@ -84,7 +84,7 @@ then
 	    exit 1			
 	fi
 	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
-    ${SUBMIT_SCRIPTS_PATH}/createScrubbingPlans.sh ../../${configFile} ${currentStep} ${slurmID}
+    ${SUBMIT_SCRIPTS_PATH}/createScrubbingPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createScrubbingPlans.sh failed some how. Stop here.")
@@ -99,7 +99,7 @@ then
 	    exit 1			
 	fi
 	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
-    ${SUBMIT_SCRIPTS_PATH}/createFilteringPlans.sh ../../${configFile} ${currentStep} ${slurmID}
+    ${SUBMIT_SCRIPTS_PATH}/createFilteringPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createFilteringPlans.sh failed some how. Stop here.")
@@ -114,7 +114,7 @@ then
 	    exit 1			
 	fi
 	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}	
-    ${SUBMIT_SCRIPTS_PATH}/createTouringPlans.sh ../../${configFile} ${currentStep} ${slurmID}
+    ${SUBMIT_SCRIPTS_PATH}/createTouringPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createTouringPlans.sh failed some how. Stop here.")
@@ -129,7 +129,7 @@ then
 	    exit 1			
 	fi
 	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
-	${SUBMIT_SCRIPTS_PATH}/createCorrectionPlans.sh ../../${configFile} ${currentStep} ${slurmID}
+	${SUBMIT_SCRIPTS_PATH}/createCorrectionPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createCorrectionPlans.sh failed some how. Stop here.")
@@ -144,7 +144,7 @@ then
 	    exit 1			
 	fi
 	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
-	${SUBMIT_SCRIPTS_PATH}/createContigAnalyzePlans.sh ../../${configFile} ${currentStep} ${slurmID}
+	${SUBMIT_SCRIPTS_PATH}/createContigAnalyzePlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createContigAnalyzePlans.sh failed some how. Stop here.")
@@ -159,7 +159,7 @@ then
 	    exit 1			
 	fi
 	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
-    ${SUBMIT_SCRIPTS_PATH}/createPacBioArrowPlans.sh ../../${configFile} ${currentStep} ${slurmID}
+    ${SUBMIT_SCRIPTS_PATH}/createPacBioArrowPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createPacBioArrowPlans.sh failed some how. Stop here.")
