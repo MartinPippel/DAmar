@@ -359,7 +359,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" > ${file}.slurm
 fi     
 
 foundNext=0
-if [[ ${currentPhase} -eq 0 ]]
+if [[ ${currentPhase} -eq 1 ]]
 then 
     if [[ $((${currentStep}+1)) -le ${RAW_REPMASK_SUBMIT_SCRIPTS_TO} ]]
     then 
@@ -371,7 +371,7 @@ then
     fi
 fi  
 
-if [[ ${currentPhase} -eq 1 && ${foundNext} -eq 0 ]]
+if [[ ${currentPhase} -eq 2 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${RAW_PATCH_SUBMIT_SCRIPTS_TO} ]]
     then 
@@ -383,7 +383,19 @@ then
     fi 
 fi  
 
-if [[ ${currentPhase} -eq 2 && ${foundNext} -eq 0 ]]
+if [[ ${currentPhase} -eq 3 && ${foundNext} -eq 0 ]]
+then 
+    if [[ $((${currentStep}+1)) -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]]
+    then 
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o mask_step$((${currentStep}+1))_${RAW_DB%.db}.out -e mask_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+    else 
+        currentPhase=1
+        currentStep=$((${FIX_PATCH_SUBMIT_SCRIPTS_FROM}-1))
+    fi
+fi
+
+if [[ ${currentPhase} -eq 4 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${FIX_SCRUB_SUBMIT_SCRIPTS_TO} ]]
     then 
@@ -395,7 +407,7 @@ then
     fi 
 fi     
 
-if [[ ${currentPhase} -eq 3 && ${foundNext} -eq 0 ]]
+if [[ ${currentPhase} -eq 5 && ${foundNext} -eq 0 ]]
 then 
     if [[ ${FIX_FILT_TYPE} -eq 0 && ${currentStep} -eq 2 && -n ${FIX_FILT_LAFILTER_RMSYMROUNDS} && ${FIX_FILT_LAFILTER_RMSYMROUNDS} -gt 0 && ! -f filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan ]]
     then                 
@@ -411,7 +423,7 @@ then
     fi 
 fi
 
-if [[ ${currentPhase} -eq 4 && ${foundNext} -eq 0 ]]
+if [[ ${currentPhase} -eq 6 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${FIX_TOUR_SUBMIT_SCRIPTS_TO} ]]
     then 
@@ -423,7 +435,7 @@ then
     fi
 fi 
 
-if [[ ${currentPhase} -eq 5 && ${foundNext} -eq 0 ]]
+if [[ ${currentPhase} -eq 7 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${FIX_CORR_SUBMIT_SCRIPTS_TO} ]]
     then 
@@ -432,7 +444,7 @@ then
     fi
 fi
 
-if [[ ${currentPhase} -eq 6 && ${foundNext} -eq 0 ]]
+if [[ ${currentPhase} -eq 8 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${COR_CONTIG_SUBMIT_SCRIPTS_TO} ]]
     then 
@@ -441,7 +453,7 @@ then
     fi
 fi
 
-if [[ ${currentPhase} -eq 7 && ${foundNext} -eq 0 ]]
+if [[ ${currentPhase} -eq 9 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]]
     then 

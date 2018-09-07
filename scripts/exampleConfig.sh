@@ -32,7 +32,7 @@ export PYTHONUSERBASE=${PACBIO_ARROW_TOOLS}
 export LD_LIBRARY_PATH=${PACBIO_ARROW_TOOLS}/lib:${LD_LIBRARY_PATH}
 export PATH=${PACBIO_ARROW_TOOLS}/bin:${PACBIO_ARROW_TOOLS}:${PATH}
 export PATH=${MARVEL_PATH}/bin:${MARVEL_PATH}/scripts:$PATH
-export PYTHONPATH=${${MARVEL_PATH}}/lib.python:$PYTHONPATH
+export PYTHONPATH=${MARVEL_PATH}/lib.python:$PYTHONPATH
 export PATH=${SAMTOOLS_PATH}/bin:$PATH
 export PATH=${BAMTOOLS_PATH}/bin:$PATH
 
@@ -60,7 +60,11 @@ CONT_DAZZ_DB=LAB1608_HYLES_VESPERTILIO_DAZZLER_CONTIG
  
 ################# define marvel phases and their steps that should be done 
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 0 - repeat masking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+DB_PATH=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/pacbio
+PATCHING_DIR="patching"
+ASSMEBLY_DIR="assembly"
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 1 - repeat masking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 # type-0 steps [1-13]: 1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LAmerge, 8-LArepeat, 9-TKmerge, 10-daligner, 11-LAmerge, 12-LArepeat, 13-TKmerge]
 RAW_REPMASK_TYPE=0
@@ -68,7 +72,7 @@ RAW_REPMASK_TYPE=0
 RAW_REPMASK_SUBMIT_SCRIPTS_FROM=1
 RAW_REPMASK_SUBMIT_SCRIPTS_TO=9
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 1 - read patching <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 2 - read patching <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
  
 #type-0 steps   [1-11]:   1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix                 #old pipeline
 #type-1 steps   [ 1-11 :  1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix                # experimental pipeline     
@@ -79,14 +83,14 @@ RAW_PATCH_TYPE=1
 RAW_PATCH_SUBMIT_SCRIPTS_FROM=1
 RAW_PATCH_SUBMIT_SCRIPTS_TO=33
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 3 - repeat masking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 3 - repeat masking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # type_0 steps [1-13]: 1-createFIX_DB, 1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LAmerge, 8-LArepeat, 9-TKmerge, 10-daligner, 11-LAmerge, 12-LArepeat, 14-TKmerge]
 FIX_REPMASK_TYPE=0
 
 FIX_REPMASK_SUBMIT_SCRIPTS_FROM=1
 FIX_REPMASK_SUBMIT_SCRIPTS_TO=14
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 2 - scrubbing <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 4 - scrubbing <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 FIX_SCRUB_TYPE=1
 
 #type-0 steps [1-13]: 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge          ## old pipeline
@@ -96,7 +100,7 @@ FIX_SCRUB_TYPE=1
 FIX_SCRUB_SUBMIT_SCRIPTS_FROM=1
 FIX_SCRUB_SUBMIT_SCRIPTS_TO=41
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 3 - overlap filtering <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 5 - overlap filtering <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 FIX_FILT_TYPE=0
 #type-1 steps: 1-createSubdir, 2-LAfilter, 3-LAmerge
@@ -104,28 +108,28 @@ FIX_FILT_TYPE=0
 FIX_FILT_SUBMIT_SCRIPTS_FROM=1
 FIX_FILT_SUBMIT_SCRIPTS_TO=3
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 4 - touring, stats, layout <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 6 - touring, stats, layout <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 FIX_TOUR_TYPE=0
 #type-0 steps: 1-OGbuild, 2-OGtour, 3-tour2fasta, 4-OGlayout, 5-statistics
 FIX_TOUR_SUBMIT_SCRIPTS_FROM=1
 FIX_TOUR_SUBMIT_SCRIPTS_TO=5
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 5 - contig correction  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 7 - contig correction  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 FIX_CORR_TYPE=0
 #type-0 steps: 1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-statistics
 FIX_CORR_SUBMIT_SCRIPTS_FROM=1
 FIX_CORR_SUBMIT_SCRIPTS_TO=5
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 6 - contig analyze stats  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 8 - contig analyze stats  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 COR_CONTIG_TYPE=0
 #type-0 steps: 1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAfilter, 9-LAseparate, 10-forcealign, 11-LAmerge, 12-LArepeat, 13-TKmerge, 14-TKcombine, 15-LAfilter, 16-LAmerge, 17-CTanalyze
 COR_CONTIG_SUBMIT_SCRIPTS_FROM=0
 COR_CONTIG_SUBMIT_SCRIPTS_TO=17
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 7 - pacbio arrow correction  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 9 - pacbio arrow correction  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 PB_ARROW_TYPE=0
 #type-0 steps: 1-prepInFasta, 2-pbalign, 3-bamsplit, 4-bamseparate, 5-bamMerge, 6-arrow, 7-statistics

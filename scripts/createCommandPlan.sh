@@ -167,6 +167,6 @@ then
     fi 
     cd ${cwd}   
 else
-    (>&2echo "unknown assembly phase: ${currentPhase}")
+    (>&2 echo "unknown assembly phase: ${currentPhase}")
     exit 1
 fi 
