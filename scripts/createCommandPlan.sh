@@ -23,8 +23,6 @@ source ${configFile}
 
 if [[ ${currentPhase} -eq 1 ]]
 then	 
-	mkdir -p ${PATCHING_DIR}
-	cd ${PATCHING_DIR}
 	if [[ ! -f ${RAW_DB%db}.db ]]
 	then 
 		if [[ ! -f ${DB_PATH}/${RAW_DB%db}.db || ! -f ${DB_PATH}/${RAW_DAZZ_DB%db}.db ]]
@@ -41,10 +39,9 @@ then
         (>&2 echo "createRepmaskPlans.sh failed some how. Stop here.")
         exit 1      
     fi
-    cd ${cwd}
 elif [[ ${currentPhase} -eq 2 ]]
 then 
-	cd ${PATCHING_DIR} && ${SUBMIT_SCRIPTS_PATH}/createReadPatchingPlans.sh ${configFile} ${currentStep} ${slurmID} && cd ${cwd}
+	${SUBMIT_SCRIPTS_PATH}/createReadPatchingPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createReadPatchingPlans.sh failed some how. Stop here.")
@@ -57,8 +54,6 @@ then
 		(>&2 echo "Variable RAW_FIX_LAFIX_PATH must be set. Its used to create the assembly subfolder ASSMEBLY_DIR/RAW_FIX_LAFIX_PATH")
 	    exit 1
 	fi
-	mkdir -p ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
-	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
 	if [[ ! -f ${RAW_DB%db}.db ]]
 	then 
 		if [[ ! -f ${DB_PATH}/${RAW_DB%db}.db || ! -f ${DB_PATH}/${RAW_DAZZ_DB%db}.db ]]
@@ -75,97 +70,54 @@ then
         (>&2 echo "createScrubbingPlans2.sh failed some how. Stop here.")
         exit 1      
     fi   
-	cd ${cwd}
 elif [[ ${currentPhase} -eq 4 ]]    
 then 
-	if [[ ! -d ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH} ]]
-	then 
-		(>&2 echo "Cannot access directory ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}")
-	    exit 1			
-	fi
-	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
     ${SUBMIT_SCRIPTS_PATH}/createScrubbingPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createScrubbingPlans.sh failed some how. Stop here.")
         exit 1      
     fi
-    cd ${cwd}
 elif [[ ${currentPhase} -eq 5 ]]
 then 
-	if [[ ! -d ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH} ]]
-	then 
-		(>&2 echo "Cannot access directory ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}")
-	    exit 1			
-	fi
-	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
     ${SUBMIT_SCRIPTS_PATH}/createFilteringPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createFilteringPlans.sh failed some how. Stop here.")
         exit 1      
     fi
-    cd ${cwd}
 elif [[ ${currentPhase} -eq 6 ]]
 then 
-	if [[ ! -d ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH} ]]
-	then 
-		(>&2 echo "Cannot access directory ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}")
-	    exit 1			
-	fi
-	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}	
     ${SUBMIT_SCRIPTS_PATH}/createTouringPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createTouringPlans.sh failed some how. Stop here.")
         exit 1      
     fi
-    cd ${cwd}
 elif [[ ${currentPhase} -eq 7 ]]
 then 
-	if [[ ! -d ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH} ]]
-	then 
-		(>&2 echo "Cannot access directory ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}")
-	    exit 1			
-	fi
-	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
 	${SUBMIT_SCRIPTS_PATH}/createCorrectionPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createCorrectionPlans.sh failed some how. Stop here.")
         exit 1      
     fi
-    cd ${cwd}
 elif [[ ${currentPhase} -eq 8 ]]
 then 
-	if [[ ! -d ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH} ]]
-	then 
-		(>&2 echo "Cannot access directory ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}")
-	    exit 1			
-	fi
-	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
 	${SUBMIT_SCRIPTS_PATH}/createContigAnalyzePlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createContigAnalyzePlans.sh failed some how. Stop here.")
         exit 1      
     fi
-    cd ${cwd}
 elif [[ ${currentPhase} -eq 9 ]]
 then 
-    if [[ ! -d ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH} ]]
-	then 
-		(>&2 echo "Cannot access directory ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}")
-	    exit 1			
-	fi
-	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
     ${SUBMIT_SCRIPTS_PATH}/createPacBioArrowPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createPacBioArrowPlans.sh failed some how. Stop here.")
         exit 1      
     fi 
-    cd ${cwd}   
 else
     (>&2 echo "unknown assembly phase: ${currentPhase}")
     exit 1

@@ -96,11 +96,13 @@ realPathConfigFile=$(realpath "${configFile}")
 cwd=$(pwd)
 if [[ ${currentPhase} -lt 3 ]]
 then 
+	mkdir -p ${PATCHING_DIR}
 	cd ${PATCHING_DIR}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
 elif [[ ${currentPhase} -lt 10 ]]
 then
+	mkdir -p ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
 	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
