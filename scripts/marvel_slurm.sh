@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-if [[ -d "${PATCHING_DIR}" ]]
+if [[ -z "${PATCHING_DIR}" ]]
 then 
     (>&2 echo "ERROR - You have to set PATCHING_DIR.")
     exit 1
