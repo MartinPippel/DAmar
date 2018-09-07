@@ -416,13 +416,13 @@ function setLAseparateOptions()
     then 
         FIX_LASEPARATE_OPT="${FIX_LASEPARATE_OPT} -l${RAW_FIX_LASEPARATE_RLEN}"
     fi 
-    if [[ -n ${RAW_FIX_LASEPARATE_USREPEAT} ]]
+    if [[ -n ${RAW_FIX_LASEPARATE_USEREPEAT} ]]
     then 
     	ptype=""
     	if [[ "$1" -eq 0 ]]
     	then 
     		ptype="dalign"
-    	elif [[ "$1" -eq 0 ]]
+    	elif [[ "$1" -eq 1 ]]
     	then 
     		ptype="repcomp"
     	fi
