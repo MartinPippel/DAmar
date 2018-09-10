@@ -955,7 +955,7 @@ then
             rm $x
         done 
 
-        ### find and set repcomp options 
+        ### find and set LAseparate options 
         setLAseparateOptions 0
 
         for x in $(seq 1 ${nblocks}); 
@@ -1013,7 +1013,7 @@ then
                     else
                         NUMACTL=""
                     fi
-                    echo -n "${NUMACTL}${REMPCOMP_PATH}/bin/repcomp${FIX_REPCOMP_OPT} -T/tmp/${RAW_DB%.db}.${x}.${y} ${desDir}/${RAW_DB%.db}.repcomp.${x}.${y} ${RAW_DAZZ_DB%.db} ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"
+                    echo -n "${NUMACTL}${REPCOMP_PATH}/bin/repcomp${FIX_REPCOMP_OPT} -T/tmp/${RAW_DB%.db}.${x}.${y} ${desDir}/${RAW_DB%.db}.repcomp.${x}.${y} ${RAW_DAZZ_DB%.db} ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"
                     cmdLine=$((${cmdLine}+1))
                     if [[ $x -eq $y ]]
                     then
