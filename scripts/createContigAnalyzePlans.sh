@@ -868,7 +868,7 @@ then
                     (>&2 echo "step ${currentStep} in COR_CONTIG_TYPE ${COR_CONTIG_TYPE}: File missing ${sdir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las!!")
                     exit 1                    
                 fi
-                echo "${MARVEL_PATH}/bin/LAseparate${CONTIG_LASEPARATE_OPT} ${CONT_DB%.db} ${sdir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ${sdir}_ForForceAlign/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ${sdir}_NoForceAlign/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las"                
+                echo "${MARVEL_PATH}/bin/LAseparate${CONTIG_LASEPARATE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${sdir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ${sdir}_ForForceAlign/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ${sdir}_NoForceAlign/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las"                
             done 
 		done > cont_09_LAseparate_block_${CONT_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_09_LAseparate_block_${CONT_DB%.db}.${slurmID}.version
@@ -912,7 +912,7 @@ then
                     else
                         NUMACTL=""
                     fi
-                    echo -n "${NUMACTL}${DACCORD_PATH}/bin/forcealign${CONTIG_FORCEALIGN_OPT} -T/tmp/${CONT_DB%.db}.forcealign.${x}.${y} ${desDir}/${CONT_DB%.db}.forcealign.${x}.${y} ${CONT_DAZZ_DB%.db} ${inFile}"
+                    echo -n "${NUMACTL}${DACCORD_PATH}/bin/forcealign${CONTIG_FORCEALIGN_OPT} -T/tmp/${CONT_DB%.db}.forcealign.${x}.${y} ${desDir}/${CONT_DB%.db}.forcealign.${x}.${y} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB%.db} ${inFile}"
                     cmdLine=$((${cmdLine}+1))
                     if [[ $x -eq $y ]]
                     then
