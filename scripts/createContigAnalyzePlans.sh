@@ -803,7 +803,7 @@ then
             count=0
             for y in $(seq ${x} ${contigblocks})
             do  
-            	if [[ $count -lt ${COR_CONTIG_DALIGNER_DAL} ]]
+            	if [[ $count -lt ${COR_CONTIG_DALIGNER_DAL} || ${count} -lt 4 ]]
                 then
                     cmd="${cmd} ${CONT_DB%.db}.${y}"
                     count=$((${count}+1))
