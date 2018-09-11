@@ -342,9 +342,11 @@ FIX_SCRUB_LAGAP_DISCARD_CHIMERS=0  # repeat defined by index and FIX_SCRUB_LAREP
 
 # ----------------------------------------------------------------- FILTER OPTIONS ----------------------------------------------------------------------------------------------------------
 
+# general setting
+FIX_FILT_SCRUB_TYPE=1
+FIX_FILT_OUTDIR=m1
 # LAfilter
 FIX_FILT_LAFILTER_VERBOSE=0	  # be carful if enabnled creates huge log files 
-FIX_FILT_OUTDIR=m1
 #FIX_FILT_LAFILTER_DIF=40
 FIX_FILT_LAFILTER_NREP=100
 FIX_FILT_LAFILTER_OLEN=4000

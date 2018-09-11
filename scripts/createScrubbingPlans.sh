@@ -591,7 +591,7 @@ function setLAseparateOptions()
 }
 
 ## ensure some paths
-if [[ -z "${MARVEL_SOURCE_PATH}" ]]
+if [[ -z "${MARVEL_SOURCE_PATH}" || ! -d "${MARVEL_SOURCE_PATH}" ]]
 then 
     (>&2 echo "ERROR - You have to set MARVEL_SOURCE_PATH. Used to report git version.")
     exit 1

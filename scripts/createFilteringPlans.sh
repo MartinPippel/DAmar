@@ -24,12 +24,6 @@ then
     exit 1
 fi
 
-if [[ -d "${MARVEL_SOURCE_PATH}" ]]
-then 
-    (>&2 echo "ERROR - You have to specify the MARVEL_SOURCE_PATH.")
-    exit 1
-fi
-
 if [[ ! -n "${FIX_FILT_TYPE}" ]]
 then 
     (>&2 echo "cannot create read patching scripts if variable FIX_FILT_TYPE is not set.")
@@ -393,12 +387,11 @@ function setLAmergeOptions()
 }
 
 ## ensure some paths
-if [[ -z "${MARVEL_SOURCE_PATH}" ]]
+if [[ -z "${MARVEL_SOURCE_PATH}" || ! -d "${MARVEL_SOURCE_PATH}" ]]
 then 
     (>&2 echo "ERROR - You have to set MARVEL_SOURCE_PATH. Used to report git version.")
     exit 1
 fi
-
 
 myTypes=("1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge")
 #type-0 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge
