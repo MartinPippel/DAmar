@@ -91,7 +91,8 @@ void rl_load(Read_Loader* rl, int* rids, int nrids)
     rewind(bases);
 
     qsort(rids, nrids, sizeof(int), cmp_rids);
-    nrids = unique(rids, nrids);
+    if(nrids)
+    	nrids = unique(rids, nrids);
 
     uint64 totallen = 0;
     int i;
@@ -165,6 +166,7 @@ void rl_load(Read_Loader* rl, int* rids, int nrids)
         // rb = re;
         offb = offe;
     }
+    free(buffer);
 }
 
 void rl_load_read(Read_Loader* rl, int rid, char* read, int ascii)
