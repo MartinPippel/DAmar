@@ -571,7 +571,7 @@ function setLAseparateOptions()
     then 
         SCRUB_LASEPARATE_OPT="${SCRUB_LASEPARATE_OPT} -l${FIX_SCRUB_LASEPARATE_RLEN}"
     fi 
-    if [[ -n ${FIX_SCRUB_LASEPARATE_USEREPEATIDX} && ${RAW_FIX_LASEPARATE_USREPEAT} -ge 0 && ${RAW_FIX_LASEPARATE_USREPEAT} -lt ${#SCRUB_LAREPEAT_OPT[*]}]]
+    if [[ -n ${FIX_SCRUB_LASEPARATE_USEREPEATIDX} && ${RAW_FIX_LASEPARATE_USREPEAT} -ge 0 && ${RAW_FIX_LASEPARATE_USREPEAT} -lt ${#SCRUB_LAREPEAT_OPT[*]} ]]
     then 
     	stype=""
     	if [[ "$1" -eq 0 ]]
