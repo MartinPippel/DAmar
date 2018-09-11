@@ -279,6 +279,22 @@ function setDatanderOptions()
     fi
 }
 
+function setDBsplitOptions()
+{
+    REPMASK_DBSPLIT_OPT=""
+
+    FIX_REPMASK_DBSPLIT_S=$(grep size ${RAW_DB%.db}.db | awk '{print $3}')
+
+    if [[ -z ${FIX_REPMASK_DBSPLIT_S} ]]
+    then
+        (>&2 echo "database $db has not been partitioned. Run DBsplit first!")
+        exit 1
+    fi
+
+    REPMASK_DBSPLIT_OPT="${REPMASK_DBSPLIT_OPT} -s${FIX_REPMASK_DBSPLIT_S}"
+}
+
+
 ## ensure some paths
 if [[ -z "${MARVEL_SOURCE_PATH}" ]]
 then 

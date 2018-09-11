@@ -59,6 +59,16 @@ then
 		ln -s -r ${DB_PATH}/${RAW_DB%db}.db ${DB_PATH}/.${RAW_DB%db}.idx ${DB_PATH}/.${RAW_DB%db}.bps .
 		ln -s -r ${DB_PATH}/${RAW_DAZZ_DB%db}.db ${DB_PATH}/.${RAW_DAZZ_DB%db}.idx ${DB_PATH}/.${RAW_DAZZ_DB%db}.bps .
 	fi
+	if [[ ! -d "${FIX_REPMASK_USELAFIX_PATH}" ]]	
+	then 
+		if [[ ! -d "../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}" ]]
+		then
+			(>&2 echo "Cannot find patched reads in directory ../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}")
+			(>&2 echo "cwd $(pwd)")
+	        exit 1
+		fi	
+		ln -s -r ../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH} ${FIX_REPMASK_USELAFIX_PATH}
+	fi
     ${SUBMIT_SCRIPTS_PATH}/createRepmaskPlans2.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 

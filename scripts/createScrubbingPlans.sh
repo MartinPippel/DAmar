@@ -124,21 +124,6 @@ function setLAfixOptions()
     fi 
 }
 
-function setDBsplitOptions()
-{
-    SCRUB_DBSPLIT_OPT=""
-
-    FIX_SCRUB_DBSPLIT_S=$(grep size ${RAW_DB%.db}.db | awk '{print $3}')
-
-    if [[ -z ${FIX_SCRUB_DBSPLIT_S} ]]
-    then
-        (>&2 echo "database $db has not been partitioned. Run DBsplit first!")
-        exit 1
-    fi
-
-    SCRUB_DBSPLIT_OPT="${SCRUB_DBSPLIT_OPT} -s${FIX_SCRUB_DBSPLIT_S}"
-}
-
 function setdatanderOptions()
 {
     ### find and set datander options 
