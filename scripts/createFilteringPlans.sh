@@ -395,7 +395,7 @@ fi
 
 myTypes=("1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge")
 #type-0 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge
-elif [[ ${FIX_FILT_TYPE} -eq 0 ]]
+if [[ ${FIX_FILT_TYPE} -eq 0 ]]
 then 
     ### create sub-directory and link relevant DB and Track files
     if [[ ${currentStep} -eq 1 ]]
