@@ -883,12 +883,11 @@ then
         
         ### find and set forcealign options 
         setForcealignOptions
-        contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)       
         cmdLine=1
         for x in $(seq 1 ${contigblocks}); 
         do 
-            srcDir=$(getSubDirName ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_DALIGNER_RUNID} ${x})_ForForceAlign
-            desDir=$(getSubDirName ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_FORCEALIGN_RUNID} ${x})
+            srcDir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_DALIGNER_RUNID} ${x})_ForForceAlign
+            desDir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_FORCEALIGN_RUNID} ${x})
 
             if [[ ! -d ${desDir} ]]
             then
@@ -898,7 +897,7 @@ then
 
             for y in $(seq ${start} ${contigblocks}); 
             do 
-                movDir=$(getSubDirName ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_FORCEALIGN_RUNID} ${y})
+                movDir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_FORCEALIGN_RUNID} ${y})
                 if [[ -f ${srcDir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ]]
                 then 
                     if [[ -n ${COR_CONTIG_FORCEALIGN_NUMACTL} && ${COR_CONTIG_FORCEALIGN_NUMACTL} -gt 0 ]]
