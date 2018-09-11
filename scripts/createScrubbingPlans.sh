@@ -157,12 +157,12 @@ function setTANmaskOptions()
     then
         SCRUB_TANMASK_OPT="${SCRUB_TANMASK_OPT} -l ${FIX_SCRUB_TANMASK_MINLEN}"
     fi
-    if [[ -n ${FIX_SCRUB_TANMASK_TRACK} ]]
+    if [[ -n ${FIX_REPMASK_TANMASK_TRACK} ]]
     then
-        SCRUB_TANMASK_OPT="${SCRUB_TANMASK_OPT} -m ${FIX_SCRUB_TANMASK_TRACK}"
+        SCRUB_TANMASK_OPT="${SCRUB_TANMASK_OPT} -m ${FIX_REPMASK_TANMASK_TRACK}"
     else
-        FIX_SCRUB_TANMASK_TRACK="tan"    
-        SCRUB_TANMASK_OPT="${SCRUB_TANMASK_OPT} -m ${FIX_SCRUB_TANMASK_TRACK}"
+        FIX_REPMASK_TANMASK_TRACK="tan"    
+        SCRUB_TANMASK_OPT="${SCRUB_TANMASK_OPT} -m ${FIX_REPMASK_TANMASK_TRACK}"
     fi
 }
 
@@ -397,7 +397,7 @@ function setLAstitchOptions()
             exit 1
         fi
 
-        SCRUB_STITCH_OPT="${SCRUB_STITCH_OPT} -r f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_SCRUB_LASTITCH_REPEATIDX}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_SCRUB_TANMASK_TRACK}_dust"
+        SCRUB_STITCH_OPT="${SCRUB_STITCH_OPT} -r f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_SCRUB_LASTITCH_REPEATIDX}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust"
     fi
 }
 
@@ -472,7 +472,7 @@ function setLAgapOptions()
             fi
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_SCRUB_LASTITCH_REPEATIDX}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
 
-            SCRUB_LAGAP_OPT="${SCRUB_LAGAP_OPT} -R f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust"
+            SCRUB_LAGAP_OPT="${SCRUB_LAGAP_OPT} -R f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust"
     fi
     
 }
@@ -821,13 +821,13 @@ then
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
 
-        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_SCRUB_TANMASK_TRACK}_dust ${FIX_SCRUB_TANMASK_TRACK} dust" >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust" >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp}" 
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK} f${tmp} ${FIX_SCRUB_TANMASK_TRACK}" 
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust f${tmp}_${FIX_SCRUB_TANMASK_TRACK} dust"            
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK}" 
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust"            
 		done >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.version      
     #### LAstitch
@@ -1153,13 +1153,13 @@ then
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
 
-        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_SCRUB_TANMASK_TRACK}_dust ${FIX_SCRUB_TANMASK_TRACK} dust" >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust" >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp}" 
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK} f${tmp} ${FIX_SCRUB_TANMASK_TRACK}" 
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust f${tmp}_${FIX_SCRUB_TANMASK_TRACK} dust"            
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK}" 
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust"            
 		done >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.version      
     #### LAstitch
@@ -1503,13 +1503,13 @@ then
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
 
-        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_SCRUB_TANMASK_TRACK}_dust ${FIX_SCRUB_TANMASK_TRACK} dust" >> scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust" >> scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp}" 
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK} f${tmp} ${FIX_SCRUB_TANMASK_TRACK}" 
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust f${tmp}_${FIX_SCRUB_TANMASK_TRACK} dust"            
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK}" 
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust"            
 		done >> scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.version        
     #### LAstitch
@@ -1931,13 +1931,13 @@ then
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
 
-        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_SCRUB_TANMASK_TRACK}_dust ${FIX_SCRUB_TANMASK_TRACK} dust" >> scrub_11_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust" >> scrub_11_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp}" 
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK} f${tmp} ${FIX_SCRUB_TANMASK_TRACK}" 
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust f${tmp}_${FIX_SCRUB_TANMASK_TRACK} dust"            
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK}" 
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust"            
 		done >> scrub_35_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scrub_35_TKcombine_single_${FIX_DB%.db}.${slurmID}.version        
     #### LAstitch
