@@ -805,7 +805,7 @@ then
             do  
             	if [[ $count -lt ${COR_CONTIG_DALIGNER_DAL} ]]
                 then
-                    cmd="${cmd} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${y}"
+                    cmd="${cmd} ${CONT_DB%.db}.${y}"
                     count=$((${count}+1))
                 else    
                     echo "${cmd} && cd $d"
@@ -820,7 +820,7 @@ then
                     else
                         NUMACTL=""
                     fi
-                    cmd="cd ${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x} ${CONT_DB%.db}.${y}"
+                    cmd="cd ${FIX_FILT_OUTDIR}/${ANALYZE_DIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${CONTIG_DALIGNER_OPT} ${CONT_DB%.db}.${x} ${CONT_DB%.db}.${y}"
                     cmdLine=$((${cmdLine}+1))
                     count=1
                 fi
