@@ -616,7 +616,7 @@ then
             n=$((${n}-1))
 
             echo ""
-    	done > mask_11_daligner_block_${FIX_DB %.db}.${slurmID}.plan 
+    	done > mask_11_daligner_block_${FIX_DB%.db}.${slurmID}.plan 
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_11_daligner_block_${FIX_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 12 && ${#FIX_REPMASK_BLOCKCMP[*]} -eq 2 && ${#FIX_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
     then
