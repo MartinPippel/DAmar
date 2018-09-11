@@ -370,10 +370,11 @@ then
             setLAfilterOptions
         fi
         ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
-        bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+        cwd=$(pwd)
+        ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
         ### create assemblyStats plan
         echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 6" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in FIX_TOUR_TYPE ${FIX_TOUR_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${FIX_TOUR_TYPE}]}")
