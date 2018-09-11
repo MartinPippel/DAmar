@@ -370,8 +370,13 @@ then
             setLAfilterOptions
         fi
         ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
-        cwd=$(pwd)
-        ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+        if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+        then 
+        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+    	else
+        	cwd=$(pwd)
+        	ssh falcon1 "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+    	fi
         ### create assemblyStats plan
         echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 6" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.version
