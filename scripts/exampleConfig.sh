@@ -84,11 +84,11 @@ RAW_PATCH_SUBMIT_SCRIPTS_FROM=1
 RAW_PATCH_SUBMIT_SCRIPTS_TO=33
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 3 - repeat masking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# type_0 steps [1-13]: 1-createFIX_DB, 1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LAmerge, 8-LArepeat, 9-TKmerge, 10-daligner, 11-LAmerge, 12-LArepeat, 14-TKmerge]
+# type_0 steps [1-14]: 1-createFIX_DB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAmerge, 9-LArepeat, 10-TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge]
 FIX_REPMASK_TYPE=0
 
 FIX_REPMASK_SUBMIT_SCRIPTS_FROM=1
-FIX_REPMASK_SUBMIT_SCRIPTS_TO=14
+FIX_REPMASK_SUBMIT_SCRIPTS_TO=10
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 4 - scrubbing <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 FIX_SCRUB_TYPE=1

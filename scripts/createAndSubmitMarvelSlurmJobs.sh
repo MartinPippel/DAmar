@@ -380,6 +380,18 @@ then
     else 
         currentPhase=3
         currentStep=$((${FIX_REPMASK_SUBMIT_SCRIPTS_FROM}-1))
+        ### we have to create the assembly directory and change into that dir 
+		if [[ $($(pwd) | awk -F \/ '{print $NF}') -eq ${PATCHING_DIR} ]]
+		then
+			cd ../	
+		fi
+        if [[ -z "${FIX_REPMASK_USELAFIX_PATH}" ]]
+		then 
+			(>&2 echo "WARNING - Variable FIX_REPMASK_USELAFIX_PATH is not set.Try to use default path: patchedReads_dalign")
+			FIX_REPMASK_USELAFIX_PATH="patchedReads_dalign"
+		fi	
+		mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
+		cd ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
     fi 
 fi  
 
