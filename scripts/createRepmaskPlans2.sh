@@ -298,12 +298,6 @@ then
     exit 1
 fi
 
-if [[ -z "${FIX_REPMASK_USELAFIX_PATH}" ]]
-then 
-	(>&2 echo "WARNING - Variable FIX_REPMASK_USELAFIX_PATH is not set. Use default path: patchedReads_dalign")
-	FIX_REPMASK_USELAFIX_PATH="patchedReads_dalign"
-fi
-
 myTypes=("1-createFIX_DB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAmerge, 9-LArepeat, 10-TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge")
 # type_0 - steps: 1-createFIX_DB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAmerge, 9-LArepeat, 10-TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge
 if [[ ${FIX_REPMASK_TYPE} -eq 0 ]]

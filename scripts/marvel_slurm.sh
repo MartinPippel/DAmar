@@ -35,6 +35,12 @@ then
     exit 1
 fi
 
+if [[ "${ASSMEBLY_DIR}" == "${PATCHING_DIR}" ]]
+then 
+    (>&2 echo "ERROR - PATCHING_DIR must be different from ASSMEBLY_DIR")
+    exit 1
+if
+
 if [[ -z "${DB_PATH}" ]]
 then 
     (>&2 echo "ERROR - You have to set DB_PATH. Location of the initial databases MARVEL and DAZZLER.")
@@ -102,8 +108,14 @@ then
 	cd ${cwd}
 elif [[ ${currentPhase} -lt 10 ]]
 then
-	mkdir -p ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
-	cd ${ASSMEBLY_DIR}/${RAW_FIX_LAFIX_PATH}
+	if [[ -z "${FIX_REPMASK_USELAFIX_PATH}" ]]
+	then 
+		(>&2 echo "WARNING - Variable FIX_REPMASK_USELAFIX_PATH is not set.Try to use default path: patchedReads_dalign")
+		FIX_REPMASK_USELAFIX_PATH="patchedReads_dalign"
+	fi
+		
+	mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
+	cd ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
 fi

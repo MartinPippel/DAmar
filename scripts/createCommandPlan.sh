@@ -49,11 +49,6 @@ then
     fi
 elif [[ ${currentPhase} -eq 3 ]]    
 then 
-	if [[ -z ${RAW_FIX_LAFIX_PATH} ]]
-	then 
-		(>&2 echo "Variable RAW_FIX_LAFIX_PATH must be set. Its used to create the assembly subfolder ASSMEBLY_DIR/RAW_FIX_LAFIX_PATH")
-	    exit 1
-	fi
 	if [[ ! -f ${RAW_DB%db}.db ]]
 	then 
 		if [[ ! -f ${DB_PATH}/${RAW_DB%db}.db || ! -f ${DB_PATH}/${RAW_DAZZ_DB%db}.db ]]
