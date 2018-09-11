@@ -314,17 +314,17 @@ function setLArepeatOptions()
         SCRUB_LAREPEAT_OPT[$x]=${tmp}
     done 
 
-    RAW_REPMASK_REPEATTRACK=""
-    for x in $(seq 1 ${#RAW_REPMASK_BLOCKCMP[*]})
+    FIX_REPMASK_REPEATTRACK=""
+    for x in $(seq 1 ${#FIX_REPMASK_BLOCKCMP[*]})
     do
         idx=$(($x-1))
-        RAW_REPMASK_REPEATTRACK="${RAW_REPMASK_REPEATTRACK} ${RAW_REPMASK_LAREPEAT_REPEATTRACK}_B${RAW_REPMASK_BLOCKCMP[${idx}]}C${RAW_REPMASK_LAREPEAT_COV[${idx}]}"
+        FIX_REPMASK_REPEATTRACK="${FIX_REPMASK_REPEATTRACK} ${FIX_REPMASK_LAREPEAT_REPEATTRACK}_B${FIX_REPMASK_BLOCKCMP[${idx}]}C${FIX_REPMASK_LAREPEAT_COV[${idx}]}"
     done 
 
     ## check if repmaskFull_B10C10 exists 
-    if [[ -f .${FIX_DB}.${RAW_REPMASK_LAREPEAT_REPEATTRACK}Full_B${RAW_REPMASK_BLOCKCMP[${idx}]}C${RAW_REPMASK_LAREPEAT_COV[${idx}]}.d2 ]]
+    if [[ -f .${FIX_DB}.${FIX_REPMASK_LAREPEAT_REPEATTRACK}Full_B${FIX_REPMASK_BLOCKCMP[${idx}]}C${FIX_REPMASK_LAREPEAT_COV[${idx}]}.d2 ]]
     then
-        RAW_REPMASK_REPEATTRACK="${RAW_REPMASK_REPEATTRACK} ${RAW_REPMASK_LAREPEAT_REPEATTRACK}Full_B${RAW_REPMASK_BLOCKCMP[${idx}]}C${RAW_REPMASK_LAREPEAT_COV[${idx}]}"
+        FIX_REPMASK_REPEATTRACK="${FIX_REPMASK_REPEATTRACK} ${FIX_REPMASK_LAREPEAT_REPEATTRACK}Full_B${FIX_REPMASK_BLOCKCMP[${idx}]}C${FIX_REPMASK_LAREPEAT_COV[${idx}]}"
     fi    
 }
 
@@ -397,7 +397,7 @@ function setLAstitchOptions()
             exit 1
         fi
 
-        SCRUB_STITCH_OPT="${SCRUB_STITCH_OPT} -r f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_SCRUB_LASTITCH_REPEATIDX}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_SCRUB_TANMASK_TRACK}_dust"
+        SCRUB_STITCH_OPT="${SCRUB_STITCH_OPT} -r f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_SCRUB_LASTITCH_REPEATIDX}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_SCRUB_TANMASK_TRACK}_dust"
     fi
 }
 
@@ -470,7 +470,7 @@ function setLAgapOptions()
             then 
                 exit 1
             fi
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_SCRUB_LASTITCH_REPEATIDX}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_SCRUB_LASTITCH_REPEATIDX}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
 
             SCRUB_LAGAP_OPT="${SCRUB_LAGAP_OPT} -R f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust"
     fi
@@ -763,19 +763,19 @@ then
             exit 1
         fi 
         ### create TKmerge command
-        if [[ -n ${RAW_REPMASK_REPEATTRACK} ]]
+        if [[ -n ${FIX_REPMASK_REPEATTRACK} ]]
         then 
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-                echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${RAW_REPMASK_REPEATTRACK}" 
+                echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${FIX_REPMASK_REPEATTRACK}" 
         	done > scrub_05_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan         
         else
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-                echo "ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"
-                echo "ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2"
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2"
 
         	done > scrub_05_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         fi 
@@ -793,7 +793,7 @@ then
         ### create TKhomogenize commands
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             for y in $(seq 1 ${fixblocks})
             do 
                 echo "${MARVEL_PATH}/bin/TKhomogenize -i  ${tmp} -I h${tmp} -b ${y} ${FIX_DB%.db} ${FIX_DB%.db}.${y}.dalign.las"
@@ -815,7 +815,7 @@ then
         ### create TKcombine commands
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} h${tmp} \#.h${tmp}"
     	done > scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan         
         ### find and set TKcombine options, but ignore the -d flag if it was set
@@ -824,7 +824,7 @@ then
         echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_SCRUB_TANMASK_TRACK}_dust ${FIX_SCRUB_TANMASK_TRACK} dust" >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK} f${tmp} ${FIX_SCRUB_TANMASK_TRACK}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust f${tmp}_${FIX_SCRUB_TANMASK_TRACK} dust"            
@@ -1095,19 +1095,19 @@ then
             exit 1
         fi 
         ### create TKmerge command
-        if [[ -n ${RAW_REPMASK_REPEATTRACK} ]]
+        if [[ -n ${FIX_REPMASK_REPEATTRACK} ]]
         then 
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-                echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${RAW_REPMASK_REPEATTRACK}" 
+                echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${FIX_REPMASK_REPEATTRACK}" 
         	done > scrub_05_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan         
         else
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-                echo "ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"
-                echo "ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2"
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2"
 
         	done > scrub_05_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         fi 
@@ -1125,7 +1125,7 @@ then
         ### create TKhomogenize commands
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             for y in $(seq 1 ${fixblocks})
             do 
                 echo "${MARVEL_PATH}/bin/TKhomogenize -i  ${tmp} -I h${tmp} -b ${y} ${FIX_DB%.db} ${FIX_DB%.db}.${y}.dalign.las"
@@ -1147,7 +1147,7 @@ then
         ### create TKcombine commands
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} h${tmp} \#.h${tmp}"
     	done > scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan         
         ### find and set TKcombine options, but ignore the -d flag if it was set
@@ -1156,7 +1156,7 @@ then
         echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_SCRUB_TANMASK_TRACK}_dust ${FIX_SCRUB_TANMASK_TRACK} dust" >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK} f${tmp} ${FIX_SCRUB_TANMASK_TRACK}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust f${tmp}_${FIX_SCRUB_TANMASK_TRACK} dust"            
@@ -1445,19 +1445,19 @@ then
             exit 1
         fi 
         ### create TKmerge command
-        if [[ -n ${RAW_REPMASK_REPEATTRACK} ]]
+        if [[ -n ${FIX_REPMASK_REPEATTRACK} ]]
         then 
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-                echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${RAW_REPMASK_REPEATTRACK}" 
+                echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${FIX_REPMASK_REPEATTRACK}" 
     		done > scrub_19_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan         
         else
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-                echo "ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"
-                echo "ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2"
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2"
 
 			done > scrub_19_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         fi 
@@ -1475,7 +1475,7 @@ then
         ### create TKhomogenize commands
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             for y in $(seq 1 ${fixblocks})
             do 
                 echo "${MARVEL_PATH}/bin/TKhomogenize -i  ${tmp} -I h${tmp} -b ${y} ${FIX_DB%.db} ${FIX_DB%.db}.${y}.repcomp.las"
@@ -1497,7 +1497,7 @@ then
         ### create TKcombine commands
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} h${tmp} \#.h${tmp}"
 		done > scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan         
         ### find and set TKcombine options, but ignore the -d flag if it was set
@@ -1506,7 +1506,7 @@ then
         echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_SCRUB_TANMASK_TRACK}_dust ${FIX_SCRUB_TANMASK_TRACK} dust" >> scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK} f${tmp} ${FIX_SCRUB_TANMASK_TRACK}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust f${tmp}_${FIX_SCRUB_TANMASK_TRACK} dust"            
@@ -1873,19 +1873,19 @@ then
             exit 1
         fi 
         ### create TKmerge command
-        if [[ -n ${RAW_REPMASK_REPEATTRACK} ]]
+        if [[ -n ${FIX_REPMASK_REPEATTRACK} ]]
         then 
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-                echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${RAW_REPMASK_REPEATTRACK}" 
+                echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${FIX_REPMASK_REPEATTRACK}" 
     		done > scrub_33_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan         
         else
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-                echo "ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"
-                echo "ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2"
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2"
 
     		done > scrub_33_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         fi
@@ -1903,7 +1903,7 @@ then
         ### create TKhomogenize commands
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             for y in $(seq 1 ${fixblocks})
             do 
                 echo "${MARVEL_PATH}/bin/TKhomogenize -i  ${tmp} -I h${tmp} -b ${y} ${FIX_DB%.db} ${FIX_DB%.db}.${y}.forcealign.las"
@@ -1925,7 +1925,7 @@ then
         ### create TKcombine commands
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} h${tmp} \#.h${tmp}"
 		done > scrub_35_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan         
         ### find and set TKcombine options, but ignore the -d flag if it was set
@@ -1934,7 +1934,7 @@ then
         echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_SCRUB_TANMASK_TRACK}_dust ${FIX_SCRUB_TANMASK_TRACK} dust" >> scrub_11_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${RAW_REPMASK_LAREPEAT_REPEATTRACK}
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK} f${tmp} ${FIX_SCRUB_TANMASK_TRACK}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust f${tmp}_${FIX_SCRUB_TANMASK_TRACK} dust"            
