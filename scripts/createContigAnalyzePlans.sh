@@ -404,11 +404,11 @@ function setForcealignOptions()
 
     if [[ -z ${COR_CONTIG_FORCEALIGN_RUNID} || ${COR_CONTIG_FORCEALIGN_RUNID} -eq ${COR_CONTIG_DALIGNER_RUNID} ]]
     then
-        if [[ -z ${FIX_SCRUB_DALIGNER_RUNID} ]]
+        if [[ -z ${COR_CONTIG_DALIGNER_RUNID} ]]
         then
             COR_CONTIG_FORCEALIGN_RUNID=2
         else 
-            COR_CONTIG_FORCEALIGN_RUNID=$((${FIX_SCRUB_DALIGNER_RUNID}+1))
+            COR_CONTIG_FORCEALIGN_RUNID=$((${COR_CONTIG_DALIGNER_RUNID}+1))
         fi
     fi
 }
@@ -518,6 +518,66 @@ function setCTanalyzeOptions()
     fi	
 }
 
+function setDalignerOptions()
+{
+    CONTIG_DALIGNER_OPT=""
+    if [[ -n ${COR_CONTIG_DALIGNER_IDENTITY_OVLS} && ${COR_CONTIG_DALIGNER_IDENTITY_OVLS} -gt 0 ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -I"
+    fi
+    if [[ -n ${COR_CONTIG_DALIGNER_KMER} && ${COR_CONTIG_DALIGNER_KMER} -gt 0 ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -k ${COR_CONTIG_DALIGNER_KMER}"
+    fi
+    if [[ -n ${COR_CONTIG_DALIGNER_ERR} ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -e ${COR_CONTIG_DALIGNER_ERR}"
+    fi
+    if [[ -n ${COR_CONTIG_DALIGNER_BIAS} && ${COR_CONTIG_DALIGNER_BIAS} -eq 1 ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -b"
+    fi
+    if [[ -n ${COR_CONTIG_DALIGNER_VERBOSE} && ${COR_CONTIG_DALIGNER_VERBOSE} -ne 0 ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -v"
+    fi
+    if [[ -n ${COR_CONTIG_DALIGNER_TRACESPACE} && ${COR_CONTIG_DALIGNER_TRACESPACE} -gt 0 ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -s ${COR_CONTIG_DALIGNER_TRACESPACE}"
+    fi
+    if [[ -n ${COR_CONTIG_DALIGNER_RUNID} ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -r ${COR_CONTIG_DALIGNER_RUNID}"
+    fi
+    if [[ -n ${COR_CONTIG_DALIGNER_T} ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -t ${COR_CONTIG_DALIGNER_T}"
+    fi  
+    if [[ -n ${COR_CONTIG_DALIGNER_ASYMMETRIC} && ${COR_CONTIG_DALIGNER_ASYMMETRIC} -ne 0 ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -A"
+    fi    
+    if [[ -n ${COR_CONTIG_DALIGNER_MEM} && ${COR_CONTIG_DALIGNER_MEM} -ne 0 ]]
+    then
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -M ${COR_CONTIG_DALIGNER_MEM}"
+    fi    
+    if [[ -n ${COR_CONTIG_DALIGNER_MASK} ]]
+    then
+        for x in ${COR_CONTIG_DALIGNER_MASK}
+        do 
+            CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -m ${x}"
+        done
+    fi
+    if [[ -n ${THREADS_daligner} ]]
+    then 
+        CONTIG_DALIGNER_OPT="${CONTIG_DALIGNER_OPT} -j ${THREADS_daligner}"
+    fi
+    if [ ! -n ${COR_CONTIG_DALIGNER_DAL} ]
+    then
+        COR_CONTIG_DALIGNER_DAL=8
+    fi 
+}
+
 if [[ -z ${COR_DIR} ]]
 then 
     COR_DIR=correction
@@ -598,10 +658,10 @@ then
 			if [[  $first -eq 1 ]]
 			then
 				first=0 
-				echo "${MARVEL_PATH}/bin/FA2db -x0 -c path -c ends -c length -c reads -csreads -c unCorReads ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB} ${x}"
+				echo "${MARVEL_PATH}/bin/FA2db -x0 -c path -c ends -c length -c rreads -c preads -c creads ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB} ${x}"
 				echo "${MARVEL_PATH}/bin/DBsplit ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB}"
 			else
-				echo "${MARVEL_PATH}/bin/FA2db -x0 -c path -c ends -c length -c reads -csreads -c unCorReads ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB} ${x}"				
+				echo "${MARVEL_PATH}/bin/FA2db -x0 -c path -c ends -c length -c rreads -c preads -c creads ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB} ${x}"				
 			fi				
 		done >> cont_01_prepDB_single_${CONT_DB%.db}.${slurmID}.plan
 		
@@ -793,7 +853,7 @@ then
             rm $x
         done 
 
-        ### find and set repcomp options         
+        ### find and set forcealign options         
         setDalignerOptions
         setLAseparateOptions 1
         for x in $(seq 1 ${contigblocks}); 
@@ -821,14 +881,14 @@ then
             rm $x
         done 
         
-        ### find and set repcomp options 
+        ### find and set forcealign options 
         setForcealignOptions
         contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)       
         cmdLine=1
         for x in $(seq 1 ${contigblocks}); 
         do 
-            srcDir=$(getSubDirName ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${FIX_SCRUB_DALIGNER_RUNID} ${x})_ForForceAlign
-            desDir=$(getSubDirName ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_REPCOMP_RUNID} ${x})
+            srcDir=$(getSubDirName ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_DALIGNER_RUNID} ${x})_ForForceAlign
+            desDir=$(getSubDirName ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_FORCEALIGN_RUNID} ${x})
 
             if [[ ! -d ${desDir} ]]
             then
@@ -838,10 +898,10 @@ then
 
             for y in $(seq ${start} ${contigblocks}); 
             do 
-                movDir=$(getSubDirName ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_REPCOMP_RUNID} ${y})
+                movDir=$(getSubDirName ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_FORCEALIGN_RUNID} ${y})
                 if [[ -f ${srcDir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ]]
                 then 
-                    if [[ -n ${COR_CONTIG_REPCOMP_NUMACTL} && ${COR_CONTIG_REPCOMP_NUMACTL} -gt 0 ]]
+                    if [[ -n ${COR_CONTIG_FORCEALIGN_NUMACTL} && ${COR_CONTIG_FORCEALIGN_NUMACTL} -gt 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -963,8 +1023,8 @@ then
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
             tmp=$(echo ${CONTIG_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${tmp}_${COR_CONTIG_TANMASK_TRACK} ${tmp} ${COR_CONTIG_TANMASK_TRACK}"
-            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${tmp}_${COR_CONTIG_TANMASK_TRACK}_dust ${tmp}_${COR_CONTIG_TANMASK_TRACK} dust" 
+            echo "${MARVEL_PATH}/bin/TKcombine${CONTIG_TKCOMBINE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${tmp}_${COR_CONTIG_TANMASK_TRACK} ${tmp} ${COR_CONTIG_TANMASK_TRACK}"
+            echo "${MARVEL_PATH}/bin/TKcombine${CONTIG_TKCOMBINE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${tmp}_${COR_CONTIG_TANMASK_TRACK}_dust ${tmp}_${COR_CONTIG_TANMASK_TRACK} dust" 
 		done > cont_14_TKcombine_single_${CONT_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_14_TKcombine_single_${CONT_DB%.db}.${slurmID}.version         
 	### LAfilter
