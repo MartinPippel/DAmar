@@ -39,7 +39,7 @@ if [[ "${ASSMEBLY_DIR}" == "${PATCHING_DIR}" ]]
 then 
     (>&2 echo "ERROR - PATCHING_DIR must be different from ASSMEBLY_DIR")
     exit 1
-if
+fi
 
 if [[ -z "${DB_PATH}" ]]
 then 
