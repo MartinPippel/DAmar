@@ -24,12 +24,6 @@ then
     exit 1
 fi
 
-if [[ -d "${MARVEL_SOURCE_PATH}" ]]
-then 
-    (>&2 echo "ERROR - You have to specify the MARVEL_SOURCE_PATH.")
-    exit 1
-fi
-
 if [[ ! -n "${FIX_CORR_TYPE}" ]]
 then 
     (>&2 echo "cannot create touring scripts if variable FIX_CORR_TYPE is not set.")
@@ -246,6 +240,13 @@ then
     COR_DIR=correction
 fi
 
+## ensure some paths
+if [[ -z "${MARVEL_SOURCE_PATH}" || ! -d  "${MARVEL_SOURCE_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set MARVEL_SOURCE_PATH. Used to report git version.")
+    exit 1
+fi
+
 myTypes=("1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-statistics")
 #type-0 steps: 1-paths2rids, 2-LAcorrect, 3-prepDB, 4-tour2fasta, 5-statistics
 if [[ ${FIX_CORR_TYPE} -eq 0 ]]
@@ -278,7 +279,7 @@ then
         done
 
         echo "cat ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs/*.paths | awk '{if (NF > 4) print \$0}' | ${MARVEL_PATH}/scripts/paths2rids.py - ${FIX_FILT_OUTDIR}/${FIX_CORR_PATHS2RIDS_FILE}" > corr_01_paths2rids_single_${FIX_DB%.db}.${slurmID}.plan
-        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_01_paths2rids_single_${FIX_DB%.db}.${slurmID}.version
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > corr_01_paths2rids_single_${FIX_DB%.db}.${slurmID}.version
     ### LAcorrect
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -294,7 +295,7 @@ then
         do 
             echo "${MARVEL_PATH}/bin/LAcorrect${COR_LACORRECT_OPT} -b ${x} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las ${FIX_FILT_OUTDIR}/${COR_DIR}/reads/${FIX_DB%.db}.${x}"
         done > corr_02_LAcorrect_block_${FIX_DB%.db}.${slurmID}.plan
-        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_02_LAcorrect_block_${FIX_DB%.db}.${slurmID}.version
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > corr_02_LAcorrect_block_${FIX_DB%.db}.${slurmID}.version
     ### prepare corrected db 
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -311,7 +312,7 @@ then
 
         echo "if [[ -f ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}.db ]]; then ${MARVEL_PATH}/bin/DBrm ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}; fi" > corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.plan
         echo "${MARVEL_PATH}/bin/FA2db -x0 -c source -c correctionq -c postrace ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db} ${FIX_FILT_OUTDIR}/${COR_DIR}/reads/${FIX_DB%.db}.[0-9]*.[0-9]*.fasta" >> corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.plan
-        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.version            
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.version            
     elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
@@ -329,7 +330,7 @@ then
             faPrefix=$(basename "${x%.tour.paths}" | sed -e "s:\.:_${FIX_FILT_OUTDIR}_:")
             echo "${MARVEL_PATH}/scripts/tour2fasta.py${COR_TOURTOFASTA_OPT} -p ${faPrefix} -c ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${x%.tour.paths}.graphml ${x}" 
         done > corr_04_tour2fasta_block_${FIX_DB%.db}.${slurmID}.plan
-        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_04_tour2fasta_block_${FIX_DB%.db}.${slurmID}.version
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > corr_04_tour2fasta_block_${FIX_DB%.db}.${slurmID}.version
     ### statistics
     elif [[ ${currentStep} -eq 5 ]]
     then
@@ -347,7 +348,7 @@ then
         bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
         ### create assemblyStats plan 
         echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 7" > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.plan
-        git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.version
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in FIX_CORR_TYPE ${FIX_CORR_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${FIX_CORR_TYPE}]}")

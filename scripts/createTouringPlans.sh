@@ -24,12 +24,6 @@ then
     exit 1
 fi
 
-if [[ -d "${MARVEL_SOURCE_PATH}" ]]
-then 
-    (>&2 echo "ERROR - You have to specify the MARVEL_SOURCE_PATH.")
-    exit 1
-fi
-
 if [[ ! -n "${FIX_TOUR_TYPE}" ]]
 then 
     (>&2 echo "cannot create touring scripts if variable FIX_TOUR_TYPE is not set.")
@@ -264,7 +258,7 @@ function setOGlayoutOptions()
 }
 
 ## ensure some paths
-if [[ -z "${MARVEL_SOURCE_PATH}" ]]
+if [[ -z "${MARVEL_SOURCE_PATH}" || ! -d  "${MARVEL_SOURCE_PATH}" ]]
 then 
     (>&2 echo "ERROR - You have to set MARVEL_SOURCE_PATH. Used to report git version.")
     exit 1
