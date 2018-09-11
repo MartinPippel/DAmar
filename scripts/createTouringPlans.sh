@@ -195,6 +195,11 @@ function setOGtourOptions()
     if [[ -n ${FIX_TOUR_OGTOUR_LOOKAHAED} && ${FIX_TOUR_OGTOUR_LOOKAHAED} -gt 0 ]]
     then
         TOUR_OGTOUR_OPT="${TOUR_OGTOUR_OPT} -l ${FIX_TOUR_OGTOUR_LOOKAHAED}"
+    fi
+    
+    if [[ -n ${FIX_TOUR_OGTOUR_MAXBACKBONEDIST} && ${FIX_TOUR_OGTOUR_MAXBACKBONEDIST} -gt 1 ]]
+    then
+        TOUR_OGTOUR_OPT="${TOUR_OGTOUR_OPT} -b ${FIX_TOUR_OGTOUR_MAXBACKBONEDIST}"
     fi    
 }
 
