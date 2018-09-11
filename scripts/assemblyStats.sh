@@ -93,7 +93,7 @@ then
 	
 elif [[ ${phase} -eq 8 ]] ## marvel corrected assembly stats after contig analysis  (last step after CTanalysis)
 then
-	#todo 
+	echo "#todo" 
 elif [[ ${phase} -eq 9 ]] ## assembly stats after PacBio Arrow Correction 
 then
 	if [[ -d ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]
