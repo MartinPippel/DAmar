@@ -398,7 +398,7 @@ then
         	fi
         done >> mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.version
-    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.version
+    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.version
     	echo "fastaidrename $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.version 
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -416,7 +416,7 @@ then
             echo "${DAZZLER_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${FIX_DAZZ_DB%.db}.${x}"
     	done > mask_02_DBdust_block_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_02_DBdust_block_${FIX_DB%.db}.${slurmID}.version
-    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_02_DBdust_block_${FIX_DB%.db}.${slurmID}.version        
+    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_02_DBdust_block_${FIX_DB%.db}.${slurmID}.version        
     elif [[ ${currentStep} -eq 3 ]]
     then 
         ### clean up plans 
@@ -430,7 +430,7 @@ then
         echo "${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${FIX_DB%.db} dust" > mask_03_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
         echo "${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${FIX_DAZZ_DB%.db} dust" >> mask_03_Catrack_single_${FIX_DB%.db}.${slurmID}.plan         
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_03_Catrack_single_${FIX_DB%.db}.${slurmID}.version
-    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_03_Catrack_single_${FIX_DB%.db}.${slurmID}.version
+    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_02_DBdust_block_${FIX_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 4 ]]
     then 
         ### clean up plans 
