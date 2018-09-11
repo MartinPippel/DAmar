@@ -142,8 +142,10 @@ def write_path_corrected(fileOut, seqname_prefix,
         seq = revcomp(seq)
 
         pathRid = [ (ridc, trim_e_c, trim_b_c) ]
+        pathUncorRid =  [ (rid, trim_e, trim_b) ]
     else:
         pathRid = [ (ridc, trim_b_c, trim_e_c) ]
+        pathUncorRid =  [ (rid, trim_b, trim_e) ]
 
     if track_source != None:
         pathSource = [ track_source.get(rid)[0] ]
@@ -172,6 +174,7 @@ def write_path_corrected(fileOut, seqname_prefix,
             (trim_b_c, ovh_end_c) = convert_interval(trace, trim_b, ovh_end)
 
             pathRid.append( (ridc, ovh_end_c, trim_b_c) )
+            pathUncorRid.append( (rid, ovh_end, trim_b) )
 
             pathSeq += revcomp(seq[trim_b_c : ovh_end_c])
         else:
@@ -180,6 +183,7 @@ def write_path_corrected(fileOut, seqname_prefix,
             (ovh_beg_c, trim_e_c) = convert_interval(trace, ovh_beg, trim_e)
 
             pathRid.append( (ridc, ovh_beg_c, trim_e_c) )
+            pathUncorRid.append( (rid, ovh_beg, trim_e) )
 
             pathSeq += seq[ovh_beg_c : trim_e_c]
 
@@ -188,11 +192,12 @@ def write_path_corrected(fileOut, seqname_prefix,
         else:
             pathSource = []
 
-    fileOut.write(">{}_{} path={} ends={},{} length={} reads={} sreads={}\n{}\n".format(seqname_prefix, pathid, pathid,
+    fileOut.write(">{}_{} path={} ends={},{} length={} creads={} preads={} rreads={}\n{}\n".format(seqname_prefix, pathid, pathid,
                     e1, e2,
                     len(pathSeq),
                     ",".join( [ "{},{},{}".format(*x) for x in pathRid ] ),
-                    ",".join( [ str(x) for x in pathSource ] ),
+                    ",".join( [ "{},{},{}".format(*x) for x in pathUncorRid] ),
+                    ",".join( [ str(x) for x in pathSource ] ),                    
                     wrapSeq(pathSeq)))
 
     return len(pathSeq)
@@ -257,7 +262,7 @@ def write_path(fileOut, seqname_prefix, db, track_source, track_trim, vread, efl
         else:
             pathSource = []
 
-    fileOut.write(">{}_{} path={} ends={},{} length={} reads={} sreads={}\n{}\n".format(seqname_prefix, pathid, pathid,
+    fileOut.write(">{}_{} path={} ends={},{} length={} preads={} rreads={}\n{}\n".format(seqname_prefix, pathid, pathid,
                     e1, e2,
                     len(pathSeq),
                     ",".join( [ "{},{},{}".format(*x) for x in pathRid ] ),

@@ -328,7 +328,7 @@ then
         do 
             if [[ -s ${x} ]]
             then
-                echo "${MARVEL_PATH}/scripts/tour2fasta.py${TOUR_2FASTA_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB} ${x%.tour.paths}.graphml $x"
+                echo "${MARVEL_PATH}/scripts/tour2fasta.py${TOUR_2FASTA_OPT} -p$(basename ${x%.tour.paths}) ${FIX_FILT_OUTDIR}/${FIX_DB} ${x%.tour.paths}.graphml $x"
             fi
     	done > tour_03_tour2fasta_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_03_tour2fasta_block_${FIX_DB%.db}.${slurmID}.version

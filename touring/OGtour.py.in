@@ -289,7 +289,7 @@ def mark_dead_ends(g, vflags, eend, eflags):
 
     return nFlagged
 
-def update_bbdist(g, vflags, eflags, bbdist):
+def update_bbdist(g, vflags, eflags, bbdist, maxbackbonedist):
     stack = set()
 
     for v in g:
@@ -299,7 +299,7 @@ def update_bbdist(g, vflags, eflags, bbdist):
 
     dist = 0
 
-    while len(stack) > 0 and dist < MAX_BB_DISTANCE:
+    while len(stack) > 0 and dist < maxbackbonedist:
         stack_new = set()
 
         for v in stack:
@@ -747,7 +747,7 @@ def analyze_path_ends_v2(g, paths, vread, eflags, eend, ends_used):
 def graph_compute_paths(g, arrStartVertices, bbdist_prop,
                         vflags_prop, vread_prop, vpath_prop,
                         eflags_prop, eend_prop, ediv_prop, elen_prop,
-                        circular, lookahead, ilookahead):
+                        circular, lookahead, ilookahead, maxbackbonedist):
 
     path_num = 0
     vcur = 0
@@ -762,7 +762,7 @@ def graph_compute_paths(g, arrStartVertices, bbdist_prop,
 
             dist = bbdist_prop[v]
 
-            if dist != -1 and dist < MAX_BB_DISTANCE:
+            if dist != -1 and dist < maxbackbonedist:
                 continue
 
             flags = vflags_prop[v]
@@ -808,13 +808,13 @@ def graph_compute_paths(g, arrStartVertices, bbdist_prop,
 
             logging.debug("update backbone distance")
 
-            update_bbdist(g, vflags_prop, eflags_prop, bbdist_prop)
+            update_bbdist(g, vflags_prop, eflags_prop, bbdist_prop, maxbackbonedist)
 
         path_num += 1
 
     return arrPaths
 
-def process_graph(g, dropinversions, circular, lookahead, ilookahead):
+def process_graph(g, dropinversions, circular, lookahead, ilookahead, maxbackbonedist):
     smark_prop = {}     # source marker
     tmark_prop = {}     # target marker
     ecolor_prop = {}
@@ -954,7 +954,7 @@ def process_graph(g, dropinversions, circular, lookahead, ilookahead):
     arrPaths = graph_compute_paths(g, arrStartVertices, bbdist_prop,
                                    vflags_prop, vread_prop, vpath_prop,
                                    eflags_prop, eend_prop, ediv_prop, elen_prop,
-                                   circular, lookahead, ilookahead)
+                                   circular, lookahead, ilookahead, maxbackbonedist)
 
     ### try to connect paths using optional edges
 
@@ -994,7 +994,7 @@ def process_graph(g, dropinversions, circular, lookahead, ilookahead):
         arrPaths = graph_compute_paths(g, arrStartVertices, bbdist_prop,
                                     vflags_prop, vread_prop, vpath_prop,
                                     eflags_prop, eend_prop, ediv_prop, elen_prop,
-                                    circular, lookahead, ilookahead)
+                                    circular, lookahead, ilookahead, maxbackbonedist)
 
     #### apply styles
 
@@ -1157,6 +1157,7 @@ def main():
     parser.add_argument("-c", "--circular", help = "allow circular paths", default = "true", action = "store_true")
     parser.add_argument("-d", "--dropinversions", help = "remove edges suspected to be due to inversions", action = "store_true")
     parser.add_argument("-l", "--lookahead", metavar = "n", help = "lookahead during touring (default {0})".format(DEF_PATH_LOOKAHEAD), default = DEF_PATH_LOOKAHEAD, type = int)
+    parser.add_argument("-b", "--maxbackbonedist", metavar = "n", help = "maximum backbone distance for the same contig (default {0})".format(MAX_BB_DISTANCE), default = MAX_BB_DISTANCE, type = int)
     parser.add_argument("--debug", help = argparse.SUPPRESS, action = "store_true")
 
     args = parser.parse_args()
@@ -1198,7 +1199,7 @@ def main():
 
         logging.info("touring...")
 
-        (g, paths, bbdist) = process_graph(g, args.dropinversions, args.circular, args.lookahead, ilookahead)
+        (g, paths, bbdist) = process_graph(g, args.dropinversions, args.circular, args.lookahead, ilookahead, args.maxbackbonedist)
 
         setContigEnds = set()
 
