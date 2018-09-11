@@ -345,7 +345,7 @@ then
         	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
     	else
         	cwd=$(pwd)
-        	ssh falcon1 "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
     	fi
         ### create assemblyStats plan 
         echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 7" > corr_05_marvelStats_single_${FIX_DB%.db}.${slurmID}.plan
