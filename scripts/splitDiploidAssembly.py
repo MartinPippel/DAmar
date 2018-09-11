@@ -66,23 +66,30 @@ for fn in fIn:
         (e1, e2) = [ int(x) for x in ends ]
 
         path = args["path"]
-        reads = args["reads"]
-        sreads = args["sreads"]
+        preads = args["preads"]
+        rreads = args["rreads"]
+        creads = args["creads"]
         length = int(args["length"][0])
 
         if e1 == e2 and e1 != -1:
-          fout_a.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
+          fout_a.write(">{} path={} ends={} length={} preads={} rreads={}".format(name, path[0], ",".join(ends), length, ",".join(rreads), ",".join(rreads)))
+          if creads:
+              fout_a.write(" creads={}".format(",".join(creads)))
           fout_a.write("\n{}\n".format(wrap_seq(seq, 100)))
           if (length > 500000):
               eprint("WARNING Found very long alternative Contig (bubble): {} lenght: {}.".format(name, length))
           continue
 
         if (e1 != -1 or e2 != -1) and length < 100000:
-          fout_a.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
+          fout_a.write(">{} path={} ends={} length={} preads={} rreads={}".format(name, path[0], ",".join(ends), length, ",".join(preads), ",".join(rreads)))
+          if creads:
+            fout_a.write(" creads={}".format(",".join(creads)))
           fout_a.write("\n{}\n".format(wrap_seq(seq, 100)))
           continue
 
-        fout_p.write(">{} path={} ends={} length={} reads={} sreads={}".format(name, path[0], ",".join(ends), length, ",".join(reads), ",".join(sreads)))
+        fout_p.write(">{} path={} ends={} length={} preads={} rreads={}".format(name, path[0], ",".join(ends), length, ",".join(preads), ",".join(rreads)))
+        if creads:
+            fout_p.write(" creads={}".format(",".join(creads)))
         fout_p.write("\n{}\n".format(wrap_seq(seq, 100)))
     f.close()
     
