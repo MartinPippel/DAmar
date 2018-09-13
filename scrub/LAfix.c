@@ -43,8 +43,8 @@
 
 // toggles
 
-#define DEBUG
-#define DEBUG_INTERVAL_ADJUSTMENT
+#undef DEBUG
+#undef DEBUG_INTERVAL_ADJUSTMENT
 #define DEBUG_FLIP
 #undef DEBUG_CHAIN
 #undef DEBUG_CHIMER
