@@ -898,7 +898,9 @@ then
             for y in $(seq ${start} ${contigblocks}); 
             do 
                 movDir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_FORCEALIGN_RUNID} ${y})
-                if [[ -f ${srcDir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ]]
+                inFile=${srcDir}/${FIX_DB%.db}.${x}.${FIX_DB%.db}.${y}.las
+                
+            if [[ -f ${inFile} ]]
                 then 
                     if [[ -n ${COR_CONTIG_FORCEALIGN_NUMACTL} && ${COR_CONTIG_FORCEALIGN_NUMACTL} -gt 0 ]]
                     then
@@ -920,7 +922,7 @@ then
                     echo " && mv ${desDir}/${CONT_DB%.db}.forcealign.${x}.${y}_r.las ${movDir}/"
                     fi
                 else
-                    (>&2 echo "step ${currentStep} in COR_CONTIG_TYPE ${COR_CONTIG_TYPE}: File missing ${srcDir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las!!")
+                    (>&2 echo "step ${currentStep} in COR_CONTIG_TYPE ${COR_CONTIG_TYPE}: File missing ${inFile}!!")
                     exit 1
                 fi
             done 
