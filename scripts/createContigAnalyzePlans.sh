@@ -898,7 +898,7 @@ then
             for y in $(seq ${start} ${contigblocks}); 
             do 
                 movDir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_FORCEALIGN_RUNID} ${y})
-                inFile=${srcDir}/${FIX_DB%.db}.${x}.${FIX_DB%.db}.${y}.las
+                inFile=${srcDir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las
                 
             if [[ -f ${inFile} ]]
                 then 
