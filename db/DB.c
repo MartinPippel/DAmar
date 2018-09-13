@@ -1806,7 +1806,7 @@ int DB_Blocks(char* db) // HEIDELBERG_MODIFICATION
 
 	if ((fileDb = fopen(path, "r")) == NULL)
 	{
-		fprintf( stderr, "failed to open database\n");
+		fprintf( stderr, "failed to open database %s\n", db);
 		return -1;
 	}
 
@@ -1814,7 +1814,7 @@ int DB_Blocks(char* db) // HEIDELBERG_MODIFICATION
 
 	if (fscanf(fileDb, "files = %d\n", &nfiles) != 1)
 	{
-		fprintf( stderr, "format error in database file\n");
+		fprintf( stderr, "format error in database file %s\n", db);
 		return -1;
 	}
 
@@ -1826,7 +1826,7 @@ int DB_Blocks(char* db) // HEIDELBERG_MODIFICATION
 
 		if (fgets(buffer, 30000, fileDb) == NULL)
 		{
-			fprintf( stderr, "format error in database file\n");
+			fprintf( stderr, "format error in database file %s \n", db);
 			return -1;
 		}
 	}
@@ -1835,7 +1835,7 @@ int DB_Blocks(char* db) // HEIDELBERG_MODIFICATION
 
 	if (fscanf(fileDb, "blocks = %d\n", &nblocks) != 1)
 	{
-		fprintf( stderr, "could not locale 'blocks' entry\n");
+		fprintf( stderr, "could not locate 'blocks' entry in db  %s \n", db);
 		return -1;
 	}
 
