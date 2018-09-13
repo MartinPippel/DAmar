@@ -6003,21 +6003,21 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	if ((actx.corContigCorrectReadsAndPos_track = track_load(&correctedContigDB, "reads")) == NULL)
+	if ((actx.corContigCorrectReadsAndPos_track = track_load(&correctedContigDB, "creads")) == NULL)
 	{
-		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "reads", actx.corContigDBName);
+		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "creads", actx.corContigDBName);
 		exit(1);
 	}
 
-	if ((actx.corContigRawReads_track = track_load(&correctedContigDB, "sreads")) == NULL)
+	if ((actx.corContigRawReads_track = track_load(&correctedContigDB, "rreads")) == NULL)
 	{
-		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "sreads", actx.corContigDBName);
+		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "rreads", actx.corContigDBName);
 		exit(1);
 	}
 
-	if ((actx.corContigPatchReadsAndPos_track = track_load(&correctedContigDB, "unCorReads")) == NULL)
+	if ((actx.corContigPatchReadsAndPos_track = track_load(&correctedContigDB, "preads")) == NULL)
 	{
-		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "unCorReads", actx.corContigDBName);
+		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "preads", actx.corContigDBName);
 		exit(1);
 	}
 
