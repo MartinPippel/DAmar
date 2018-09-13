@@ -630,7 +630,7 @@ then
         for x in $(seq 1 ${fixblocks})
         do 
             echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${FIX_DB%.db} ${FIX_DB%.db}.${x}.mask2.las $(getSubDirName ${FIX_REPMASK_DALIGNER_RUNID} ${x})"
-    	done > mask_12_LAmerge_block_${FIX_DB %.db}.${slurmID}.plan
+    	done > mask_12_LAmerge_block_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_12_LAmerge_block_${FIX_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 13 && ${#FIX_REPMASK_BLOCKCMP[*]} -eq 2 && ${#FIX_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
     then 
