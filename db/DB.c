@@ -1798,11 +1798,14 @@ int DB_Blocks(char* db) // HEIDELBERG_MODIFICATION
 {
 	FILE* fileDb;
 	char* path = (char*) malloc(strlen(db) + 20);
-	char* root = Root(db, NULL);
 
-	sprintf(path, "%s.db", root);
+	char* dir  = PathTo(db);
+	char* root = Root(db, ".db");
+
+	sprintf(path, "%s/%s.db", dir, root);
 
 	free(root);
+	free(dir);
 
 	if ((fileDb = fopen(path, "r")) == NULL)
 	{

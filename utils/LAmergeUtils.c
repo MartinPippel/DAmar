@@ -786,13 +786,6 @@ MERGE_OPT* parseMergeOptions(int argc, char* argv[])
         mopt->pathDB = malloc(len + 10);
         memcpy(mopt->pathDB, argv[optind], len + 1);
 
-        // add .db extension if not present
-        if ((len < 3) || ((strcasecmp(argv[optind] + (len - 3), ".db") != 0)))
-          {
-            strncpy(mopt->pathDB + len, ".db", 3);
-            mopt->pathDB[len + 3] = '\0';
-          }
-
         // parse number of blocks
         mopt->nBlocks = DB_Blocks(mopt->pathDB);
         if (mopt->nBlocks < 0)
