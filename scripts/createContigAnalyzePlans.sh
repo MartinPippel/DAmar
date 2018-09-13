@@ -1061,7 +1061,7 @@ then
         ### find and set LAmerge options 
         setLAmergeOptions
         
-        echo "${MARVEL_PATH}/bin/LAmerge${CONT_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las" > cont_16_LAmerge_single_${CONT_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/LAmerge${CONTIG_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las" > cont_16_LAmerge_single_${CONT_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_16_LAmerge_single_${CONT_DB%.db}.${slurmID}.version
 	### CTanalyze
 	elif [[ ${currentStep} -eq 17 ]]
@@ -1074,7 +1074,7 @@ then
         
         ### find and set CTanalyze options 
         setCTanalyzeOptions
-		echo "${MARVEL_PATH}/bin/CTanalyze${CONT_CTANALYZE_OPT} -C ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las -F ${FIX_FILT_OUTDIR}/${FIX_DB%.DB} ${FIX_FILT_OUTDIR}/${FIX_DB%.DB}.filt.las -D ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}" > cont_17_CTanalyze_single_${CONT_DB%.db}.${slurmID}.plan
+		echo "${MARVEL_PATH}/bin/CTanalyze${CONTIG_CTANALYZE_OPT} -C ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las -F ${FIX_FILT_OUTDIR}/${FIX_DB%.DB} ${FIX_FILT_OUTDIR}/${FIX_DB%.DB}.filt.las -D ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}" > cont_17_CTanalyze_single_${CONT_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_17_CTanalyze_single_${CONT_DB%.db}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in COR_CONTIG_TYPE ${COR_CONTIG_TYPE} not supported")
