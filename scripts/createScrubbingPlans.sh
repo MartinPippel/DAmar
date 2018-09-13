@@ -574,16 +574,16 @@ function setLAseparateOptions()
     if [[ -n ${FIX_SCRUB_LASEPARATE_USEREPEATIDX} && ${FIX_SCRUB_LASEPARATE_USEREPEATIDX} -ge 0 && ${FIX_SCRUB_LASEPARATE_USEREPEATIDX} -lt ${#FIX_SCRUB_LAREPEAT_LEAVE_COV[*]} ]]
     then 
     	stype=""
-    	if [[ "$1" -eq 0 ]]
+    	if [[ "x$1" == "x0" ]]
     	then 
     		setLArepeatOptions 1
-    	elif [[ "$1" -eq 1 ]]
+    	elif [[ "x$1" == "x1" ]]
     	then 
     		setLArepeatOptions 2
     	fi
     		
 		FIX_SCRUB_LASEPARATE_REPEAT="f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_SCRUB_LASEPARATE_USEREPEATIDX}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust"
-    	FIX_LASEPARATE_OPT="${FIX_LASEPARATE_OPT} -r${FIX_SCRUB_LASEPARATE_REPEAT}"
+    	SCRUB_LASEPARATE_OPT="${SCRUB_LASEPARATE_OPT} -r${FIX_SCRUB_LASEPARATE_REPEAT}"
     fi
     
     # type is passed as argument
