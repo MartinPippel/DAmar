@@ -330,7 +330,7 @@ function setLAfilterOptions()
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust
+            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
 
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
         fi
@@ -344,7 +344,7 @@ function setLAfilterOptions()
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust
+            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
 
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
         fi
@@ -358,7 +358,7 @@ function setLAfilterOptions()
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_SCRUB_TANMASK_TRACK}_dust
+            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
 
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
         fi

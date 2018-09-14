@@ -459,7 +459,8 @@ ptype="dalign"
 if [[ -n ${FIX_FILT_SCRUB_TYPE} && ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
 then 
     ptype="repcomp"
-else 
+elif [[ -n ${FIX_FILT_SCRUB_TYPE} && ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
+then 
     ptype="forcealign"
 fi
 COR_CONTIG_CTANALYZE_TRIMTRACK_PATCHEDREADS="trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_${ptype}"

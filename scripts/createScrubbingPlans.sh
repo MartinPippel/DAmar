@@ -1503,7 +1503,6 @@ then
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
 
-        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust" >> scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
@@ -1931,7 +1930,6 @@ then
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
 
-        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust" >> scrub_11_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
