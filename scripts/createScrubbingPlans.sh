@@ -282,10 +282,10 @@ function setLArepeatOptions()
     if [[ "x$1" == "x1" ]]
     then 
         stype="_dalign"
-    elif [[ "x$2" == "x2" ]]
+    elif [[ "x$1" == "x2" ]]
     then 
         stype="_repcomp"
-    elif [[ "x$3" == "x3" ]]
+    elif [[ "x$1" == "x3" ]]
     then 
         stype="_forcealign"        
     else
