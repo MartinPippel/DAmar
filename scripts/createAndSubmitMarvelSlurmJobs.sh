@@ -5,6 +5,8 @@ currentPhase=$2
 currentStep=$3
 slurmID=$4
 
+retrySubmit=3
+
 echo "createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} ${currentStep} ${slurmID}"
 function isNumber 
 {
@@ -158,10 +160,10 @@ JOBS=$(wc -l ${prefix}_${cjobid}_${jname}_${jtype}_${db}.${slurmID}.plan | awk '
 log_folder=log_${prefix}_${jname}_${db}
 mkdir -p ${log_folder}
 first=1
-if [[ ${JOBS} -gt 9000 ]]
+if [[ ${JOBS} -gt 9900 ]]
 then
     from=1
-    to=9000
+    to=9900
     d=1
     while [[ $from -lt ${JOBS} ]]
     do
@@ -215,14 +217,52 @@ end=\$(date +%s)
 echo \"${file}.plan end \$end\"
 echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
             if [[ ${d} -eq 1 ]]
-            then 
-                TMPRET=$(sbatch ${file}.slurm) && isNumber ${TMPRET##* } && echo "submit ${file}.slurm ${TMPRET##* }"
+            then
+            	retry=0
+            	TMPRET=-1
+            	wait=30
+            	while [[ "${TMPRET}" == "-1" && ${retry} -lt ${retrySubmit} ]]
+            	do
+            		if [[ ${retry} ]]
+            		then
+            			echo "try to restart job ${file}.slurm ${retry}/${retrySubmit} - wait $((${retry}*${wait})) seconds"
+            			sleep $((${retry}*${wait}))
+            		fi
+            		TMPRET=$(sbatch ${file}.slurm) && isNumber ${TMPRET##* } || TMPRET=-1            		
+                	retry=$((${retry}+1))
+        		done
+                
+                if [[ "${TMPRET}" == "-1" ]]
+                then
+                	(>&2 echo "Unable to submit job ${file}.slurm. Stop here.")
+    				exit 1
+    			fi
+    			echo "submit ${file}.slurm ${TMPRET##* }"
                 RET="${TMPRET##* }"
-            else                
-                TMPRET=$(sbatch ${file}.slurm) && isNumber ${TMPRET##* } && echo "submit ${file}.slurm ${TMPRET##* }"
+            else  
+            	retry=0
+            	TMPRET=-1
+            	wait=30
+            	while [[ "${TMPRET}" == "-1" && ${retry} -lt ${retrySubmit} ]]
+            	do
+            		if [[ ${retry} ]]
+            		then
+            			echo "try to restart job ${file}.slurm ${retry}/${retrySubmit} - wait $((${retry}*${wait})) seconds"
+            			sleep $((${retry}*${wait}))
+            		fi              
+                	TMPRET=$(sbatch ${file}.slurm) && isNumber ${TMPRET##* } || TMPRET=-1
+                	retry=$((${retry}+1))
+        		done
+                
+                if [[ "${TMPRET}" == "-1" ]]
+                then
+                	(>&2 echo "Unable to submit job ${file}.slurm. Stop here.")
+    				exit 1
+    			fi
+    			echo "submit ${file}.slurm ${TMPRET##* }"
                 RET="${RET}:${TMPRET##* }"
             fi
-        else    # can this really happen > 9000 jobs that are sequentially executed 
+        else    # can this really happen > 9900 jobs that are sequentially executed 
             echo "#!/bin/bash
 #SBATCH -J ${PROJECT_ID}_p${currentPhase}s${currentStep}
 #SBATCH -p ${SLURM_PARTITION}
@@ -261,14 +301,14 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" > ${file}}.slurm
         fi
         d=$(($d+1))
         from=$((${to}+1))
-        to=$((${to}+9000))
+        to=$((${to}+9900))
         if [[ $to -gt ${JOBS} ]]
         then
             to=${JOBS}
         fi
         sleep 5
     done
-else ## less then 9000 jobs 
+else ## less then 9900 jobs 
     jobs=${JOBS}
     file=${prefix}_${cjobid}_${jname}_${jtype}_${db}.${slurmID}
     ### create slurm submit file
@@ -318,6 +358,7 @@ end=\$(date +%s)
 echo \"${file}.plan end \$end\"
 echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
         ### submit job
+        
         RET=$(sbatch ${file}.slurm) && isNumber ${RET##* } && echo "submit ${file}.slurm ${RET##* }"
     else
         echo "#!/bin/bash
