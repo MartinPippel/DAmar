@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 
             if (ob < oe && offset[j] != 0)
             {
-                fprintf(stderr, "ERROR: not merging in proper order\n");
+                fprintf(stderr, "ERROR: not merging in proper order. ob < oe read %" PRIu64 " ob %lld oe %lld. read offset %lld \n", j, ob, oe, offset[j]);
                 exit(1);
             }
 
