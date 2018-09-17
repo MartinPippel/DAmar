@@ -121,13 +121,13 @@ int main(int argc, char* argv[])
 
             if (ob > oe)
             {
-                fprintf(stderr, "ERROR: ob > oe read %" PRIu64 " ob %lld oe %lld\n", j, ob, oe);
+                fprintf(stderr, "ERROR: block %d ob > oe read %" PRIu64 " ob %lld oe %lld\n", i, j, ob, oe);
                 exit(1);
             }
 
             if (ob < oe && offset[j] != 0)
             {
-                fprintf(stderr, "ERROR: not merging in proper order. ob < oe read %" PRIu64 " ob %lld oe %lld. read offset %lld \n", j, ob, oe, offset[j]);
+                fprintf(stderr, "ERROR: block %d not merging in proper order. ob < oe read %" PRIu64 " ob %lld oe %lld. read offset %lld \n", i, j, ob, oe, offset[j]);
                 exit(1);
             }
 
