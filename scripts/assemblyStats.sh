@@ -115,6 +115,8 @@ then
 	     	(>&2 echo "ERROR - stats folder or assembly staticstics are missing. Run last step of touring first.")
     	    exit 1        			
         fi
+        
+        mkdir -p ${arrowPath}        
 
 		## primary 
 		for z in $(cat ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.header)

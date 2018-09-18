@@ -92,7 +92,7 @@ then
         
         if [[ ! -d "${PB_ARROW_INFASTA}" ]]
         then
-        	(>&2 echo "ERROR - set PB_ARROW_INPUT to input fasta directory")
+        	(>&2 echo "ERROR - set PB_ARROW_INFASTA to input fasta directory")
         	exit 1
    		fi
    		
