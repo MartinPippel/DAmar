@@ -146,7 +146,7 @@ then
 			fi  
 			
 			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}${arrowExtension}/ALL_${name}${pathID}${arrowExtension}.arrow.fa						        		
-		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta
+		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta
 		## alternate
 		for z in $(cat ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.header)
 		do
