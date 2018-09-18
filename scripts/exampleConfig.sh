@@ -454,7 +454,7 @@ COR_CONTIG_CTANALYZE_MINCLEN=1000
 COR_CONTIG_CTANALYZE_EXPRAWREADCOV=${RAW_COV}
 COR_CONTIG_CTANALYZE_MAXSPURLEN=100000
 COR_CONTIG_CTANALYZE_MAXTIPLEN=200000
-COR_CONTIG_CTANALYZE_REPEATTRACK="repeats_cov${COR_CONTIG_LAREPEAT_COV[3]}_l${COR_CONTIG_LAREPEAT_ENTER_COV[3]}_h${COR_CONTIG_LAREPEAT_LEAVE_COV[3]}_${COR_CONTIG_DATANDER_FOLDER}_dust"
+COR_CONTIG_CTANALYZE_REPEATTRACK="repeats_c${COR_CONTIG_LAREPEAT_COV[3]}_l${COR_CONTIG_LAREPEAT_LEAVE_COV[3]}h${COR_CONTIG_LAREPEAT_ENTER_COV[3]}_forcealign_${COR_CONTIG_DATANDER_FOLDER}_dust"
 ptype="dalign"
 if [[ -n ${FIX_FILT_SCRUB_TYPE} && ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
 then 
@@ -471,8 +471,8 @@ COR_CONTIG_CTANALYZE_DIR="analyze01"
 ### general options
 PB_ARROW_RUNID=1                                                          # used for output directory arrow_run${PB_ARROW_RUNID}
 PB_ARROW_BAM="/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/pacbio/"    # directory with bam files
-PB_ARROW_OUTDIR="${FIX_FILT_OUTDIR}_dalign"
-PB_ARROW_INFASTA="${FIX_FILT_OUTDIR}_dalign/correction/contigs"		    # will be ignored if runID is greater then 1
+PB_ARROW_OUTDIR="${FIX_FILT_OUTDIR}"
+PB_ARROW_INFASTA="${FIX_FILT_OUTDIR}/correction/contigs"		    # will be ignored if runID is greater then 1
 PB_ARROW_MAKEUNIQUEHEADER=0                                                 # to ensure unique header, add sequence index to fasta header 
 ### pbalign
 PB_ARROW_PBALIGN_LOGFILE=1
