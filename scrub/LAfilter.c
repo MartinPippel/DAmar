@@ -3454,7 +3454,7 @@ int main(int argc, char* argv[])
 		case 'R':
 		{
 			int flag = atoi(optarg);
-			if (flag < 0 || flag > 4)
+			if (flag < 0 || flag > 5)
 			{
 				fprintf(stderr, "[ERROR]: Unsupported -R [%d] option.\n", flag);
 				usage();
