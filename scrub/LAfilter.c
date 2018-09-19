@@ -2878,7 +2878,8 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				}
 				else
 				{
-					printf("keep all chains\n");
+					;
+//					printf("keep all chains\n");
 				}
 				// reset chain and ovl counter
 				for (a = 0; a < ctx->curChains; a++)
