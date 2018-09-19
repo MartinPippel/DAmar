@@ -2849,12 +2849,18 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 			chain(ctx, ovl + j, k - j + 1, trimABeg, trimAEnd);
 			{
+
 				// evaluate user input: nMaxProperChains and get rid (DISCARD all overlaps) of chains that are not wanted
 				// if nMaxProperChains == 0, then only THE best chain is kept, all others are discarded
 				// if nMaxProperChains == 1, then only THE best chain in forward as well as in reverse complement orientation are kept
 				// otherwise keep all chains
 
 				int a, b;
+				// get rid of OVL_TEMP marked ovls
+				for(a=j; a< k - j + 1; a++);
+					if(ovl[a].flags & OVL_TEMP)
+						ovl[a].flags |= OVL_DISCARD;
+
 				if (ctx->nMaxProperChains == 0)
 				{
 					for (a = 1; a < ctx->curChains; a++)
@@ -2876,11 +2882,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							ctx->ovlChains[a].ovls[b]->flags |= OVL_DISCARD;
 					}
 				}
-				else
-				{
-					;
-//					printf("keep all chains\n");
-				}
+
 				// reset chain and ovl counter
 				for (a = 0; a < ctx->curChains; a++)
 					ctx->ovlChains[a].novl = 0;
