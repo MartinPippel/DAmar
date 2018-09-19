@@ -54,6 +54,7 @@
 #define REMOVE_TP ( 1 << 2 )
 #define REMOVE_NONID_OVL ( 1 << 3 )
 #define REMOVE_SPECREP_OVL ( 1 << 4 )
+#define REMOVE_ID_OVL ( 1 << 5 )
 
 typedef struct
 {
@@ -98,8 +99,9 @@ typedef struct
 	char* cov_read_active;
 
 	int removeFlags; 	// 1 << 0 ... stitched overlaps, 1 << 1 ... module overlaps, 1 << 2 .. trace points, 1 << 3 .. non-identity overlaps,
-										// 1 << 4 .. remove B-read repeat overlaps, if a proper overlap between A and B exist i.e A ------------ or A ------------ or A ------------ or A   ------------
-										// 																																											  B -----E|B				B     E|B-----    B   E|B---E|B		  B ------------------
+						// 1 << 4 .. remove B-read repeat overlaps, if a proper overlap between A and B exist i.e A ------------ or A ------------ or A ------------ or A   ------------
+						//  																					   B -----E|B				B     E|B-----    B   E|B---E|B		  B ------------------
+						// 1 << 5 .. identity overlaps,
 	int includeReadFlag;
 
 	int removeLowCoverageOverlaps;
@@ -257,6 +259,11 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 		}
 
 		else if ((rmFlag & REMOVE_NONID_OVL) && (ovls[i].aread != ovls[i].bread))
+		{
+			ovls[i].flags |= OVL_DISCARD;
+		}
+
+		else if ((rmFlag & REMOVE_ID_OVL) && (ovls[i].aread == ovls[i].bread))
 		{
 			ovls[i].flags |= OVL_DISCARD;
 		}
@@ -3238,6 +3245,7 @@ static void usage()
 	fprintf(stderr, "                2 trace points\n");
 	fprintf(stderr, "                3 non-identity overlaps\n");
 	fprintf(stderr, "                4 remove B-read repeat overlaps, if a proper overlap between A and B exists \n");
+	fprintf(stderr, "                5 identity overlaps\n");
 	fprintf(stderr, "         -L ... two pass processing with read caching\n");
 	fprintf(stderr, "experimental features:\n");
 	fprintf(stderr, "         -f ... percentage of overlaps to keep (downsampling)\n");
