@@ -195,33 +195,6 @@ void initAnalyzeContext(AnalyzeContext *actx)
 		contig->numcReads = (int) ((patched_re - patched_rb) / 3);
 		assert(contig->numcReads == (int ) ((corrected_re - corrected_rb) / 3));
 
-		/// TODO REMOVE
-		switch (i)
-		{
-		case 36:
-		case 35:
-		case 48:
-		case 52:
-		case 72:
-		case 79:
-		case 84:
-		case 95:
-		case 115:
-		case 139:
-		case 197:
-		case 218:
-		case 227:
-		case 273:
-		case 291:
-		case 292:
-			printf("keep contig %d\n", i);
-			break;
-		default:
-			contig->numcReads = 0;
-			contig->flag |= CONTIG_DISCARD;
-			break;
-		}
-
 		if (contig->numcReads == 0)
 		{
 			fprintf(stderr, "!strange! - no reads found for contig: %d. DISCARDED\n", i);
