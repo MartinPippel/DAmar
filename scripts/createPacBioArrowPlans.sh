@@ -337,7 +337,7 @@ then
 		
 		for x in $(cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header)   		
    		do
-   			echo "bamtools merge -list ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof -out ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam"
+   			echo "bamtools merge -list ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof -out ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && xargs rm < ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof"
 		done > arrow_05_bamtools_block_${FIX_DB}.${slurmID}.plan
 		echo "$(bamtools --version | grep bamtools)" >arrow_05_bamtools_block_${FIX_DB}.${slurmID}.version
 	### 6-arrow 
