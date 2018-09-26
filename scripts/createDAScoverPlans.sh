@@ -350,6 +350,7 @@ then
         	do
         		flist="${flist} TAN.${RAW_DAZZ_DB%.db}.${z}.las"
         	done
+        	x=$((${y}+1))
         	echo "rm${flist}"
 		done  > cover_05_rmTan_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan            
     elif [[ ${currentStep} -eq 6 ]]
@@ -403,6 +404,7 @@ then
         		flist="${flist} ${RAW_DAZZ_DB%.db}.${z}.${RAW_DAZZ_DB%.db}.${z}"
         	done
         	echo "${DAZZLER_PATH}/bin/LAcheck${DASCOVER_LACHECK_OPT} ${RAW_DAZZ_DB%.db}${flist} || exit 1"
+        	x=$((${y}+1))
 		done > cover_07_LAcheck_block_${RAW_DAZZ_DB%.db}.${slurmID}.plan
         echo "DALIGNER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > cover_07_LAcheck_block_${RAW_DAZZ_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 8 ]]
@@ -430,6 +432,7 @@ then
         		flist="${flist} ${RAW_DAZZ_DB%.db}.${z}.${RAW_DAZZ_DB%.db}.${z}"
         	done
         	echo "${DAZZLER_PATH}/bin/REPmask${DASCOVER_REPMASK_OPT} ${RAW_DAZZ_DB%.db}${flist} || exit 1"
+        	x=$((${y}+1))
 		done > cover_08_REPmask_block_${RAW_DAZZ_DB%.db}.${slurmID}.plan
         echo "DAMASKER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > cover_08_REPmask_block_${RAW_DAZZ_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 9 ]]
@@ -454,6 +457,7 @@ then
         	do
         		flist="${flist} ${RAW_DAZZ_DB%.db}.${z}.${RAW_DAZZ_DB%.db}.${z}.las"
         	done
+        	x=$((${y}+1))
         	echo "rm${flist}"
 		done  > cover_09_rmDaligner_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan  
 	elif [[ ${currentStep} -eq 10 ]]
@@ -473,7 +477,8 @@ then
         	NUMACTL=""
         fi
         echo "PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${DASCOVER_DALIGNER_OPT} -mdust -mtan -mrep ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK} ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK}" > cover_10_daligner_block_${RAW_DAZZ_DB%.db}.${slurmID}.plan
-        for x in $(seq 1 ${nblocks})
+        x=1;
+        while [[ ${x} -le ${nblocks} ]]
         do
             if [[ -n ${RAW_DASCOVER_DALIGNER_NUMACTL} && ${RAW_DASCOVER_DALIGNER_NUMACTL} -gt 0 ]]
             then
@@ -504,6 +509,7 @@ then
             then
             	echo "PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${DASCOVER_DALIGNER_OPT} -mdust -mtan -mrep -A ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK} ${flist}"
         	fi
+        	x=$((${y}+1))
 		done >> cover_10_daligner_block_${RAW_DAZZ_DB%.db}.${slurmID}.plan
         echo "DALIGNER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > cover_10_daligner_block_${RAW_DAZZ_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 11 ]]
@@ -575,6 +581,7 @@ then
         		flist="${flist} ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK}.${RAW_DAZZ_DB%.db}.${z}.las"
         	done
         	echo "rm${flist}"
+        	x=$((${y}+1))
 		done  > cover_14_rmDaligner_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
 	elif [[ ${currentStep} -eq 15 ]]
     then 

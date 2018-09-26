@@ -146,11 +146,11 @@ PB_ARROW_TYPE=0
 PB_ARROW_SUBMIT_SCRIPTS_FROM=1
 PB_ARROW_SUBMIT_SCRIPTS_TO=7
 
-# ----------------------------------------------------------------- RAW REPEAT MASKING OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
+# ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 
 RAW_DASCOVER_DBDUST_BIAS=0
 
-RAW_DASCOVER_DATANDER_THREADS=4
+RAW_DASCOVER_DATANDER_THREADS=8
 #RAW_DASCOVER_DATANDER_MINLEN=500
 
 DASCOVER_LACHECK_BLOCKCMP=4
