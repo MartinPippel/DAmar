@@ -530,7 +530,7 @@ then
         	then
         		y=${nblocks}	
         	fi 
-        	echo "${DAZZLER_PATH}/bin/LAcheck${DASCOVER_LACHECK_OPT} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK}.${RAW_DAZZ_DB%.db}@${x}-${y} || exit 1"
+        	echo "${DAZZLER_PATH}/bin/LAcheck${DASCOVER_LACHECK_OPT} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK}.${RAW_DAZZ_DB%.db}.@${x}-${y} || exit 1"
         	x=$((${y}+1)) 
 		done > cover_11_LAcheck_block_${RAW_DAZZ_DB%.db}.${slurmID}.plan
         echo "DALIGNER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > cover_11_LAcheck_block_${RAW_DAZZ_DB%.db}.${slurmID}.version   
@@ -544,7 +544,7 @@ then
         ### find and set LAcheck options 
         setLAmergeOptions
         ### create LAmerge command
-		echo "${DAZZLER_PATH}/bin/LAmerge${DASCOVER_LAMERGE_OPT} ${RAW_DAZZ_DB%.db}.${nblocks}.${RAW_DASCOVER_DALIGNER_FORBLOCK} ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK}.${RAW_DAZZ_DB%.db}@1-${nblocks} || exit 1" > cover_12_LAmerge_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
+		echo "${DAZZLER_PATH}/bin/LAmerge${DASCOVER_LAMERGE_OPT} ${RAW_DAZZ_DB%.db}.${nblocks}.${RAW_DASCOVER_DALIGNER_FORBLOCK} ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK}.${RAW_DAZZ_DB%.db}.@1-${nblocks} || exit 1" > cover_12_LAmerge_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
         echo "DALIGNER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > cover_12_LAmerge_block_${RAW_DAZZ_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 13 ]]
     then 
