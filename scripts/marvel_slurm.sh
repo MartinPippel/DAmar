@@ -23,6 +23,12 @@ then
     exit 1
 fi
 
+if [[ -z "${COVERAGE_DIR}" ]]
+then 
+    (>&2 echo "ERROR - You have to set COVERAGE_DIR.")
+    exit 1
+fi
+
 if [[ -z "${PATCHING_DIR}" ]]
 then 
     (>&2 echo "ERROR - You have to set PATCHING_DIR.")
@@ -55,7 +61,11 @@ function realpath()
 
 ## find entry point to create first plan and submit that stuff 
 
-if [[ ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+if [[ ${RAW_DASCOVER_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+then 
+    currentPhase=0
+    currentStep=${RAW_DASCOVER_SUBMIT_SCRIPTS_FROM}    
+elif [[ ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=1
     currentStep=${RAW_REPMASK_SUBMIT_SCRIPTS_FROM}    
@@ -100,7 +110,13 @@ fi
 realPathConfigFile=$(realpath "${configFile}")
 
 cwd=$(pwd)
-if [[ ${currentPhase} -lt 3 ]]
+if [[ ${currentPhase} -eq 0 ]]
+then 
+	mkdir -p ${COVERAGE_DIR}
+	cd ${COVERAGE_DIR}
+	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
+	cd ${cwd}
+elif [[ ${currentPhase} -lt 3 ]]
 then 
 	mkdir -p ${PATCHING_DIR}
 	cd ${PATCHING_DIR}

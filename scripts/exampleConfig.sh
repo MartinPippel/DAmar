@@ -63,6 +63,16 @@ CONT_DAZZ_DB=LAB1608_HYLES_VESPERTILIO_DAZZLER_CONTIG
 DB_PATH=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/pacbio
 PATCHING_DIR="patching"
 ASSMEBLY_DIR="assembly"
+COVERAGE_DIR="coverage"
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase 0 - DAScover <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+# type-0 steps [1-13]: 1-DBdust, 2-datander, 3-TANmask, 4-CheckTan, 5-rmTan, 6-daligner, 7-CheckDaligner, 8-REPmask, 9-rmDaligner, 10-daligner, 11-CheckDaligner, 12-LAmerge, 13-CheckMerge, 14-rmDaligner, 15-DAScover, 16-REPcover]
+RAW_DASCOVER_TYPE=0
+
+RAW_DASCOVER_SUBMIT_SCRIPTS_FROM=1
+RAW_DASCOVER_SUBMIT_SCRIPTS_TO=16
+
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 1 - repeat masking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -136,6 +146,37 @@ PB_ARROW_TYPE=0
 PB_ARROW_SUBMIT_SCRIPTS_FROM=1
 PB_ARROW_SUBMIT_SCRIPTS_TO=7
 
+# ----------------------------------------------------------------- RAW REPEAT MASKING OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
+
+RAW_DASCOVER_DBDUST_BIAS=0
+
+RAW_DASCOVER_DATANDER_THREADS=4
+#RAW_DASCOVER_DATANDER_MINLEN=500
+
+DASCOVER_LACHECK_BLOCKCMP=4
+DASCOVER_LACHECK_OPT=1
+ 
+DASCOVER_TANMASK_BLOCKCMP=4
+DASCOVER_TANMASK_VERBOSE=1
+
+#RAW_DASCOVER_DALIGNER_KMER=14
+#RAW_DASCOVER_DALIGNER_ERR=0.7
+RAW_DASCOVER_DALIGNER_BIAS=0
+#RAW_DASCOVER_DALIGNER_OLEN=1000
+RAW_DASCOVER_DALIGNER_MEM=32
+DASCOVER_DALIGNER_BLOCKCMP=4
+RAW_DASCOVER_DALIGNER_FORBLOCK=1
+RAW_DASCOVER_DALIGNER_NUMACTL=1
+
+DASCOVER_REPMASK_BLOCKCMP=4
+DASCOVER_REPMASK_VERBOSE=1
+DASCOVER_REPMASK_COVERAGE=10
+
+RAW_DASCOVER_LAMERGE_VERBOSE=1
+
+RAW_DASCOVER_DASCOVER_VERBOSE=1
+#RAW_DASCOVER_DASCOVER_REPEAT="dust tan rep"
+#RAW_DASCOVER_DASCOVER_HGAPLEN=6000
 
 # ----------------------------------------------------------------- RAW REPEAT MASKING OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
@@ -470,7 +511,7 @@ COR_CONTIG_CTANALYZE_DIR="analyze01"
 
 ### general options
 PB_ARROW_RUNID=1                                                          # used for output directory arrow_run${PB_ARROW_RUNID}
-PB_ARROW_BAM="/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/pacbio/"    # directory with bam files
+PB_ARROW_BAM="${DB_PATH}"   										 # directory with bam files
 PB_ARROW_OUTDIR="${FIX_FILT_OUTDIR}"
 PB_ARROW_INFASTA="${FIX_FILT_OUTDIR}/correction/contigs"		    # will be ignored if runID is greater then 1
 PB_ARROW_MAKEUNIQUEHEADER=0                                                 # to ensure unique header, add sequence index to fasta header 

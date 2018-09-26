@@ -53,6 +53,7 @@ ng_count = 0
 
 if n_size < ng_size:
     eprint("Assembly size {} is smaller than estimated genome size {}".format(n_size, ng_size))
+    
 if n_size < ng_size/2:
     eprint("Assembly size {} is smaller than given NG50 {}. Reset to N50.".format(n_size, ng_size/2))
     ng_size = n_size
@@ -98,13 +99,9 @@ firstNg90=1
 firstNg100=1
 
 for i in range( len(arrSizes) ):
-#    reads = arrSizes[i][1]["reads"][::3]
-#    sreads = arrSizes[i][1]["sreads"]
-#    source = ",".join( "{}-{}".format(*x) for x in zip(reads, sreads) )
-
     seq = arrSizes[i][3]
     cumSeq += len(seq)
-    #print("{:2} {:8} {:10}".format(i, arrSizes[i][2], cumSeq))
+
     sys.stdout.write("{:2} {:8} {:10}".format(i, arrSizes[i][2], cumSeq))
     if firstNg10 == 1 and cumSeq >= 0.1*ng_size:
       sys.stdout.write(" NG10")

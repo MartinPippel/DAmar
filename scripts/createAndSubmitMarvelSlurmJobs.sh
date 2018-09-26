@@ -43,7 +43,11 @@ source ${configFile}
 
 function getPhaseFilePrefix()
 {
-    if [[ ${currentPhase} -eq 1 || ${currentPhase} -eq 3 ]]
+	if [[ ${currentPhase} -eq 0 ]]
+    then
+        echo "cover"
+	
+    elif [[ ${currentPhase} -eq 1 || ${currentPhase} -eq 3 ]]
     then
         echo "mask"
     elif [[ ${currentPhase} -eq 2 ]]
@@ -92,8 +96,11 @@ function getPhaseFilePrefix()
 }
 
 function getCurrentDB()
-{
-    if [[ ${currentPhase} -lt 3 ]]
+{	
+	if [[ ${currentPhase} -eq 0 ]]
+    then 
+        echo "${RAW_DAZZ_DB%.db}"
+    elif [[ ${currentPhase} -lt 3 ]]
     then 
         echo "${RAW_DB%.db}"
 	elif [[ ${currentPhase} -eq 8 ]]
@@ -406,11 +413,30 @@ then
 	fi	
 fi
 
-if [[ ${currentPhase} -eq 1 ]]
+if [[ ${currentPhase} -eq 0 ]]
+then 
+    if [[ $((${currentStep}+1)) -le ${RAW_DASCOVER_SUBMIT_SCRIPTS_TO} ]]
+    then 
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+    else 
+        currentPhase=1
+        currentStep=$((${RAW_REPMASK_SUBMIT_SCRIPTS_FROM}-1))
+		### we have to create the patching directory and change into that dir 
+		if [[ $($(pwd) | awk -F \/ '{print $NF}') -eq ${COVERAGE_DIR} ]]
+		then
+			cd ../	
+		fi
+		mkdir -p ${PATCHING_DIR}
+		cd ${PATCHING_DIR}
+    fi
+fi
+
+if [[ ${currentPhase} -eq 1  && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -le ${RAW_REPMASK_SUBMIT_SCRIPTS_TO} ]]
     then 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o mask_step$((${currentStep}+1))_${RAW_DB%.db}.out -e mask_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     else 
         currentPhase=2
@@ -422,7 +448,7 @@ if [[ ${currentPhase} -eq 2 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${RAW_PATCH_SUBMIT_SCRIPTS_TO} ]]
     then 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o fix_step$((${currentStep}+1))_${RAW_DB%.db}.out -e fix_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     else 
         currentPhase=3
@@ -446,7 +472,7 @@ if [[ ${currentPhase} -eq 3 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]]
     then 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o mask_step$((${currentStep}+1))_${RAW_DB%.db}.out -e mask_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     else 
         currentPhase=4
@@ -458,7 +484,7 @@ if [[ ${currentPhase} -eq 4 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${FIX_SCRUB_SUBMIT_SCRIPTS_TO} ]]
     then 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o scrub_step$((${currentStep}+1))_${FIX_DB%.db}.out -e scrub_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     else 
         currentPhase=5
@@ -470,11 +496,11 @@ if [[ ${currentPhase} -eq 5 && ${foundNext} -eq 0 ]]
 then 
     if [[ ${FIX_FILT_TYPE} -eq 0 && ${currentStep} -eq 2 && -n ${FIX_FILT_LAFILTER_RMSYMROUNDS} && ${FIX_FILT_LAFILTER_RMSYMROUNDS} -gt 0 && ! -f filt_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan ]]
     then                 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s${currentStep} -o filt_step$((${currentStep}+1))_${FIX_DB%.db}.out -e filt_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} ${currentStep} $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s${currentStep} -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} ${currentStep} $slurmID"
         foundNext=1
     elif [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${FIX_FILT_SUBMIT_SCRIPTS_TO} ]]
     then 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o filt_step$((${currentStep}+1))_${FIX_DB%.db}.out -e filt_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     else 
         currentPhase=6
@@ -486,7 +512,7 @@ if [[ ${currentPhase} -eq 6 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${FIX_TOUR_SUBMIT_SCRIPTS_TO} ]]
     then 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o tour_step$((${currentStep}+1))_${FIX_DB%.db}.out -e tour_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     else 
         currentPhase=7
@@ -498,7 +524,7 @@ if [[ ${currentPhase} -eq 7 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${FIX_CORR_SUBMIT_SCRIPTS_TO} ]]
     then 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o corr_step$((${currentStep}+1))_${FIX_DB%.db}.out -e corr_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     else 
         currentPhase=8
@@ -510,7 +536,7 @@ if [[ ${currentPhase} -eq 8 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${COR_CONTIG_SUBMIT_SCRIPTS_TO} ]]
     then 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o cont_step$((${currentStep}+1))_${CONT_DB%.db}.out -e cont_step$((${currentStep}+1))_${CONT_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${CONT_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${CONT_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
 	else 
         currentPhase=9
@@ -522,12 +548,13 @@ if [[ ${currentPhase} -eq 9 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]]
     then 
-        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o arrow_step$((${currentStep}+1))_${RAW_DB%.db}.out -e arrow_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     fi
 fi  
 
 if [[ ${foundNext} -eq 0 ]]
 then
-    echo "finished - all selected jobs created and submitted" 
+	# submit a dummy job that waits until the last real jobs sucessfully finished
+	sbatch --job-name=${PROJECT_ID}_final -o final_step.out -e final_step.err -n1 -c1 -p ${SLURM_PARTITION} --time=00:15:00 --mem=1g --dependency=afterok:${RET##* } --wrap="sleep 5 && echo \"finished - all selected jobs created and submitted\""     
 fi
