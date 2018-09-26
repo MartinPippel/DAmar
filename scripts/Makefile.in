@@ -8,7 +8,8 @@ SCRIPTS = rid2bid.py DBprepare.py paths2rids.py marvelStats.sh n50.py splitDiplo
           createRepmaskPlans2.sh createScrubbingPlans.sh createFilteringPlans.sh createTouringPlans.sh \
           createCorrectionPlans.sh createContigAnalyzePlans.sh \
           createPacBioArrowPlans.sh \
-          slurmStats.sh assemblyStats.sh exampleConfig.sh
+          slurmStats.sh assemblyStats.sh exampleConfig.sh \
+          createCorrectionPlans.sh
 
 all: $(ALL)
 
