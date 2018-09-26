@@ -544,8 +544,8 @@ then
         ### find and set LAcheck options 
         setLAmergeOptions
         ### create LAmerge command
-		echo "${DAZZLER_PATH}/bin/LAmerge${DASCOVER_LAMERGE_OPT} ${RAW_DAZZ_DB%.db}.${nblocks}.${RAW_DASCOVER_DALIGNER_FORBLOCK} ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK}.${RAW_DAZZ_DB%.db}.@1-${nblocks} || exit 1" > cover_12_LAmerge_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
-        echo "DALIGNER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > cover_12_LAmerge_block_${RAW_DAZZ_DB%.db}.${slurmID}.version
+		echo "PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/LAmerge${DASCOVER_LAMERGE_OPT} ${RAW_DAZZ_DB%.db}.${nblocks}.${RAW_DASCOVER_DALIGNER_FORBLOCK} ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK}.${RAW_DAZZ_DB%.db}.@1-${nblocks} || exit 1" > cover_12_LAmerge_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
+        echo "DALIGNER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > cover_12_LAmerge_single_${RAW_DAZZ_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 13 ]]
     then 
         ### clean up plans 
@@ -557,7 +557,7 @@ then
         setLAcheckOptions
         ### create LAmerge command
 		echo "${DAZZLER_PATH}/bin/LAcheck${DASCOVER_LACHECK_OPT} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${nblocks}.${RAW_DASCOVER_DALIGNER_FORBLOCK} || exit 1" > cover_13_LAcheck_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
-        echo "DALIGNER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > cover_13_LAcheck_block_${RAW_DAZZ_DB%.db}.${slurmID}.version
+        echo "DALIGNER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > cover_13_LAcheck_single_${RAW_DAZZ_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 14 ]]
     then 
         ### clean up plans 
@@ -594,7 +594,7 @@ then
         setDAScoverOptions
         ### create DAScover command
 		echo "${DAZZLER_PATH}/bin/DAScover${DASCOVER_DASCOVER_OPT} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${nblocks}.${RAW_DASCOVER_DALIGNER_FORBLOCK}" > cover_15_DAScover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
-        echo "DASCRUBBER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DASCRUBBER/.git rev-parse --short HEAD)" > cover_15_DAScover_block_${RAW_DAZZ_DB%.db}.${slurmID}.version
+        echo "DASCRUBBER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DASCRUBBER/.git rev-parse --short HEAD)" > cover_15_DAScover_single_${RAW_DAZZ_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 16 ]]
     then
         ### clean up plans 
@@ -605,7 +605,7 @@ then
 	
         ### create REPcover commands 
 		echo "${DAZZLER_PATH}/bin/REPcover ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK} | tee effectiveCov_${RAW_DAZZ_DB%.db}_${slurmID}_forBlock${RAW_DASCOVER_DALIGNER_FORBLOCK}.txt" > cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
-        echo "DASCRUBBER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DASCRUBBER/.git rev-parse --short HEAD)" > cover_16_DAScover_block_${RAW_DAZZ_DB%.db}.${slurmID}.version
+        echo "DASCRUBBER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DASCRUBBER/.git rev-parse --short HEAD)" > cover_16_DAScover_single_${RAW_DAZZ_DB%.db}.${slurmID}.version
     else 
         (>&2 echo "step ${currentStep} in RAW_DASCOVER_TYPE ${RAW_DASCOVER_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_DASCOVER_TYPE}]}")
