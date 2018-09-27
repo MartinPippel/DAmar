@@ -423,18 +423,22 @@ then
         currentPhase=1
         currentStep=$((${RAW_REPMASK_SUBMIT_SCRIPTS_FROM}-1))
 		### we have to create the patching directory and change into that dir 
-		if [[ $($(pwd) | awk -F \/ '{print $NF}') -eq ${COVERAGE_DIR} ]]
+		if [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${COVERAGE_DIR} ]]
 		then
 			cd ../	
 		fi
-		mkdir -p ${PATCHING_DIR}
-		cd ${PATCHING_DIR}
+		if [[ ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${RAW_REPMASK_SUBMIT_SCRIPTS_TO} ]] ||
+		   [[ ${RAW_PATCH_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_PATCH_SUBMIT_SCRIPTS_FROM} -le ${RAW_PATCH_SUBMIT_SCRIPTS_TO} ]]
+		then
+			mkdir -p ${PATCHING_DIR}
+			cd ${PATCHING_DIR}
+		fi
     fi
 fi
 
 if [[ ${currentPhase} -eq 1  && ${foundNext} -eq 0 ]]
 then 
-    if [[ $((${currentStep}+1)) -le ${RAW_REPMASK_SUBMIT_SCRIPTS_TO} ]]
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${RAW_REPMASK_SUBMIT_SCRIPTS_TO} ]]
     then 
         sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
@@ -454,7 +458,7 @@ then
         currentPhase=3
         currentStep=$((${FIX_REPMASK_SUBMIT_SCRIPTS_FROM}-1))
         ### we have to create the assembly directory and change into that dir 
-		if [[ $($(pwd) | awk -F \/ '{print $NF}') -eq ${PATCHING_DIR} ]]
+		if [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${PATCHING_DIR} ]]
 		then
 			cd ../	
 		fi
@@ -470,7 +474,7 @@ fi
 
 if [[ ${currentPhase} -eq 3 && ${foundNext} -eq 0 ]]
 then 
-    if [[ $((${currentStep}+1)) -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]]
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]]
     then 
         sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
