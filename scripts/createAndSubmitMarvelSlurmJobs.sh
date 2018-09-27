@@ -466,9 +466,18 @@ then
 		then 
 			(>&2 echo "WARNING - Variable FIX_REPMASK_USELAFIX_PATH is not set.Try to use default path: patchedReads_dalign")
 			FIX_REPMASK_USELAFIX_PATH="patchedReads_dalign"
-		fi	
-		mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
-		cd ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
+		fi
+		if [[ ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]] ||
+		   [[ ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -le ${FIX_SCRUB_SUBMIT_SCRIPTS_TO} ]] ||
+		   [[ ${FIX_FILT_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_FILT_SUBMIT_SCRIPTS_FROM} -le ${FIX_FILT_SUBMIT_SCRIPTS_TO} ]] ||
+		   [[ ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -le ${FIX_TOUR_SUBMIT_SCRIPTS_TO} ]] ||
+		   [[ ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -le ${FIX_CORR_SUBMIT_SCRIPTS_TO} ]] ||
+		   [[ ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -gt 0 && ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -le ${COR_CONTIG_SUBMIT_SCRIPTS_TO} ]] ||
+		   [[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]]
+		then
+			mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
+			cd ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
+		fi
     fi 
 fi  
 
@@ -560,5 +569,5 @@ fi
 if [[ ${foundNext} -eq 0 ]]
 then
 	# submit a dummy job that waits until the last real jobs sucessfully finished
-	sbatch --job-name=${PROJECT_ID}_final -o final_step.out -e final_step.err -n1 -c1 -p ${SLURM_PARTITION} --time=00:15:00 --mem=1g --dependency=afterok:${RET##* } --wrap="sleep 5 && echo \"finished - all selected jobs created and submitted\""     
+sbatch --job-name=${PROJECT_ID}_final -o final_step.out -e final_step.err -n1 -c1 -p ${SLURM_PARTITION} --time=00:15:00 --mem=1g --dependency=afterok:${RET##* } --wrap="sleep 5 && echo \"finished - all selected jobs created and submitted. Last Step: ${prefix} ${currentPhase} ${currentStep} $slurmID ${configFile}\""     
 fi
