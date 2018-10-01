@@ -1650,9 +1650,9 @@ static int filter_flips(FixContext* fctx, Overlap* ovls, int novl, int* trim_b, 
 	{
 		return trimmed;
 	}
-
+#ifdef DEBUG
 	printf("%7d %3d %3d [%4d..%4d]\n", aread, self_c, self_n, b, e);
-
+#endif
 	int alen = DB_READ_LEN(fctx->db, aread);
 
 	for (i = b; i < e; i++)
@@ -1669,16 +1669,18 @@ static int filter_flips(FixContext* fctx, Overlap* ovls, int novl, int* trim_b, 
 
 			if (intersect(ab, ae, ab_c, ae_c))
 			{
+#ifdef DEBUG
 				printf("  -> crosses diagonal %5d..%5d x %5d..%5d\n", ab, ae, ab_c, ae_c);
-
+#endif
 				ovl_trace* trace = ovl->path.trace;
 
 				int sab = ovl->path.abpos;
 				int sae = (sab / fctx->twidth + 1) * fctx->twidth;
 				int sbb = ovl->path.bbpos;
 				int sbe = sbb + trace[1];
-
+#ifdef DEBUG
 				printf("  -> sab %d sae %d sbb %d sbe %d\n", sab, sae, sbb, sbe);
+#endif
 				int j;
 				for (j = 2; j < ovl->path.tlen - 2; j += 2)
 				{
@@ -1988,8 +1990,9 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 			data[dcur].diff = fctx->twidth * 1.0 * q / (be - bb);
 			data[dcur].comp = (ovl[i].flags & OVL_COMP);
 
+#ifdef DEBUG
 			printf("OVL %d..%d -> %d..%d\n", ovl[i - 1].path.abpos, ovl[i - 1].path.aepos, ovl[i].path.abpos, ovl[i].path.aepos);
-
+#endif
 			dcur++;
 		}
 	}
@@ -2146,7 +2149,9 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 
 		if (contained)
 		{
+#ifdef DEBUG
 			printf("%d @ %d contained\n", i, qa[i]);
+#endif
 			continue;
 		}
 
@@ -2235,9 +2240,9 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 					q_min = q_new;
 					ovl_q_min = j;
 				}
-
+#ifdef DEBUG
 				printf("%c %8d %5d..%5d %3d..%3d %5.2f\n", ovl_q_min == j ? '*' : ' ', ovl[j].bread, bb, be, beg, end, q_new);
-
+#endif
 				span++;
 			}
 
