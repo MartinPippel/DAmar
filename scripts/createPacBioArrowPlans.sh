@@ -393,7 +393,13 @@ then
    				fq=" -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fq"	
    			fi
    			
-   			echo "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && arrow${ARROW_ARROW_OPT}${gff}${vcf}${fq} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta -w ${x} -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam"	
+   			# check if bam is empty !!!!!
+   			if [[ $(samtools view -H ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam | wc -l) -eq 0 ]]
+   			then
+   				(>&2 echo "bam file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam is EMPTY. Skip it!")
+   			else
+   				echo "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && arrow${ARROW_ARROW_OPT}${gff}${vcf}${fq} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta -w ${x} -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam"	
+   			fi
 		done > arrow_06_arrow_block_${FIX_DB}.${slurmID}.plan	
 		echo "$(bamtools --version | grep bamtools)" > arrow_06_arrow_block_${FIX_DB}.${slurmID}.version
 		echo "pbindex $(pbindex --version)" >> arrow_06_arrow_block_${FIX_DB}.${slurmID}.version

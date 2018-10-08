@@ -181,7 +181,7 @@ RAW_DASCOVER_DASCOVER_VERBOSE=1
 # ----------------------------------------------------------------- RAW REPEAT MASKING OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
 # number of daligner block comparison for repeat masking if there are more then one number then mulyiple round of repeat masking are applied
-RAW_REPMASK_BLOCKCMP=(2)
+RAW_REPMASK_BLOCKCMP=(1)
 # bias in nucleotide distribution - set to 1 for AT >= 70% || AT <= 30% 
 RAW_REPMASK_DBDUST_BIAS=0
 # datander
@@ -286,7 +286,7 @@ RAW_FIX_LAFIX_MAXCHIMERLEN=8000
 
 FIX_REPMASK_USELAFIX_PATH=patchedReads_dalign
 # number of daligner block comparison for repeat masking if there are more then one number then mulyiple round of repeat masking are applied
-FIX_REPMASK_BLOCKCMP=(2)
+FIX_REPMASK_BLOCKCMP=(1)
 # bias in nucleotide distribution - set to 1 for AT >= 70% || AT <= 30% 
 FIX_REPMASK_DBDUST_BIAS=0
 # datander
