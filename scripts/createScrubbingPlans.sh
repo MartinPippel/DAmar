@@ -309,6 +309,13 @@ function setLArepeatOptions()
             tmp="${tmp} -c ${FIX_SCRUB_LAREPEAT_COV[$x]}"
             tmp="${tmp} -t repeats_c${FIX_SCRUB_LAREPEAT_COV[$x]}_l${FIX_SCRUB_LAREPEAT_LEAVE_COV[$x]}h${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}${stype}"
         else
+        	if [[ -n ${FIX_SCRUB_LAREPEAT_MAX_COV} && ${FIX_SCRUB_LAREPEAT_MAX_COV} -gt 100 ]]
+        	then 
+        		tmp="${tmp} -M ${FIX_SCRUB_LAREPEAT_MAX_COV}"
+			else if [[ -n ${RAW_COV} && $((${RAW_COV}+20)) -gt 100 ]]
+			then
+				tmp="${tmp} -M 200"
+        	fi         	
             tmp="${tmp} -t repeats_calCov_l${FIX_SCRUB_LAREPEAT_LEAVE_COV[$x]}h${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}${stype}"
         fi
         SCRUB_LAREPEAT_OPT[$x]=${tmp}

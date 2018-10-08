@@ -1144,7 +1144,7 @@ static void correct_overlaps( corrector_context* cctx, Overlap** ovls, int nOvls
     {
         if ( !has_valid_pt_points( ovls[ i ] ) )
         {
-            printf( "ERROR: bad pt points ovl %d bread %d\n", i, ovls[ i ]->bread );
+            printf( "ERROR: bad pt points ovl %d aread %d bread %d\n", i, ovls[ i ]->aread, ovls[ i ]->bread );
             return;
         }
     }
@@ -1435,13 +1435,13 @@ static void* corrector_thread( void* arg )
 
     size_t tbytes = TBYTES( cctx.twidth );
 
-    int omax              = 500;
+    int omax              = 5000;
     Overlap* pOvls        = malloc( sizeof( Overlap ) * omax );
     Overlap** ovls_sorted = malloc( sizeof( Overlap* ) * omax );
 
     fseek( fileOvls, carg->start, SEEK_SET );
 
-    while ( !Read_Overlap( fileOvls, pOvls ) && ( pOvls->flags & OVL_DISCARD || pOvls->path.tlen == 0 ) )
+    while ( !Read_Overlap( fileOvls, pOvls ) && ( (pOvls->flags & OVL_DISCARD) || (pOvls->path.tlen == 0) ) )
     {
         fseek( fileOvls, tbytes * pOvls->path.tlen, SEEK_CUR );
     }
@@ -1482,7 +1482,7 @@ static void* corrector_thread( void* arg )
 
             ovls_sorted[ n ] = pOvls + n;
 
-            if ( pOvls[ n ].flags & OVL_DISCARD || pOvls[ n ].path.tlen == 0 )
+            if ( (pOvls[ n ].flags & OVL_DISCARD) || (pOvls[ n ].path.tlen == 0 ) )
             {
                 fseek( fileOvls, tbytes * pOvls[ n ].path.tlen, SEEK_CUR );
                 continue;

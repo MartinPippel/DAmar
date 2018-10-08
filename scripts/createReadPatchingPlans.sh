@@ -240,6 +240,14 @@ function setLArepeatOptions()
         then
             RAW_FIX_LAREPEAT_REPEATTRACK=repeats_c${RAW_FIX_LAREPEAT_COV}_l${RAW_FIX_LAREPEAT_LEAVE_COV}h${RAW_FIX_LAREPEAT_ENTER_COV}${ptype}
         else
+        	if [[ -n ${RAW_FIX_LAREPEAT_MAX_COV} && ${RAW_FIX_LAREPEAT_MAX_COV} -gt 100 ]]
+        	then 
+        		FIX_LAREPEAT_OPT="${FIX_LAREPEAT_OPT} -M ${RAW_FIX_LAREPEAT_MAX_COV}"
+			else if [[ -n ${RAW_COV} && $((${RAW_COV}+20)) -gt 100 ]]
+			then
+				FIX_LAREPEAT_OPT="${FIX_LAREPEAT_OPT} -M 200"
+        	fi
+        	
             RAW_FIX_LAREPEAT_REPEATTRACK=repeats_calCov_l${RAW_FIX_LAREPEAT_LEAVE_COV}h${RAW_FIX_LAREPEAT_ENTER_COV}${ptype}
         fi
         FIX_LAREPEAT_OPT="${FIX_LAREPEAT_OPT} -t ${RAW_FIX_LAREPEAT_REPEATTRACK}"
