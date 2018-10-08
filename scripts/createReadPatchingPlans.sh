@@ -243,7 +243,7 @@ function setLArepeatOptions()
         	if [[ -n ${RAW_FIX_LAREPEAT_MAX_COV} && ${RAW_FIX_LAREPEAT_MAX_COV} -gt 100 ]]
         	then 
         		FIX_LAREPEAT_OPT="${FIX_LAREPEAT_OPT} -M ${RAW_FIX_LAREPEAT_MAX_COV}"
-			else if [[ -n ${RAW_COV} && $((${RAW_COV}+20)) -gt 100 ]]
+			elif [[ -n ${RAW_COV} && $((${RAW_COV}+20)) -gt 100 ]]
 			then
 				FIX_LAREPEAT_OPT="${FIX_LAREPEAT_OPT} -M 200"
         	fi

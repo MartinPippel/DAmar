@@ -312,7 +312,7 @@ function setLArepeatOptions()
         	if [[ -n ${FIX_SCRUB_LAREPEAT_MAX_COV} && ${FIX_SCRUB_LAREPEAT_MAX_COV} -gt 100 ]]
         	then 
         		tmp="${tmp} -M ${FIX_SCRUB_LAREPEAT_MAX_COV}"
-			else if [[ -n ${RAW_COV} && $((${RAW_COV}+20)) -gt 100 ]]
+			elif [[ -n ${RAW_COV} && $((${RAW_COV}+20)) -gt 100 ]]
 			then
 				tmp="${tmp} -M 200"
         	fi         	
