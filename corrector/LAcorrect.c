@@ -1781,7 +1781,8 @@ int main( int argc, char* argv[] )
     {
         fclose( cargs[ i ].fileOvls );
         fclose( cargs[ i ].fileOut );
-        fclose( cargs[ i ].db.bases );
+        if(cargs[ i ].db.bases) // can still be NULL in rare cases - especially when last block has only a few reads that are not part of any contig
+        	fclose( cargs[ i ].db.bases );
     }
 
     free( cargs );
