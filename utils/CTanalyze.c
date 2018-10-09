@@ -162,12 +162,12 @@ void initAnalyzeContext(AnalyzeContext *actx)
 		actx->vreadMask[i] = (int *) malloc(sizeof(int) * DB_NREADS(actx->patchedReadDB));
 		bzero(actx->vreadMask[i], sizeof(int) * DB_NREADS(actx->patchedReadDB));
 	}
-	printf("done\n");
+	printf(" - done\n");
 
 	actx->readSeq = New_Read_Buffer(actx->corContigDB);
 	bzero(actx->readSeq, DB_READ_MAXLEN(actx->corContigDB));
 
-	printf("init contigs");
+	printf(" init contigs - START\n");
 	for (i = 0; i < numOfContigs; i++)
 	{
 		// init contigs with reads
@@ -298,7 +298,7 @@ void initAnalyzeContext(AnalyzeContext *actx)
 				printf(" %5d", abs(contig->cReads[j].ovlReads[0].end - contig->cReads[j].ovlReads[0].beg));
 				printf(" %8d", contig->cReads[j].patchedContigPosBeg);
 				printf(" %8d", contig->cReads[j].patchedContigPosEnd);
-				//  orreted coordinates
+				//  correx=cted coordinates
 				printf(" |	 %8d", contig->cReads[j].correctedID);
 				printf(" %8d", contig->cReads[j].correctedReadPosBeg);
 				printf(" %8d", contig->cReads[j].correctedReadPosEnd);
@@ -313,12 +313,12 @@ void initAnalyzeContext(AnalyzeContext *actx)
 			printf(" --> len: %10d\n", contig->len);
 		}
 	}
-	printf("done\n");
+	printf(" init contigs - DONE\n");
 
 	parseDBFileNames(actx->corContigDBName, &actx->contigFileNameOffsets, &actx->ContigFileNames, NULL);
 
 	actx->contigs = contigs;
-	printf("sort contigs");
+	printf("sort contigs by length - START");
 	// sort contig pointer according length (longest first)
 	actx->contigs_sorted = malloc(sizeof(Contig*) * actx->numContigs);
 	assert(actx->contigs_sorted != NULL);
@@ -327,7 +327,7 @@ void initAnalyzeContext(AnalyzeContext *actx)
 		actx->contigs_sorted[i] = actx->contigs + i;
 	}
 	qsort(actx->contigs_sorted, actx->numContigs, sizeof(Contig*), cmp_contig_length);
-	printf("done\n");
+	printf("sort contigs by length - DONE");
 }
 
 char* getFastaFileNameFromDB(AnalyzeContext *actx, int contigID)
@@ -6083,9 +6083,9 @@ int main(int argc, char* argv[])
 		pre(patched_pctx, &actx);
 	}
 // initialize contigs
-	printf("STEP0a: initialize AnalyzeContext");
+	printf("STEP0a: initialize AnalyzeContext - START\n");
 	initAnalyzeContext(&actx);
-	printf(" - DONE\n");
+	printf("STEP0a: initialize AnalyzeContext - DONE\n");
 // todo for now do all steps: input format should from MARVEL assembly run
 // analyze overlaps of fixed reads for each contig ( coverage, containments, duplicate reads used in different contigs )
 // STEP1
