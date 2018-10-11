@@ -3257,7 +3257,12 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 								while (from <= to)
 								{
-									contigJCovHist[from++]++;
+									if(contig_k->idx == 263)
+									{
+										printf("from = %d, Jcount %d\n",from, contigJCovHist[from]);
+									}
+									contigJCovHist[from]++;
+									from++;
 								}
 								from = contigKBegRange[l] / binSize;
 								to = contigKEndRange[l] / binSize;
@@ -3273,7 +3278,12 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 								}
 								while (from <= to)
 								{
-									contigKCovHist[from++]++;
+									if(contig_k->idx == 263)
+																		{
+																			printf("from = %d, Kcount %d\n",from, contigJCovHist[from]);
+																		}
+									contigKCovHist[from]++;
+									from++;
 								}
 							}
 						}
