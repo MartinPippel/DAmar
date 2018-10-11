@@ -84,13 +84,12 @@ typedef struct
 #define OVLGRP_TOO_SHORT     (1 << 4)        // overlap group is shorter than MIN_CONTIG_LENGTH
 
 
-/// todo
 typedef struct
 {
-	int numOvls;
-	Overlap **chain;
-
-} ContigOverlapChain;
+	Overlap **ovls;
+	int novl;
+	int maxOvl;
+} Chain;
 
 
 typedef struct
@@ -179,17 +178,15 @@ typedef struct
 	int numcReads;
 	float avgCov;
 
-	OverlapGroup **ovlGrps; // overlaps between contigs
-	int ovlGrpsClassificFlag;
-	int numOvlGrps;
-	int maxOvlGrps;
+	// valid overlap chains with other contigs, i.e. all repeat induced overlaps are filtered out !!!!
+	Chain *contigChains;
+	int curContigChains;
+	int maxContigChains;
 
 	ContigGraphClassification *gClassific;
 	int gClassificFlag;
 	int numGClassific;
 	int maxGClassific;
-
-	char *pctCoveredBasesInOtherContigs;  // number of contigs, size: numContigs
 
 	int tmp;
 	int class;
@@ -281,7 +278,7 @@ int getPathID(AnalyzeContext *actx, int contigID);
 void getContigsEndIDs(AnalyzeContext *actx, int contigID, int* beg, int *end);
 
 //////// analyze contigs on their alignments with each other
-int findOverlapGroups(AnalyzeContext* actx, Overlap* pOvls, int n);
+void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n);
 int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl);
 int compareInt(const void * a, const void * b);
 int isOverlapGroupValid(AnalyzeContext *actx, OverlapGroup *ovlgrp);
