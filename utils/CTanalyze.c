@@ -6942,7 +6942,7 @@ int main(int argc, char* argv[])
 		pass(contig_pctx, processContigOverlap_handler);
 		printf("DONE     ---   STEP2a: analyze contig alignments\n");
 		printf("START    ---   STEP2b: classify contig by contig alignments\n");
-		classifyContigsByOverlaps(&actx);
+//		classifyContigsByOverlaps(&actx);
 		printf("DONE     ---   STEP2b: classify contig by contig alignments\n");
 	}
 
@@ -6951,7 +6951,7 @@ int main(int argc, char* argv[])
 	if (1)
 	{
 		printf("START    ---   STEP3: refine contig classification (based on STEP1 and STEP2)");
-		classify(&actx);
+//		classify(&actx);
 		printf("DONE     ---   STEP3: refine contig classification (based on STEP1 and STEP2)");
 	}
 // check reads that occur multiple times in contigs, and set proper split positions if required
@@ -6959,13 +6959,13 @@ int main(int argc, char* argv[])
 	{
 		printf("STEP4: analyze reads that occur multiple times in contigs, and set proper split positions if required\n");
 		// analyze number of shared reads between contigs, trim them back if possible /// split contigs ??
-		finalContigValidation(&actx);
+//		finalContigValidation(&actx);
 	}
 // create output: contigs, splitted contigs, stat and bed files with i.e. coverage histogram, repeat tracks, split coordinates, ...
 // STEP5
 	{
 		printf("STEP5: create output\n");
-		rawClassification(&actx);
+//		rawClassification(&actx);
 
 	}
 
