@@ -3247,12 +3247,12 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 								int to = contigJEndRange[l] / binSize;
 								if(from < 0)
 								{
-									printf("contigIntersectionJKReads failed for read %d: from %d to %d\n",l, from, to );
+									printf("contigIntersectionJKReads Jrange failed for read %d: from %d to %d\n",l, from, to );
 								}
 
-								if(to >= nbins)
+								if(to >= nBins)
 								{
-									printf("contigIntersectionJKReads failed for read %d: from %d to %d\n",l, from, to );
+									printf("contigIntersectionJKReads Jrange failed for read %d: from %d to %d\n",l, from, to );
 								}
 
 								while (from <= to)
@@ -3261,6 +3261,16 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 								}
 								from = contigKBegRange[l] / binSize;
 								to = contigKEndRange[l] / binSize;
+
+								if(from < 0)
+								{
+									printf("contigIntersectionJKReads Krange failed for read %d: from %d to %d\n",l, from, to );
+								}
+
+								if(to >= nBins)
+								{
+									printf("contigIntersectionJKReads Krange failed for read %d: from %d to %d\n",l, from, to );
+								}
 								while (from <= to)
 								{
 									contigKCovHist[from++]++;
