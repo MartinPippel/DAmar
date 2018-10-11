@@ -31,7 +31,7 @@
 
 #undef DEBUG_STEP1A
 #undef DEBUG_STEP1B
-#undef DEBUG_STEP1C
+#define DEBUG_STEP1C
 
 #define DEBUG_STEP2A
 
@@ -5030,9 +5030,17 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 			k++;
 
 		if (ovls[j].aread == ovls[j].bread) // ignore overlaps between same contig
-			;
-		else if (DB_READ_LEN(actx->corContigDB, ovls[j].aread) > DB_READ_LEN(actx->corContigDB, ovls[j].bread)) // len aread must be < then len bread !!!
-			;
+		{
+			// TODO discard overlaps only when writeOutFilteredContigChains is enabled
+			int i;
+			for (i = 0; i < (k - j + 1); i++)
+			{
+				ovls[i].flags |= OVL_DISCARD;
+			}
+
+		}
+//		else if (DB_READ_LEN(actx->corContigDB, ovls[j].aread) > DB_READ_LEN(actx->corContigDB, ovls[j].bread)) // len aread must be < then len bread !!!
+//			;
 		else
 			chainContigOverlaps(actx, ovls + j, k - j + 1);
 
