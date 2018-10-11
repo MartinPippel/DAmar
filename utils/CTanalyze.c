@@ -6970,7 +6970,7 @@ int main(int argc, char* argv[])
 		analyzeContigOverlapGraph(&actx);
 		printf("DONE     ---   STEP1B: -- analyzeContigOverlapGraph\n");
 		printf("START    ---   STEP1C: -- classifyContigsByBReadsAndPath\n");
-		classifyContigsByBReadsAndPath(&actx);
+//		classifyContigsByBReadsAndPath(&actx);
 		printf("DONE     ---   STEP1C: -- classifyContigsByBReadsAndPath\n");
 	}
 
