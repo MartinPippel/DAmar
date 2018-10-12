@@ -4412,6 +4412,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 #endif
 			}
 
+			assert(longestUniqOvlIdx >=0 && longestUniqOvlIdx < n);
 			// first: add longest overlap to chain
 			curChain->ovls[0] = ovls + longestUniqOvlIdx;
 			curChain->ovls[0]->flags |= OVL_TEMP;
