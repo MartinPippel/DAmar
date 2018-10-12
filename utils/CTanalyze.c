@@ -4433,9 +4433,10 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			curChain->ovls[0]->flags |= OVL_TEMP;
 			curChain->novl++;
 			nremain--;
-	#ifdef DEBUG_CHAIN
+//	#ifdef DEBUG_CHAIN
+			if(ovls->aread == 0 && ovls->bread == 14)
 			printf("chain: nOvl: %d, maxOvl %d, nremain %d\n", curChain->novl, curChain->maxOvl, nremain);
-	#endif
+//	#endif
 
 			int ab1, ae1;
 			int bb1, be1;
@@ -4656,7 +4657,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				}
 			}
 
-			// try to ectedn chain into left direction
+			// try to extend chain into left direction
 			if (nremain && longestUniqOvlIdx > 0)
 			{
 				ab1 = ovls[longestUniqOvlIdx].path.abpos;
