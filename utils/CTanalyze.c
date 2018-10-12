@@ -4963,7 +4963,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				int j;
 				for (i = 0; i < ctx->curChains && valid; i++)
 				{
-					if ((curChain->ovls[0]->flags & OVL_COMP) == (ctx->ovlChains[i].ovls[0]->flags && OVL_COMP))
+					//if ((curChain->ovls[0]->flags & OVL_COMP) == (ctx->ovlChains[i].ovls[0]->flags && OVL_COMP))
 					{
 						for (j = 0; j < curChain->novl; j++)
 						{

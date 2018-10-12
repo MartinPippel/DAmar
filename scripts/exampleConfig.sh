@@ -67,7 +67,7 @@ COVERAGE_DIR="coverage"
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase 0 - DAScover <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-# type-0 steps [1-13]: 1-DBdust, 2-datander, 3-TANmask, 4-CheckTan, 5-rmTan, 6-daligner, 7-CheckDaligner, 8-REPmask, 9-rmDaligner, 10-daligner, 11-CheckDaligner, 12-LAmerge, 13-CheckMerge, 14-rmDaligner, 15-DAScover, 16-REPcover]
+# type-0 steps [1-16]: 1-DBdust, 2-datander, 3-TANmask, 4-CheckTan, 5-rmTan, 6-daligner, 7-CheckDaligner, 8-REPmask, 9-rmDaligner, 10-daligner, 11-CheckDaligner, 12-LAmerge, 13-CheckMerge, 14-rmDaligner, 15-DAScover, 16-REPcover]
 RAW_DASCOVER_TYPE=0
 
 RAW_DASCOVER_SUBMIT_SCRIPTS_FROM=1
