@@ -5133,7 +5133,13 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 					}
 				}
 			}
-
+			// reset chain and ovl counter
+			int i;
+			for (i = 0; i < actx->curChains; i++)
+			{
+				actx->ovlChains[i].novl = 0;
+			}
+			actx->curChains = 0;
 		}
 
 		j = k + 1;
