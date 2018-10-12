@@ -4964,56 +4964,48 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				for (i = 0; i < ctx->curChains && valid; i++)   // loop through all existing chains
 				{
 					Chain *validChain = ctx->ovlChains + i;
-					for (j=0; j<validChain->novl && valid; j++ ) // loop through all overlaps
+
+					// check contigA coordinates
+					if(intersect(validChain->ovls[0]->path.abpos,validChain->ovls[validChain->novl-1]->path.aepos,curChain->ovls[0]->path.abpos,curChain->ovls[curChain->novl-1]->path.aepos))
 					{
-						int k;
-						for(k=0;k<curChain->novl && valid ;k++)
-						{
-							// check contigA coordinates
-							if(intersect(validChain->ovls[j]->path.abpos, validChain->ovls[j]->path.aepos, curChain->ovls[k]->path.abpos, curChain->ovls[k]->path.aepos))
-							{
 #ifdef DEBUG_CHAIN
 							printf("CHAIN is invalid - DISCARD\n");
 #endif
-								valid = 0;
-								break;
-							}
-							// check contigB coordinates
-							if ((validChain->ovls[0]->flags & OVL_COMP) == (curChain->ovls[0]->flags && OVL_COMP))
-							{
-								if(intersect(validChain->ovls[j]->path.bbpos, validChain->ovls[j]->path.bepos, curChain->ovls[k]->path.bbpos, curChain->ovls[k]->path.bepos))
-								{
+							valid = 0;
+							break;
+					}
+					// check contigB coordinates
+					if ((validChain->ovls[0]->flags & OVL_COMP) == (curChain->ovls[0]->flags && OVL_COMP))
+					{
+						if(intersect(validChain->ovls[0]->path.bbpos,validChain->ovls[validChain->novl-1]->path.bepos,curChain->ovls[0]->path.bbpos,curChain->ovls[curChain->novl-1]->path.bepos))
+						{
 	#ifdef DEBUG_CHAIN
 								printf("CHAIN is invalid - DISCARD\n");
 	#endif
-									valid = 0;
-									break;
-								}
-							}
-							else if (validChain->ovls[0]->flags & OVL_COMP)
-							{
-								if(intersect(conB->len - validChain->ovls[j]->path.bepos, conB->len - validChain->ovls[j]->path.bbpos, curChain->ovls[k]->path.bbpos, curChain->ovls[k]->path.bepos))
-								{
+							valid = 0;
+							break;
+						}
+					}
+					else if (validChain->ovls[0]->flags & OVL_COMP)
+					{
+						if(intersect(conB->len - validChain->ovls[0]->path.bepos, conB->len - validChain->ovls[validChain->novl-1]->path.bbpos,curChain->ovls[0]->path.bbpos,curChain->ovls[curChain->novl-1]->path.bepos))
+						{
 	#ifdef DEBUG_CHAIN
 								printf("CHAIN is invalid - DISCARD\n");
 	#endif
-									valid = 0;
-									break;
-								}
-
-							}
-							else // i.e. (curChain->ovls[0]->flags && OVL_COMP))
-							{
-								if(intersect(validChain->ovls[j]->path.bbpos, validChain->ovls[j]->path.bepos, conB->len - curChain->ovls[k]->path.bepos, conB->len - curChain->ovls[k]->path.bbpos))
-								{
+							valid = 0;
+							break;
+						}
+					}
+					else // i.e. (curChain->ovls[0]->flags && OVL_COMP)
+					{
+						if(intersect(validChain->ovls[0]->path.bbpos,validChain->ovls[validChain->novl-1]->path.bepos,conB->len - curChain->ovls[0]->path.bepos, conB->len - curChain->ovls[curChain->novl-1]->path.bbpos))
+						{
 	#ifdef DEBUG_CHAIN
 								printf("CHAIN is invalid - DISCARD\n");
 	#endif
-									valid = 0;
-									break;
-								}
-							}
-
+							valid = 0;
+							break;
 						}
 					}
 				}
