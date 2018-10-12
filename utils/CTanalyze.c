@@ -4412,6 +4412,12 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 #endif
 			}
 
+			if (longestUniqOvlIdx < 0 || longestUniqOvlIdx >=n)
+			{
+				printf("TERROR: longest index out of bounds!!! longestUniqOvlIdx %d, contigs %d vs %d\n", longestUniqOvlIdx, ovls->aread, ovls->bread);
+				fflush(stdout);
+			}
+
 			assert(longestUniqOvlIdx >=0 && longestUniqOvlIdx < n);
 			// first: add longest overlap to chain
 			curChain->ovls[0] = ovls + longestUniqOvlIdx;
