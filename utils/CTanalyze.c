@@ -4273,9 +4273,10 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			{
 				curChain->maxOvl = curChain->novl * 1.2 + n;
 				curChain->ovls = (Overlap**) realloc(curChain->ovls, sizeof(Overlap *)*curChain->maxOvl);
+				bzero(curChain->ovls + curChain->novl, sizeof(Overlap*) * (curChain->maxOvl - curChain->novl));
 			}
-			curChain->ovls[curChain->novl] = ovls;
-			curChain->novl++;
+			curChain->ovls[0] = ovls;
+			curChain->novl = 1;
 			ovls->flags |= OVL_TEMP;
 		}
 		else
@@ -4405,6 +4406,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			{
 				curChain->maxOvl = curChain->novl * 1.2 + n;
 				curChain->ovls = (Overlap**) realloc(curChain->ovls, sizeof(Overlap *)*curChain->maxOvl);
+				bzero(curChain->ovls + curChain->novl, sizeof(Overlap*) * (curChain->maxOvl - curChain->novl));
 #ifdef DEBUG_CHAIN
 			printf("realloc > chain: nOvl: %d, maxOvl %d\n", curChain->novl, curChain->maxOvl);
 #endif
@@ -4606,6 +4608,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 					{
 						curChain->maxOvl = curChain->maxOvl * 1.2 + n;
 						curChain->ovls = (Overlap**) realloc(curChain->ovls, sizeof(Overlap*) * curChain->maxOvl);
+						bzero(curChain->ovls + curChain->novl, sizeof(Overlap*) * (curChain->maxOvl - curChain->novl));
 					}
 
 					// append right side overlaps at the end of chain, i.e. chain must be sorted afterwards by abpos
@@ -4824,6 +4827,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 					{
 						curChain->maxOvl = curChain->maxOvl * 1.2 + n;
 						curChain->ovls = (Overlap**) realloc(curChain->ovls, sizeof(Overlap*) * curChain->maxOvl);
+						bzero(curChain->ovls + curChain->novl, sizeof(Overlap*) * (curChain->maxOvl - curChain->novl));
 					}
 
 					// append left side overlaps at the end of chain, i.e. chain must be sorted afterwards by abpos
@@ -4892,7 +4896,6 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 						{
 							Overlap *lastAddedOvl = curChain->ovls[curChain->novl - 1];
 
-							// TODO thats very strict!!!!
 							if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos) > 100
 									|| intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos) > 100)
 								break;
@@ -4901,6 +4904,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 							{
 								curChain->maxOvl = curChain->maxOvl * 1.2 + n;
 								curChain->ovls = (Overlap**) realloc(curChain->ovls, sizeof(Overlap*) * curChain->maxOvl);
+								bzero(curChain->ovls + curChain->novl, sizeof(Overlap*) * (curChain->maxOvl - curChain->novl));
 							}
 
 							// append left side overlaps at the end of chain, i.e. chain must be sorted afterwards by abpos
@@ -4926,9 +4930,9 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 
 			if (nremain)
 			{
-				// mark remaining ovls as DISC if the overlap with a chain overlap !!
+				// mark remaining ovls as DISCARD if they overlap with a chain overlap !!
 	#ifdef DEBUG_CHAIN
-				printf("// mark remaining ovls as DISC if they overlap with a chain overlap !!\n");
+				printf("// mark remaining ovls as DISCARD if they overlap with a chain overlap !!\n");
 	#endif
 				int chainIdx = 0;
 				int chainLastIdx = curChain->novl - 1;
