@@ -4256,7 +4256,9 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 	if (n < 2)
 	{
 		// add a single overlap into chain if its somehow long enough
-		if(ovls->path.aepos - ovls->path.abpos > 5000 || (ovls->path.aepos - ovls->path.abpos) >= 0.7*conA->len || (ovls->path.bepos - ovls->path.bbpos) >= 0.7*conB->len)
+		if((ovls->path.aepos - ovls->path.abpos) >= 0.5*conA->len || (ovls->path.bepos - ovls->path.bbpos) >= 0.5*conB->len ||
+		  (	((ovls->path.abpos = 0) || (ovls->path.aepos = conA->len)) && ((ovls->path.bbpos = 0) || (ovls->path.bepos = conB->len)) && (ovls->path.aepos - ovls->path.abpos > 15000)) // putative join
+			)
 		{
 			if (ctx->curChains == ctx->maxChains)
 			{
@@ -4274,6 +4276,11 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			}
 			curChain->ovls[curChain->novl] = ovls;
 			curChain->novl++;
+			ovls->flags |= OVL_TEMP;
+		}
+		else
+		{
+			ovls->flags |= OVL_DISCARD;
 		}
 	}
 	else
@@ -5009,6 +5016,27 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 						}
 					}
 				}
+			}
+
+			int aCoveredBases=0;
+			int bCoveredBases=0;
+			for (i = 0; i < curChain->novl; i++)
+			{
+				aCoveredBases+=(curChain->ovls[i]->path.aepos - curChain->ovls[i]->path.abpos);
+				bCoveredBases+=(curChain->ovls[i]->path.aepos - curChain->ovls[i]->path.abpos);
+			}
+
+			if(
+				(aCoveredBases < 0.5*conA->len && bCoveredBases < 0.5*conB->len)
+				&&
+				!(
+						((curChain->ovls[0]->path.abpos == 0) || (curChain->ovls[curChain->novl-1]->path.aepos = conA->len)) &&
+						((curChain->ovls[0]->path.bbpos == 0) || (curChain->ovls[curChain->novl-1]->path.bepos = conB->len)) &&
+						MIN(aCoveredBases, bCoveredBases) > 15000
+				 )
+			)
+			{
+				valid = 0;
 			}
 
 			if (valid)
