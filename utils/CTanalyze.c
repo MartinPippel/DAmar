@@ -4245,28 +4245,27 @@ static int cmp_chain_len(const void *a, const void *b)
 
 void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 {
-	int contigAId = ovls->aread;
-	int contigBId = ovls->bread;
+	int conAId = ovls->aread;
+	int conBId = ovls->bread;
 
-	assert(contigAId != contigBId);
+	assert(conAId != conBId);
 
-	Contig *contigA = ctx->contigs + contigAId;
-	Contig *contigB = ctx->contigs + contigBId;
+	Contig *conA = ctx->contigs + conAId;
+	Contig *conB = ctx->contigs + conBId;
 
 	if (n < 2)
 	{
 		// add a single overlap into chain if its somehow long enough
-		if(ovls->path.aepos - ovls->path.abpos > 5000 || (ovls->path.aepos - ovls->path.abpos) >= 0.7*contigA->len || (ovls->path.bepos - ovls->path.bbpos) >= 0.7*contigB->len)
+		if(ovls->path.aepos - ovls->path.abpos > 5000 || (ovls->path.aepos - ovls->path.abpos) >= 0.7*conA->len || (ovls->path.bepos - ovls->path.bbpos) >= 0.7*conB->len)
 		{
-			if (contigA->curContigChains == contigA->maxContigChains)
+			if (ctx->curChains == ctx->maxChains)
 			{
-				contigA->maxContigChains = contigA->maxContigChains * 1.2 + 5;
-				contigA->contigChains = (Chain*) realloc(contigA->contigChains, sizeof(Chain) * contigA->maxContigChains);
-
-				bzero(contigA->contigChains + contigA->curContigChains, sizeof(Chain) * (contigA->maxContigChains - contigA->curContigChains));
+				ctx->maxChains = ctx->maxChains * 1.2 + 5;
+				ctx->ovlChains = (Chain*) realloc(ctx->ovlChains, sizeof(Chain) * ctx->maxChains);
+				bzero(ctx->ovlChains + ctx->curChains, sizeof(Chain) * (ctx->maxChains - ctx->curChains));
 			}
 
-			Chain *curChain = contigA->contigChains + contigA->curContigChains;
+			Chain *curChain = ctx->ovlChains + ctx->curChains;
 
 			if(curChain->novl == curChain->maxOvl)
 			{
@@ -4382,15 +4381,15 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			// 1st on the right
 			// 2nd on the left side
 
-			if (contigA->curContigChains == contigA->maxContigChains)
+			if (ctx->curChains == ctx->maxChains)
 			{
-				contigA->maxContigChains = contigA->maxContigChains * 1.2 + 5;
-				contigA->contigChains = (Chain*) realloc(contigA->contigChains, sizeof(Chain) * contigA->maxContigChains);
+				ctx->maxChains = ctx->maxChains * 1.2 + 5;
+				ctx->ovlChains = (Chain*) realloc(ctx->ovlChains, sizeof(Chain) * ctx->maxChains);
 
-				bzero(contigA->contigChains + contigA->curContigChains, sizeof(Chain) * (contigA->maxContigChains - contigA->curContigChains));
+				bzero(ctx->ovlChains + ctx->curChains, sizeof(Chain) * (ctx->maxChains - ctx->curChains));
 			}
 
-			Chain *curChain = contigA->contigChains + contigA->curContigChains;
+			Chain *curChain = ctx->ovlChains + ctx->curChains;
 
 #ifdef DEBUG_CHAIN
 		printf("chain: nOvl: %d, maxOvl %d, nremain: %d\n", curChain->novl, curChain->maxOvl, nremain);
@@ -4404,6 +4403,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 #endif
 			}
 
+			// first: add longest overlap to chain
 			curChain->ovls[0] = ovls + longestUniqOvlIdx;
 			curChain->ovls[0]->flags |= OVL_TEMP;
 			curChain->novl++;
@@ -4435,7 +4435,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				int curBestUniqBases = -1;
 				int curBestBases = -1;
 				int curBestOffset = 1;
-				int curBestIntersection = MAX(contigA->len, contigB->len);
+				int curBestIntersection = MAX(conA->len, conB->len);
 
 				while (cont)
 				{
@@ -4535,8 +4535,8 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 
 							// check if current overlap is better (longer/more unique bases ?) then curBest
 
-							int curUniqBasesInAIvl = (ae2 - ab2) - getRepeatBasesOfContigRange(ctx, ovl, contigAId);
-							int curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesOfContigRange(ctx, ovl, contigBId);
+							int curUniqBasesInAIvl = (ae2 - ab2) - getRepeatBasesOfContigRange(ctx, ovl, conAId);
+							int curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesOfContigRange(ctx, ovl, conBId);
 
 							if (curBestIntersection > MAX(intersect(ab1, ae1, ab2, ae2), intersect(bb1, be1, bb2, be2)) && curBestBases < MIN(ae2 - ab2, be2 - bb2))
 							{
@@ -4601,7 +4601,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 						curChain->ovls = (Overlap**) realloc(curChain->ovls, sizeof(Overlap*) * curChain->maxOvl);
 					}
 
-					// append left side overlaps at the end of chain, i.e. chain must be sorted afterwards by abpos
+					// append right side overlaps at the end of chain, i.e. chain must be sorted afterwards by abpos
 					curChain->ovls[curChain->novl] = ovls + (longestUniqOvlIdx + curBestUniqOffset);
 					curChain->ovls[curChain->novl]->flags |= OVL_TEMP;
 					curChain->novl++;
@@ -4621,7 +4621,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 					curBestUniqBases = -1;
 					curBestBases = -1;
 
-					curBestIntersection = MAX(contigA->len, contigB->len);
+					curBestIntersection = MAX(conA->len, conB->len);
 
 					if (longestUniqOvlIdx + curBestUniqOffset >= n)
 					{
@@ -4648,7 +4648,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				int curBestUniqBases = -1;
 				int curBestBases = -1;
 				int curBestOffset = 1;
-				int curBestIntersection = MAX(contigA->len, contigB->len);
+				int curBestIntersection = MAX(conA->len, conB->len);
 
 				while (cont)
 				{
@@ -4752,8 +4752,8 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 
 							// check if current overlap is better (longer/more unique bases ?) then curLeftBest
 
-							int curUniqBasesInAIvl = (ae2 - ab2) - getRepeatBasesOfContigRange(ctx, ovl, contigAId);
-							int curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesOfContigRange(ctx, ovl, contigBId);
+							int curUniqBasesInAIvl = (ae2 - ab2) - getRepeatBasesOfContigRange(ctx, ovl, conAId);
+							int curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesOfContigRange(ctx, ovl, conBId);
 
 							if (curBestIntersection > MAX(intersect(ab2, ae2, ab1, ae1), intersect(bb2, be2, bb1, be1)) && curBestBases < MIN(ae2 - ab2, be2 - bb2))
 							{
@@ -4839,7 +4839,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 					curBestUniqBases = -1;
 					curBestBases = -1;
 
-					curBestIntersection = MAX(contigA->len, contigB->len);
+					curBestIntersection = MAX(conA->len, conB->len);
 
 					if (longestUniqOvlIdx - curBestUniqOffset < 0)
 					{
@@ -4955,22 +4955,22 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 #endif
 			// sanity check // there should be no intersection with other chains (with same orientation) possible
 			int valid = 1;
-			if (contigA->curContigChains)
+			if (ctx->curChains)
 			{
 #ifdef DEBUG_CHAIN
 				printf("DO SANITY CHECK\n");
 #endif
 				int j;
-				for (i = 0; i < contigA->curContigChains && valid; i++)
+				for (i = 0; i < ctx->curChains && valid; i++)
 				{
-					if ((curChain->ovls[0]->flags & OVL_COMP) == (contigA->contigChains[i].ovls[0]->flags && OVL_COMP))
+					if ((curChain->ovls[0]->flags & OVL_COMP) == (ctx->ovlChains[i].ovls[0]->flags && OVL_COMP))
 					{
 						for (j = 0; j < curChain->novl; j++)
 						{
-							if ((curChain->ovls[j]->path.abpos > contigA->contigChains[i].ovls[0]->path.abpos
-									&& curChain->ovls[j]->path.aepos < contigA->contigChains[i].ovls[contigA->contigChains[i].novl - 1]->path.aepos)
-									|| (curChain->ovls[j]->path.bbpos > contigA->contigChains[i].ovls[0]->path.bbpos
-											&& curChain->ovls[j]->path.bepos < contigA->contigChains[i].ovls[contigA->contigChains[i].novl - 1]->path.bepos))
+							if ((curChain->ovls[j]->path.abpos > ctx->ovlChains[i].ovls[0]->path.abpos
+									&& curChain->ovls[j]->path.aepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.aepos)
+									|| (curChain->ovls[j]->path.bbpos > ctx->ovlChains[i].ovls[0]->path.bbpos
+											&& curChain->ovls[j]->path.bepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.bepos))
 							{
 	#ifdef DEBUG_CHAIN
 								printf("CHAIN is invalid - DISCARD\n");
@@ -4984,7 +4984,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			}
 
 			if (valid)
-				contigA->curContigChains++;
+				ctx->curChains++;
 			else
 			{
 				int j;
@@ -5018,12 +5018,12 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 #endif
 
 		// sort chains according to alignment lengths
-		if (contigA->curContigChains > 1)
+		if (ctx->curChains > 1)
 		{
 	#ifdef DEBUG_CHAIN
 			printf("SORT CHAINS (longest first):\n");
 	#endif
-			qsort(contigA->contigChains, contigA->curContigChains, sizeof(Chain), cmp_chain_len);
+			qsort(ctx->ovlChains, ctx->curChains, sizeof(Chain), cmp_chain_len);
 	#ifdef DEBUG_CHAIN
 			printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
 			for (i = 0; i < ctx->curChains; i++)
@@ -5040,6 +5040,31 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 	#endif
 		}
 	}
+}
+
+int analyzeChains(AnalyzeContext *ctx)
+{
+	if(ctx->curChains == 0)
+		return 0;
+
+	printf("[analyzeChains] c%d vs c%d\n", ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
+	int i,j;
+	for (i=0; i < ctx->curChains; i++)
+	{
+		Chain *chain = ctx->ovlChains + i;
+		if(chain->novl == 0)
+			return 0;
+
+		printf("	Chain_%d [", i);
+		for (j=0; j<chain->novl; j++)
+		{
+			printf("%d-%d", chain->ovls[j]->path.abpos,chain->ovls[j]->path.aepos);
+			if(j+1 < chain->novl)
+				printf(",");
+		}
+		printf("]\n");
+	}
+	return 0;
 }
 
 int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
@@ -5074,11 +5099,45 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 //		else if (DB_READ_LEN(actx->corContigDB, ovls[j].aread) > DB_READ_LEN(actx->corContigDB, ovls[j].bread)) // len aread must be < then len bread !!!
 //			;
 		else
+		{
 			chainContigOverlaps(actx, ovls + j, k - j + 1);
+			if(analyzeChains(actx))
+			{
+				// convert valid chains into ContigChain struct
+				Contig *conA = actx->contigs + ovls->aread;
+				Contig *conB = actx->contigs + ovls->bread;
+				int i;
+				for (i=0; i < actx->curChains; i++)
+				{
+					Chain *chain = actx->ovlChains;
+					if(chain->novl == 0)
+						continue;
+
+					if(conA->numCChains == conA->maxCChains)
+					{
+						conA->maxCChains = conA->maxCChains * 1.2 + 5;
+						conA->cChains = (ContigChain*) realloc(conA->cChains, sizeof(ContigChain) * conA->maxCChains);
+						bzero(conA->cChains + conA->numCChains, sizeof(ContigChain) * (conA->maxCChains - conA->numCChains));
+					}
+
+					ContigChain *cchain = conA->cChains + conA->numCChains;
+					cchain->corContigIdx = conB->idx;
+					cchain->numPos = chain->novl;
+					cchain->abpos = (int*)malloc(sizeof(int)*chain->novl*2);
+					cchain->aepos = cchain->abpos + chain->novl;
+					int h;
+					for (h=0; h<chain->novl; h++)
+					{
+						cchain->abpos[h] = chain->ovls[h]->path.abpos;
+						cchain->aepos[h] = chain->ovls[h]->path.aepos;
+					}
+				}
+			}
+
+		}
 
 		j = k + 1;
 	}
-
 	return 1;
 }
 

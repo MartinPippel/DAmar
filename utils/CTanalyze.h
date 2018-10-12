@@ -170,6 +170,14 @@ typedef struct
 
 typedef struct
 {
+	int corContigIdx;
+	int *abpos;
+	int *aepos;
+	int numPos;
+} ContigChain;
+
+typedef struct
+{
 	int flag;              // (above) CONTIG flags
 	int len;               // contig length
 	int idx;               // initial index from Contig-DB
@@ -182,6 +190,10 @@ typedef struct
 	Chain *contigChains;
 	int curContigChains;
 	int maxContigChains;
+
+	ContigChain *cChains;
+	int numCChains;
+	int maxCChains;
 
 	ContigGraphClassification *gClassific;
 	int gClassificFlag;
@@ -241,6 +253,11 @@ typedef struct
 	// TODO change this, use file indexes and not names!!!
 	int *contigFileNameOffsets;
 	char **ContigFileNames;
+
+	// detect and store temporarily contig chains
+	Chain *ovlChains;
+	int curChains;
+	int maxChains;
 } AnalyzeContext;
 
 void initAnalyzeContext(AnalyzeContext *actx);
@@ -279,6 +296,7 @@ void getContigsEndIDs(AnalyzeContext *actx, int contigID, int* beg, int *end);
 
 //////// analyze contigs on their alignments with each other
 void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n);
+int analyzeChains(AnalyzeContext *ctx);
 int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl);
 int compareInt(const void * a, const void * b);
 int isOverlapGroupValid(AnalyzeContext *actx, OverlapGroup *ovlgrp);
