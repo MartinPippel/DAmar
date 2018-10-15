@@ -4347,12 +4347,28 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 //		#endif
 		assert(nremain >= 1);
 
+		int whileIdx=0;
 		while (nremain > 0)
 		{
 			int longestUniqOvlBases = -1;
 			int longestUniqOvlIdx = -1;
 			int longestOvlBases = -1;
 			int longestOvlIdx = -1;
+
+			//		#ifdef DEBUG_CHAIN
+			{
+				printf("while loop %d nremain %d\n", ++whileIdx, nremain);
+
+				int count=1;
+				for(i=0; i<n; i++)
+				{
+					Overlap *ovl = ovls + i;
+					if(ovl->flags & (OVL_DISCARD | OVL_TEMP))
+						continue;
+					printf("%d [%d, %d] [%d, %d] %c\n", count++, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, (ovl->flags & OVL_COMP) ? 'C' : 'N');
+				}
+			}
+			//		#endif
 
 			// find longest overlap based on number of unique bases
 			for (i = 0; i < n; i++)
