@@ -4291,6 +4291,24 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 		// try to detect all possible chains
 		int nremain = n;
 
+		//		#ifdef DEBUG_CHAIN
+		if(ovls->aread == 0 && ovls->bread == 14)
+			printf("check initial overlaps flags\n");
+//		#endif
+		{
+			int j;
+			for (i = 0; i < n; i++)
+			{
+				Overlap *ovl_i = ovls + i;
+
+				if (ovl_i->flags & (OVL_DISCARD))
+					nremain--;
+			}
+		}
+
+		if(nremain == 0)
+			return;
+
 		// mark contained overlaps
 //		#ifdef DEBUG_CHAIN
 		if(ovls->aread == 0 && ovls->bread == 14)
