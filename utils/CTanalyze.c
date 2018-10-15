@@ -4365,7 +4365,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 					Overlap *ovl = ovls + i;
 					if(ovl->flags & (OVL_DISCARD | OVL_TEMP))
 						continue;
-					printf("%d [%d, %d] [%d, %d] %c\n", count++, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, (ovl->flags & OVL_COMP) ? 'C' : 'N');
+					printf("%d [%d, %d] [%d, %d] %c flags %d\n", count++, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, (ovl->flags & OVL_COMP) ? 'C' : 'N', ovl->flags);
 				}
 			}
 			//		#endif
