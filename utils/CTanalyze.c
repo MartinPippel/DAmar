@@ -4291,24 +4291,6 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 		// try to detect all possible chains
 		int nremain = n;
 
-		//		#ifdef DEBUG_CHAIN
-		if(ovls->aread == 0 && ovls->bread == 14)
-			printf("check initial overlaps flags\n");
-//		#endif
-		{
-			int j;
-			for (i = 0; i < n; i++)
-			{
-				Overlap *ovl_i = ovls + i;
-
-				if (ovl_i->flags & (OVL_DISCARD))
-					nremain--;
-			}
-		}
-
-		if(nremain == 0)
-			return;
-
 		// mark contained overlaps
 //		#ifdef DEBUG_CHAIN
 		if(ovls->aread == 0 && ovls->bread == 14)
@@ -4320,24 +4302,41 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			{
 				Overlap *ovl_i = ovls + i;
 
-				if (ovl_i->flags & (OVL_CONT | OVL_DISCARD))
+				if (ovl_i->flags & (OVL_CONT))
 					continue;
 
 				for (j = i + 1; j < n; j++)
 				{
 					Overlap *ovl_j = ovls + j;
 
-					if (ovl_j->flags & (OVL_CONT | OVL_DISCARD))
+					if (ovl_j->flags & (OVL_CONT))
 						continue;
 
 					if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos)
 							&& contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
 					{
-						nremain--;
-						ovl_j->flags |= (OVL_CONT | OVL_DISCARD);
+						ovl_j->flags |= (OVL_CONT);
 					}
 				}
 
+			}
+		}
+
+		//		#ifdef DEBUG_CHAIN
+		if(ovls->aread == 0 && ovls->bread == 14)
+			printf("check initial overlaps flags\n");
+//		#endif
+		{
+			int j;
+			for (i = 0; i < n; i++)
+			{
+				Overlap *ovl_i = ovls + i;
+
+				if (ovl_i->flags & (OVL_CONT))
+				{
+					ovl_i->flags |= OVL_DISCARD;
+					nremain--;
+				}
 			}
 		}
 
