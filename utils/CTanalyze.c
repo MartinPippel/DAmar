@@ -4354,21 +4354,6 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			int longestOvlBases = -1;
 			int longestOvlIdx = -1;
 
-			//		#ifdef DEBUG_CHAIN
-			{
-				printf("while loop %d nremain %d\n", ++whileIdx, nremain);
-
-				int count=1;
-				for(i=0; i<n; i++)
-				{
-					Overlap *ovl = ovls + i;
-					if(ovl->flags & (OVL_DISCARD | OVL_TEMP))
-						continue;
-					printf("%d [%d, %d] [%d, %d] %c flags %d\n", count++, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, (ovl->flags & OVL_COMP) ? 'C' : 'N', ovl->flags);
-				}
-			}
-			//		#endif
-
 			// find longest overlap based on number of unique bases
 			for (i = 0; i < n; i++)
 			{
@@ -4413,6 +4398,24 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 //#endif
 				longestUniqOvlBases = longestOvlBases;
 				longestUniqOvlIdx = longestOvlIdx;
+			}
+
+			// break out
+			if(ctx->curChains && (longestOvlBases < 5000 && !((longestOvlBases*1.0/conB->len > 0.5)||(longestOvlBases*1.0/conA->len > 0.5))) )
+			{
+				for (i = 0; i < n; i++)
+				{
+					Overlap *ovl = ovls + i;
+
+					if (ovl->flags & (OVL_CONT | OVL_DISCARD | OVL_TEMP))
+					{
+						continue;
+					}
+
+					ovl->flags |= OVL_DISCARD;
+				}
+				nremain = 0;
+				break;
 			}
 
 //#ifdef DEBUG_CHAIN
