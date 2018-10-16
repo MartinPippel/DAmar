@@ -5247,7 +5247,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 		{
 			// TODO discard overlaps only when writeOutFilteredContigChains is enabled
 			int i;
-			for (i = 0; i < (k - j + 1); i++)
+			for (i = j; i <= k; i++)
 			{
 				ovls[i].flags |= OVL_DISCARD;
 			}
@@ -5256,7 +5256,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 		else if(conA->len > MIN_CLEN && !(ovls[j].flags & OVL_MODULE))
 		{
 			int i;
-			for (i = 0; i < (k - j + 1); i++)
+			for (i = j; i <= k; i++)
 			{
 				ovls[i].flags |= OVL_DISCARD;
 			}
