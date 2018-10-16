@@ -5011,9 +5011,10 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 						{
 							ovl->flags |= OVL_DISCARD;
 							nremain--;
-	#ifdef DEBUG_CHAIN
-							printf("DISCARD [%d, %d] [%d, %d] nremain %d\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, nremain);
-	#endif
+//	#ifdef DEBUG_CHAIN
+							if(ovls->aread == 4 && ovls->bread == 839)
+								printf("DISCARD [%d, %d] [%d, %d] nremain %d\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, nremain);
+//	#endif
 							break;
 						}
 					}
@@ -5105,6 +5106,8 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				ctx->curChains++;
 			else
 			{
+				if(ovls->aread == 4 && ovls->bread == 839)
+					printf("INVALID DISCARD CHAIN novl: %d nremain: %d\n", curChain->novl, nremain);
 				int j;
 				for (j = 0; j < curChain->novl; j++)
 				{
