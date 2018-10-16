@@ -4348,6 +4348,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 		int whileIdx=0;
 		while (nremain > 0)
 		{
+			whileIdx++;
 			int longestUniqOvlBases = -1;
 			int longestUniqOvlIdx = -1;
 			int longestOvlBases = -1;
@@ -4404,7 +4405,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				printf("checkBreakOut %d && %d && !(%d || %d)\n", ctx->curChains, longestOvlBases < 5000, longestOvlBases*1.0/conB->len > 0.5, longestOvlBases*1.0/conA->len > 0.5);
 
 			// break out
-			if(ctx->curChains && (longestOvlBases < 5000 && !((longestOvlBases*1.0/conB->len > 0.5)||(longestOvlBases*1.0/conA->len > 0.5))) )
+			if((ctx->curChains || whileIdx > 2) && (longestOvlBases < 5000 && !((longestOvlBases*1.0/conB->len > 0.5)||(longestOvlBases*1.0/conA->len > 0.5))) )
 			{
 				for (i = 0; i < n; i++)
 				{
