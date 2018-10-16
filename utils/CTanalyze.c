@@ -4327,12 +4327,11 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			printf("check initial overlaps flags\n");
 //		#endif
 		{
-			int j;
 			for (i = 0; i < n; i++)
 			{
 				Overlap *ovl_i = ovls + i;
 
-				if (ovl_i->flags & (OVL_CONT))
+				if (ovl_i->flags & (OVL_CONT | OVL_DISCARD))
 				{
 					ovl_i->flags |= OVL_DISCARD;
 					nremain--;
