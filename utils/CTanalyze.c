@@ -5113,9 +5113,10 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				curChain->novl = 0;
 			}
 
-#ifdef DEBUG_CHAIN
-			printf("curChain: %d, remain unchained OVls: %d\n", ctx->curChains, nremain);
-#endif
+//#ifdef DEBUG_CHAIN
+			if(ovls->aread == 4 && ovls->bread == 839)
+				printf("curChain: %d, remain unchained OVls: %d\n", ctx->curChains, nremain);
+//#endif
 		}
 
 #ifdef DEBUG_CHAIN
