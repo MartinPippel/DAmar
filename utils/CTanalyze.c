@@ -4394,11 +4394,15 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			{
 //#ifdef DEBUG_CHAIN
 				if(ovls->aread == 4 && ovls->bread == 839)
-			printf("Number of unique bases to low. Use longest overlap.\n");
+			printf("Number of unique bases to low. Use longest overlap. uniq %d %d -> longest %d %d\n", longestUniqOvlIdx, longestUniqOvlBases, longestOvlIdx, longestOvlBases);
 //#endif
 				longestUniqOvlBases = longestOvlBases;
 				longestUniqOvlIdx = longestOvlIdx;
 			}
+
+
+			if(ovls->aread == 4 && ovls->bread == 839)
+				printf("checkBreakOut %d && %d && !(%d || %d)\n", ctx->curChains, longestOvlBases < 5000, longestOvlBases*1.0/conB->len > 0.5, longestOvlBases*1.0/conA->len > 0.5);
 
 			// break out
 			if(ctx->curChains && (longestOvlBases < 5000 && !((longestOvlBases*1.0/conB->len > 0.5)||(longestOvlBases*1.0/conA->len > 0.5))) )
@@ -4422,9 +4426,9 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			if(ovls->aread == 4 && ovls->bread == 839)
 			{
 		printf("longest overlap:\n");
-		printf("idx: %d --> uB %d, %d - %d [%d, %d] [%d, %d]\n", longestUniqOvlIdx, longestUniqOvlBases, ovls[longestUniqOvlIdx].aread,
+		printf("idx: %d --> uB %d, %d - %d [%d, %d] [%d, %d] nonUnB: %d nonUnBIdx %d\n", longestUniqOvlIdx, longestUniqOvlBases, ovls[longestUniqOvlIdx].aread,
 				ovls[longestUniqOvlIdx].bread, ovls[longestUniqOvlIdx].path.abpos, ovls[longestUniqOvlIdx].path.aepos, ovls[longestUniqOvlIdx].path.bbpos,
-				ovls[longestUniqOvlIdx].path.bepos);
+				ovls[longestUniqOvlIdx].path.bepos, longestOvlBases, longestOvlIdx);
 			}
 //#endif
 
