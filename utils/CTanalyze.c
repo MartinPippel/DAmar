@@ -4997,13 +4997,17 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				for (i = 0; i < n; i++)
 				{
 					Overlap *ovl = ovls + i;
-					if ((ovl->flags & (OVL_TEMP | OVL_CONT | OVL_DISCARD)) || ((ovl->flags & OVL_COMP) != (curChain->ovls[chainIdx]->flags & OVL_COMP)))
+					if ((ovl->flags & (OVL_TEMP | OVL_CONT | OVL_DISCARD)))
 						continue;
 
 					for (j = chainIdx; j <= chainLastIdx; j++)
 					{
-						if (intersect(curChain->ovls[j]->path.abpos, curChain->ovls[j]->path.aepos, ovl->path.abpos, ovl->path.aepos)
-								|| intersect(curChain->ovls[j]->path.bbpos, curChain->ovls[j]->path.bepos, ovl->path.bbpos, ovl->path.bepos))
+						if(
+							(intersect(curChain->ovls[j]->path.abpos, curChain->ovls[j]->path.aepos, ovl->path.abpos, ovl->path.aepos)) /*check A-coordinates*/
+							|| ((curChain->ovls[j]->flags & OVL_COMP) && (ovl->flags & OVL_COMP) && (intersect(curChain->ovls[j]->path.bbpos, curChain->ovls[j]->path.bepos, ovl->path.bbpos, ovl->path.bepos)))
+							|| ((curChain->ovls[j]->flags & OVL_COMP) && !(ovl->flags & OVL_COMP) && (intersect(conB->len-curChain->ovls[j]->path.bepos, conB->len - curChain->ovls[j]->path.bbpos, ovl->path.bbpos, ovl->path.bepos)))
+							|| (!(curChain->ovls[j]->flags & OVL_COMP) && (ovl->flags & OVL_COMP) && (intersect(curChain->ovls[j]->path.bbpos, curChain->ovls[j]->path.bepos, conB->len - ovl->path.bepos, conB->len - ovl->path.bbpos)))
+						  )
 						{
 							ovl->flags |= OVL_DISCARD;
 							nremain--;
@@ -5012,23 +5016,20 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 	#endif
 							break;
 						}
-
-						if (j + 1 < curChain->novl && ovl->path.abpos > curChain->ovls[j + 1]->path.abpos)
-							chainIdx++;
 					}
 				}
 			}
 #ifdef DEBUG_CHAIN
 		printChain(chain);
 #endif
-			// sanity check // there should be no intersection with other chains (with same orientation) possible
+			// sanity check // there should be no intersection with other chains possible
 			int valid = 1;
 			if (ctx->curChains)
 			{
 #ifdef DEBUG_CHAIN
 				printf("DO SANITY CHECK\n");
 #endif
-				int j;
+
 				for (i = 0; i < ctx->curChains && valid; i++)   // loop through all existing chains
 				{
 					Chain *validChain = ctx->ovlChains + i;
