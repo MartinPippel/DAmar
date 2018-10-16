@@ -5200,6 +5200,35 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 		printf("Analyze overlaps for contig: %d numOvls: %d\n", ovls->aread, novl);
 
 	int j;
+	Contig *conA = actx->contigs + ovls->aread;
+
+	// speed up things for long contigs
+	int MIN_OLEN = 5000;
+	int MIN_CLEN = 1000000;
+	if(conA->len > MIN_CLEN)
+	{
+		int k;
+		j = k = 0;
+		int valid;
+		while (j < novl)
+		{
+			valid=0;
+			while (k < novl - 1 && ovls[j].bread == ovls[k + 1].bread)
+			{
+				if((ovls->path.aepos - ovls->path.abpos) > MIN_OLEN)
+				{
+					valid=1;
+				}
+				k++;
+			}
+
+			if(valid)
+				ovls[j].flags |= OVL_MODULE; 				/// use module overlap to mark overlaps where chain detection should be applied
+
+			j = k + 1;
+		}
+
+	}
 
 	int k;
 	j = k = 0;
@@ -5218,6 +5247,14 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 			}
 
 		}
+		else if(conA->len > MIN_CLEN && !(ovls[j].flags & OVL_MODULE))
+		{
+			int i;
+			for (i = 0; i < (k - j + 1); i++)
+			{
+				ovls[i].flags |= OVL_DISCARD;
+			}
+		}
 //		else if (DB_READ_LEN(actx->corContigDB, ovls[j].aread) > DB_READ_LEN(actx->corContigDB, ovls[j].bread)) // len aread must be < then len bread !!!
 //			;
 		else
@@ -5226,7 +5263,6 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 			if(analyzeChains(actx))
 			{
 				// convert valid chains into ContigChain struct
-				Contig *conA = actx->contigs + ovls->aread;
 				Contig *conB = actx->contigs + ovls->bread;
 				int i;
 				for (i=0; i < actx->curChains; i++)
