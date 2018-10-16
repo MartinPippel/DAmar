@@ -4293,7 +4293,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 
 		// mark contained overlaps
 //		#ifdef DEBUG_CHAIN
-		if(ovls->aread == 0 && ovls->bread == 14)
+		if(ovls->aread == 4 && ovls->bread == 839)
 			printf("mark contained overlaps\n");
 //		#endif
 		{
@@ -4323,7 +4323,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 		}
 
 		//		#ifdef DEBUG_CHAIN
-		if(ovls->aread == 0 && ovls->bread == 14)
+		if(ovls->aread == 4 && ovls->bread == 839)
 			printf("check initial overlaps flags\n");
 //		#endif
 		{
@@ -4341,7 +4341,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 		}
 
 //		#ifdef DEBUG_CHAIN
-		if(ovls->aread == 0 && ovls->bread == 14)
+		if(ovls->aread == 4 && ovls->bread == 839)
 			printf("nremain %d\n", nremain);
 //		#endif
 		assert(nremain >= 1);
@@ -4371,7 +4371,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				int bRep = getRepeatBasesOfContigRange(ctx, ovl, ovl->bread);
 
 //#ifdef DEBUG_CHAIN
-				if(ovls->aread == 0 && ovls->bread == 14)
+				if(ovls->aread == 4 && ovls->bread == 839)
 			printf("%d - %d [%d, %d] [%d, %d], aR %d/%d, bR %d/%d\n", conAId, conBId, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, aLen, aRep,
 					bLen, bRep);
 //#endif
@@ -4393,7 +4393,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			if (longestUniqOvlBases < ctx->twidth && longestOvlBases > longestUniqOvlBases)
 			{
 //#ifdef DEBUG_CHAIN
-				if(ovls->aread == 0 && ovls->bread == 14)
+				if(ovls->aread == 4 && ovls->bread == 839)
 			printf("Number of unique bases to low. Use longest overlap.\n");
 //#endif
 				longestUniqOvlBases = longestOvlBases;
@@ -4412,14 +4412,14 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 						continue;
 					}
 
-					ovl->flags |= OVL_DISCARD;
+					ovl->flags |= (OVL_DISCARD | OVL_OLEN);
 				}
 				nremain = 0;
 				break;
 			}
 
 //#ifdef DEBUG_CHAIN
-			if(ovls->aread == 0 && ovls->bread == 14)
+			if(ovls->aread == 4 && ovls->bread == 839)
 			{
 		printf("longest overlap:\n");
 		printf("idx: %d --> uB %d, %d - %d [%d, %d] [%d, %d]\n", longestUniqOvlIdx, longestUniqOvlBases, ovls[longestUniqOvlIdx].aread,
@@ -4443,7 +4443,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			Chain *curChain = ctx->ovlChains + ctx->curChains;
 
 //#ifdef DEBUG_CHAIN
-			if(ovls->aread == 0 && ovls->bread == 14)
+			if(ovls->aread == 4 && ovls->bread == 839)
 		printf("chain: nOvl: %d, maxOvl %d, nremain: %d\n", curChain->novl, curChain->maxOvl, nremain);
 //#endif
 			if(curChain->novl == curChain->maxOvl)
@@ -4452,7 +4452,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				curChain->ovls = (Overlap**) realloc(curChain->ovls, sizeof(Overlap *)*curChain->maxOvl);
 				bzero(curChain->ovls + curChain->novl, sizeof(Overlap*) * (curChain->maxOvl - curChain->novl));
 //#ifdef DEBUG_CHAIN
-				if(ovls->aread == 0 && ovls->bread == 14)
+				if(ovls->aread == 4 && ovls->bread == 839)
 			printf("realloc > chain: nOvl: %d, maxOvl %d\n", curChain->novl, curChain->maxOvl);
 //#endif
 			}
@@ -4470,7 +4470,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			curChain->novl++;
 			nremain--;
 //	#ifdef DEBUG_CHAIN
-			if(ovls->aread == 0 && ovls->bread == 14)
+			if(ovls->aread == 4 && ovls->bread == 839)
 			printf("chain: nOvl: %d, maxOvl %d, nremain %d\n", curChain->novl, curChain->maxOvl, nremain);
 //	#endif
 
