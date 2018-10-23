@@ -7238,11 +7238,19 @@ int main(int argc, char* argv[])
 
 	}
 
+	// clean up
 	pass_free(contig_pctx);
 	pass_free(patched_pctx);
 
 	fflush(stdout);
 	fflush(stderr);
+
+	Close_DB(&patchedReadDB);
+	Close_DB(&correctedReadDB);
+	free(actx.readSeq-1);
+	free(actx.contigFileNameOffsets);
+	free(actx.ContigFileNames);
+	free(actx.ovlChains);
 
 	free(cwd);
 	return 0;
