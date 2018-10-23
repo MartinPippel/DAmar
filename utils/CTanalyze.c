@@ -476,8 +476,13 @@ void parseDBFileNames(char *dbName, int **fileOffsets, char ***fileNames, char *
 
 	if (fileNames != NULL)
 		*fileNames = &(*fnames);
+	else
+		free(fnames);
 	if (readNames != NULL)
 		*readNames = &(*rnames);
+	else
+		free(rnames);
+
 	*fileOffsets = &(*offsets);
 }
 
@@ -7253,11 +7258,15 @@ int main(int argc, char* argv[])
 	free(actx.ContigFileNames);
 
 	int i;
-	for (i = 0; i <= actx.curChains; i++)
+	for (i = 0; i < actx.maxChains; i++)
 	{
 		free(actx.ovlChains[i].ovls);
 	}
 	free(actx.ovlChains);
+	for (i = 0; i < actx->maxVReadMask; i++)
+	{
+		free(actx.vreadMask[i]);
+	}
 	free(actx.vreadMask);
 
 	free(cwd);
