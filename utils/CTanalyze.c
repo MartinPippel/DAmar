@@ -7268,8 +7268,8 @@ int main(int argc, char* argv[])
 	int i;
 	if(actx.ContigFileNames)
 	{
-		for (i = 1; i <= actx->numContigFileNames; i++)
-			free(actx->ContigFileNames[i]);
+		for (i = 1; i <= actx.numContigFileNames; i++)
+			free(actx.ContigFileNames[i]);
 		free(actx.ContigFileNames);
 	}
 
