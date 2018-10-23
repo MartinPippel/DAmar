@@ -7238,7 +7238,7 @@ int main(int argc, char* argv[])
 
 	}
 
-	// clean up
+	// clean up - put everything in a method
 	pass_free(contig_pctx);
 	pass_free(patched_pctx);
 
@@ -7247,10 +7247,18 @@ int main(int argc, char* argv[])
 
 	Close_DB(&patchedReadDB);
 	Close_DB(&correctedReadDB);
+	Close_DB(&correctedContigDB);
 	free(actx.readSeq-1);
 	free(actx.contigFileNameOffsets);
 	free(actx.ContigFileNames);
+
+	int i;
+	for (i = 0; i <= actx.curChains; i++)
+	{
+		free(actx.ovlChains[i].ovls);
+	}
 	free(actx.ovlChains);
+	free(actx.vreadMask);
 
 	free(cwd);
 	return 0;
