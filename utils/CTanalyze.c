@@ -315,7 +315,7 @@ void initAnalyzeContext(AnalyzeContext *actx)
 	}
 	printf(" init contigs - DONE\n");
 
-	parseDBFileNames(actx->corContigDBName, &actx->contigFileNameOffsets, &actx->ContigFileNames, NULL);
+	actx->numContigFileNames = parseDBFileNames(actx->corContigDBName, &actx->contigFileNameOffsets, &actx->ContigFileNames, NULL);
 
 	actx->contigs = contigs;
 	printf("sort contigs by length - START\n");
@@ -402,7 +402,7 @@ int getNumberOfSequencesFromFastaFileName(AnalyzeContext *actx, int contigID)
 	return actx->contigFileNameOffsets[i] - actx->contigFileNameOffsets[i - 1];
 }
 
-void parseDBFileNames(char *dbName, int **fileOffsets, char ***fileNames, char ***readNames)
+int parseDBFileNames(char *dbName, int **fileOffsets, char ***fileNames, char ***readNames)
 {
 	// parse old database file and store bax names as well as their read offsets
 	FILE *f;
@@ -477,13 +477,23 @@ void parseDBFileNames(char *dbName, int **fileOffsets, char ***fileNames, char *
 	if (fileNames != NULL)
 		*fileNames = &(*fnames);
 	else
+	{
+		for (i = 1; i <= numFiles; i++)
+			free(fnames[i]);
 		free(fnames);
+	}
 	if (readNames != NULL)
 		*readNames = &(*rnames);
 	else
+	{
+		for (i = 1; i <= numFiles; i++)
+			free(rnames[i]);
 		free(rnames);
+	}
 
 	*fileOffsets = &(*offsets);
+
+	return numFiles;
 }
 
 static void pre(PassContext* pctx, AnalyzeContext* actx)
@@ -7255,9 +7265,14 @@ int main(int argc, char* argv[])
 	Close_DB(&correctedContigDB);
 	free(actx.readSeq-1);
 	free(actx.contigFileNameOffsets);
-	free(actx.ContigFileNames);
-
 	int i;
+	if(actx.ContigFileNames)
+	{
+		for (i = 1; i <= actx->numContigFileNames; i++)
+			free(actx->ContigFileNames[i]);
+		free(actx.ContigFileNames);
+	}
+
 	for (i = 0; i < actx.maxChains; i++)
 	{
 		free(actx.ovlChains[i].ovls);

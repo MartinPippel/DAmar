@@ -253,6 +253,7 @@ typedef struct
 	// TODO change this, use file indexes and not names!!!
 	int *contigFileNameOffsets;
 	char **ContigFileNames;
+	int numContigFileNames;
 
 	// detect and store temporarily contig chains
 	Chain *ovlChains;
@@ -282,7 +283,7 @@ void getCorrespondingPositionInARead(AnalyzeContext *actx, Overlap *ovl, int* po
 /// do coverage analysis for contig-read-overlaps, set absolute contig positions
 void analyzeContigOverlapGraph(AnalyzeContext *actx);
 int cmpOVLreadById(const void *a, const void *b);
-void parseDBFileNames(char *dbName, int **fileOffsets, char ***fileNames, char ***readNames);
+int parseDBFileNames(char *dbName, int **fileOffsets, char ***fileNames, char ***readNames);
 void classifyContigsByBReadsAndPath(AnalyzeContext *actx);
 typedef struct
 {
