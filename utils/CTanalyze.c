@@ -7263,7 +7263,7 @@ int main(int argc, char* argv[])
 		free(actx.ovlChains[i].ovls);
 	}
 	free(actx.ovlChains);
-	for (i = 0; i < actx->maxVReadMask; i++)
+	for (i = 0; i < actx.maxVReadMask; i++)
 	{
 		free(actx.vreadMask[i]);
 	}
