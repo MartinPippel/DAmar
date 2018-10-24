@@ -5218,7 +5218,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 		return 1;
 
 	if (actx->VERBOSE)
-		printf("Analyze overlaps for contig: %d numOvls: %d\n", ovls->aread, novl);
+		printf("BEGIN -- Analyze overlaps for contig: %d numOvls: %d\n", ovls->aread, novl);
 
 	int j;
 	Contig *conA = actx->contigs + ovls->aread;
@@ -5281,6 +5281,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 		else
 		{
 			chainContigOverlaps(actx, ovls + j, k - j + 1);
+
 			if(analyzeChains(actx))
 			{
 				// convert valid chains into ContigChain struct
@@ -5323,6 +5324,15 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 
 		j = k + 1;
 	}
+	int numDiscOvls = 0;
+	int i;
+	for(i=0; i<novl; i++)
+	{
+		if(ovls[i].flags & OVL_DISCARD)
+			numDiscOvls++;
+	}
+	printf("END -- Analyze overlaps for contig: %d numOvls: %d discOvls %d: remaining Ovls %d\n", ovls->aread, novl, numDiscOvls, novl-numDiscOvls);
+
 	return 1;
 }
 
