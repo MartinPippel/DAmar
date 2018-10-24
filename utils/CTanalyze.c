@@ -4277,7 +4277,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 	{
 		// add a single overlap into chain if its somehow long enough
 		if((ovls->path.aepos - ovls->path.abpos) >= 0.5*conA->len || (ovls->path.bepos - ovls->path.bbpos) >= 0.5*conB->len ||
-		  (	((ovls->path.abpos = 0) || (ovls->path.aepos = conA->len)) && ((ovls->path.bbpos = 0) || (ovls->path.bepos = conB->len)) && (ovls->path.aepos - ovls->path.abpos > 15000)) // putative join
+		  (	((ovls->path.abpos == 0) || (ovls->path.aepos == conA->len)) && ((ovls->path.bbpos == 0) || (ovls->path.bepos == conB->len)) && (ovls->path.aepos - ovls->path.abpos > 15000)) // putative join
 			)
 		{
 			if (ctx->curChains == ctx->maxChains)
@@ -4297,7 +4297,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			}
 			if (conA->idx == 1 &&  conB->idx == 10)
 				printf(" 1 vs 10 --> is a chain? %d || %d || %d || ((%d || %d) && (%d && %d) && %d\n", (ovls->path.aepos - ovls->path.abpos) >= 0.5*conA->len, (ovls->path.bepos - ovls->path.bbpos) >= 0.5*conB->len,
-						  	(ovls->path.abpos = 0), (ovls->path.aepos = conA->len), (ovls->path.bbpos = 0), (ovls->path.bepos = conB->len), (ovls->path.aepos - ovls->path.abpos > 15000));
+						  	(ovls->path.abpos == 0), (ovls->path.aepos == conA->len), (ovls->path.bbpos == 0), (ovls->path.bepos == conB->len), (ovls->path.aepos - ovls->path.abpos > 15000));
 			chain->ovls[0] = ovls;
 			chain->novl = 1;
 			ovls->flags |= OVL_TEMP;
