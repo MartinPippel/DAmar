@@ -4268,6 +4268,11 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 	Contig *conA = ctx->contigs + conAId;
 	Contig *conB = ctx->contigs + conBId;
 
+	assert(ctx->curChains == 0);
+
+	if (conA->idx == 1 &&  conB->idx == 10)
+		printf("conA 1 conB 10: a[%d ,%d] b[%d ,%d]\n", ovls->path.abpos, ovls->path.aepos, ovls->path.bbpos, ovls->path.bepos);
+
 	if (n < 2)
 	{
 		// add a single overlap into chain if its somehow long enough
@@ -4281,8 +4286,6 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				ctx->ovlChains = (Chain*) realloc(ctx->ovlChains, sizeof(Chain) * ctx->maxChains);
 				bzero(ctx->ovlChains + ctx->curChains, sizeof(Chain) * (ctx->maxChains - ctx->curChains));
 			}
-
-			assert(ctx->curChains == 0);
 
 			Chain *chain = ctx->ovlChains + ctx->curChains;
 
@@ -4303,8 +4306,6 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 	}
 	else
 	{
-		assert(ctx->curChains == 0);
-
 		int i;
 
 		// try to detect all possible chains
