@@ -5330,6 +5330,10 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 	{
 		if(ovls[i].flags & OVL_DISCARD)
 			numDiscOvls++;
+		else
+		{
+			printf("Keep ovl %d vs %d a[%d, %d] b [%d, %d] %c\n", ovls[i].aread, ovls[i].bread, ovls[i].path.abpos, ovls[i].path.aepos, ovls[i].path.bbpos, ovls[i].path.bepos, (ovls[i].flags & OVL_COMP) ? 'C' : 'N');
+		}
 	}
 	printf("END -- Analyze overlaps for contig: %d numOvls: %d discOvls %d: remaining Ovls %d\n", ovls->aread, novl, numDiscOvls, novl-numDiscOvls);
 
