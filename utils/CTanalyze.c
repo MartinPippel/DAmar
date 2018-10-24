@@ -4295,6 +4295,9 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				chain->ovls = (Overlap**) realloc(chain->ovls, sizeof(Overlap *)*chain->maxOvl);
 				bzero(chain->ovls + chain->novl, sizeof(Overlap*) * (chain->maxOvl - chain->novl));
 			}
+			if (conA->idx == 1 &&  conB->idx == 10)
+				printf(" 1 vs 10 --> is a chain? %d || %d || %d || ((%d || %d) && (%d && %d) && %d\n", (ovls->path.aepos - ovls->path.abpos) >= 0.5*conA->len, (ovls->path.bepos - ovls->path.bbpos) >= 0.5*conB->len,
+						  	(ovls->path.abpos = 0), (ovls->path.aepos = conA->len), (ovls->path.bbpos = 0), (ovls->path.bepos = conB->len), (ovls->path.aepos - ovls->path.abpos > 15000));
 			chain->ovls[0] = ovls;
 			chain->novl = 1;
 			ovls->flags |= OVL_TEMP;
