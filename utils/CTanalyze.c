@@ -4436,7 +4436,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 
 			// break out
 			if ((ctx->curChains || whileIdx > 2)
-					&& (longestOvlBases < 5000 && !((longestOvlBases * 1.0 / conB->len > 0.5) || (longestOvlBases * 1.0 / conA->len > 0.5))))
+					&& (longestOvlBases < 10000 && !((longestOvlBases * 1.0 / conB->len > 0.5) || (longestOvlBases * 1.0 / conA->len > 0.5))))
 			{
 				for (i = 0; i < n; i++)
 				{
@@ -5238,7 +5238,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 	Contig *conA = actx->contigs + ovls->aread;
 
 	// speed up things for long contigs
-	int MIN_OLEN = 5000;
+	int MIN_OLEN = 10000;
 	int MIN_CLEN = 1000000;
 	if (conA->len > MIN_CLEN)
 	{
