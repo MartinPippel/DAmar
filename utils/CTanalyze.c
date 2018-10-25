@@ -5207,18 +5207,66 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 
 int analyzeChains(AnalyzeContext *ctx)
 {
+	// keep only best chain of each contig A vs Contig B overlap chain
+	// idea for now: use always first chain, as chains are anyway sorted according length
+	// todo check do multiple chains exists, if so why??
+	// todo sanity check + keep contained contigs + keep contigs that are joinable
 	if (ctx->curChains == 0)
 		return 0;
 
-	printf("[analyzeChains] c%d vs c%d\n", ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
+	printf("[analyzeChains] c%d vs c%d nChains: %d\n", ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread, ctx->curChains);
 	int i, j;
+
+	int nOvlABases;
+	int nOvlBBases;
+
+	int nUniqOvlABases;
+	int nUniqOvlBBases;
+
 	for (i = 0; i < ctx->curChains; i++)
 	{
 		Chain *chain = ctx->ovlChains + i;
 		if (chain->novl == 0)
 			return 0;
 
-		printf("	Chain_%d [", i);
+		nOvlABases = (chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos);
+		nOvlBBases = (chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos);
+
+		nUniqOvlABases = getRepeatBasesOfContigRange(ctx, chain->ovls[0], chain->ovls[0]->aread);
+		nUniqOvlBBases = getRepeatBasesOfContigRange(ctx, chain->ovls[0], chain->ovls[0]->bread);
+
+		for (j = 1; j < chain->novl; j++)
+		{
+			nOvlABases += (chain->ovls[j]->path.aepos - chain->ovls[j]->path.abpos);
+			nOvlBBases += (chain->ovls[j]->path.bepos - chain->ovls[j]->path.bbpos);
+
+			nUniqOvlABases += getRepeatBasesOfContigRange(ctx, chain->ovls[j], chain->ovls[j]->aread);
+			nUniqOvlBBases += getRepeatBasesOfContigRange(ctx, chain->ovls[j], chain->ovls[j]->bread);
+
+			// remove overhangs between neighboring overlaps
+			if(chain->ovls[j]->path.abpos < chain->ovls[j-1]->path.aepos)
+			{
+				nOvlABases -= (chain->ovls[j-1]->path.aepos - chain->ovls[j]->path.abpos);
+				nUniqOvlABases -= ((chain->ovls[j-1]->path.aepos - chain->ovls[j]->path.abpos) - getRepeatBasesFromInterval(ctx, chain->ovls[j]->aread, chain->ovls[j]->path.abpos, chain->ovls[j-1]->path.aepos));
+			}
+
+			if(chain->ovls[j]->path.bbpos < chain->ovls[j-1]->path.bepos)
+			{
+				nOvlBBases -= (chain->ovls[j-1]->path.bepos - chain->ovls[j]->path.bbpos);
+				if(chain->ovls[j]->flags & OVL_COMP)
+				{
+					nUniqOvlBBases -=	((chain->ovls[j-1]->path.bepos - chain->ovls[j]->path.bbpos) -
+							getRepeatBasesFromInterval(ctx, chain->ovls[j]->bread, DB_READ_LEN(ctx->corContigDB, chain->ovls[j]->bread) - chain->ovls[j-1]->path.bepos,
+									DB_READ_LEN(ctx->corContigDB, chain->ovls[j]->bread) - chain->ovls[j]->path.bbpos));
+				}
+				else
+				{
+					nUniqOvlBBases -=	((chain->ovls[j-1]->path.bepos - chain->ovls[j]->path.bbpos) - getRepeatBasesFromInterval(ctx, chain->ovls[j]->bread, chain->ovls[j]->path.bbpos, chain->ovls[j-1]->path.bepos));
+				}
+			}
+		}
+
+		printf("	Chain_%d_a[%d_%d]_b[%d_%d] [", i, nOvlABases, nUniqOvlABases, nOvlBBases, nUniqOvlBBases);
 		for (j = 0; j < chain->novl; j++)
 		{
 			printf("%d-%d", chain->ovls[j]->path.abpos, chain->ovls[j]->path.aepos);
@@ -5227,6 +5275,8 @@ int analyzeChains(AnalyzeContext *ctx)
 		}
 		printf("]\n");
 	}
+
+
 	return 0;
 }
 
