@@ -5132,9 +5132,12 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			if (
 					(aCoveredBases < 0.5 * conA->len && bCoveredBases < 0.5 * conB->len)
 					&& !(
-							((chain->ovls[0]->path.abpos < 2000) || (chain->ovls[chain->novl - 1]->path.aepos + 2000 > conA->len))
-							&& ((chain->ovls[0]->path.bbpos < 2000) || (chain->ovls[chain->novl - 1]->path.bepos + 2000 > conB->len))
-							&& MIN(aCoveredBases, bCoveredBases) > 15000)
+							 (
+							 	 ((chain->ovls[0]->path.abpos < 10000) && (chain->ovls[chain->novl - 1]->path.bepos + 10000 > conB->len))
+								 ||
+								 ((chain->ovls[chain->novl - 1]->path.aepos + 10000 > conA->len) && (chain->ovls[0]->path.bbpos < 10000))
+							 )
+							 && MIN(aCoveredBases, bCoveredBases) > 30000)
 							)
 			{
 				valid = 0;
