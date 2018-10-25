@@ -5309,7 +5309,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 		{
 			if(ovls[j].aread == 37 && ovls[j].bread == 38)
 			{
-				printf("37 vs 38: VALID? %d flags: %d -> try to find chains\n", valid, ovls[j].flags);
+				printf("37 vs 38: VALID? %d flags: %d -> try to find chains\n", 1, ovls[j].flags);
 				fflush(stdout);
 				exit(1);
 			}
