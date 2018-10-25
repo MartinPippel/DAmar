@@ -5269,6 +5269,13 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 			if (valid)
 				ovls[j].flags |= OVL_MODULE; /// use module overlap to mark overlaps where chain detection should be applied
 
+			if(ovls[j].aread == 37 && ovls[j].bread == 38)
+			{
+				printf("37 vs 38: VALID? %d flags: %d\n", valid, ovls[j].flags);
+				fflush(stdout);
+				exit(1);
+			}
+
 			j = k + 1;
 		}
 
@@ -5299,8 +5306,6 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 				ovls[i].flags |= OVL_DISCARD;
 			}
 		}
-//		else if (DB_READ_LEN(actx->corContigDB, ovls[j].aread) > DB_READ_LEN(actx->corContigDB, ovls[j].bread)) // len aread must be < then len bread !!!
-//			;
 		else
 		{
 			chainContigOverlaps(actx, ovls + j, k - j + 1);
