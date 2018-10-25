@@ -5313,13 +5313,6 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 
 			chainContigOverlaps(actx, ovls + j, k - j + 1);
 
-			if(ovls[j].aread == 37 && ovls[j].bread == 38)
-						{
-							printf("37 vs 38: VALID? %d flags: %d -> try to find chains\n", 1, ovls[j].flags);
-							fflush(stdout);
-							exit(1);
-						}
-
 			if (analyzeChains(actx))
 			{
 				// convert valid chains into ContigChain struct
