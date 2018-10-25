@@ -4274,7 +4274,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 
 	assert(ctx->curChains == 0);
 
-	if (conA->idx == 37 && conB->idx == 38)
+	if (conA->idx == 131 && conB->idx == 132)
 		printf("conA 1 conB 10: a[%d ,%d] b[%d ,%d]\n", ovls->path.abpos, ovls->path.aepos, ovls->path.bbpos, ovls->path.bepos);
 
 	if (n < 2)
@@ -4300,7 +4300,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				chain->ovls = (Overlap**) realloc(chain->ovls, sizeof(Overlap *) * chain->maxOvl);
 				bzero(chain->ovls + chain->novl, sizeof(Overlap*) * (chain->maxOvl - chain->novl));
 			}
-			if (conA->idx == 37 && conB->idx == 38)
+			if (conA->idx == 131 && conB->idx == 132)
 				printf(" 1 vs 10 --> is a chain? %d || %d || %d || ((%d || %d) && (%d && %d) && %d\n", (ovls->path.aepos - ovls->path.abpos) >= 0.5 * conA->len,
 						(ovls->path.bepos - ovls->path.bbpos) >= 0.5 * conB->len, (ovls->path.abpos == 0), (ovls->path.aepos == conA->len), (ovls->path.bbpos == 0),
 						(ovls->path.bepos == conB->len), (ovls->path.aepos - ovls->path.abpos > 15000));
@@ -4322,7 +4322,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 
 		// mark contained overlaps
 //		#ifdef DEBUG_CHAIN
-		if (ovls->aread == 37 && ovls->bread == 38)
+		if (ovls->aread == 131 && ovls->bread == 132)
 			printf("mark contained overlaps\n");
 //		#endif
 		{
@@ -4352,7 +4352,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 		}
 
 		//		#ifdef DEBUG_CHAIN
-		if (ovls->aread == 37 && ovls->bread == 38)
+		if (ovls->aread == 131 && ovls->bread == 132)
 			printf("check initial overlaps flags\n");
 //		#endif
 		{
@@ -4369,7 +4369,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 		}
 
 //		#ifdef DEBUG_CHAIN
-		if (ovls->aread == 37 && ovls->bread == 38)
+		if (ovls->aread == 131 && ovls->bread == 132)
 			printf("nremain %d\n", nremain);
 //		#endif
 		assert(nremain >= 1);
@@ -4400,7 +4400,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				int bRep = getRepeatBasesOfContigRange(ctx, ovl, ovl->bread);
 
 //#ifdef DEBUG_CHAIN
-				if (ovls->aread == 37 && ovls->bread == 38)
+				if (ovls->aread == 131 && ovls->bread == 132)
 					printf("%d - %d [%d, %d] [%d, %d], aR %d/%d, bR %d/%d\n", conAId, conBId, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, aLen,
 							aRep, bLen, bRep);
 //#endif
@@ -4422,7 +4422,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			if (longestUniqOvlBases < ctx->twidth && longestOvlBases > longestUniqOvlBases)
 			{
 //#ifdef DEBUG_CHAIN
-				if (ovls->aread == 37 && ovls->bread == 38)
+				if (ovls->aread == 131 && ovls->bread == 132)
 					printf("Number of unique bases to low. Use longest overlap. uniq %d %d -> longest %d %d\n", longestUniqOvlIdx, longestUniqOvlBases, longestOvlIdx,
 							longestOvlBases);
 //#endif
@@ -4430,7 +4430,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				longestUniqOvlIdx = longestOvlIdx;
 			}
 
-			if (ovls->aread == 37 && ovls->bread == 38)
+			if (ovls->aread == 131 && ovls->bread == 132)
 				printf("checkBreakOut %d && %d && !(%d || %d)\n", ctx->curChains, longestOvlBases < 5000, longestOvlBases * 1.0 / conB->len > 0.5,
 						longestOvlBases * 1.0 / conA->len > 0.5);
 
@@ -4456,7 +4456,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			}
 
 //#ifdef DEBUG_CHAIN
-			if (ovls->aread == 37 && ovls->bread == 38)
+			if (ovls->aread == 131 && ovls->bread == 132)
 			{
 				printf("longest overlap:\n");
 				printf("idx: %d --> uB %d, %d - %d [%d, %d] [%d, %d] nonUnB: %d nonUnBIdx %d\n", longestUniqOvlIdx, longestUniqOvlBases, ovls[longestUniqOvlIdx].aread,
@@ -4480,7 +4480,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			Chain *chain = ctx->ovlChains + ctx->curChains;
 
 //#ifdef DEBUG_CHAIN
-			if (ovls->aread == 37 && ovls->bread == 38)
+			if (ovls->aread == 131 && ovls->bread == 132)
 				printf("chain: nOvl: %d, maxOvl %d, nremain: %d\n", chain->novl, chain->maxOvl, nremain);
 //#endif
 			if (chain->novl == chain->maxOvl)
@@ -4489,7 +4489,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				chain->ovls = (Overlap**) realloc(chain->ovls, sizeof(Overlap *) * chain->maxOvl);
 				bzero(chain->ovls + chain->novl, sizeof(Overlap*) * (chain->maxOvl - chain->novl));
 //#ifdef DEBUG_CHAIN
-				if (ovls->aread == 37 && ovls->bread == 38)
+				if (ovls->aread == 131 && ovls->bread == 132)
 					printf("realloc > chain: nOvl: %d, maxOvl %d\n", chain->novl, chain->maxOvl);
 //#endif
 			}
@@ -4507,7 +4507,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			chain->novl++;
 			nremain--;
 //	#ifdef DEBUG_CHAIN
-			if (ovls->aread == 37 && ovls->bread == 38)
+			if (ovls->aread == 131 && ovls->bread == 132)
 				printf("chain: nOvl: %d, maxOvl %d, nremain %d\n", chain->novl, chain->maxOvl, nremain);
 //	#endif
 
@@ -5048,7 +5048,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 							ovl->flags |= OVL_DISCARD;
 							nremain--;
 //	#ifdef DEBUG_CHAIN
-							if (ovls->aread == 37 && ovls->bread == 38)
+							if (ovls->aread == 131 && ovls->bread == 132)
 								printf("DISCARD [%d, %d] [%d, %d] nremain %d\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, nremain);
 //	#endif
 							break;
@@ -5144,7 +5144,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				ctx->curChains++;
 			else
 			{
-				if (ovls->aread == 37 && ovls->bread == 38)
+				if (ovls->aread == 131 && ovls->bread == 132)
 					printf("INVALID DISCARD CHAIN novl: %d nremain: %d\n", chain->novl, nremain);
 				int j;
 				for (j = 0; j < chain->novl; j++)
@@ -5155,7 +5155,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			}
 
 //#ifdef DEBUG_CHAIN
-			if (ovls->aread == 37 && ovls->bread == 38)
+			if (ovls->aread == 131 && ovls->bread == 132)
 				printf("curChain: %d, remain unchained OVls: %d\n", ctx->curChains, nremain);
 //#endif
 		}
@@ -5272,7 +5272,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 			if (valid)
 				ovls[j].flags |= OVL_MODULE; /// use module overlap to mark overlaps where chain detection should be applied
 
-			if(ovls[j].aread == 37 && ovls[j].bread == 38)
+			if(ovls[j].aread == 131 && ovls[j].bread == 132)
 			{
 				printf("37 vs 38: VALID? %d flags: %d\n", valid, ovls[j].flags);
 				fflush(stdout);
