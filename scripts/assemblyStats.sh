@@ -44,6 +44,21 @@ then
 		p=stats/contigs/${FIX_FILT_OUTDIR}/raw
 		mkdir -p ${p}
 		
+		# create effective coverage histogram - DAScover(based on RAW_DB) 
+		if [[ -f ../../${COVERAGE_DIR}/effectiveCov_${RAW_DAZZ_DB%.db}_1_forBlock${RAW_DASCOVER_DALIGNER_FORBLOCK}.txt ]]
+		then 
+			grep -e "%" ../../${COVERAGE_DIR}/effectiveCov_${RAW_DAZZ_DB%.db}_1_forBlock${RAW_DASCOVER_DALIGNER_FORBLOCK}.txt  | tr -d ":" | awk '{print $1" "$2}' | tac > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_DAScover_b${RAW_DASCOVER_DALIGNER_FORBLOCK}.hist	
+		fi
+		
+		# create effective coverage histogram - LArepeat(based on FIX_DB)
+		for y in log_scrub_LArepeat_${db}/*_1.out
+		do
+			if [[ -f ${y} ]]
+			then
+				grep -e "^COV " ${y%1.out}* | sort -k2,2n | awk -v c=0 -v cumCov=0 '{if ($2==c) {cumCov+=$4} else {print cumCov" "c; c=$2; cumCov=$4}} END {print cumCov" "c}' > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_LArepeat_$(basename ${y%_1.out}).hist	
+			fi			
+		done
+		
 		for y in ${FIX_FILT_OUTDIR}/tour/*.fasta
 		do
 			name=$(basename ${y%.fasta})
