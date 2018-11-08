@@ -99,9 +99,9 @@ typedef struct
 	char* cov_read_active;
 
 	int removeFlags; 	// 1 << 0 ... stitched overlaps, 1 << 1 ... module overlaps, 1 << 2 .. trace points, 1 << 3 .. non-identity overlaps,
-						// 1 << 4 .. remove B-read repeat overlaps, if a proper overlap between A and B exist i.e A ------------ or A ------------ or A ------------ or A   ------------
-						//  																					   B -----E|B				B     E|B-----    B   E|B---E|B		  B ------------------
-						// 1 << 5 .. identity overlaps,
+	// 1 << 4 .. remove B-read repeat overlaps, if a proper overlap between A and B exist i.e A ------------ or A ------------ or A ------------ or A   ------------
+	//  																					   B -----E|B				B     E|B-----    B   E|B---E|B		  B ------------------
+	// 1 << 5 .. identity overlaps,
 	int includeReadFlag;
 
 	int removeLowCoverageOverlaps;
@@ -2581,13 +2581,13 @@ static void filter_post(FilterContext* ctx)
 static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 {
 
-	int j, k , l;
+	int j, k, l;
 	j = k = 0;
 
-    int64 cov;
-    int64 bases = 0;
+	int64 cov;
+	int64 bases = 0;
 
-    bzero( ctx->cov_read_active, DB_READ_MAXLEN( ctx->db ) );
+	bzero(ctx->cov_read_active, DB_READ_MAXLEN(ctx->db));
 
 	int trimABeg, trimAEnd;
 	int trimBBeg, trimBEnd;
@@ -2598,7 +2598,6 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 	if (ctx->trackTrim)
 		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimABeg, &trimAEnd);
 
-
 	while (j < novl)
 	{
 		while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
@@ -2606,11 +2605,11 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 			k++;
 		}
 
-        if (ovl[ j ].aread == ovl[ j ].bread)
-        {
-        	j = k + 1;
-            continue;
-        }
+		if (ovl[j].aread == ovl[j].bread)
+		{
+			j = k + 1;
+			continue;
+		}
 
 		trimBBeg = 0;
 		trimBEnd = DB_READ_LEN(ctx->db, ovl[j].bread);
@@ -2636,8 +2635,7 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 			if (MIN(bestChain->ovls[0]->path.abpos - trimABeg, bestChain->ovls[0]->path.bbpos) - trimBBeg < 1000)
 				properBeg = 1;
 			// check for proper end
-			if (MIN(trimAEnd - bestChain->ovls[bestChain->novl - 1]->path.aepos,
-					trimBEnd - bestChain->ovls[bestChain->novl - 1]->path.bepos) < 1000)
+			if (MIN(trimAEnd - bestChain->ovls[bestChain->novl - 1]->path.aepos, trimBEnd - bestChain->ovls[bestChain->novl - 1]->path.bepos) < 1000)
 				properEnd = 1;
 
 			if (properBeg && properEnd)
@@ -2698,14 +2696,14 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 			}
 
 			// if there is a proper chain between A and B reads, then discard all overlaps between A and B for the repcomp step, (otherwise do repcomp)
-			if (properBeg && properEnd
-					&& itsBasesInA >= 0&& itsBasesInB >=0 && gapBasesInA >=0 && gapBasesInB >=0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB) && overlapBases >= ctx->nMinAlnLength)
+			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0
+					&& overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB) && overlapBases >= ctx->nMinAlnLength)
 			{
-				for ( l = 0; l < bestChain->novl; l++ )
+				for (l = 0; l < bestChain->novl; l++)
 				{
 					bases += bestChain->ovls[l]->path.aepos - bestChain->ovls[l]->path.abpos;
 
-					memset( ctx->cov_read_active + bestChain->ovls[l]->path.abpos, 1, bestChain->ovls[l]->path.aepos - bestChain->ovls[l]->path.abpos );
+					memset(ctx->cov_read_active + bestChain->ovls[l]->path.abpos, 1, bestChain->ovls[l]->path.aepos - bestChain->ovls[l]->path.abpos);
 				}
 			}
 			// reset chain and ovl counter
@@ -2713,7 +2711,7 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 			{
 				int m;
 				// reset OVL_TEMP flag ovl
-				for (m = j; m < k - j +1; m++)
+				for (m = j; m < k - j + 1; m++)
 				{
 					if (ovl[m].flags & OVL_TEMP)
 						ovl[m].flags &= ~OVL_TEMP;
@@ -2735,25 +2733,23 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 			if (MIN(trimAEnd - ovl->path.aepos, trimBEnd - ovl->path.bepos) < 1000)
 				properEnd = 1;
 
-			if(properBeg && properEnd && (ovl->path.aepos - ovl->path.abpos) > ctx->nMinAlnLength)
+			if (properBeg && properEnd && (ovl->path.aepos - ovl->path.abpos) > ctx->nMinAlnLength)
 			{
 				bases += ovl->path.aepos - ovl->path.abpos;
 
-				memset( ctx->cov_read_active + ovl->path.abpos, 1, ovl->path.aepos - ovl->path.abpos );
+				memset(ctx->cov_read_active + ovl->path.abpos, 1, ovl->path.aepos - ovl->path.abpos);
 			}
 		}
 		j = k + 1;
 	}
 
-
-
 	int active = 0;
-	for ( j = trimABeg; j < trimAEnd; j++ )
+	for (j = trimABeg; j < trimAEnd; j++)
 	{
-		active += ctx->cov_read_active[ j ];
+		active += ctx->cov_read_active[j];
 	}
 
-	if ( active > 0 )
+	if (active > 0)
 	{
 		cov = bases / active;
 	}
@@ -2762,16 +2758,17 @@ static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 		cov = 0;
 	}
 
-	if(cov >= ctx->lowCoverageFilter && cov <= ctx->hghCoverageFilter)
+	if (cov >= ctx->lowCoverageFilter && cov <= ctx->hghCoverageFilter)
 	{
-		for(j=0; j<novl; j++)
+		for (j = 0; j < novl; j++)
 		{
 			ovl[j].flags |= OVL_DISCARD;
-			ctx->nCovFiltBases+= ovl[j].path.aepos - ovl[j].path.abpos;
+			ctx->nCovFiltBases += ovl[j].path.aepos - ovl[j].path.abpos;
 		}
 		ctx->nCovFiltReads++;
 		ctx->nCovFiltOverlaps += novl;
-		printf("COV FILT OUT READ %d (novl: %d) cov: %lld range [%d, %d] active: %d\n", ovl->aread, novl, cov, ctx->lowCoverageFilter, ctx->hghCoverageFilter, active);
+		printf("COV FILT OUT READ %d (novl: %d) cov: %lld range [%d, %d] active: %d\n", ovl->aread, novl, cov, ctx->lowCoverageFilter, ctx->hghCoverageFilter,
+				active);
 
 	}
 	else
@@ -2805,7 +2802,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
-	if(ctx->lowCoverageFilter < ctx->hghCoverageFilter)
+	if (ctx->lowCoverageFilter < ctx->hghCoverageFilter)
 		filterByCoverage(ctx, ovl, novl);
 
 	if (ctx->stitch >= 0)
@@ -2839,7 +2836,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		if (ctx->trackTrim)
 			get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimABeg, &trimAEnd);
 
-
 		while (j < novl)
 		{
 			while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
@@ -2857,9 +2853,10 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 				int a, b;
 				// get rid of OVL_TEMP marked ovls
-				for(a=j; a< k - j + 1; a++);
-					if(ovl[a].flags & OVL_TEMP)
-						ovl[a].flags |= OVL_DISCARD;
+				for (a = j; a < k - j + 1; a++)
+					;
+				if (ovl[a].flags & OVL_TEMP)
+					ovl[a].flags |= OVL_DISCARD;
 
 				if (ctx->nMaxProperChains == 0)
 				{
@@ -2901,7 +2898,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 	if (ctx->removeMultiMappers)
 	{
-		int i;
 		int foundMultiMapper = 0;
 
 		if (ctx->removeMultiMappers > 1)
@@ -2924,99 +2920,105 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			}
 		}
 
-		for (i = 0; i < novl;)
+		int k, l, m;
+		j = k = 0;
+
+		int trimABeg, trimAEnd;
+		int trimBBeg, trimBEnd;
+
+		int numMultiMapper = 0;
+		while (j < novl)
 		{
-			foundMultiMapper = 0;
-			Overlap *o1 = ovl + i;
-
-			if (o1->flags & OVL_DISCARD)
+			while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
 			{
-				i++;
-				continue;
+				k++;
 			}
 
-			int trimABeg, trimAEnd;
-			int trimBBeg, trimBEnd;
-
-			trimABeg = 0;
-			trimAEnd = DB_READ_LEN(ctx->db, o1->aread);
-
-			if (ctx->trackTrim)
-				get_trim(ctx->db, ctx->trackTrim, o1->aread, &trimABeg, &trimAEnd);
-
-			trimBBeg = 0;
-			trimBEnd = DB_READ_LEN(ctx->db, o1->bread);
-
-			if (ctx->trackTrim)
-				get_trim(ctx->db, ctx->trackTrim, o1->bread, &trimBBeg, &trimBEnd);
-
-			j = i;
-			while (j + 1 < novl && (ovl[i].bread == ovl[j + 1].bread))
+			if (k > j)
 			{
-				Overlap *o2 = ovl + j + 1;
+				foundMultiMapper = 0;
 
-				if (o2->flags & OVL_DISCARD)
+				for (l = j; l <= k && !foundMultiMapper; l++)
 				{
-					j++;
-					continue;
-				}
+					Overlap *o1 = ovl + l;
 
-				if (((o1->path.abpos == trimABeg || o1->path.bbpos == trimBBeg) && (o1->path.aepos == trimAEnd || o1->path.bepos == trimBEnd))
-						&& ((o2->path.abpos == trimABeg || o2->path.bbpos == trimBBeg) && (o2->path.aepos == trimAEnd || o2->path.bepos == trimBEnd))
-						&& ((abs(o1->path.abpos - o2->path.abpos) > ctx->twidth) && (abs(o1->path.aepos - o2->path.aepos) > ctx->twidth)))
-				{
-					foundMultiMapper = 1;
-				}
+					if (o1->flags & OVL_DISCARD)
+						continue;
 
-				j++;
-			}
+					trimABeg = 0;
+					trimAEnd = DB_READ_LEN(ctx->db, o1->aread);
 
-			if (foundMultiMapper)
-			{
-				while (i <= j)
-				{
-					if (!(ovl[i].flags & OVL_DISCARD))
+					if (ctx->trackTrim)
+						get_trim(ctx->db, ctx->trackTrim, o1->aread, &trimABeg, &trimAEnd);
+
+					trimBBeg = 0;
+					trimBEnd = DB_READ_LEN(ctx->db, o1->bread);
+
+					if (ctx->trackTrim)
+						get_trim(ctx->db, ctx->trackTrim, o1->bread, &trimBBeg, &trimBEnd);
+
+					for (m = l + 1; m <= k && !foundMultiMapper; m++)
 					{
-#ifdef VERBOSE
-						printf("remove multi mapper: %d vs %d [%d, %d] %c [%d, %d]\n", ovl[i].aread, ovl[i].bread, ovl[i].path.abpos, ovl[i].path.aepos,
-								(ovl[i].flags & OVL_COMP) ? 'c' : 'n', ovl[i].path.bbpos, ovl[i].path.bepos);
-#endif
+						Overlap *o2 = ovl + m;
 
-						ctx->nMultiMapper++;
-						ctx->nMultiMapperBases += ovl[i].path.aepos - ovl[i].path.abpos;
-						ovl[i].flags |= OVL_DISCARD;
-					}
+						if (o2->flags & OVL_DISCARD)
+							continue;
 
-					if (ctx->removeMultiMappers > 1)
-					{
-						memset(ctx->cover_multi_mapper + ovl[i].path.abpos, 1, ovl[i].path.aepos - ovl[i].path.abpos);
+						if (((o1->path.abpos == trimABeg || o1->path.bbpos == trimBBeg) && (o1->path.aepos == trimAEnd || o1->path.bepos == trimBEnd))
+								&& ((o2->path.abpos == trimABeg || o2->path.bbpos == trimBBeg) && (o2->path.aepos == trimAEnd || o2->path.bepos == trimBEnd))
+								&& ((abs(o1->path.abpos - o2->path.abpos) > ctx->twidth) && (abs(o1->path.aepos - o2->path.aepos) > ctx->twidth)))
+						{
+							foundMultiMapper = 1;
+						}
 					}
-					i++;
 				}
-				continue;
+
+				if(foundMultiMapper)
+				{
+					ctx->nMultiMapper++;
+					numMultiMapper++;
+					for (l = j; l <= k; l++)
+					{
+						if (!(ovl[l].flags & OVL_DISCARD))
+						{
+	#ifdef VERBOSE
+							printf("remove multi mapper: %d vs %d [%d, %d] %c [%d, %d]\n", ovl[l].aread, ovl[l].bread, ovl[l].path.abpos, ovl[l].path.aepos,
+									(ovl[l].flags & OVL_COMP) ? 'c' : 'n', ovl[l].path.bbpos, ovl[l].path.bepos);
+	#endif
+							ctx->nMultiMapperBases += ovl[l].path.aepos - ovl[l].path.abpos;
+							ovl[l].flags |= OVL_DISCARD;
+						}
+
+						if (ctx->removeMultiMappers > 1)
+						{
+							memset(ctx->cover_multi_mapper + ovl[l].path.abpos, 1, ovl[l].path.aepos - ovl[l].path.abpos);
+						}
+
+
+					}
+				}
 			}
-			i++;
+			j = k + 1;
 		}
-
-		if (ctx->removeMultiMappers > 1 && foundMultiMapper)
+		if (ctx->removeMultiMappers > 1 && numMultiMapper)
 		{
-			for (i = 0; i < novl; i++)
+			for (j = 0; j < novl; j++)
 			{
-				Overlap *o = ovl + i;
+				Overlap *o = ovl + j;
 
 				if (o->flags & OVL_DISCARD)
 					continue;
 
 				int sumMultMapBases = 0;
-				for (j = o->path.abpos; j < o->path.aepos; j++)
+				for (k = o->path.abpos; k < o->path.aepos; k++)
 				{
-					if ((int) (ctx->cover_multi_mapper[j]))
+					if ((int) (ctx->cover_multi_mapper[k]))
 						sumMultMapBases++;
 					else
 						break;
 				}
 
-				int anchorBases = MAX(0, ctx->nMinNonRepeatBases);
+				int anchorBases = MAX(500, ctx->nMinNonRepeatBases);
 
 				if (sumMultMapBases + anchorBases >= (o->path.aepos - o->path.abpos))
 				{
@@ -3396,27 +3398,26 @@ int main(int argc, char* argv[])
 			break;
 
 		case 'c':
+		{
+			int tmp = atoi(optarg);
+			if (tmp == 0)
 			{
-				int tmp = atoi(optarg);
-				if(tmp == 0)
-				{
-					fprintf(stderr, "[ERROR]: Unsupported coverage filer -c [%d].\n", tmp);
-					usage();
-					exit(1);
-				}
-				if (tmp < 0)
-				{
-					fctx.lowCoverageFilter = 0;
-					fctx.hghCoverageFilter = abs(tmp);
-				}
-				else
-				{
-					fctx.lowCoverageFilter = tmp;
-					fctx.hghCoverageFilter = INT_MAX;
-				}
+				fprintf(stderr, "[ERROR]: Unsupported coverage filer -c [%d].\n", tmp);
+				usage();
+				exit(1);
 			}
+			if (tmp < 0)
+			{
+				fctx.lowCoverageFilter = 0;
+				fctx.hghCoverageFilter = abs(tmp);
+			}
+			else
+			{
+				fctx.lowCoverageFilter = tmp;
+				fctx.hghCoverageFilter = INT_MAX;
+			}
+		}
 			break;
-
 
 		case 'A':
 			pathInDiscardedOvls = optarg;
@@ -3557,8 +3558,8 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	if(fctx.lowCoverageFilter < fctx.hghCoverageFilter)
-		fctx.cov_read_active = (char*)malloc( DB_READ_MAXLEN( fctx.db ) );
+	if (fctx.lowCoverageFilter < fctx.hghCoverageFilter)
+		fctx.cov_read_active = (char*) malloc(DB_READ_MAXLEN(fctx.db));
 
 	int i;
 	for (i = 0; i < DB_NREADS(&db); i++)
@@ -3710,7 +3711,7 @@ int main(int argc, char* argv[])
 			if (prevAread == aread)
 				assert(prevBread < bread);
 
-			assert(aread < DB_NREADS(fctx.db)+1);
+			assert(aread < DB_NREADS(fctx.db) + 1);
 
 			line++;
 
