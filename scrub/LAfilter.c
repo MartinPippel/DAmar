@@ -2902,7 +2902,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	if (ctx->removeMultiMappers)
 	{
 		int i;
-		int foundMulitMapper = 0;
+		int foundMultiMapper = 0;
 
 		if (ctx->removeMultiMappers > 1)
 		{
@@ -2926,7 +2926,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 		for (i = 0; i < novl;)
 		{
-			int j = i;
+			foundMultiMapper = 0;
 			Overlap *o1 = ovl + i;
 
 			if (o1->flags & OVL_DISCARD)
@@ -2950,9 +2950,10 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			if (ctx->trackTrim)
 				get_trim(ctx->db, ctx->trackTrim, o1->bread, &trimBBeg, &trimBEnd);
 
+			j = i;
 			while (j + 1 < novl && (ovl[i].bread == ovl[j + 1].bread))
 			{
-				Overlap *o2 = ovl + j;
+				Overlap *o2 = ovl + j + 1;
 
 				if (o2->flags & OVL_DISCARD)
 				{
@@ -2962,15 +2963,15 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 				if (((o1->path.abpos == trimABeg || o1->path.bbpos == trimBBeg) && (o1->path.aepos == trimAEnd || o1->path.bepos == trimBEnd))
 						&& ((o2->path.abpos == trimABeg || o2->path.bbpos == trimBBeg) && (o2->path.aepos == trimAEnd || o2->path.bepos == trimBEnd))
-						&& ((abs(o1->path.abpos - o2->path.abpos) > ctx->twidth) || (abs(o1->path.bbpos - o2->path.bbpos) > ctx->twidth)))
+						&& ((abs(o1->path.abpos - o2->path.abpos) > ctx->twidth) && (abs(o1->path.aepos - o2->path.aepos) > ctx->twidth)))
 				{
-					foundMulitMapper = 1;
+					foundMultiMapper = 1;
 				}
 
 				j++;
 			}
 
-			if (foundMulitMapper)
+			if (foundMultiMapper)
 			{
 				while (i <= j)
 				{
@@ -2997,7 +2998,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			i++;
 		}
 
-		if (ctx->removeMultiMappers > 1 && foundMulitMapper)
+		if (ctx->removeMultiMappers > 1 && foundMultiMapper)
 		{
 			for (i = 0; i < novl; i++)
 			{
