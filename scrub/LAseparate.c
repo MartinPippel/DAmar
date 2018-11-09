@@ -315,37 +315,53 @@ static void chain(SeparateContext*ctx, Overlap *ovls, int n)
 #ifdef DEBUG_CHAIN
 	printf("mark contained overlaps\n");
 #endif
+
 	{
 		int j;
 		for (i = 0; i < n; i++)
 		{
 			Overlap *ovl_i = ovls + i;
 
-			if (ovl_i->flags & (OVL_CONT | OVL_DISCARD))
+			if (ovl_i->flags & (OVL_CONT))
 				continue;
 
 			for (j = i + 1; j < n; j++)
 			{
 				Overlap *ovl_j = ovls + j;
 
-				if (ovl_j->flags & (OVL_CONT | OVL_DISCARD))
+				if (ovl_j->flags & (OVL_CONT))
 					continue;
 
 				if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos)
 						&& contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
 				{
-					nremain--;
-					ovl_j->flags |= (OVL_CONT | OVL_DISCARD);
+					ovl_j->flags |= (OVL_CONT);
 				}
 			}
 
 		}
 	}
+
+	{
+		for (i = 0; i < n; i++)
+		{
+			Overlap *ovl_i = ovls + i;
+
+			if (ovl_i->flags & (OVL_CONT | OVL_DISCARD))
+			{
+				ovl_i->flags |= OVL_DISCARD;
+				nremain--;
+			}
+		}
+	}
+
 #ifdef DEBUG_CHAIN
 	printf("nremain %d\n", nremain);
 #endif
 	if (nremain < 1)
 		return;
+
+	assert(nremain >= 1);
 
 	while (nremain > 0)
 	{
@@ -916,8 +932,8 @@ static void chain(SeparateContext*ctx, Overlap *ovls, int n)
 					{
 						Overlap *lastAddedOvl = chain->ovls[chain->novl - 1];
 
-						if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos)
-								|| intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos))
+						if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos) > 100
+								|| intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos) > 100)
 							break;
 
 						if (chain->novl == chain->maxOvl)
@@ -1126,11 +1142,11 @@ static int separate_handler(void* _ctx, Overlap* ovl, int novl)
 					else
 					{
 						int gap = bestChain->ovls[i]->path.abpos - bestChain->ovls[i - 1]->path.aepos;
-						if (gap > 1000)
-						{
-							gapBasesInA = -1;
-							break;
-						}
+//						if (gap > 1000)
+//						{
+//							gapBasesInA = -1;
+//							break;
+//						}
 						gapBasesInA += gap;
 					}
 					// check for intersection in B
@@ -1148,11 +1164,11 @@ static int separate_handler(void* _ctx, Overlap* ovl, int novl)
 					else
 					{
 						int gap = bestChain->ovls[i]->path.bbpos - bestChain->ovls[i - 1]->path.bepos;
-						if (gap > 1000)
-						{
-							gapBasesInB = -1;
-							break;
-						}
+//						if (gap > 1000)
+//						{
+//							gapBasesInB = -1;
+//							break;
+//						}
 						gapBasesInB += gap;
 					}
 					overlapBases -= MAX(its_a, its_b);
@@ -1164,8 +1180,8 @@ static int separate_handler(void* _ctx, Overlap* ovl, int novl)
 					gapBasesInB, overlapBases, gapBasesInA, gapBasesInB);
 #endif
 			// if there is a proper chain between A and B reads, then discard all overlaps between A and B for the repcomp step, (otherwise do repcomp)
-			if (properBeg && properEnd
-					&& itsBasesInA >= 0&& itsBasesInB >=0 && gapBasesInA >=0 && gapBasesInB >=0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
+			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0
+					&& overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
 			{
 #ifdef DEBUG
 				printf("FOUND PROPER CHAIN - EXCLUDE ALL OVLS FROM REPCOMP INPUT\n");
@@ -1255,11 +1271,11 @@ static int separate_handler(void* _ctx, Overlap* ovl, int novl)
 					else
 					{
 						int gap = bestChain->ovls[i]->path.abpos - bestChain->ovls[i - 1]->path.aepos;
-						if (gap > 1000)
-						{
-							gapBasesInA = -1;
-							break;
-						}
+//						if (gap > 1000)
+//						{
+//							gapBasesInA = -1;
+//							break;
+//						}
 						gapBasesInA += gap;
 					}
 					// check for intersection in B
@@ -1277,11 +1293,11 @@ static int separate_handler(void* _ctx, Overlap* ovl, int novl)
 					else
 					{
 						int gap = bestChain->ovls[i]->path.bbpos - bestChain->ovls[i - 1]->path.bepos;
-						if (gap > 1000)
-						{
-							gapBasesInB = -1;
-							break;
-						}
+//						if (gap > 1000)
+//						{
+//							gapBasesInB = -1;
+//							break;
+//						}
 						gapBasesInB += gap;
 					}
 					overlapBases -= MAX(its_a, its_b);
@@ -1292,15 +1308,15 @@ static int separate_handler(void* _ctx, Overlap* ovl, int novl)
 			printf("if(%d && %d && %d >=0 && %d >=0 && %d >=0 && %d >=0 && %d * 0.3 > MAX(%d, %d))\n", properBeg, properEnd, itsBasesInA, itsBasesInB, gapBasesInA,
 					gapBasesInB, overlapBases, gapBasesInA, gapBasesInB);
 #endif
-			if (properBeg && properEnd
-					&& itsBasesInA >= 0&& itsBasesInB >=0 && gapBasesInA >=0 && gapBasesInB >=0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
+			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0
+					&& overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
 			{
 #ifdef DEBUG
 				printf("FOUND PROPER CHAIN - INCLUDE ALL CHAIN OVLS FOR FORCEALIGN INPUT\n");
 #endif
 				for (i = 0; i < novl; i++)
 				{
-					if(ovl[i].flags & OVL_DISCARD)
+					if (ovl[i].flags & OVL_DISCARD)
 						ctx->nDiscardOvls++;
 					else
 						ctx->nKeptOvls++;
@@ -1409,11 +1425,11 @@ static int separateDiscard_handler(void* _ctx, Overlap* ovl, int novl)
 					else
 					{
 						int gap = bestChain->ovls[i]->path.abpos - bestChain->ovls[i - 1]->path.aepos;
-						if (gap > 1000)
-						{
-							gapBasesInA = -1;
-							break;
-						}
+//						if (gap > 1000)
+//						{
+//							gapBasesInA = -1;
+//							break;
+//						}
 						gapBasesInA += gap;
 					}
 					// check for intersection in B
@@ -1431,11 +1447,11 @@ static int separateDiscard_handler(void* _ctx, Overlap* ovl, int novl)
 					else
 					{
 						int gap = bestChain->ovls[i]->path.bbpos - bestChain->ovls[i - 1]->path.bepos;
-						if (gap > 1000)
-						{
-							gapBasesInB = -1;
-							break;
-						}
+//						if (gap > 1000)
+//						{
+//							gapBasesInB = -1;
+//							break;
+//						}
 						gapBasesInB += gap;
 					}
 					overlapBases -= MAX(its_a, its_b);
@@ -1446,8 +1462,8 @@ static int separateDiscard_handler(void* _ctx, Overlap* ovl, int novl)
 					gapBasesInB, overlapBases, gapBasesInA, gapBasesInB);
 #endif
 			// if there is a proper chain between A and B reads, then discard all overlaps between A and B for the repcomp step, (otherwise do repcomp)
-			if (properBeg && properEnd
-					&& itsBasesInA >= 0&& itsBasesInB >=0 && gapBasesInA >=0 && gapBasesInB >=0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
+			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0
+					&& overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
 			{
 #ifdef DEBUG
 				printf("FOUND PROPER CHAIN - EXCLUDE ALL OVLS FROM REPCOMP INPUT\n");
@@ -1546,11 +1562,11 @@ static int separateDiscard_handler(void* _ctx, Overlap* ovl, int novl)
 					else
 					{
 						int gap = bestChain->ovls[i]->path.abpos - bestChain->ovls[i - 1]->path.aepos;
-						if (gap > 1000)
-						{
-							gapBasesInA = -1;
-							break;
-						}
+//						if (gap > 1000)
+//						{
+//							gapBasesInA = -1;
+//							break;
+//						}
 						gapBasesInA += gap;
 					}
 					// check for intersection in B
@@ -1568,11 +1584,11 @@ static int separateDiscard_handler(void* _ctx, Overlap* ovl, int novl)
 					else
 					{
 						int gap = bestChain->ovls[i]->path.bbpos - bestChain->ovls[i - 1]->path.bepos;
-						if (gap > 1000)
-						{
-							gapBasesInB = -1;
-							break;
-						}
+//						if (gap > 1000)
+//						{
+//							gapBasesInB = -1;
+//							break;
+//						}
 						gapBasesInB += gap;
 					}
 					overlapBases -= MAX(its_a, its_b);
@@ -1582,8 +1598,8 @@ static int separateDiscard_handler(void* _ctx, Overlap* ovl, int novl)
 			printf("if(%d && %d && %d >=0 && %d >=0 && %d >=0 && %d >=0 && %d * 0.3 > MAX(%d, %d))\n", properBeg, properEnd, itsBasesInA, itsBasesInB, gapBasesInA,
 					gapBasesInB, overlapBases, gapBasesInA, gapBasesInB);
 #endif
-			if (properBeg && properEnd
-					&& itsBasesInA >= 0&& itsBasesInB >=0 && gapBasesInA >=0 && gapBasesInB >=0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
+			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0
+					&& overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
 			{
 				;
 #ifdef DEBUG
