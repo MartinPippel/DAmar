@@ -56,7 +56,7 @@ then
 		fi
 		
 		# create effective coverage histogram - LArepeat(based on FIX_DB)
-		for y in log_scrub_LArepeat_${db}/*_1.out
+		for y in log_scrub_LArepeat_${RAW_DB}/*_1.out
 		do
 			if [[ -f ${y} ]]
 			then

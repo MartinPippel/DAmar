@@ -378,17 +378,17 @@ then
 		for x in $(cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header)   		
    		do
    			gff=""
-   			if [[ -n ${PB_ARROW_ARROW_GFFOUT} && ${PB_ARROW_ARROW_GFFOUT} -ne 1 ]]
+   			if [[ -n ${PB_ARROW_ARROW_GFFOUT} && ${PB_ARROW_ARROW_GFFOUT} -ne 0 ]]
    			then
    				gff=" -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.gff"	
    			fi 
    			vcf=""
-   			if [[ -n ${PB_ARROW_ARROW_VCFOUT} && ${PB_ARROW_ARROW_VCFOUT} -ne 1 ]]
+   			if [[ -n ${PB_ARROW_ARROW_VCFOUT} && ${PB_ARROW_ARROW_VCFOUT} -ne 0 ]]
    			then
    				vcf=" -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.vcf"	
    			fi
    			fq=""
-   			if [[ -n ${PB_ARROW_ARROW_FQOUT} && ${PB_ARROW_ARROW_FQOUT} -ne 1 ]]
+   			if [[ -n ${PB_ARROW_ARROW_FQOUT} && ${PB_ARROW_ARROW_FQOUT} -ne 0 ]]
    			then
    				fq=" -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fq"	
    			fi
