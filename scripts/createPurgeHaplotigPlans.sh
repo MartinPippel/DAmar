@@ -57,7 +57,7 @@ then
         done
         ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
         
-        echo "minimap2 -t ${CT_PURGEHAPLOTIGS_MINIMAP2IDXTHREADS} -x map-pb -d ${ref}.idx ${ref}.fasta" > purgeHaplotigs_02_createMinimap2RefIndex_single_${FIX_DB}.${slurmID}.plan
+        echo "minimap2 -t ${CT_PURGEHAPLOTIGS_MINIMAP2IDXTHREADS} -x map-pb -d ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.idx ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta" > purgeHaplotigs_02_createMinimap2RefIndex_single_${FIX_DB}.${slurmID}.plan
     ### 3-minimap2
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -103,7 +103,7 @@ then
    		do
         	name=$(basename ${x%.subreads.fasta.gz})
         	    		
-    	echo "minimap2 -a -x map-pb -t ${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS} ${ref}.idx ${x} | samtools view -hF 256 - | samtools sort -@ ${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS} -m ${CT_PURGEHAPLOTIGS_SAMTOOLSMEM}G -o ${ref}_${name}_minmap2.sort.bam -T ${ref}_${name}_minmap2.sort.tmp"        	
+    	echo "minimap2 -a -x map-pb -t ${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.idx ${x} | samtools view -hF 256 - | samtools sort -@ ${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS} -m ${CT_PURGEHAPLOTIGS_SAMTOOLSMEM}G -o ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_${name}_minmap2.sort.bam -T /tmp/${ref}_${name}_minmap2.sort.tmp"        	
 		done > purgeHaplotigs_03_minimap2_block_${FIX_DB}.${slurmID}.plan 
     	echo "minimap2 $(minimap2 --version)" > purgeHaplotigs_03_minimap2_block_${FIX_DB}.${slurmID}.version
 		echo "samtools $(samtools 2>&1 | grep Version | awk '{print $2}')" >> purgeHaplotigs_03_minimap2_block_${FIX_DB}.${slurmID}.version		
