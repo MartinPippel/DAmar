@@ -75,7 +75,7 @@ then
                 
         # sanity checks
    		numFiles=0 
-   		for x in ${CT_PURGEHAPLOTIGS_BAM}/*.subreads.fa.gz   		
+   		for x in ${CT_PURGEHAPLOTIGS_PACBIOFASTA}/*.subreads.fa.gz   		
    		do
    			if [[ ! -f ${x} || ! -s ${x} ]]
    			then
@@ -99,7 +99,7 @@ then
 			exit 1
 		fi
 		
-        for x in ${CT_PURGEHAPLOTIGS_BAM}/*.subreads.fa.gz   		
+        for x in ${CT_PURGEHAPLOTIGS_PACBIOFASTA}/*.subreads.fa.gz   		
    		do
         	name=$(basename ${x%.subreads.fasta.gz})
         	    		
