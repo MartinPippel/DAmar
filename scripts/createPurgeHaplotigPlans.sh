@@ -93,54 +93,6 @@ then
 		
 		ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
 		
-		if [[ ! -f echo "if [[ -d ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ]]; then mv ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" > purgeHaplotigs_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
-		echo "ln -s -r ${CT_PURGEHAPLOTIGS_INFASTA} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" >> purgeHaplotigs_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
-	### 2-createMinimap2RefIndex
-    elif [[ ${currentStep} -eq 2 ]]
-    then
-    	### clean up plans 
-        for x in $(ls purgeHaplotigs_02_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done
-        ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
-        
-        echo "minimap2 -t ${CT_PURGEHAPLOTIGS_MINIMAP2IDXTHREADS} -x map-pb -d ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.idx ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta" > purgeHaplotigs_02_createMinimap2RefIndex_single_${FIX_DB}.${slurmID}.plan
-    ### 3-minimap2
-    elif [[ ${currentStep} -eq 3 ]]
-    then
-        ### clean up plans 
-        for x in $(ls purgeHaplotigs_03_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done
-        
-        if [[ ! -d ${CT_PURGEHAPLOTIGS_PACBIOFASTA} ]]
-        then
-        	(>&2 echo "ERROR - Variable ${CT_PURGEHAPLOTIGS_PACBIOFASTA} is not set or cannot be accessed")
-        	exit 1
-        fi
-                
-        # sanity checks
-   		numFiles=0 
-   		for x in ${CT_PURGEHAPLOTIGS_PACBIOFASTA}/*.subreads.fa.gz   		
-   		do
-   			if [[ ! -f ${x} || ! -s ${x} ]]
-   			then
-   				(>&2 echo "WARNING - file ${x} not available or empty")
-   			else
-   				numFiles=$((${numFiles}+1))
-   			fi      						
-   		done
-
-		if [[ ${numFiles} -eq 0 ]]
-		then
-			(>&2 echo "ERROR - no input bam file found")
-	       	exit 1	
-		fi
-		
-		ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
-		
 		if [[ ! -f ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.idx ]]
 		then 
 			(>&2 echo "ERROR - file ${ref}.idx not available. Create an reference index first!")
