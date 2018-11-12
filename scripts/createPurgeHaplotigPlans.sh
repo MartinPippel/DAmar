@@ -105,7 +105,7 @@ then
    		do
         	name=$(basename ${x%.subreads.fa.gz})
         	    		
-    	echo "minimap2 -a -x map-pb -t ${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.idx ${x} | samtools view -hF 256 - | samtools sort -@ ${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS} -m ${CT_PURGEHAPLOTIGS_SAMTOOLSMEM}G -o ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_${name}_minmap2.sort.bam -T /tmp/${ref}_${name}_minimap2.sort.tmp && samtools index -@ ${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_${name}_minimap2.sort.bam"        	
+    	echo "minimap2 -a -x map-pb -t ${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.idx ${x} | samtools view -hF 256 - | samtools sort -@ ${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS} -m ${CT_PURGEHAPLOTIGS_SAMTOOLSMEM}G -o ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_${name}_minimap2.sort.bam -T /tmp/${ref}_${name}_minimap2.sort.tmp && samtools index -@ ${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_${name}_minimap2.sort.bam"        	
 		done > purgeHaplotigs_03_minimap2_block_${FIX_DB}.${slurmID}.plan 
     	echo "minimap2 $(${PURGEHAPLOTIGS_ENV} && minimap2 --version && ${PURGEHAPLOTIGS_ENV_DEACT})" > purgeHaplotigs_03_minimap2_block_${FIX_DB}.${slurmID}.version
 		echo "samtools $(${PURGEHAPLOTIGS_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PURGEHAPLOTIGS_ENV_DEACT})" >> purgeHaplotigs_03_minimap2_block_${FIX_DB}.${slurmID}.version
@@ -134,7 +134,7 @@ then
         
                 
     	# create input bam file list 
-   		for x in ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_*_minmap2.sort.bam   		
+   		for x in ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_*_minimap2.sort.bam   		
    		do
    			if [[ ! -f ${x} || ! -s ${x} ]]
    			then
