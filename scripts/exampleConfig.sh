@@ -23,6 +23,7 @@ SUBMIT_SCRIPTS_PATH="${MARVEL_PATH}/scripts"
 PACBIO_ARROW_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate base"
 ############################## activate purgehaplotigs environment if requires
 PURGEHAPLOTIGS_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate purge_haplotigs_env"
+PURGEHAPLOTIGS_ENV_DEACT="source /projects/dazzler/pippel/prog/miniconda3/bin/deactivate purge_haplotigs_env"
 
 ### ENVIRONMENT VARIABLES 
 export PATH=${MARVEL_PATH}/bin:${MARVEL_PATH}/scripts:$PATH
