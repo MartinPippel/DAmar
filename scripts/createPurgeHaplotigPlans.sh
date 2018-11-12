@@ -27,16 +27,6 @@ then
  gsize=$((${GSIZE:0:$i}*1000))
 fi
 
-function setMinimap2Options()
-{
-    PURGEHAPLOTIGS_MINIMAP2_OPT=""
-	if [[ -n ${PB_ARROW_PBALIGN_THREADS} && ${PB_ARROW_PBALIGN_THREADS} -gt 0 ]]
-	then 
-		ARROW_PBALIGN_OPT="${ARROW_PBALIGN_OPT} --nproc ${PB_ARROW_PBALIGN_THREADS}"
-	fi	
-
-}
-
 myTypes=("1-prepInFasta, 2-createMinimap2RefIndex, 3-minimap2, 4-bamMerge, 5-readCovHist, 6-contigCovHist, 7-purgeHaplotigs, 8-statistics")
 if [[ ${CT_PURGEHAPLOTIGS_TYPE} -eq 0 ]]
 then 
@@ -117,6 +107,11 @@ then
 		done > purgeHaplotigs_03_minimap2_block_${FIX_DB}.${slurmID}.plan 
     	echo "minimap2 $(minimap2 --version)" > purgeHaplotigs_03_minimap2_block_${FIX_DB}.${slurmID}.version
 		echo "samtools $(samtools 2>&1 | grep Version | awk '{print $2}')" >> purgeHaplotigs_03_minimap2_block_${FIX_DB}.${slurmID}.version		
+    else
+        (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${CT_PURGEHAPLOTIGS_TYPE}]}")
+        exit 1            
+    fi    		
 else
     (>&2 echo "unknown CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE}")
     (>&2 echo "supported types")
