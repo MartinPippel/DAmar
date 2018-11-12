@@ -25,7 +25,6 @@ PACBIO_ARROW_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate b
 PURGEHAPLOTIGS_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate purge_haplotigs_env"
 
 ### ENVIRONMENT VARIABLES 
-export PYTHONUSERBASE=${PACBIO_ARROW_TOOLS}
 export PATH=${MARVEL_PATH}/bin:${MARVEL_PATH}/scripts:$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:$PYTHONPATH
 
@@ -666,10 +665,12 @@ THREADS_arrow=${PB_ARROW_ARROW_THREADS}
 MEM_arrow=$((${PB_ARROW_ARROW_THREADS}*4096+4096))     
 TIME_arrow=24:00:00
 
+########### minimap2 alignment
 THREADS_minimap2=${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS}
 MEM_minimap2=$((${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS}*4096))     
 TIME_minimap2=24:00:00
 
+########### minimap2 reference index
 THREADS_createMinimap2RefIndex=${CT_PURGEHAPLOTIGS_MINIMAP2IDXTHREADS}
 MEM_createMinimap2RefIndex=$((${CT_PURGEHAPLOTIGS_MINIMAP2IDXTHREADS}*4096))     
 TIME_createMinimap2RefIndex=24:00:00

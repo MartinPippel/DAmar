@@ -102,10 +102,10 @@ elif [[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 ]]
 then 
     currentPhase=9
     currentStep=${PB_ARROW_SUBMIT_SCRIPTS_FROM}
-elif [[ ${CT_PURGEHAPLOPTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+elif [[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=10
-    currentStep=${CT_PURGEHAPLOPTIGS_SUBMIT_SCRIPTS_FROM}                    
+    currentStep=${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM}                    
 else 
     echo "nothing to do"
     exit 0
