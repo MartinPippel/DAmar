@@ -612,7 +612,16 @@ then
         sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     fi
-fi  
+fi
+
+if [[ ${currentPhase} -eq 10 && ${foundNext} -eq 0 ]]
+then 
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]]
+    then 
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+    fi
+fi    
 
 if [[ ${foundNext} -eq 0 ]]
 then
