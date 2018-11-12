@@ -544,6 +544,8 @@ CT_PURGEHAPLOTIGS_MINIMAP2IDXTHREADS=8										# number of threads to create re
 CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS=24										# number of threads to align reads
 CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS=8
 CT_PURGEHAPLOTIGS_SAMTOOLSMEM=1
+### purgeHaplotigs
+CT_PURGEHAPLOTIGS_THREADS=24
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
@@ -681,3 +683,7 @@ THREADS_bamMerge=${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS}
 MEM_bamMerge=$((${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS}*4096))     
 TIME_bamMerge=24:00:00
 
+########### purgeHaplotigs readCovHist
+THREADS_readCovHist=${CT_PURGEHAPLOTIGS_THREADS}
+MEM_readCovHist=$((${CT_PURGEHAPLOTIGS_THREADS}*2048))     
+TIME_readCovHist=24:00:00

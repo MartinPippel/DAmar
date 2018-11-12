@@ -146,7 +146,38 @@ then
         	    		
     	echo "samtools merge -b ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/bamlist.fofn -@ ${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_minimap2.sort.bam" > purgeHaplotigs_04_bamMerge_single_${FIX_DB}.${slurmID}.plan
     	echo "samtools index -@ ${CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_minimap2.sort.bam" >> purgeHaplotigs_04_bamMerge_single_${FIX_DB}.${slurmID}.plan
-   		echo "samtools $(${PURGEHAPLOTIGS_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PURGEHAPLOTIGS_ENV_DEACT})" > purgeHaplotigs_04_bamMerge_single_${FIX_DB}.${slurmID}.version				
+   		echo "samtools $(${PURGEHAPLOTIGS_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PURGEHAPLOTIGS_ENV_DEACT})" > purgeHaplotigs_04_bamMerge_single_${FIX_DB}.${slurmID}.version
+   	### 5-readCovHist
+    elif [[ ${currentStep} -eq 5 ]]
+    then
+        ### clean up plans 
+        for x in $(ls purgeHaplotigs_05_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        if [[ ! -d ${CT_PURGEHAPLOTIGS_PACBIOFASTA} ]]
+        then
+        	(>&2 echo "ERROR - Variable ${CT_PURGEHAPLOTIGS_PACBIOFASTA} is not set or cannot be accessed")
+        	exit 1
+        fi
+        
+        ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
+		
+		if [[ ! -f ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.idx ]]
+		then 
+			(>&2 echo "ERROR - file ${ref}.idx not available. Create an reference index first!")
+			exit 1
+		fi
+        
+		if [[ -f ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_minimap2.sort.bam ]] 
+        then 
+        	(>&2 echo "ERROR - file ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_minimap2.sort.bam not available.")
+			exit 1
+    	fi
+    	
+    	echo "purge_haplotigs readhist -b ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_minimap2.sort.bam -g ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta -t ${CT_PURGEHAPLOTIGS_THREADS}" > purgeHaplotigs_05_readCovHist_single_${FIX_DB}.${slurmID}.plan
+    	echo "purge_haplotigs $(${PURGEHAPLOTIGS_ENV} && conda list purge_haplotigs | grep -e "^purge_haplotigs" | awk '{print $2}' && ${PURGEHAPLOTIGS_ENV_DEACT})" > purgeHaplotigs_05_readCovHist_single_${FIX_DB}.${slurmID}.version	   						
     else
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PURGEHAPLOTIGS_TYPE}]}")
