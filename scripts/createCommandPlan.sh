@@ -139,7 +139,15 @@ then
     then 
         (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createPacBioArrowPlans.sh failed some how. Stop here.")
         exit 1      
-    fi 
+    fi
+elif [[ ${currentPhase} -eq 10 ]]
+then 
+    ${SUBMIT_SCRIPTS_PATH}/createPurgeHaplotigPlans.sh ${configFile} ${currentStep} ${slurmID}
+    if [ $? -ne 0 ]
+    then 
+        (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createPurgeHaplotigPlans.sh failed some how. Stop here.")
+        exit 1      
+    fi      
 else
     (>&2 echo "unknown assembly phase: ${currentPhase}")
     exit 1
