@@ -46,7 +46,7 @@ then
    		fi
    		
    		echo "if [[ -d ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ]]; then mv ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" > purgeHaplotigs_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
-		echo "ln -s ${CT_PURGEHAPLOTIGS_INFASTA} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" >> purgeHaplotigs_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
+		echo "ln -s -r ${CT_PURGEHAPLOTIGS_INFASTA} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" >> purgeHaplotigs_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
 	### 2-createMinimap2RefIndex
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -75,7 +75,7 @@ then
                 
         # sanity checks
    		numFiles=0 
-   		for x in ${CT_PURGEHAPLOTIGS_BAM}/*.subreads.fasta.gz   		
+   		for x in ${CT_PURGEHAPLOTIGS_BAM}/*.subreads.fa.gz   		
    		do
    			if [[ ! -f ${x} || ! -s ${x} ]]
    			then
@@ -99,7 +99,7 @@ then
 			exit 1
 		fi
 		
-        for x in ${CT_PURGEHAPLOTIGS_BAM}/*.subreads.fasta.gz   		
+        for x in ${CT_PURGEHAPLOTIGS_BAM}/*.subreads.fa.gz   		
    		do
         	name=$(basename ${x%.subreads.fasta.gz})
         	    		
