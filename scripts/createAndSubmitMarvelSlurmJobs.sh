@@ -88,9 +88,13 @@ function getPhaseFilePrefix()
         echo "cont"
     elif [[ ${currentPhase} -eq 9 ]]
     then
-        echo "arrow"       
+        echo "arrow"
+    elif [[ ${currentPhase} -eq 10 ]]
+    then
+        echo "purgeHaplotigs"       
+               
     else
-        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow)")
+        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs)")
         exit 1
     fi
 }
@@ -209,7 +213,15 @@ then
 	            then
 	                echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	            fi 
-	
+	            
+				if [[ ${prefix} == "arrow" ]]
+				then
+					echo -e "\n${PACBIO_ARROW_ENV}" >> ${file}.slurm
+				elif [[ ${prefix} == "purgeHaplotigs" ]]
+				then	
+					echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm			
+				fi
+				
 	            echo "export PATH=${MARVEL_PATH}/bin:\$PATH
 export PATH=${MARVEL_PATH}/scripts:\$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:\$PYTHONPATH
@@ -247,9 +259,17 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --time=${TIME}
 #SBATCH --mem=${MEM}
 #SBATCH --mail-user=pippel@mpi-cbg.de
-#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=FAIL" > ${file}.slurm
 
-export PATH=${MARVEL_PATH}/bin:\$PATH
+				if [[ ${prefix} == "arrow" ]]
+				then
+					echo -e "\n${PACBIO_ARROW_ENV}" >> ${file}.slurm
+				elif [[ ${prefix} == "purgeHaplotigs" ]]
+				then	
+					echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm			
+				fi
+
+				echo "export PATH=${MARVEL_PATH}/bin:\$PATH
 export PATH=${MARVEL_PATH}/scripts:\$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:\$PYTHONPATH
 
@@ -269,7 +289,7 @@ done
 
 end=\$(date +%s)
 echo \"${file}.plan end \$end\"
-echo \"${file}.plan run time: $((${end}-${beg}))\"" > ${file}}.slurm
+echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
 	        fi
 	        d=$(($d+1))
 	        from=$((${to}+1))
@@ -302,6 +322,14 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" > ${file}}.slurm
 	        then
 	            echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	        fi 
+	        
+			if [[ ${prefix} == "arrow" ]]
+			then
+				echo -e "\n${PACBIO_ARROW_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "purgeHaplotigs" ]]
+			then	
+				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm			
+			fi
 	
 	        echo "export PATH=${MARVEL_PATH}/bin:\$PATH
 export PATH=${MARVEL_PATH}/scripts:\$PATH
@@ -340,9 +368,17 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --time=${TIME}
 #SBATCH --mem=${MEM}
 #SBATCH --mail-user=pippel@mpi-cbg.de
-#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=FAIL" > ${file}.slurm
 
-export PATH=${MARVEL_PATH}/bin:\$PATH
+			if [[ ${prefix} == "arrow" ]]
+			then
+				echo -e "\n${PACBIO_ARROW_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "purgeHaplotigs" ]]
+			then	
+				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm			
+			fi
+
+			echo "export PATH=${MARVEL_PATH}/bin:\$PATH
 export PATH=${MARVEL_PATH}/scripts:\$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:\$PYTHONPATH
 
@@ -362,7 +398,7 @@ done
 
 end=\$(date +%s)
 echo \"${file}.plan end \$end\"
-echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" > ${file}.slurm
+echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 	    fi
 	fi
 fi

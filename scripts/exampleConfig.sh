@@ -20,21 +20,14 @@ DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzler/"
 SUBMIT_SCRIPTS_PATH="${MARVEL_PATH}/scripts"
 
 ############################## tools for pacbio arrow correction 
-### samtools
-SAMTOOLS_PATH="/projects/dazzler/pippel/prog/samtools/samtools-1.8"
-### bamtools 
-BAMTOOLS_PATH="/projects/dazzler/pippel/prog/bamtools/build"
-### arrow path
-PACBIO_ARROW_TOOLS="/projects/dazzler/pippel/prog/pacbio/FALCON_ALL_PREBUILD"
+PACBIO_ARROW_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate base"
+############################## activate purgehaplotigs environment if requires
+PURGEHAPLOTIGS_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate purge_haplotigs_env"
 
 ### ENVIRONMENT VARIABLES 
 export PYTHONUSERBASE=${PACBIO_ARROW_TOOLS}
-export LD_LIBRARY_PATH=${PACBIO_ARROW_TOOLS}/lib:${LD_LIBRARY_PATH}
-export PATH=${PACBIO_ARROW_TOOLS}/bin:${PACBIO_ARROW_TOOLS}:${PATH}
 export PATH=${MARVEL_PATH}/bin:${MARVEL_PATH}/scripts:$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:$PYTHONPATH
-export PATH=${SAMTOOLS_PATH}/bin:$PATH
-export PATH=${BAMTOOLS_PATH}/bin:$PATH
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -145,6 +138,13 @@ PB_ARROW_TYPE=0
 #type-0 steps: 1-prepInFasta, 2-pbalign, 3-bamsplit, 4-bamseparate, 5-bamMerge, 6-arrow, 7-statistics
 PB_ARROW_SUBMIT_SCRIPTS_FROM=1
 PB_ARROW_SUBMIT_SCRIPTS_TO=7
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 10 - contig purge haplotigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+CT_PURGEHAPLOTIGS_TYPE=0
+#type-0 steps: 1-prepInFasta, 2-createMinimap2RefIndex, 3-minimap2, 4-bamMerge, 5-readCovHist, 6-contigCovHist, 7-purgeHaplotigs, 8-statistics
+CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM=1
+CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO=8
 
 # ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 
@@ -532,6 +532,18 @@ PB_ARROW_ARROW_GFFOUT=1
 PB_ARROW_ARROW_FQOUT=1
 PB_ARROW_ARROW_VCFOUT=1
 
+# ----------------------------------------------------------------- CONTIG PURGEHAPLPOTIGS OPTIONS ----------------------------------------------------------------------------------------------------
+
+### general options
+CT_PURGEHAPLOTIGS_RUNID=1													# used for output directory purgeHaplotigs_run${PB_ARROW_RUNID}
+CT_PURGEHAPLOTIGS_PACBIOFASTA="${DB_PATH}"   								# directory with pacbio fasta files
+CT_PURGEHAPLOTIGS_OUTDIR="${FIX_FILT_OUTDIR}"
+CT_PURGEHAPLOTIGS_INFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
+### minimap2
+CT_PURGEHAPLOTIGS_MINIMAP2IDXTHREADS=8										# number of threads to create reference index
+CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS=24										# number of threads to align reads
+CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS=8
+CT_PURGEHAPLOTIGS_SAMTOOLSMEM=1
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
@@ -653,3 +665,12 @@ TIME_pbalign=24:00:00
 THREADS_arrow=${PB_ARROW_ARROW_THREADS}
 MEM_arrow=$((${PB_ARROW_ARROW_THREADS}*4096+4096))     
 TIME_arrow=24:00:00
+
+THREADS_minimap2=${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS}
+MEM_minimap2=$((${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS}*4096))     
+TIME_minimap2=24:00:00
+
+THREADS_createMinimap2RefIndex=${CT_PURGEHAPLOTIGS_MINIMAP2IDXTHREADS}
+MEM_createMinimap2RefIndex=$((${CT_PURGEHAPLOTIGS_MINIMAP2IDXTHREADS}*4096))     
+TIME_createMinimap2RefIndex=24:00:00
+

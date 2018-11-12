@@ -101,7 +101,11 @@ then
 elif [[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=9
-    currentStep=${PB_ARROW_SUBMIT_SCRIPTS_FROM}        
+    currentStep=${PB_ARROW_SUBMIT_SCRIPTS_FROM}
+elif [[ ${CT_PURGEHAPLOPTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+then 
+    currentPhase=10
+    currentStep=${CT_PURGEHAPLOPTIGS_SUBMIT_SCRIPTS_FROM}                    
 else 
     echo "nothing to do"
     exit 0
@@ -122,7 +126,7 @@ then
 	cd ${PATCHING_DIR}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
-elif [[ ${currentPhase} -lt 10 ]]
+elif [[ ${currentPhase} -lt 11 ]]
 then
 	if [[ -z "${FIX_REPMASK_USELAFIX_PATH}" ]]
 	then 
