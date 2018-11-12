@@ -170,7 +170,7 @@ then
 			exit 1
 		fi
         
-		if [[ -f ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_minimap2.sort.bam ]] 
+		if [[ ! -f ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_minimap2.sort.bam ]] 
         then 
         	(>&2 echo "ERROR - file ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_minimap2.sort.bam not available.")
 			exit 1
