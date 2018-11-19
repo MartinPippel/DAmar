@@ -2114,245 +2114,221 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 
 	if (ctx->nMinNonRepeatBases != -1)
 	{
-		int b, e, rb, re, ovllen, repeat, repeat_read;
-		int tmpRB, tmpRE;
+		int b, e, rb, re, ovllen, repeat;
+
 		track_anno* repeats_anno = ctx->trackRepeat->anno;
 		track_data* repeats_data = ctx->trackRepeat->data;
 
-		b = repeats_anno[ovl->aread] / sizeof(track_data);
-		e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
-		ovllen = ovl->path.aepos - ovl->path.abpos;
-		repeat = repeat_read = 0;
+		int rp_mergeTip_ab = trim_ab;
+		int rp_mergeTip_ae = trim_ae;
 
-		rb = trim_ab;
-		re = trim_ab + ctx->rp_mergeTips;
+		int extendRepeatAtFront = 0;
 
-//		printf("check ovl %d %d a:[%d, %d] b:[%d, %d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos);
-		int stop = 0;
-		while (b < e)
+		if (ctx->rp_mergeTips)
 		{
-			tmpRB = repeats_data[b];
-			tmpRE = repeats_data[b + 1];
+			int cumRep = 0;
 
-//			printf(" rep in trim [%d %d] tmpRep [%d, %d]\n", trim_ab, trim_ae, tmpRB, tmpRE);
+			b = repeats_anno[ovl->aread] / sizeof(track_data);
+			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
 
-			// ignore repeats that are not in the trim interval
-			if (tmpRE < trim_ab)
+			while (b < e)
 			{
-				b += 2;
-				continue;
-			}
+				rb = repeats_data[b];
+				re = repeats_data[b + 1];
 
-			if (tmpRB > rb && tmpRE < re)
-			{
-//				printf(" ignore contained rb, re [%d, %d]\n", rb, re);
-				b += 2;
-				continue;
-			}
-			if ((tmpRB - re < ctx->rm_merge) && (tmpRE - tmpRB > 100 && re - rb > 100))
-			{
-//				printf("repeats [%d, %d] and [%d, %d] joinable --> [%d, %d]\n", rb, re, tmpRB, tmpRE, rb, tmpRE);
-				re = tmpRE;
+				// ignore repeats starting behind rp_mergeTip offset
+				if (rb > trim_ab + ctx->rp_mergeTips)
+					break;
 
-				if (re >= trim_ae - ctx->rp_mergeTips)
-				{
-					re = trim_ae;
-					stop = 1;
-				}
-
-//				printf(" rb&re [%d, %d]\n", rb, re);
-				if (b + 2 < e && !stop)
+				// ignore repeat in front of trim intervaL
+				if (re < trim_ab)
 				{
 					b += 2;
 					continue;
 				}
-			}
 
-			repeat_read += (re - rb);
-			repeat += intersect(ovl->path.abpos, ovl->path.aepos, rb, re);
+				if (rb < trim_ab)
+				{
+					cumRep += re - trim_ab;
+				}
+				else
+				{
+					cumRep += re - rb;
+				}
 
-//			printf(" ovl %d vs %d a:[%d, %d] b:[%d, %d] -> rep [%d, %d] repeat_read %d, repeat %d\n", ovl->aread, ovl->bread,
-//					ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, rb, re, repeat_read, repeat);
+				if (re > trim_ab + ctx->rp_mergeTips)
+					break;
 
-			if (stop)
-			{
-//				printf("break, reached end\n");
-				break;
-			}
-
-			rb = tmpRB;
-			re = tmpRE;
-
-//			printf(" rb&re [%d, %d]\n", rb, re);
-
-			if (re > trim_ae - ctx->rp_mergeTips)
-			{
-				re = trim_ae;
-				stop = 1;
-			}
-
-			if (rb > trim_ae - ctx->rp_mergeTips)
-			{
-				rb = trim_ae - ctx->rp_mergeTips;
-			}
-
-			if (b + 2 < e && !stop)
-			{
 				b += 2;
-				continue;
 			}
-			else
+
+			if (cumRep > 1 + ctx->rp_mergeTips / 3)
 			{
-				repeat_read += (re - rb);
-				repeat += intersect(ovl->path.abpos, ovl->path.aepos, rb, re);
-//				printf("LAST repeat [%d, %d]:  ovl %d vs %d repeat_read %d, repeat %d, uniq bases %d\n", rb, re, ovl->aread, ovl->bread, repeat_read, repeat,
-//						ovllen - repeat);
-				break;
+				rp_mergeTip_ab = trim_ab + ctx->rp_mergeTips;
 			}
-			b += 2;
+
+			// check end of the Aread
+			cumRep = 0;
+
+			b = repeats_anno[ovl->aread] / sizeof(track_data);
+			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
+
+			while (b < e)
+			{
+				rb = repeats_data[b];
+				re = repeats_data[b + 1];
+
+				// ignore repeats that end before trim_ae - rp_mergeTip offset
+				if (re < trim_ae - ctx->rp_mergeTips)
+				{
+					b += 2;
+					continue;
+				}
+
+				// ignore repeat behind end of trim intervaL
+				if (rb > trim_ae)
+				{
+					break;
+				}
+
+				if (re > trim_ae)
+				{
+					cumRep += trim_ae - rb;
+				}
+				else
+				{
+					cumRep += re - rb;
+				}
+
+				b += 2;
+			}
+
+			if (cumRep > 1 + ctx->rp_mergeTips / 3)
+			{
+				rp_mergeTip_ae = trim_ae - ctx->rp_mergeTips;
+			}
 		}
 
-		if (repeat > 0 && ovllen - repeat < ctx->nMinNonRepeatBases)
+		if (rp_mergeTip_ae < rp_mergeTip_ab)
 		{
 			if (ctx->nVerbose)
 			{
-				printf("overlap %d -> %d [ %d-%d %d-%d] : drop due to repeat in a\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos,
-						ovl->path.bepos);
+				printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
 			}
 
 			ctx->nFilteredRepeat++;
 			ret |= OVL_DISCARD | OVL_REPEAT;
-		}
-
-		b = repeats_anno[ovl->bread] / sizeof(track_data);
-		e = repeats_anno[ovl->bread + 1] / sizeof(track_data);
-		ovllen = ovl->path.bepos - ovl->path.bbpos;
-
-		int bbpos, bepos;
-
-		if (ovl->flags & OVL_COMP)
-		{
-			bbpos = ovlBLen - ovl->path.bepos;
-			bepos = ovlBLen - ovl->path.bbpos;
 		}
 		else
 		{
-			bbpos = ovl->path.bbpos;
-			bepos = ovl->path.bepos;
-		}
 
-		repeat = repeat_read = 0;
+			// Check A-read !!!!
 
-		rb = trim_bb;
-		re = trim_bb + ctx->rp_mergeTips;
+			b = repeats_anno[ovl->aread] / sizeof(track_data);
+			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
+			ovllen = MIN(ovl->path.aepos, rp_mergeTip_ae) - MAX(ovl->path.abpos, rp_mergeTip_ab);
+			repeat = 0;
 
-//		printf("%d ", ovl->bread);
-		stop = 0;
-		while (b < e)
-		{
-			tmpRB = repeats_data[b];
-			tmpRE = repeats_data[b + 1];
-
-//			printf(" rep in trim [%d %d] tmpRep [%d, %d]\n", trim_bb, trim_be, tmpRB, tmpRE);
-
-			// ignore repeats that are not in the trim interval
-			if (tmpRE < trim_bb)
+			while (b < e)
 			{
-				b += 2;
-				continue;
-			}
+				rb = repeats_data[b];
+				re = repeats_data[b + 1];
 
-			if (tmpRB > rb && tmpRE < re)
-			{
-//				printf(" ignore contained rb, re [%d, %d]\n", rb, re);
-				b += 2;
-				continue;
-			}
-			if ((tmpRB - re < ctx->rm_merge) && (tmpRE - tmpRB > 100 && re - rb > 100))
-			{
-//				printf("repeats [%d, %d] and [%d, %d] joinable --> [%d, %d]\n", rb, re, tmpRB, tmpRE, rb, tmpRE);
-				re = tmpRE;
-
-				if (re >= trim_be - ctx->rp_mergeTips)
-				{
-					re = trim_be;
-					stop = 1;
-				}
-
-//				printf(" rb&re [%d, %d]\n", rb, re);
-				if (b + 2 < e && !stop)
+				if (re < rp_mergeTip_ab || rb > rp_mergeTip_ae)
 				{
 					b += 2;
 					continue;
 				}
-			}
 
-			repeat_read += (re - rb);
-			repeat += intersect(bbpos, bepos, rb, re);
+				if (rb < rp_mergeTip_ab)
+				{
+					rb = rp_mergeTip_ab;
+				}
 
-//			printf(" ovl %d vs %d a:[%d, %d] b:[%d, %d] -> rep [%d, %d] repeat_read %d, repeat %d\n", ovl->aread, ovl->bread,
-//					ovl->path.abpos, ovl->path.aepos, bbpos, bepos, rb, re, repeat_read, repeat);
+				if (re > rp_mergeTip_ae)
+				{
+					re = rp_mergeTip_ae;
+				}
 
-			if (stop)
-			{
-//				printf("break, reached end\n");
-				break;
-			}
+				repeat += intersect(ovl->path.abpos, ovl->path.aepos, rb, re);
 
-			rb = tmpRB;
-			re = tmpRE;
-
-//			printf(" rb&re [%d, %d]\n", rb, re);
-
-			if (re > trim_be - ctx->rp_mergeTips)
-			{
-				re = trim_be;
-				stop = 1;
-			}
-
-			if (rb > trim_be - ctx->rp_mergeTips)
-			{
-				rb = trim_be - ctx->rp_mergeTips;
-			}
-
-			if (b + 2 < e && !stop)
-			{
 				b += 2;
-				continue;
 			}
-			else
+
+			assert(repeat <= ovllen);
+
+			if (repeat > 0 && ovllen - repeat < ctx->nMinNonRepeatBases)
 			{
-				repeat_read += (re - rb);
-				repeat += intersect(bbpos, bepos, rb, re);
-//				printf("LAST repeat [%d, %d]:  ovl %d vs %d repeat_read %d, repeat %d, uniq bases %d\n", rb, re, ovl->aread, ovl->bread, repeat_read, repeat,
-//						ovllen - repeat);
-				break;
+				if (ctx->nVerbose)
+				{
+					printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
+				}
+
+				ctx->nFilteredRepeat++;
+				ret |= OVL_DISCARD | OVL_REPEAT;
 			}
-			b += 2;
-		}
-
-//		while (b < e)
-//		{
-//			rb = repeats_data[b];
-//			re = repeats_data[b + 1];
-//
-//			repeat += intersect(bbpos, bepos, rb, re);
-//			repeat_read += (re - rb);
-//
-//			b += 2;
-//		}
-
-		if (repeat > 0 && ovllen - repeat < ctx->nMinNonRepeatBases)
-		{
-			if (ctx->nVerbose)
+			else // check B-Read only if we don't know yet if overlap is discarded by repeat
 			{
-				printf("overlap %d -> %d [ %d-%d %d-%d] : drop due to repeat in b\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos,
-						ovl->path.bepos);
+
+				b = repeats_anno[ovl->bread] / sizeof(track_data);
+				e = repeats_anno[ovl->bread + 1] / sizeof(track_data);
+
+				// roughly map rp_mergeTip positions to B-read
+				ovllen = ovl->path.bepos - ovl->path.bbpos;
+
+				if (ovl->path.aepos > rp_mergeTip_ae)
+					ovllen -= (ovl->path.aepos - rp_mergeTip_ae);
+
+				if (ovl->path.abpos < rp_mergeTip_ab)
+					ovllen -= (rp_mergeTip_ab - ovl->path.abpos);
+
+				int bbpos, bepos;
+
+				if (ovl->flags & OVL_COMP)
+				{
+					if (ovl->path.aepos > rp_mergeTip_ae)
+						bbpos = ovlBLen - (ovl->path.bepos - (ovl->path.aepos - rp_mergeTip_ae));
+					else
+						bbpos = ovlBLen - ovl->path.bepos;
+					if (ovl->path.abpos < rp_mergeTip_ab)
+						bepos = ovlBLen - (ovl->path.bbpos - (rp_mergeTip_ab - ovl->path.abpos));
+					else
+						bepos = ovlBLen - ovl->path.bbpos;
+				}
+				else
+				{
+					bbpos = ovl->path.bbpos;
+					if (ovl->path.abpos < rp_mergeTip_ab)
+						bbpos += rp_mergeTip_ab - ovl->path.abpos;
+					bepos = ovl->path.bepos;
+					if (ovl->path.aepos > rp_mergeTip_ae)
+						bepos -= ovl->path.aepos - rp_mergeTip_ae;
+				}
+
+				repeat = 0;
+
+				while (b < e)
+				{
+					rb = repeats_data[b];
+					re = repeats_data[b + 1];
+
+					repeat += intersect(bbpos, bepos, rb, re);
+
+					b += 2;
+				}
+
+				if (repeat > 0 && ovllen - repeat < ctx->nMinNonRepeatBases)
+				{
+					if (ctx->nVerbose)
+					{
+						printf("overlap %d -> %d: drop due to repeat in b\n", ovl->aread, ovl->bread);
+					}
+
+					ctx->nFilteredRepeat++;
+
+					ret |= OVL_DISCARD | OVL_REPEAT;
+				}
 			}
-
-			ctx->nFilteredRepeat++;
-
-			ret |= OVL_DISCARD | OVL_REPEAT;
 		}
 	}
 
@@ -2973,7 +2949,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					}
 				}
 
-				if(foundMultiMapper)
+				if (foundMultiMapper)
 				{
 					ctx->nMultiMapper++;
 					numMultiMapper++;
@@ -2981,10 +2957,10 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					{
 						if (!(ovl[l].flags & OVL_DISCARD))
 						{
-	#ifdef VERBOSE
+#ifdef VERBOSE
 							printf("remove multi mapper: %d vs %d [%d, %d] %c [%d, %d]\n", ovl[l].aread, ovl[l].bread, ovl[l].path.abpos, ovl[l].path.aepos,
 									(ovl[l].flags & OVL_COMP) ? 'c' : 'n', ovl[l].path.bbpos, ovl[l].path.bepos);
-	#endif
+#endif
 							ctx->nMultiMapperBases += ovl[l].path.aepos - ovl[l].path.abpos;
 							ovl[l].flags |= OVL_DISCARD;
 						}
@@ -2993,7 +2969,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						{
 							memset(ctx->cover_multi_mapper + ovl[l].path.abpos, 1, ovl[l].path.aepos - ovl[l].path.abpos);
 						}
-
 
 					}
 				}
