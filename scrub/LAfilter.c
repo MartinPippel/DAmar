@@ -2222,7 +2222,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 		else
 		{
 
-			// Check B-read !!!!
+			// Check A-read !!!!
 
 			b = repeats_anno[ovl->aread] / sizeof(track_data);
 			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
@@ -2257,7 +2257,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 
 			if(repeat > ovllen)
 			{
-				printf("[%6d, %6d] CHECK B-READ ovl %d vs %d [%d, %d] [%d, %d] %c: ovllen: %d, repeat %d\n", rp_mergeTip_ab, rp_mergeTip_ae, ovl->aread, ovl->bread,
+				printf("trim [%6d, %6d] mergeTip [%6d, %6d] CHECK B-READ ovl %d vs %d [%d, %d] [%d, %d] %c: ovllen: %d, repeat %d\n", trim_ab, trim_ae, rp_mergeTip_ab, rp_mergeTip_ae, ovl->aread, ovl->bread,
 						ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos,
 						(ovl->flags & OVL_COMP) ? 'C' : 'N', ovllen, repeat);
 				fflush(stdout);
