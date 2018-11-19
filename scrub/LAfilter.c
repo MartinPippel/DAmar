@@ -2258,9 +2258,9 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 			if(repeat > ovllen)
 			{
 				printf("ovl %d vs %d [%d, %d] [%d, %d] %c: ovllen: %d, repeat %d\n", ovl->aread, ovl->bread,
-						ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos
+						ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos,
 						(ovl->flags & OVL_COMP) ? 'C' : 'N', ovllen, repeat);
-				fflush(stout);
+				fflush(stdout);
 			}
 
 			assert(repeat <= ovllen);
