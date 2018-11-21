@@ -85,7 +85,7 @@ then
     if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
-        for x in $(ls arrow_01_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls arrow_01_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -123,12 +123,12 @@ then
 	        	exit 1
 			fi
 			
-			echo "if [[ -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]; then mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}" > arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
+			echo "if [[ -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]; then mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}" > arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 			if [[ -n ${PB_ARROW_MAKEUNIQUEHEADER} && ${PB_ARROW_MAKEUNIQUEHEADER} -eq 1 ]]
 			then
-				echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
+				echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 			else
-				echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
+				echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 			fi
 		# for all other runs try to find all previously created (i.e. current runID - 1) arrow corrected fa files 
 		else
@@ -164,24 +164,24 @@ then
 		       	exit 1	
 			fi
 			
-			echo "if [[ -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]; then mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}" > arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
+			echo "if [[ -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]; then mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}" > arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 			if [[ -n ${PB_ARROW_MAKEUNIQUEHEADER} && ${PB_ARROW_MAKEUNIQUEHEADER} -eq 1 ]]
 			then
-				echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/arrow_in.header); do cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/\${x}/ALL_\${x}.arrow.fa; done | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan				
+				echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/arrow_in.header); do cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/\${x}/ALL_\${x}.arrow.fa; done | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan				
 			else
-				echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/arrow_in.header); do cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/\${x}/ALL_\${x}.arrow.fa; done | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
+				echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/arrow_in.header); do cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/\${x}/ALL_\${x}.arrow.fa; done | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 			fi
 		fi		
-		echo "sawriter ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
-		echo "samtools faidx ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
-		echo "grep -e \">\" ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta | sed -e 's:^>::' > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header" >> arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.plan
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.version
-		echo "samtools $(samtools 2>&1 | grep Version | awk '{print $2}')" >> arrow_01_prepInFasta_single_${FIX_DB}.${slurmID}.version
+		echo "sawriter ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+		echo "samtools faidx ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+		echo "grep -e \">\" ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta | sed -e 's:^>::' > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.version
+		echo "samtools $(samtools 2>&1 | grep Version | awk '{print $2}')" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.version
     ### 2-pbalign
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
-        for x in $(ls arrow_02_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls arrow_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -234,15 +234,15 @@ then
     		fi
     		
     		echo "pbalign${logfile}${unalignFile}${ARROW_PBALIGN_OPT} ${x} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}.pbalign.bam"        	
-    	done > arrow_02_pbalign_block_${FIX_DB}.${slurmID}.plan 
-    	echo "pbalign $(pbalign --version)" > arrow_02_pbalign_block_${FIX_DB}.${slurmID}.version
-		echo "samtools $(samtools 2>&1 | grep Version | awk '{print $2}')" >> arrow_02_pbalign_block_${FIX_DB}.${slurmID}.version
-		echo "blasr $(blasr --version | awk '{print $2}')">> arrow_02_pbalign_block_${FIX_DB}.${slurmID}.version
+    	done > arrow_02_pbalign_block_${CONT_DB}.${slurmID}.plan 
+    	echo "pbalign $(pbalign --version)" > arrow_02_pbalign_block_${CONT_DB}.${slurmID}.version
+		echo "samtools $(samtools 2>&1 | grep Version | awk '{print $2}')" >> arrow_02_pbalign_block_${CONT_DB}.${slurmID}.version
+		echo "blasr $(blasr --version | awk '{print $2}')">> arrow_02_pbalign_block_${CONT_DB}.${slurmID}.version
     ### 3-bamsplit
     elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
-        for x in $(ls arrow_03_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls arrow_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -284,13 +284,13 @@ then
         	name=$(basename ${x%.subreads.bam})
         	file=${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}.pbalign.bam
         	echo "bamtools split -in  ${file} -reference"			   			   		
-		done > arrow_03_bamtools_block_${FIX_DB}.${slurmID}.plan
-		echo "$(bamtools --version | grep bamtools)" > arrow_03_bamtools_block_${FIX_DB}.${slurmID}.version
+		done > arrow_03_bamtools_block_${CONT_DB}.${slurmID}.plan
+		echo "$(bamtools --version | grep bamtools)" > arrow_03_bamtools_block_${CONT_DB}.${slurmID}.version
     ### 4-bamseparate
     elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
-        for x in $(ls arrow_04_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls arrow_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -301,12 +301,12 @@ then
 	       	exit 1
 	    fi
 	    
-		echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header); do mkdir -p ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\$x; mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/*.REF_\${x}.bam ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x}; find \$(pwd)/${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x} -name \"*.bam\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x}/in.fof; done" > arrow_04_bamseparate_single_${FIX_DB}.${slurmID}.plan	    
+		echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header); do mkdir -p ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\$x; mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/*.REF_\${x}.bam ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x}; find \$(pwd)/${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x} -name \"*.bam\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/\${x}/in.fof; done" > arrow_04_bamseparate_single_${CONT_DB}.${slurmID}.plan	    
 	### 5-bamMerge 
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
-        for x in $(ls arrow_05_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls arrow_05_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -338,13 +338,13 @@ then
 		for x in $(cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header)   		
    		do
    			echo "bamtools merge -list ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof -out ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && if [[ -s ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof ]]; then xargs rm < ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof; fi"
-		done > arrow_05_bamtools_block_${FIX_DB}.${slurmID}.plan
-		echo "$(bamtools --version | grep bamtools)" >arrow_05_bamtools_block_${FIX_DB}.${slurmID}.version
+		done > arrow_05_bamtools_block_${CONT_DB}.${slurmID}.plan
+		echo "$(bamtools --version | grep bamtools)" >arrow_05_bamtools_block_${CONT_DB}.${slurmID}.version
 	### 6-arrow 
     elif [[ ${currentStep} -eq 6 ]]
     then
         ### clean up plans 
-        for x in $(ls arrow_06_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls arrow_06_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -400,15 +400,15 @@ then
    			else
    				echo "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && arrow${ARROW_ARROW_OPT}${gff}${vcf}${fq} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta -w ${x} -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam"	
    			fi
-		done > arrow_06_arrow_block_${FIX_DB}.${slurmID}.plan	
-		echo "$(bamtools --version | grep bamtools)" > arrow_06_arrow_block_${FIX_DB}.${slurmID}.version
-		echo "pbindex $(pbindex --version)" >> arrow_06_arrow_block_${FIX_DB}.${slurmID}.version
-		echo "arrow $(arrow --version)" >> arrow_06_arrow_block_${FIX_DB}.${slurmID}.version				
+		done > arrow_06_arrow_block_${CONT_DB}.${slurmID}.plan	
+		echo "$(bamtools --version | grep bamtools)" > arrow_06_arrow_block_${CONT_DB}.${slurmID}.version
+		echo "pbindex $(pbindex --version)" >> arrow_06_arrow_block_${CONT_DB}.${slurmID}.version
+		echo "arrow $(arrow --version)" >> arrow_06_arrow_block_${CONT_DB}.${slurmID}.version				
 	### 7-statistics 
     elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
-        for x in $(ls arrow_07_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls arrow_07_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -422,8 +422,8 @@ then
         	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
     	fi
     	### create assemblyStats plan 
-    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 9" > arrow_07_statistics_single_${FIX_DB}.${slurmID}.plan
-    	git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > arrow_07_statistics_single_${FIX_DB}.${slurmID}.version
+    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 9" > arrow_07_statistics_single_${CONT_DB}.${slurmID}.plan
+    	git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > arrow_07_statistics_single_${CONT_DB}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in PB_ARROW_TYPE ${PB_ARROW_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${PB_ARROW_TYPE}]}")

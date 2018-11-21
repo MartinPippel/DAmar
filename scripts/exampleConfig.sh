@@ -20,10 +20,13 @@ DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzler/"
 SUBMIT_SCRIPTS_PATH="${MARVEL_PATH}/scripts"
 
 ############################## tools for pacbio arrow correction 
-PACBIO_ARROW_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate base"
+PACBIO_BASE_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate base"
+PACBIO_BASE_ENV_DEACT="source /projects/dazzler/pippel/prog/miniconda3/bin/deactivate base"
 ############################## activate purgehaplotigs environment if requires
 PURGEHAPLOTIGS_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate purge_haplotigs_env"
 PURGEHAPLOTIGS_ENV_DEACT="source /projects/dazzler/pippel/prog/miniconda3/bin/deactivate purge_haplotigs_env"
+############################## tools for whatshap phasing
+WHATSHAP_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate whatshap"
 
 ### ENVIRONMENT VARIABLES 
 export PATH=${MARVEL_PATH}/bin:${MARVEL_PATH}/scripts:$PATH
@@ -54,6 +57,7 @@ CONT_DAZZ_DB=LAB1608_HYLES_VESPERTILIO_DAZZLER_CONTIG
 ################# define marvel phases and their steps that should be done 
 
 DB_PATH=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/pacbio
+TENX_PATH=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/10x
 PATCHING_DIR="patching"
 ASSMEBLY_DIR="assembly"
 COVERAGE_DIR="coverage"
@@ -145,6 +149,14 @@ CT_PURGEHAPLOTIGS_TYPE=0
 #type-0 steps: 1-prepInFasta, 2-createMinimap2RefIndex, 3-minimap2, 4-bamMerge, 5-readCovHist, 6-contigCovHist, 7-purgeHaplotigs, 8-statistics
 CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM=1
 CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO=8
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 11 - Freebayes polishing on contigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+CT_FREEBAYES_TYPE=0
+#type-0 steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools
+#type-1 steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
+CT_FREEBAYES_SUBMIT_SCRIPTS_FROM=1
+CT_FREEBAYES_SUBMIT_SCRIPTS_TO=8
 
 # ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 
@@ -535,6 +547,30 @@ PB_ARROW_ARROW_VCFOUT=1
 # ----------------------------------------------------------------- CONTIG PURGEHAPLPOTIGS OPTIONS ----------------------------------------------------------------------------------------------------
 
 ### general options
+CT_FREEBAYES_RUNID=1												# used for output directory purgeHaplotigs_run${PB_ARROW_RUNID}
+CT_FREEBAYES_READS="${TENX_PATH}"   								# directory with pacbio fasta files
+CT_FREEBAYES_READSTYPE="10x"   								# if its 10x data we need to trim off the first 23 bases
+CT_FREEBAYES_OUTDIR="${FIX_FILT_OUTDIR}"
+CT_FREEBAYES_REFFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
+### fastp
+CT_FREEBAYES_FASTP_THREADS=4
+### bwa
+CT_FREEBAYES_BWA_THREADS=40
+CT_FREEBAYES_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
+### samtools sort
+CT_FREEBAYES_SAMTOOLS_THREADS=10
+CT_FREEBAYES_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
+### freebayes
+
+### bcftools
+
+### markduplicates 
+
+### samtools
+
+# ----------------------------------------------------------------- CONTIG PURGEHAPLPOTIGS OPTIONS ----------------------------------------------------------------------------------------------------
+
+### general options
 CT_PURGEHAPLOTIGS_RUNID=1													# used for output directory purgeHaplotigs_run${PB_ARROW_RUNID}
 CT_PURGEHAPLOTIGS_PACBIOFASTA="${DB_PATH}"   								# directory with pacbio fasta files
 CT_PURGEHAPLOTIGS_OUTDIR="${FIX_FILT_OUTDIR}"
@@ -687,3 +723,13 @@ TIME_bamMerge=24:00:00
 THREADS_readCovHist=${CT_PURGEHAPLOTIGS_THREADS}
 MEM_readCovHist=$((${CT_PURGEHAPLOTIGS_THREADS}*2048))     
 TIME_readCovHist=24:00:00
+
+########### freebayes fastp 
+THREADS_FBfastp=${CT_FREEBAYES_FASTP_THREADS}
+MEM_FBfastp=$((${CT_FREEBAYES_FASTP_THREADS}*4096))     
+TIME_FBfastp=24:00:00
+
+########### freebayes bwa 
+THREADS_FBbwa=${CT_FREEBAYES_BWA_THREADS}
+MEM_FBbwa=$((${CT_FREEBAYES_BWA_THREADS}*1024+${CT_FREEBAYES_SAMTOOLS_THREADS}*${CT_FREEBAYES_SAMTOOLS_MEM}*1024))     
+TIME_FBbwa=24:00:00

@@ -111,7 +111,7 @@ static int cmp_contig_bytmp(const void* a, const void* b)
 	Contig* c1 = *(Contig**) a;
 	Contig* c2 = *(Contig**) b;
 
-	return (c1->tmp - c2->tmp);
+	return (c1->property.tmp - c2->property.tmp);
 }
 
 //compare contigs by length, longest first
@@ -120,7 +120,7 @@ static int cmp_contig_length(const void* a, const void* b)
 	Contig* c1 = *(Contig**) a;
 	Contig* c2 = *(Contig**) b;
 
-	int cmp = c2->len - c1->len;
+	int cmp = c2->property.len - c1->property.len;
 
 	if (!cmp)
 	{
@@ -168,14 +168,19 @@ void initAnalyzeContext(AnalyzeContext *actx)
 	actx->readSeq = New_Read_Buffer(actx->corContigDB);
 	bzero(actx->readSeq, DB_READ_MAXLEN(actx->corContigDB));
 
+	// parse Contig File Names and Offset, must be done before getFileID is called the first time
+	parseDBFileNames(actx->corContigDBName, actx->contigFileNamesAndOffsets);
+
 	printf(" init contigs - START\n");
 	for (i = 0; i < numOfContigs; i++)
 	{
 		// init contigs with reads
 		Contig *contig = contigs + i;
 
-		contig->len = DB_READ_LEN(actx->corContigDB, i);
-		contig->idx = i;
+		contig->property.len = DB_READ_LEN(actx->corContigDB, i);
+		contig->property.contigID = i;
+		contig->property.pathID = getPathID(actx, i);
+		contig->property.fileID = getFileID(actx->contigFileNamesAndOffsets, i);
 
 		track_anno patched_rb, patched_re;
 		track_anno corrected_rb, corrected_re;
@@ -195,17 +200,17 @@ void initAnalyzeContext(AnalyzeContext *actx)
 		if (contig->numcReads == 0)
 		{
 			fprintf(stderr, "!strange! - no reads found for contig: %d. DISCARDED\n", i);
-			contig->flag |= CONTIG_DISCARD;
+			contig->property.flag |= CONTIG_DISCARD;
 			continue;
 		}
 
-		contig->numGClassific = 0;
-		contig->maxGClassific = 1;
-		contig->gClassific = (ContigGraphClassification*) malloc(sizeof(ContigGraphClassification) * contig->maxGClassific);
+		contig->numReadRelations = 0;
+		contig->maxReadRelations = 1;
+		contig->readRelations = (ReadRelation*) malloc(sizeof(ReadRelation) * contig->maxReadRelations);
 
-		contig->curContigChains = 0;
-		contig->maxContigChains = 0;
-		contig->contigChains = NULL;
+		contig->numContigRelations = 0;
+		contig->maxContigRelations = 0;
+		contig->contigRelations = NULL;
 
 		// init contig read buffer for overlapping reads
 		contig->cReads = (ContigRead*) malloc(sizeof(ContigRead) * contig->numcReads);
@@ -311,12 +316,97 @@ void initAnalyzeContext(AnalyzeContext *actx)
 				printf(" %8d", unCorCumLen);
 				printf(" %5.3f%%\n", unCorCumLen * 100.0 / corCumLen);
 			}
-			printf(" --> len: %10d\n", contig->len);
+			printf(" --> len: %10d\n", contig->property.len);
+		}
+
+		//todo reduce this to actual number of relations
+		int numContigsOfCurSubgraph = actx->contigFileNamesAndOffsets[contig->property.fileID].toDbIdx - actx->contigFileNamesAndOffsets[contig->property.fileID].fromDbIdx + 1;
+		contig->tourRelations = (TourRelation*)malloc(sizeof(TourRelation)*numContigsOfCurSubgraph);
+		bzero(contig->tourRelations, sizeof(TourRelation)*numContigsOfCurSubgraph);
+	}
+
+	// create Touring relations
+	for (i = 0; i < numOfContigs; i++)
+	{
+		Contig *contig = actx->contigs + i;
+
+		int contigEndPathIdx1, contigEndPathIdx2;
+		getContigsEndIDs(actx, i, &contigEndPathIdx1, &contigEndPathIdx2);
+
+		int numContigsOfCurSubgraph = actx->contigFileNamesAndOffsets[contig->property.fileID].toDbIdx - actx->contigFileNamesAndOffsets[contig->property.fileID].fromDbIdx + 1;
+
+		assert(MAX(contigEndPathIdx1, contigEndPathIdx2) <= numContigsOfCurSubgraph - 1);
+
+		// 1. bubble
+		if(contigEndPathIdx1 != -1 && contigEndPathIdx1 == contigEndPathIdx2)
+		{
+			int curPathID = contig->property.pathID;
+
+			Contig *relatedContig = actx->contigs  + i - (curPathID - contigEndPathIdx1);
+
+			assert(relatedContig != NULL);
+
+			assert(contigEndPathIdx1 == relatedContig->property.pathID);
+
+			contig->tourRelations[contig->numTourRelations].contigID1 = relatedContig->property.contigID;
+			contig->tourRelations[contig->numTourRelations].flag |= TOUR_IS_BUBBLE;
+			contig->numTourRelations++;
+
+			relatedContig->tourRelations[relatedContig->numTourRelations].contigID1 = contig->property.contigID;
+			relatedContig->tourRelations[relatedContig->numTourRelations].flag |= TOUR_HAS_BUBBLE;
+			relatedContig->numTourRelations++;
+		}
+
+		// 2. spur
+		else if((contigEndPathIdx1 == -1 && contigEndPathIdx2 != -1) || (contigEndPathIdx1 != -1 && contigEndPathIdx2 == -1))
+		{
+			int curPathID = contig->property.pathID;
+			int curPathRelID = MAX(contigEndPathIdx1, contigEndPathIdx2);
+			Contig *relatedContig = actx->contigs  + i - (curPathID - curPathRelID);
+			assert(relatedContig != NULL);
+			assert(curPathRelID == relatedContig->property.pathID);
+
+			contig->tourRelations[contig->numTourRelations].contigID1 = relatedContig->property.contigID;
+			contig->tourRelations[contig->numTourRelations].flag |= TOUR_IS_SPUR;
+			contig->numTourRelations++;
+
+			relatedContig->tourRelations[relatedContig->numTourRelations].contigID1 = contig->property.contigID;
+			relatedContig->tourRelations[relatedContig->numTourRelations].flag |= TOUR_HAS_SPUR;
+			relatedContig->numTourRelations++;
+		}
+
+		// 3. link between two different contigs
+		else if(contigEndPathIdx1 != -1 && contigEndPathIdx2 != -1)
+		{
+			int curPathID = contig->property.pathID;
+
+			Contig *relatedContig1 = actx->contigs  + i - (curPathID - contigEndPathIdx1);
+			assert(relatedContig1 != NULL);
+			assert(contigEndPathIdx1 == relatedContig1->property.pathID);
+
+			Contig *relatedContig2 = actx->contigs  + i - (curPathID - contigEndPathIdx2);
+			assert(relatedContig2 != NULL);
+			assert(contigEndPathIdx2 == relatedContig2->property.pathID);
+
+
+			contig->tourRelations[contig->numTourRelations].contigID1 = relatedContig1->property.contigID;
+			contig->tourRelations[contig->numTourRelations].contigID2 = relatedContig2->property.contigID;
+			contig->tourRelations[contig->numTourRelations].flag |= TOUR_IS_BRIDGECONTIG;
+			contig->numTourRelations++;
+
+			relatedContig1->tourRelations[relatedContig1->numTourRelations].contigID1 = contig->property.contigID;
+			relatedContig1->tourRelations[relatedContig1->numTourRelations].contigID2 = relatedContig2->property.contigID;
+			relatedContig1->tourRelations[relatedContig1->numTourRelations].flag |= TOUR_HAS_BRIDGECONTIG;
+			relatedContig1->numTourRelations++;
+
+			relatedContig2->tourRelations[relatedContig2->numTourRelations].contigID1 = contig->property.contigID;
+			relatedContig2->tourRelations[relatedContig2->numTourRelations].contigID2 = relatedContig1->property.contigID;
+			relatedContig2->tourRelations[relatedContig2->numTourRelations].flag |= TOUR_HAS_BRIDGECONTIG;
+			relatedContig2->numTourRelations++;
 		}
 	}
-	printf(" init contigs - DONE\n");
 
-	actx->numContigFileNames = parseDBFileNames(actx->corContigDBName, &actx->contigFileNameOffsets, &actx->ContigFileNames, NULL);
+	printf(" init contigs - DONE\n");
 
 	actx->contigs = contigs;
 	printf("sort contigs by length - START\n");
@@ -331,81 +421,28 @@ void initAnalyzeContext(AnalyzeContext *actx)
 	printf("sort contigs by length - DONE\n");
 }
 
-char* getFastaFileNameFromDB(AnalyzeContext *actx, int contigID)
+char* getContigFastaFileName(AnalyzeContext *actx, Contig *contig)
 {
-	if (contigID < 0 || contigID >= DB_NREADS(actx->corContigDB))
-	{
-		fprintf(stderr, "[ERROR] - getContigFileName: contigID %d out of bounds [%d, %d [\n", contigID, 0, DB_NREADS(actx->corContigDB));
-		fflush(stderr);
-		exit(1);
-	}
+	int i;
 
-	int i = 1;
-	while (1)
+	for(i=0; i<actx->contigFileNamesAndOffsets->numFileNames; i++)
 	{
-		if (contigID >= actx->contigFileNameOffsets[i - 1] && contigID < actx->contigFileNameOffsets[i])
+		if(contig->property.contigID >= actx->contigFileNamesAndOffsets->fromDbIdx[i] && contig->property.contigID < actx->contigFileNamesAndOffsets->fromDbIdx[i])
 		{
-			break;
+			return actx->contigFileNamesAndOffsets->fileNames[i];
 		}
-		i++;
-
-		assert(i <= 1000000);
 	}
 
-	return actx->ContigFileNames[i];
+	fprintf(stderr, "[ERROR] - Cannot find contig file name of contig %d\n", contig->property.contigID);
+	exit(1);
 }
 
-int getFirstDBIdxFromFastaFileName(AnalyzeContext *actx, int contigID)
-{
-	if (contigID < 0 || contigID >= DB_NREADS(actx->corContigDB))
-	{
-		fprintf(stderr, "[ERROR] - getNumberOfSequencesFromFastaFileName: contigID %d out of bounds [%d, %d [\n", contigID, 0, DB_NREADS(actx->corContigDB));
-		fflush(stderr);
-		exit(1);
-	}
-
-	int i = 1;
-	while (1)
-	{
-		if (contigID >= actx->contigFileNameOffsets[i - 1] && contigID < actx->contigFileNameOffsets[i])
-		{
-			break;
-		}
-		i++;
-
-		assert(i <= 1000000);
-	}
-
-	return actx->contigFileNameOffsets[i - 1];
-}
-
-int getNumberOfSequencesFromFastaFileName(AnalyzeContext *actx, int contigID)
-{
-	if (contigID < 0 || contigID >= DB_NREADS(actx->corContigDB))
-	{
-		fprintf(stderr, "[ERROR] - getNumberOfSequencesFromFastaFileName: contigID %d out of bounds [%d, %d [\n", contigID, 0, DB_NREADS(actx->corContigDB));
-		fflush(stderr);
-		exit(1);
-	}
-
-	int i = 1;
-	while (1)
-	{
-		if (contigID >= actx->contigFileNameOffsets[i - 1] && contigID < actx->contigFileNameOffsets[i])
-		{
-			break;
-		}
-		i++;
-
-		assert(i <= 1000000);
-	}
-
-	return actx->contigFileNameOffsets[i] - actx->contigFileNameOffsets[i - 1];
-}
-
-int parseDBFileNames(char *dbName, int **fileOffsets, char ***fileNames, char ***readNames)
+void parseDBFileNames(char *dbName, FileNamesAndOffsets *fileNamesAndOffsets)
 {
 	// parse old database file and store bax names as well as their read offsets
+
+	assert(fileNamesAndOffsets != NULL);
+
 	FILE *f;
 	int numFiles = 0;
 	char name[MAX_NAME];
@@ -430,73 +467,41 @@ int parseDBFileNames(char *dbName, int **fileOffsets, char ***fileNames, char **
 		exit(1);
 	}
 
-	int *offsets = (int *) malloc(sizeof(int) * (numFiles + 2));
-	memset(offsets, 0, numFiles + 2);
+	fileNamesAndOffsets->numFileNames = numFiles;
 
-	if (offsets == NULL)
-	{
-		fprintf(stderr, "[ERROR] parseDBFileNames: Cannot allocate buffer for read offsets.\n");
-		fclose(f);
-		exit(1);
-	}
+	fileNamesAndOffsets->fromDbIdx = (int *) malloc(sizeof(int) * (numFiles));
+	memset(fileNamesAndOffsets->fromDbIdx, 0, numFiles);
+	fileNamesAndOffsets->toDbIdx = (int *) malloc(sizeof(int) * (numFiles));
+	memset(fileNamesAndOffsets->toDbIdx, 0, numFiles);
 
-	char **fnames = (char **) malloc(sizeof(char*) * (numFiles + 1));
-	char **rnames = (char **) malloc(sizeof(char*) * (numFiles + 1));
-	if (fnames == NULL || rnames == NULL)
-	{
-		fprintf(stderr, "[ERROR] parseDBFileNames: Cannot allocate buffer for file names.\n");
-		fclose(f);
-		exit(1);
-	}
+	fileNamesAndOffsets->fileNames = (char **) malloc(sizeof(char*) * (numFiles));
+	fileNamesAndOffsets->fastaNames= (char **) malloc(sizeof(char*) * (numFiles));
 
 	int i;
-	for (i = 1; i <= numFiles; i++)
+	for (i = 0; i < numFiles; i++)
 	{
-		fnames[i] = (char*) malloc(sizeof(char) * MAX_NAME);
-		rnames[i] = (char*) malloc(sizeof(char) * MAX_NAME);
-		if (fnames[i] == NULL || rnames[i] == NULL)
-		{
-			fprintf(stderr, "[ERROR] parseDBFileNames: Cannot allocate %d st file name buffer of size %d.\n", i, MAX_NAME);
-			fclose(f);
-			exit(1);
-		}
-
+		fileNamesAndOffsets->fileNames[i] = (char*) malloc(sizeof(char) * MAX_NAME);
+		fileNamesAndOffsets->fastaNames[i] = (char*) malloc(sizeof(char) * MAX_NAME);
 	}
 
-	for (i = 1; i <= numFiles; i++)
+	int prevOffset, curOffset;
+	prevOffset = 0;
+	for (i = 0; i < numFiles; i++)
 	{
-		if (fscanf(f, DB_FDATA, &offsets[i], fnames[i], rnames[i]) != 3)
+		if (fscanf(f, DB_FDATA, &curOffset, fileNamesAndOffsets->fileNames[i], fileNamesAndOffsets->fastaNames[i]) != 3)
 		{
 			fprintf(stderr, "[ERROR] parseDBFileNames: Cannot parse \"%s\" in line %d from file %s.\n",
 			DB_FDATA, i, dbName);
 			fclose(f);
 			exit(1);
 		}
-	}
-	// add number of db reads as last entry
-	offsets[i] = offsets[i - 1];
-	fclose(f);
 
-	if (fileNames != NULL)
-		*fileNames = &(*fnames);
-	else
-	{
-		for (i = 1; i <= numFiles; i++)
-			free(fnames[i]);
-		free(fnames);
-	}
-	if (readNames != NULL)
-		*readNames = &(*rnames);
-	else
-	{
-		for (i = 1; i <= numFiles; i++)
-			free(rnames[i]);
-		free(rnames);
-	}
+		assert(curOffset > prevOffset);
+		fileNamesAndOffsets->fromDbIdx[i] = prevOffset;
+		fileNamesAndOffsets->toDbIdx[i] = curOffset - 1;
 
-	*fileOffsets = &(*offsets);
-
-	return numFiles;
+		prevOffset = curOffset;
+	}
 }
 
 static void pre(PassContext* pctx, AnalyzeContext* actx)
@@ -593,7 +598,7 @@ int getFullReadPositionInContig(AnalyzeContext *actx, Contig* contig, int readID
 					if (abs(rbeg) - tbeg < 1000) // i.e. there is no overlap, due to the minimum overlap length of daligner
 					{
 						*cbeg = (*cbeg) - (abs(rbeg) - tbeg);
-						assert((*cbeg) >= 0 && (*cbeg) < (*cend) && (*cend) <= contig->len);
+						assert((*cbeg) >= 0 && (*cbeg) < (*cend) && (*cend) <= contig->property.len);
 					}
 					else
 					{
@@ -660,7 +665,7 @@ int getFullReadPositionInContig(AnalyzeContext *actx, Contig* contig, int readID
 					if (tend - abs(rbeg) < 1000) // i.e. there is no overlap, due to the minimum overlap length of daligner
 					{
 						*cbeg = (*cbeg) - (tend - abs(rbeg));
-						assert((*cbeg) >= 0 && (*cbeg) < (*cend) && (*cend) <= contig->len);
+						assert((*cbeg) >= 0 && (*cbeg) < (*cend) && (*cend) <= contig->property.len);
 					}
 					else
 					{
@@ -679,7 +684,7 @@ int getFullReadPositionInContig(AnalyzeContext *actx, Contig* contig, int readID
 
 //void printSplitEvent(Contig *contig, SplitEvent *split)
 //{
-//	printf("CONTIG %d len %d new SplitEvent [%s] duplRead %d absPos (%d, %d, %d) leftRead (%d, %d,%d) rightRead (%d, %d,%d)\n", contig->idx, contig->len,
+//	printf("CONTIG %d len %d new SplitEvent [%s] duplRead %d absPos (%d, %d, %d) leftRead (%d, %d,%d) rightRead (%d, %d,%d)\n", contig->property.contigID, contig->property.len,
 //			getSplitType(split), split->duplicRead, split->type, split->contigPos1, split->contigPos2, split->leftProperRead, split->leftProperReadPos1,
 //			split->leftProperReadPos2, split->rightProperRead, split->rightProperReadPos1, split->rightProperReadPos2);
 //}
@@ -703,7 +708,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 		contig_j = actx->contigs + abs(actx->vreadMask[1][read]) - 1;
 
 		// check if we have a normal primary and secondary contig connection
-		if (contig_i->len < contig_j->len)
+		if (contig_i->property.len < contig_j->property.len)
 		{
 			contig_i = actx->contigs + abs(actx->vreadMask[1][read]) - 1;
 			contig_j = actx->contigs + abs(actx->vreadMask[0][read]) - 1;
@@ -718,13 +723,13 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 		//                      H1        							A1
 		// check haploid coverage
 		int path_j_beg, path_j_end;
-		getContigsEndIDs(actx, contig_j->idx, &path_j_beg, &path_j_end);
+		getContigsEndIDs(actx, contig_j->property.contigID, &path_j_beg, &path_j_end);
 
 		int containedByContigOverlaps = 0;
 //		for (i = 0; i < contig_j->numOvlGrps; i++)
 //		{
 //			OverlapGroup *olg = contig_j->ovlGrps[i];
-//			if ((olg->bread == contig_i->idx) && (olg->flag & OVLGRP_AREAD_IS_CONTAINED))
+//			if ((olg->bread == contig_i->property.contigID) && (olg->flag & OVLGRP_AREAD_IS_CONTAINED))
 //			{
 //				containedByContigOverlaps = 1;
 //				break;
@@ -732,10 +737,10 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 //		}
 
 		int containedByFixedReadCoverage = 0;
-		for (i = 0; i < contig_j->numGClassific; i++)
+		for (i = 0; i < contig_j->numReadRelations; i++)
 		{
-			ContigGraphClassification *gclass = contig_j->gClassific + i;
-			if ((gclass->correspID == contig_i->idx) && (gclass->flag & CONTIG_IS_CONTAINED))
+			ReadRelation *readRel = contig_j->readRelations + i;
+			if ((readRel->correspID == contig_i->property.contigID) && (readRel->flag & CONTIG_IS_CONTAINED))
 			{
 				containedByFixedReadCoverage = 1;
 				break;
@@ -768,8 +773,8 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 		contig_k = actx->contigs + abs(actx->vreadMask[2][read]) - 1;
 
 		// all 3 contigs are haploid | or none of them is haploid
-		if (((contig_i->class & CONTIG_CLASS_HAPLOID) && (contig_j->class & CONTIG_CLASS_HAPLOID) && (contig_k->class & CONTIG_CLASS_HAPLOID))
-				|| (!(contig_i->class & CONTIG_CLASS_HAPLOID) && !(contig_j->class & CONTIG_CLASS_HAPLOID) && !(contig_k->class & CONTIG_CLASS_HAPLOID)))
+		if (((contig_i->property.flag & CONTIG_CLASS_HAPLOID) && (contig_j->property.flag & CONTIG_CLASS_HAPLOID) && (contig_k->property.flag & CONTIG_CLASS_HAPLOID))
+				|| (!(contig_i->property.flag & CONTIG_CLASS_HAPLOID) && !(contig_j->property.flag & CONTIG_CLASS_HAPLOID) && !(contig_k->property.flag & CONTIG_CLASS_HAPLOID)))
 		{
 			cutOut = 1;
 		}
@@ -780,16 +785,16 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			Contig *contig_alt1 = NULL;
 			Contig *contig_alt2 = NULL;
 
-			if (contig_i->class & CONTIG_CLASS_HAPLOID)
+			if (contig_i->property.flag & CONTIG_CLASS_HAPLOID)
 			{
 				contig_hap1 = contig_i;
 
-				if (contig_j->class & CONTIG_CLASS_HAPLOID)
+				if (contig_j->property.flag & CONTIG_CLASS_HAPLOID)
 				{
 					contig_hap2 = contig_j;
 					contig_alt1 = contig_k;
 				}
-				else if (contig_k->class & CONTIG_CLASS_HAPLOID)
+				else if (contig_k->property.flag & CONTIG_CLASS_HAPLOID)
 				{
 					contig_hap2 = contig_k;
 					contig_alt1 = contig_j;
@@ -800,11 +805,11 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 					contig_alt2 = contig_k;
 				}
 			}
-			else if (contig_j->class & CONTIG_CLASS_HAPLOID)
+			else if (contig_j->property.flag & CONTIG_CLASS_HAPLOID)
 			{
 				contig_hap1 = contig_j;
 				contig_alt1 = contig_i;
-				if (contig_k->class & CONTIG_CLASS_HAPLOID)
+				if (contig_k->property.flag & CONTIG_CLASS_HAPLOID)
 				{
 					contig_hap2 = contig_k;
 				}
@@ -813,7 +818,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 					contig_alt2 = contig_k;
 				}
 			}
-			else if (contig_k->class & CONTIG_CLASS_HAPLOID)
+			else if (contig_k->property.flag & CONTIG_CLASS_HAPLOID)
 			{
 				contig_hap1 = contig_k;
 				contig_alt1 = contig_i;
@@ -829,15 +834,15 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			if (contig_alt1 != NULL && contig_alt2 != NULL && contig_hap1 != NULL)
 			{
 				int a1End1, a1End2, a2End1, a2End2;
-				getContigsEndIDs(actx, contig_alt1->idx, &a1End1, &a1End2);
-				getContigsEndIDs(actx, contig_alt2->idx, &a2End1, &a2End2);
+				getContigsEndIDs(actx, contig_alt1->property.contigID, &a1End1, &a1End2);
+				getContigsEndIDs(actx, contig_alt2->property.contigID, &a2End1, &a2End2);
 
-				if (((((contig_alt1->class & CONTIG_CLASS_ALT_BUBBLE) || (contig_alt1->class & CONTIG_CLASS_ALT_SPUR))
-						&& (a1End1 == contig_hap1->idx || a1End2 == contig_hap1->idx))
-						|| ((contig_alt1->class & CONTIG_CLASS_ALT_HUGEDIFF) && a1End1 == contig_hap1->idx && a1End2 == contig_hap1->idx))
-						&& ((((contig_alt2->class & CONTIG_CLASS_ALT_BUBBLE) || (contig_alt2->class & CONTIG_CLASS_ALT_SPUR))
-								&& (a1End1 == contig_hap1->idx || a1End2 == contig_hap1->idx))
-								|| ((contig_alt2->class & CONTIG_CLASS_ALT_HUGEDIFF) && a1End1 == contig_hap1->idx && a1End2 == contig_hap1->idx))
+				if (((((contig_alt1->property.flag & CONTIG_CLASS_ALT_BUBBLE) || (contig_alt1->property.flag & CONTIG_CLASS_ALT_SPUR))
+						&& (a1End1 == contig_hap1->property.contigID || a1End2 == contig_hap1->property.contigID))
+						|| ((contig_alt1->property.flag & CONTIG_CLASS_ALT_HUGEDIFF) && a1End1 == contig_hap1->property.contigID && a1End2 == contig_hap1->property.contigID))
+						&& ((((contig_alt2->property.flag & CONTIG_CLASS_ALT_BUBBLE) || (contig_alt2->property.flag & CONTIG_CLASS_ALT_SPUR))
+								&& (a1End1 == contig_hap1->property.contigID || a1End2 == contig_hap1->property.contigID))
+								|| ((contig_alt2->property.flag & CONTIG_CLASS_ALT_HUGEDIFF) && a1End1 == contig_hap1->property.contigID && a1End2 == contig_hap1->property.contigID))
 						//&& checkJunctionCoverage(actx, read, numContigs) // returns true if everything is ok, false otherwise
 						)
 				{
@@ -869,7 +874,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			else if (contig_alt1 != NULL && contig_hap1 != NULL && contig_hap2 != NULL)
 			{
 				int end1, end2;
-				getContigsEndIDs(actx, contig_alt1->idx, &end1, &end2);
+				getContigsEndIDs(actx, contig_alt1->property.contigID, &end1, &end2);
 
 				// check if haploid contigs have dead end
 				int deadEnd = 0;
@@ -883,7 +888,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 					{
 						deadEnd = 1;
 					}
-					else if (contig_hap1->len - contigCutPos2 <= actx->TIP_LEN)
+					else if (contig_hap1->property.len - contigCutPos2 <= actx->TIP_LEN)
 					{
 						deadEnd = 2;
 					}
@@ -896,21 +901,21 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 					{
 						deadEnd = 1;
 					}
-					else if (contig_hap1->len - contigCutPos2 <= actx->TIP_LEN)
+					else if (contig_hap1->property.len - contigCutPos2 <= actx->TIP_LEN)
 					{
 						deadEnd = 2;
 					}
 				}
 
 				if (deadEnd
-						&& ((((contig_alt1->class & CONTIG_CLASS_ALT_BUBBLE) || (contig_alt1->class & CONTIG_CLASS_ALT_SPUR))
-								&& (end1 == contig_hap1->idx || end2 == contig_hap1->idx || end1 == contig_hap2->idx || end2 == contig_hap2->idx))
-								|| ((contig_alt1->class & CONTIG_CLASS_ALT_HUGEDIFF)
-										&& (((end1 == contig_hap1->idx && end2 == contig_hap1->idx) || (end1 == contig_hap2->idx && end2 == contig_hap2->idx)))))
+						&& ((((contig_alt1->property.flag & CONTIG_CLASS_ALT_BUBBLE) || (contig_alt1->property.flag & CONTIG_CLASS_ALT_SPUR))
+								&& (end1 == contig_hap1->property.contigID || end2 == contig_hap1->property.contigID || end1 == contig_hap2->property.contigID || end2 == contig_hap2->property.contigID))
+								|| ((contig_alt1->property.flag & CONTIG_CLASS_ALT_HUGEDIFF)
+										&& (((end1 == contig_hap1->property.contigID && end2 == contig_hap1->property.contigID) || (end1 == contig_hap2->property.contigID && end2 == contig_hap2->property.contigID)))))
 						//&& checkJunctionCoverage(actx, read, numContigs) // returns true if everything is ok, false otherwise
 						)
 				{
-					if (end1 == contig_hap1->idx && end2 == contig_hap1->idx) // ALT contig is a bubble of contig_hap1
+					if (end1 == contig_hap1->property.contigID && end2 == contig_hap1->property.contigID) // ALT contig is a bubble of contig_hap1
 					{
 						if (contig_alt1->cReads[0].patchedID == read)
 						{
@@ -927,7 +932,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 							cutOut = 1;
 						}
 					}
-					else if (end1 == contig_hap2->idx && end2 == contig_hap2->idx) // ALT contig is a bubble of contig_hap2
+					else if (end1 == contig_hap2->property.contigID && end2 == contig_hap2->property.contigID) // ALT contig is a bubble of contig_hap2
 					{
 						if (contig_alt1->cReads[0].patchedID == read)
 						{
@@ -944,16 +949,16 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 							cutOut = 1;
 						}
 					}
-					else if (contig_alt1->class == CONTIG_CLASS_ALT_SPUR)
+					else if (contig_alt1->property.flag == CONTIG_CLASS_ALT_SPUR)
 					{
 						if (contig_alt1->cReads[0].patchedID == read)
 						{
-							if (end1 == contig_hap1->idx)
+							if (end1 == contig_hap1->property.contigID)
 							{
 //								createSplitEvent(actx, contig_hap1, read, SPLIT_HETEROZYGLEFT);
 //								createSplitEvent(actx, contig_alt1, read, SPLIT_HETEROZYGLEFT);
 							}
-							else if (end1 == contig_hap2->idx)
+							else if (end1 == contig_hap2->property.contigID)
 							{
 //								createSplitEvent(actx, contig_hap2, read, SPLIT_HETEROZYGLEFT);
 //								createSplitEvent(actx, contig_alt1, read, SPLIT_HETEROZYGLEFT);
@@ -965,12 +970,12 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 						}
 						else if (contig_alt1->cReads[contig_alt1->numcReads - 1].patchedID == read)
 						{
-							if (end2 == contig_hap1->idx)
+							if (end2 == contig_hap1->property.contigID)
 							{
 //								createSplitEvent(actx, contig_hap1, read, SPLIT_HETEROZYGRIGHT);
 //								createSplitEvent(actx, contig_alt1, read, SPLIT_HETEROZYGRIGHT);
 							}
-							else if (end2 == contig_hap2->idx)
+							else if (end2 == contig_hap2->property.contigID)
 							{
 //								createSplitEvent(actx, contig_hap2, read, SPLIT_HETEROZYGRIGHT);
 //								createSplitEvent(actx, contig_alt1, read, SPLIT_HETEROZYGRIGHT);
@@ -1058,20 +1063,20 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 		Contig *contig_j = actx->contigs + abs(actx->vreadMask[0][read]) - 1;
 		Contig *contig_k = actx->contigs + abs(actx->vreadMask[1][read]) - 1;
 
-		printf("else: %d vs %d\n", contig_j->idx, contig_k->idx);
+		printf("else: %d vs %d\n", contig_j->property.contigID, contig_k->property.contigID);
 		/////
 		//// check the weird stuff first
 		///
 		// contig_k is circular
 		if (contig_k->cReads[0].patchedID == read && contig_k->cReads[contig_k->numcReads - 1].patchedID == read)
 		{
-			fprintf(stderr, "-----------------------> circle in contig_k %d\n", contig_k->idx);
+			fprintf(stderr, "-----------------------> circle in contig_k %d\n", contig_k->property.contigID);
 			exit(1);
 		}
 		// contig_j is circular
 		else if (contig_j->cReads[0].patchedID == read && contig_j->cReads[contig_j->numcReads - 1].patchedID == read)
 		{
-			fprintf(stderr, "-----------------------> circle in contig_j %d\n", contig_j->idx);
+			fprintf(stderr, "-----------------------> circle in contig_j %d\n", contig_j->property.contigID);
 			exit(1);
 		}
 		// contig_j stops at read X and contig_k starts at read X
@@ -1099,7 +1104,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			assert(contigJCutPos1 != -1 && contigJCutPos2 != -1);
 			assert(contigKCutPos1 != -1 && contigKCutPos2 != -1);
 
-			printf("contig %d read %d at [%d, %d] contig %d read %d at [%d, %d]\n", contig_j->idx, read, contigJCutPos1, contigJCutPos2, contig_k->idx, read,
+			printf("contig %d read %d at [%d, %d] contig %d read %d at [%d, %d]\n", contig_j->property.contigID, read, contigJCutPos1, contigJCutPos2, contig_k->property.contigID, read,
 					contigKCutPos1, contigKCutPos2);
 			//int type = 0;
 
@@ -1112,11 +1117,11 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 				// check if there is a valuable dead end, otherwise its a false join
 
 				// todo remove this after testing
-				//	assert(contig_j->len > 200000 || contig_k->idx > 200000);
+				//	assert(contig_j->property.len > 200000 || contig_k->property.contigID > 200000);
 
 				if (contigJCutPos1 == 0)
 				{
-					if (contigKCutPos1 > actx->TIP_LEN && contig_k->len - contigKCutPos2 > actx->TIP_LEN)
+					if (contigKCutPos1 > actx->TIP_LEN && contig_k->property.len - contigKCutPos2 > actx->TIP_LEN)
 					{
 //						type = SPLIT_FALSEJOINLEFT;
 					}
@@ -1126,9 +1131,9 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 						printf("1 DEAD END ----> check number of read that follow both paths\n");
 					}
 				}
-				else if (contigJCutPos2 == contig_j->len)
+				else if (contigJCutPos2 == contig_j->property.len)
 				{
-					if (contigKCutPos1 > actx->TIP_LEN && contig_k->len - contigKCutPos2 > actx->TIP_LEN)
+					if (contigKCutPos1 > actx->TIP_LEN && contig_k->property.len - contigKCutPos2 > actx->TIP_LEN)
 					{
 //						type = SPLIT_FALSEJOINLEFT;
 					}
@@ -1141,7 +1146,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 
 				else if (contigKCutPos1 == 0)
 				{
-					if (contigJCutPos1 > actx->TIP_LEN && contig_j->len - contigJCutPos2 > actx->TIP_LEN)
+					if (contigJCutPos1 > actx->TIP_LEN && contig_j->property.len - contigJCutPos2 > actx->TIP_LEN)
 					{
 //						type = SPLIT_FALSEJOINLEFT;
 					}
@@ -1151,9 +1156,9 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 						printf("3 DEAD END ----> check number of read that follow both paths\n");
 					}
 				}
-				else if (contigKCutPos2 == contig_k->len)
+				else if (contigKCutPos2 == contig_k->property.len)
 				{
-					if (contigJCutPos1 > actx->TIP_LEN && contig_j->len - contigJCutPos2 > actx->TIP_LEN)
+					if (contigJCutPos1 > actx->TIP_LEN && contig_j->property.len - contigJCutPos2 > actx->TIP_LEN)
 					{
 //						type = SPLIT_FALSEJOINLEFT;
 					}
@@ -1167,7 +1172,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 
 			}
 			// only one contig is haploid
-			else if ((contig_j->class & CONTIG_CLASS_HAPLOID) || (contig_k->class & CONTIG_CLASS_HAPLOID))
+			else if ((contig_j->property.flag & CONTIG_CLASS_HAPLOID) || (contig_k->property.flag & CONTIG_CLASS_HAPLOID))
 			{
 				// TODO
 			}
@@ -1193,9 +1198,9 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 
 			 if (contigJCutPos1 == 0)
 			 {
-			 if (contigKCutPos1 > actx->TIP_LEN && contig_k->len - contigKCutPos2 > actx->TIP_LEN) // well inside contigK
+			 if (contigKCutPos1 > actx->TIP_LEN && contig_k->property.len - contigKCutPos2 > actx->TIP_LEN) // well inside contigK
 			 {
-			 if (contig_j->len <= actx->SPUR_LEN)
+			 if (contig_j->property.len <= actx->SPUR_LEN)
 			 {
 			 stype |= SPLIT_HETEROZYGRIGHT;
 			 }
@@ -1211,9 +1216,9 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			 }
 			 else if (contigKCutPos1 == 0)
 			 {
-			 if (contigJCutPos1 > actx->TIP_LEN && contig_j->len - contigJCutPos2 > actx->TIP_LEN) // well inside contigJ
+			 if (contigJCutPos1 > actx->TIP_LEN && contig_j->property.len - contigJCutPos2 > actx->TIP_LEN) // well inside contigJ
 			 {
-			 if (contig_k->len <= actx->SPUR_LEN)
+			 if (contig_k->property.len <= actx->SPUR_LEN)
 			 {
 			 stype |= SPLIT_HETEROZYGRIGHT;
 			 }
@@ -1228,11 +1233,11 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			 }
 			 }
 
-			 else if (contigJCutPos2 == contig_j->len)
+			 else if (contigJCutPos2 == contig_j->property.len)
 			 {
-			 if (contigKCutPos1 > actx->TIP_LEN && contig_k->len - contigKCutPos2 > actx->TIP_LEN) // well inside contigK
+			 if (contigKCutPos1 > actx->TIP_LEN && contig_k->property.len - contigKCutPos2 > actx->TIP_LEN) // well inside contigK
 			 {
-			 if (contig_j->len <= actx->SPUR_LEN)
+			 if (contig_j->property.len <= actx->SPUR_LEN)
 			 {
 			 stype |= SPLIT_HETEROZYGLEFT;
 			 }
@@ -1246,11 +1251,11 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			 stype |= SPLIT_DEADENDLEFT;
 			 }
 			 }
-			 else if (contigKCutPos2 == contig_k->len)
+			 else if (contigKCutPos2 == contig_k->property.len)
 			 {
-			 if (contigJCutPos1 > actx->TIP_LEN && contig_j->len - contigJCutPos2 > actx->TIP_LEN) // well inside contigJ
+			 if (contigJCutPos1 > actx->TIP_LEN && contig_j->property.len - contigJCutPos2 > actx->TIP_LEN) // well inside contigJ
 			 {
-			 if (contig_k->len <= actx->SPUR_LEN)
+			 if (contig_k->property.len <= actx->SPUR_LEN)
 			 {
 			 stype |= SPLIT_HETEROZYGLEFT;
 			 }
@@ -1271,7 +1276,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			 }
 
 			 printf("############## remaining duplicate Read: %d: contig_j %d len %d pos %d, %d TYPE: %d and contig_k %d len %d pos %d, %d TYPE %d\n",
-			 aread, contig_j->idx, contig_j->len, contigJCutPos1, contigJCutPos2, stype, contig_k->idx, contig_k->len, contigKCutPos1,
+			 aread, contig_j->property.contigID, contig_j->property.len, contigJCutPos1, contigJCutPos2, stype, contig_k->property.contigID, contig_k->property.len, contigKCutPos1,
 			 contigKCutPos2, stype);
 
 			 // add split position to contig_j
@@ -1281,7 +1286,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			 contig_j->split = (SplitEvent*) realloc(contig_j->split, sizeof(SplitEvent) * contig_j->maxSplits);
 			 assert(contig_j->split != NULL);
 			 }
-			 assert(contigJCutPos1 >= 0 && contigJCutPos1 < contigJCutPos2 && contigJCutPos2 <= contig_j->len);
+			 assert(contigJCutPos1 >= 0 && contigJCutPos1 < contigJCutPos2 && contigJCutPos2 <= contig_j->property.len);
 			 {
 			 // find contig reads and their positions for corresponding cutPositions
 			 int leftProperRead, rightProperRead;
@@ -1311,7 +1316,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			 assert(leftProperReadPos1 < leftProperReadPos2);
 			 }
 			 }
-			 if (contig_j->reads[k]->cEnd > contigJCutPos2 && contigJCutPos2 < contig_j->len)
+			 if (contig_j->reads[k]->cEnd > contigJCutPos2 && contigJCutPos2 < contig_j->property.len)
 			 {
 			 rightProperRead = abs(contig_j->reads[k]->id);
 			 rightProperReadPos2 = contig_j->reads[k]->end;
@@ -1360,7 +1365,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			 contig_k->split = (SplitEvent*) realloc(contig_k->split, sizeof(SplitEvent) * contig_k->maxSplits);
 			 assert(contig_k->split != NULL);
 			 }
-			 assert(contigKCutPos1 >= 0 && contigKCutPos1 < contigKCutPos2 && contigKCutPos2 <= contig_k->len);
+			 assert(contigKCutPos1 >= 0 && contigKCutPos1 < contigKCutPos2 && contigKCutPos2 <= contig_k->property.len);
 			 {
 			 // find contig reads and their positions for corresponding cutPositions
 			 int leftProperRead, rightProperRead;
@@ -1390,7 +1395,7 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			 assert(leftProperReadPos1 < leftProperReadPos2);
 			 }
 			 }
-			 if (contig_k->reads[k]->cEnd > contigKCutPos2 && contigKCutPos2 < contig_k->len)
+			 if (contig_k->reads[k]->cEnd > contigKCutPos2 && contigKCutPos2 < contig_k->property.len)
 			 {
 			 rightProperRead = abs(contig_k->reads[k]->id);
 			 rightProperReadPos2 = contig_k->reads[k]->end;
@@ -1454,7 +1459,7 @@ void createSplitEvent(AnalyzeContext * actx, Contig *contig, int read, int sType
 //		contig->split = (SplitEvent*) realloc(contig->split, sizeof(SplitEvent) * contig->maxSplits);
 //		assert(contig->split != NULL);
 //	}
-	assert(contigCutPos1 >= 0 && contigCutPos1 < contigCutPos2 && contigCutPos2 <= contig->len);
+	assert(contigCutPos1 >= 0 && contigCutPos1 < contigCutPos2 && contigCutPos2 <= contig->property.len);
 	{
 		// find contig reads and their positions for corresponding cutPositions
 		int leftProperRead, rightProperRead;
@@ -1481,7 +1486,7 @@ void createSplitEvent(AnalyzeContext * actx, Contig *contig, int read, int sType
 //					assert(leftProperReadPos1 < leftProperReadPos2);
 //				}
 //			}
-//			if (contig->reads[k]->cEnd > contigCutPos2 && contigCutPos2 < contig->len)
+//			if (contig->reads[k]->cEnd > contigCutPos2 && contigCutPos2 < contig->property.len)
 //			{
 //				rightProperRead = abs(contig->reads[k]->id);
 //				rightProperReadPos2 = contig->reads[k]->end;
@@ -1542,7 +1547,7 @@ void finalContigValidation(AnalyzeContext *actx)
 			if (cread->nOutReads < MIN_OUT_COV || cread->nComReadsWithNextContigRead < MIN_COM_OUT_COV)
 			{
 				printf("CONTIG %d FOUND LOW  COVERAGE CP: read %d, # in %d, # out %d, #comRead %d, cPos [%d, %d], rPos [%d, %d], avgCov %.2f, covDrop %d\n",
-						contig->idx, cread->patchedID, cread->nInReads, cread->nOutReads, cread->nComReadsWithNextContigRead, cread->patchedContigPosBeg,
+						contig->property.contigID, cread->patchedID, cread->nInReads, cread->nOutReads, cread->nComReadsWithNextContigRead, cread->patchedContigPosBeg,
 						cread->patchedContigPosEnd, cread->ovlReads->beg, cread->ovlReads->end, cread->avgCov, cread->lowCov);
 
 				cread->type |= (CONTIG_READ_BREAK_UNKNOWN);
@@ -1553,7 +1558,7 @@ void finalContigValidation(AnalyzeContext *actx)
 
 	// todo really necessary?
 	for (i = 0; i < actx->numContigs; i++)
-		actx->contigs[i].flag &= ~( CONTIG_VISITED);
+		actx->contigs[i].property.flag &= ~( CONTIG_VISITED);
 
 	int k;
 	Contig **secondaryContigs;
@@ -1569,7 +1574,7 @@ void finalContigValidation(AnalyzeContext *actx)
 	//        c) analyze all relations of contigs in 2b): heterozygous, repeat induced, false joins, and split contigs if necessary
 	for (i = 0; i < actx->numContigs; i++)
 	{
-		if (actx->contigs_sorted[i]->flag & CONTIG_VISITED)
+		if (actx->contigs_sorted[i]->property.flag & CONTIG_VISITED)
 		{
 			continue;
 		}
@@ -1594,14 +1599,14 @@ void finalContigValidation(AnalyzeContext *actx)
 				for (k = 0; k < nOcc; k++)
 				{
 					int contigIdx = abs(actx->vreadMask[k][aread]) - 1;
-					if (contigIdx == primaryContig->idx)
+					if (contigIdx == primaryContig->property.contigID)
 						continue;
 
 					int add = 1;
 					int l;
 					for (l = 0; l < curSecondaryContigs; l++)
 					{
-						if (secondaryContigs[l]->idx == contigIdx)
+						if (secondaryContigs[l]->property.contigID == contigIdx)
 						{
 							add = 0;
 							break;
@@ -1616,7 +1621,7 @@ void finalContigValidation(AnalyzeContext *actx)
 							assert(secondaryContigs != NULL);
 						}
 						secondaryContigs[curSecondaryContigs] = actx->contigs + contigIdx;
-						secondaryContigs[curSecondaryContigs]->tmp = primaryContig->cReads[j].patchedContigPosBeg;
+						secondaryContigs[curSecondaryContigs]->property.tmp = primaryContig->cReads[j].patchedContigPosBeg;
 						curSecondaryContigs++;
 					}
 				}
@@ -1634,7 +1639,7 @@ void finalContigValidation(AnalyzeContext *actx)
 //				int add = 1;
 //				for (k = 0; k < curSecondaryContigs; k++)
 //				{
-//					if (secondaryContigs[k]->idx == primaryContig->ovlGrps[j]->bread)
+//					if (secondaryContigs[k]->property.contigID == primaryContig->ovlGrps[j]->bread)
 //					{
 //						add = 0;
 //						break;
@@ -1656,14 +1661,14 @@ void finalContigValidation(AnalyzeContext *actx)
 //		}
 
 		// check contig graph classification
-		for (j = 0; j < primaryContig->numGClassific; j++)
+		for (j = 0; j < primaryContig->numReadRelations; j++)
 		{
-			if (primaryContig->gClassific[j].flag & CONTIG_HAS_CONTAINED)
+			if (primaryContig->readRelations[j].flag & CONTIG_HAS_CONTAINED)
 			{
 				int add = 1;
 				for (k = 0; k < curSecondaryContigs; k++)
 				{
-					if (secondaryContigs[k]->idx == primaryContig->gClassific[j].correspID)
+					if (secondaryContigs[k]->property.contigID == primaryContig->readRelations[j].correspID)
 					{
 						add = 0;
 						break;
@@ -1677,8 +1682,8 @@ void finalContigValidation(AnalyzeContext *actx)
 						secondaryContigs = (Contig**) realloc(secondaryContigs, sizeof(Contig*) * maxSecondaryContigs);
 						assert(secondaryContigs != NULL);
 					}
-					secondaryContigs[curSecondaryContigs] = actx->contigs + primaryContig->gClassific[j].correspID;
-					secondaryContigs[curSecondaryContigs]->tmp = primaryContig->gClassific[j].coveredIntervals[0];
+					secondaryContigs[curSecondaryContigs] = actx->contigs + primaryContig->readRelations[j].correspID;
+					secondaryContigs[curSecondaryContigs]->property.tmp = primaryContig->readRelations[j].coveredIntervals[0];
 					curSecondaryContigs++;
 				}
 			}
@@ -1687,19 +1692,19 @@ void finalContigValidation(AnalyzeContext *actx)
 		// sort secondary contigs according to mapping position in primary contig
 		qsort(secondaryContigs, curSecondaryContigs, sizeof(Contig*), cmp_contig_bytmp);
 
-		printf("Primary Contig: %d LEN %d class %d flag %d\n", primaryContig->idx, primaryContig->len, primaryContig->class, primaryContig->flag);
+		printf("Primary Contig: %d LEN %d class %d \n", primaryContig->property.contigID, primaryContig->property.len, primaryContig->property.flag);
 
 		// analyze contig relations
 		for (j = 0; j < curSecondaryContigs; j++)
 		{
 			Contig *secondaryContig = secondaryContigs[j];
-			printf("Secondary Contig: %d LEN %d start at: %d class %d flag %d\n", secondaryContig->idx, secondaryContig->len, secondaryContig->tmp,
-					secondaryContig->class, secondaryContig->flag);
+			printf("Secondary Contig: %d LEN %d start at: %d class %d\n", secondaryContig->property.contigID, secondaryContig->property.len, secondaryContig->property.tmp,
+					secondaryContig->property.flag);
 		}
 
-		primaryContig->flag |= CONTIG_VISITED;
+		primaryContig->property.flag |= CONTIG_VISITED;
 		for (j = 0; j < curSecondaryContigs; j++)
-			secondaryContigs[j]->flag |= CONTIG_VISITED;
+			secondaryContigs[j]->property.flag |= CONTIG_VISITED;
 	}
 
 	// clean up temp contig buffer
@@ -1715,7 +1720,7 @@ void finalContigValidation(AnalyzeContext *actx)
 //	{
 //		Contig *contig = actx->contigs + i;
 //
-////		printf("analyzeRepeatContent of contig %d (%d), len %d", i, contig->idx, contig->len);
+////		printf("analyzeRepeatContent of contig %d (%d), len %d", i, contig->property.contigID, contig->property.len);
 //
 //		track_anno* ranno = (track_anno*) (actx->contigRepeats_track->anno);
 //		track_data* rdata = (track_data*) (actx->contigRepeats_track->data);
@@ -1775,9 +1780,9 @@ void finalContigValidation(AnalyzeContext *actx)
 //				{
 //					tipL += MIN(25000, prve) - prvb;
 //				}
-//				if (prve > contig->len - 25000)
+//				if (prve > contig->property.len - 25000)
 //				{
-//					tipR += prve - MAX(prvb, contig->len - 25000);
+//					tipR += prve - MAX(prvb, contig->property.len - 25000);
 //				}
 //				prvb = b;
 //				prve = e;
@@ -1792,16 +1797,16 @@ void finalContigValidation(AnalyzeContext *actx)
 //		{
 //			tipL += MIN(25000, prve) - prvb;
 //		}
-//		if (prve > contig->len - 25000)
+//		if (prve > contig->property.len - 25000)
 //		{
-//			tipR += prve - MAX(prvb, contig->len - 25000);
+//			tipR += prve - MAX(prvb, contig->property.len - 25000);
 //		}
 //
 //		contig->repBases = repBases;
 //		contig->repBasesTipLeft = tipL;
 //		contig->repBasesTipRight = tipR;
 //		contig->numRepeats = nrepeat;
-////		printf(" repeat %d %d %d (%.2f%%) tipL %d, tipR %d\n", nrepeat, repBases, repMerged, repBases * 100.0 / contig->len, tipL, tipR);
+////		printf(" repeat %d %d %d (%.2f%%) tipL %d, tipR %d\n", nrepeat, repBases, repMerged, repBases * 100.0 / contig->property.len, tipL, tipR);
 //	}
 //}
 
@@ -2099,7 +2104,7 @@ void getCorrespondingPositionInBRead(AnalyzeContext *actx, Overlap *ovl, int* po
 #endif
 }
 
-int processFixedReadOverlap_handler1(void* _ctx, Overlap* ovls, int novl)
+int processReadOverlapsAndMapThemToContigs(void* _ctx, Overlap* ovls, int novl)
 {
 	AnalyzeContext* actx = (AnalyzeContext*) _ctx;
 
@@ -2177,8 +2182,8 @@ int processFixedReadOverlap_handler1(void* _ctx, Overlap* ovls, int novl)
 			Contig * contig = actx->contigs + (conId - 1);
 
 #ifdef DEBUG_STEP1A
-			printf("found aread %d in contig %d: (len: %d, rep: %d) bread %d\n", aread, conId - 1, contig->len,
-					getRepeatBasesFromInterval(actx, contig->idx, 0, contig->len), bread);
+			printf("found aread %d in contig %d: (len: %d, rep: %d) bread %d\n", aread, conId - 1, contig->property.len,
+					getRepeatBasesFromInterval(actx, contig->property.contigID, 0, contig->property.len), bread);
 #endif
 			// check if corresponding b-read is already visited
 			int found = 0;
@@ -2220,7 +2225,7 @@ int processFixedReadOverlap_handler1(void* _ctx, Overlap* ovls, int novl)
 #ifdef DEBUG_STEP1A
 			printf("OVERLAP: %d vs %d [%8d, %8d] %c [%8d, %8d] l [%8d, %8d]\n",ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, (ovl->flags & OVL_COMP) ? 'C' : 'N', ovl->path.bbpos, ovl->path.bepos,
 					DB_READ_LEN(actx->patchedReadDB, ovl->aread), DB_READ_LEN(actx->patchedReadDB, ovl->bread));
-			printf("Aread %d in contig %d: cPos [%d, %d] rPos: [%d, %d] %c\n", aread, contig->idx, areadContigBeg, areadContigEnd, areadReadBeg, areadReadEnd, (areadReadBeg > areadReadEnd) ? 'C' : 'N');
+			printf("Aread %d in contig %d: cPos [%d, %d] rPos: [%d, %d] %c\n", aread, contig->property.contigID, areadContigBeg, areadContigEnd, areadReadBeg, areadReadEnd, (areadReadBeg > areadReadEnd) ? 'C' : 'N');
 			printf("convert overlap coordinates from %d %d [%d, %d] %c [%d, %d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos,
 					(ovl->flags & OVL_COMP) ? 'C' : 'N', ovl->path.bbpos, ovl->path.bepos);
 #endif
@@ -2362,7 +2367,7 @@ int processFixedReadOverlap_handler1(void* _ctx, Overlap* ovls, int novl)
 						ovl->path.bepos, DB_READ_LEN(actx->patchedReadDB, ovl->aread), DB_READ_LEN(actx->patchedReadDB, ovl->bread), (ovl->flags & OVL_COMP) ? 'c' : 'n',
 						falk->patchedContigPosBeg, falk->patchedContigPosEnd, falk->ovlReads->beg, falk->ovlReads->end);
 
-				printf("=======<<<< added OVL-B-read: %d %d-%d, in c%d-%d-%d %c %c crLen %d oLen %d ocrLen %d ocLen %d\n", curOvlRead->patchedID, curOvlRead->beg, curOvlRead->end, contig->idx, curOvlRead->cBeg, curOvlRead->cEnd,
+				printf("=======<<<< added OVL-B-read: %d %d-%d, in c%d-%d-%d %c %c crLen %d oLen %d ocrLen %d ocLen %d\n", curOvlRead->patchedID, curOvlRead->beg, curOvlRead->end, contig->property.contigID, curOvlRead->cBeg, curOvlRead->cEnd,
 						(cReadInComplement) ? 'C': 'N', (ovl->flags & OVL_COMP) ? 'C': 'N', cread->ovlReads->cEnd - cread->ovlReads->cBeg, ovl->path.aepos - ovl->path.abpos, curOvlRead->cEnd - curOvlRead->cBeg, abs(abs(curOvlRead->beg)-abs(curOvlRead->end)));
 
 #endif
@@ -2381,8 +2386,8 @@ int processFixedReadOverlap_handler1(void* _ctx, Overlap* ovls, int novl)
 			Contig * contig = actx->contigs + (conId - 1);
 
 #ifdef DEBUG_STEP1A
-			printf("found bread %d in contig %d: (len: %d, rep: %d)\n", bread, conId - 1, contig->len,
-					getRepeatBasesFromInterval(actx, contig->idx, 0, contig->len));
+			printf("found bread %d in contig %d: (len: %d, rep: %d)\n", bread, conId - 1, contig->property.len,
+					getRepeatBasesFromInterval(actx, contig->property.contigID, 0, contig->property.len));
 #endif
 			// check if corresponding a-read is already visited
 			int found = 0;
@@ -2422,7 +2427,7 @@ int processFixedReadOverlap_handler1(void* _ctx, Overlap* ovls, int novl)
 #ifdef DEBUG_STEP1A
 			printf("OVERLAP: %d vs %d [%8d, %8d] %c [%8d, %8d] l [%8d, %8d]\n",ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, (ovl->flags & OVL_COMP) ? 'C' : 'N', ovl->path.bbpos, ovl->path.bepos,
 					DB_READ_LEN(actx->patchedReadDB, ovl->aread), DB_READ_LEN(actx->patchedReadDB, ovl->bread));
-			printf("Bread %d in contig %d: cPos [%d, %d] rPos: [%d, %d]\n", bread, contig->idx, breadContigBeg, breadContigEnd, breadReadBeg, breadReadEnd);
+			printf("Bread %d in contig %d: cPos [%d, %d] rPos: [%d, %d]\n", bread, contig->property.contigID, breadContigBeg, breadContigEnd, breadReadBeg, breadReadEnd);
 			printf("convert overlap coordinates from %d %d [%d, %d] %c [%d, %d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos,
 					(ovl->flags & OVL_COMP) ? 'C' : 'N', ovl->path.bbpos, ovl->path.bepos);
 #endif
@@ -2490,7 +2495,7 @@ int processFixedReadOverlap_handler1(void* _ctx, Overlap* ovls, int novl)
 
 					if (cread->ovlReads == NULL)
 					{
-						fprintf(stderr, "[ERROR]: Unable to increase OvlRead buffer of contig %d at read: %d, from %d to %d!\n", contig->idx, bread, cread->numOvlReads,
+						fprintf(stderr, "[ERROR]: Unable to increase OvlRead buffer of contig %d at read: %d, from %d to %d!\n", contig->property.contigID, bread, cread->numOvlReads,
 								cread->maxOvlReads);
 						exit(1);
 					}
@@ -2578,7 +2583,7 @@ int processFixedReadOverlap_handler1(void* _ctx, Overlap* ovls, int novl)
 						ovl->path.bepos, DB_READ_LEN(actx->patchedReadDB, ovl->aread), DB_READ_LEN(actx->patchedReadDB, ovl->bread), (ovl->flags & OVL_COMP) ? 'c' : 'n',
 						falk->patchedContigPosBeg, falk->patchedContigPosEnd, falk->ovlReads->beg, falk->ovlReads->end);
 
-				printf("=======>>>> added OVL-A-read: %d %d-%d, in c%d-%d-%d %c %c crLen %d oLen %d ocrLen %d ocLen %d\n", curOvlRead->patchedID, curOvlRead->beg, curOvlRead->end, contig->idx, curOvlRead->cBeg, curOvlRead->cEnd,
+				printf("=======>>>> added OVL-A-read: %d %d-%d, in c%d-%d-%d %c %c crLen %d oLen %d ocrLen %d ocLen %d\n", curOvlRead->patchedID, curOvlRead->beg, curOvlRead->end, contig->property.contigID, curOvlRead->cBeg, curOvlRead->cEnd,
 						(cReadInComplement) ? 'C': 'N', (ovl->flags & OVL_COMP) ? 'C': 'N', cread->ovlReads->cEnd - cread->ovlReads->cBeg, ovl->path.aepos - ovl->path.abpos, curOvlRead->cEnd - curOvlRead->cBeg, abs(abs(curOvlRead->beg)-abs(curOvlRead->end)));
 #endif
 			}
@@ -2623,7 +2628,6 @@ int getRepeatBasesFromInterval(AnalyzeContext* actx, int readID, int beg, int en
 		rb += 2;
 	}
 
-	printf("getRepeatBasesFromInterval: %d %d %d --> %d\n", readID, beg, end, repBases);
 	return repBases;
 }
 
@@ -2824,18 +2828,16 @@ void updateOverlapGroup(AnalyzeContext *actx, OverlapGroup *ovlgrp, Overlap *pOv
 	}
 }
 
-void analyzeContigOverlapGraph(AnalyzeContext *actx)
+void analyzeContigCoverageOfMappedReads(AnalyzeContext *actx)
 {
 	int i, j, k;
-	int tmp;
-	int crComp;
 
 	// sort b-reads according read id and remove duplicates
 	for (i = 0; i < actx->numContigs; i++)
 	{
 		Contig *contig = actx->contigs + i;
 
-		if (contig->flag & CONTIG_DISCARD)
+		if (contig->property.flag & CONTIG_DISCARD)
 			continue;
 
 		for (j = 0; j < contig->numcReads; j++)
@@ -2857,12 +2859,12 @@ void analyzeContigOverlapGraph(AnalyzeContext *actx)
 	{
 		Contig *contig = actx->contigs + i;
 
-		if (contig->flag & CONTIG_DISCARD)
+		if (contig->property.flag & CONTIG_DISCARD)
 			continue;
 
 #ifdef DEBUG_STEP1B
 
-		printf("Contig %d, reads: %d\n", contig->idx, contig->numcReads);
+		printf("Contig %d, reads: %d\n", contig->property.contigID, contig->numcReads);
 #endif
 		for (j = 0; j < contig->numcReads; j++)
 		{
@@ -2977,11 +2979,11 @@ void analyzeContigOverlapGraph(AnalyzeContext *actx)
 			}
 		}
 		// calculate average coverage of contig
-		contig->avgCov /= contig->len;
+		contig->avgCov /= contig->property.len;
 
-//		if(contig->idx == 0)
+//		if(contig->property.contigID == 0)
 		{
-			printf("STATS of contig %d\n", contig->idx);
+			printf("STATS of contig %d\n", contig->property.contigID);
 			printf("avgCov: %.2f\n", contig->avgCov);
 			for (j = 0; j < contig->numcReads; j++)
 			{
@@ -3033,6 +3035,25 @@ int getPathID(AnalyzeContext *actx, int contigID)
 	return (int) path_data[b];
 }
 
+int getFileID(FileNamesAndOffsets *fileAndNameOffset, int contigID)
+{
+	assert(fileAndNameOffset != NULL);
+
+	assert(contigID >= 0 && contigID <= fileAndNameOffset->toDbIdx[fileAndNameOffset->numFileNames]);
+
+	int i;
+	for (i=0; i<fileAndNameOffset->numFileNames; i++)
+	{
+		if(contigID >= fileAndNameOffset->fromDbIdx[i]  && contigID <=fileAndNameOffset->toDbIdx[i])
+		{
+			break;
+		}
+	}
+
+	return i;
+}
+
+
 void getContigsEndIDs(AnalyzeContext *actx, int contigID, int* beg, int *end)
 {
 	if (contigID < 0 || contigID >= DB_NREADS(actx->corContigDB))
@@ -3063,9 +3084,9 @@ void getContigsEndIDs(AnalyzeContext *actx, int contigID, int* beg, int *end)
 	(*end) = path_data[b + 1];
 }
 
-void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
+void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 {
-	int i, j, k, l, m;
+	int j, k, l, m;
 
 	ContigIDAndLen *contigIDAndLength = (ContigIDAndLen*) malloc(sizeof(ContigIDAndLen) * actx->numContigs);
 	int numCL = 0;
@@ -3091,49 +3112,35 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 	contigKBegRange = (int*) malloc(sizeof(int) * numReads);
 	contigKEndRange = (int*) malloc(sizeof(int) * numReads);
 
-	i = 1;
-	int offset, prevOffset;
+	int faId;
 
-	offset = prevOffset = 0;
-
-	int beg, end;
-
-	int faId = 0;
-	while (offset < actx->numContigs)
+	for(faId=0; faId<actx->contigFileNamesAndOffsets->numFileNames; faId++)
 	{
-		faId++;
-		offset = actx->contigFileNameOffsets[i];
-
 #ifdef DEBUG_STEP1C
-		printf("i %d, %d %d\n", i, prevOffset, offset);
+		printf("i %d, %d %d\n", faId, actx->contigFileNamesAndOffsets->fromDbIdx[faId], actx->contigFileNamesAndOffsets->toDbIdx[faId]);
 #endif
-		beg = end = -1;
 
-		getContigsEndIDs(actx, i - 1, &beg, &end);
-#ifdef DEBUG_STEP1C
-		printf("%s ends=%d,%d:\n", actx->ContigFileNames[i], beg, end);
-#endif
-		if (offset - prevOffset == 1)
+		if (actx->contigFileNamesAndOffsets->fromDbIdx[faId] == actx->contigFileNamesAndOffsets->toDbIdx[faId])
 		{
 #ifdef DEBUG_STEP1C
-			printf("fasta file %d: %s --> has only one contig\n", faId, actx->ContigFileNames[i]);
+			printf("fasta file %d: %s --> has only one contig\n", faId, actx->contigFileNamesAndOffsets->fileNames[faId]);
 #endif
-			actx->contigs[prevOffset].gClassificFlag |= CONTIG_UNIQUE;
+			actx->contigs[actx->contigFileNamesAndOffsets->fromDbIdx[faId]].property.readRelationFlags |= READ_IS_UNIQUE;
 		}
 		else // at this point, current compound contains at least 2 contigs
 		{
 			numCL = 0;
 
 			// add all contigs from current connected compound (same file == subgraph)
-			for (j = prevOffset; j < offset; j++)
+			for (j = actx->contigFileNamesAndOffsets->fromDbIdx[faId]; j <= actx->contigFileNamesAndOffsets->toDbIdx[faId]; j++)
 			{
 				Contig *contig = actx->contigs + j;
-				if (contig->flag & CONTIG_DISCARD)
+				if (contig->property.flag & CONTIG_DISCARD)
 					continue;
-				contigIDAndLength[numCL].idx = contig->idx;
-				contigIDAndLength[numCL].len = contig->len;
+				contigIDAndLength[numCL].idx = contig->property.contigID;
+				contigIDAndLength[numCL].len = contig->property.len;
 #ifdef DEBUG_STEP1C
-				printf("%d len: %d\n", contig->idx, contig->len);
+				printf("%d len: %d\n", contig->property.contigID, contig->property.len);
 #endif
 				numCL++;
 			}
@@ -3146,17 +3153,17 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 			{
 				Contig * contig_j = actx->contigs + contigIDAndLength[j].idx;
 
-				if (contig_j->flag & CONTIG_DISCARD)
+				if (contig_j->property.flag & CONTIG_DISCARD)
 					continue;
 
 #ifdef DEBUG_STEP1C
-				printf("Check against contig_j: %d, len %d\n", contig_j->idx, contig_j->len);
+				printf("Check against contig_j: %d, len %d\n", contig_j->property.contigID, contig_j->property.len);
 #endif
 
-				if (contig_j->gClassificFlag & CONTIG_IS_CONTAINED)
+//				if (contig_j->gClassificFlag & CONTIG_IS_CONTAINED)
 				{
 #ifdef DEBUG_STEP1C
-					printf("Skip contig %d, already contained!\n", contig_j->idx);
+					printf("Skip contig %d, already contained!\n", contig_j->property.contigID);
 #endif
 //					continue;
 				}
@@ -3171,7 +3178,7 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 					ContigRead *cread = contig_j->cReads + k;
 
 #ifdef DEBUG_STEP1C
-					printf("contig_j %d add breads for cread %d\n", contig_j->idx, cread->patchedID);
+					printf("contig_j %d add breads for cread %d\n", contig_j->property.contigID, cread->patchedID);
 #endif
 					for (l = 0; l < cread->numOvlReads; l++)
 					{
@@ -3198,13 +3205,13 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 				{
 					Contig * contig_k = actx->contigs + contigIDAndLength[k].idx;
 
-					if (contig_k->flag & CONTIG_DISCARD)
+					if (contig_k->property.flag & CONTIG_DISCARD)
 						continue;
 
 //					if (contig_k->gClassificFlag & CONTIG_IS_CONTAINED)
 //					{
 #ifdef DEBUG_STEP1C
-					printf("Skip contig %d, already contained!\n", contig_k->idx);
+					printf("Skip contig %d, already contained!\n", contig_k->property.contigID);
 #endif
 //						continue;
 //					}
@@ -3218,7 +3225,7 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 						ContigRead *cread = contig_k->cReads + l;
 
 #ifdef DEBUG_STEP1C
-						printf("contig_k %d add breads for cread %d\n", contig_k->idx, cread->patchedID);
+						printf("contig_k %d add breads for cread %d\n", contig_k->property.contigID, cread->patchedID);
 #endif
 						for (m = 0; m < cread->numOvlReads; m++)
 						{
@@ -3274,7 +3281,7 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 								while (from <= to)
 								{
-									if (contig_k->idx == 263)
+									if (contig_k->property.contigID == 263)
 									{
 										printf("from = %d, to = %d Jcount %d nBins %d\n", from, to, contigJCovHist[from], nBins);
 										fflush(stdout);
@@ -3296,7 +3303,7 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 								}
 								while (from <= to)
 								{
-									if (contig_k->idx == 263)
+									if (contig_k->property.contigID == 263)
 									{
 										printf("from = %d, to = %d Kcount %d nBins %d\n", from, to, contigKCovHist[from], nBins);
 										fflush(stdout);
@@ -3307,8 +3314,8 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 							}
 						}
 #ifdef DEBUG_STEP1C
-						printf("analyze contigs: %d p%d (cov %.2f) %d p%d (cov %.2f) len %d %d --> numOfcommonReads: %d of %d: %.3f\n", contig_j->idx,
-								getPathID(actx, contig_j->idx), contig_j->avgCov, contig_k->idx, getPathID(actx, contig_k->idx), contig_k->avgCov, contig_j->len, contig_k->len,
+						printf("analyze contigs: %d p%d (cov %.2f) %d p%d (cov %.2f) len %d %d --> numOfcommonReads: %d of %d: %.3f\n", contig_j->property.contigID,
+								getPathID(actx, contig_j->property.contigID), contig_j->avgCov, contig_k->property.contigID, getPathID(actx, contig_k->property.contigID), contig_k->avgCov, contig_j->property.len, contig_k->property.len,
 								numComReads, numkReads, numComReads * 100.0 / numkReads);
 						printf("contigKCovHist:\n");
 #endif
@@ -3390,13 +3397,13 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 						{
 							if (ba_value(contigIntersectionJKReads, l))
 							{
-								printf("%4d: c %7d vs c %7d read: %7d [%7d, %7d] --> [%7d, %7d]\n", m++, contig_j->idx, contig_k->idx, l, contigJBegRange[l],
+								printf("%4d: c %7d vs c %7d read: %7d [%7d, %7d] --> [%7d, %7d]\n", m++, contig_j->property.contigID, contig_k->property.contigID, l, contigJBegRange[l],
 										contigJEndRange[l], contigKBegRange[l], contigKEndRange[l]);
 							}
 						}
 #endif
 
-						int cumKGapBases = covIvlK[0] + contig_k->len - covIvlK[3 * numCovIvlK - 2];
+						int cumKGapBases = covIvlK[0] + contig_k->property.len - covIvlK[3 * numCovIvlK - 2];
 						int cumKCoveredBases = 0;
 						for (l = 0; l < numCovIvlK; l++)
 						{
@@ -3409,8 +3416,8 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 								cumKGapBases += (covIvlK[(l + 1) * 3] - covIvlK[l * 3 + 1]);
 						}
 #ifdef DEBUG_STEP1C
-						printf("cumKGapBases %d (%.2f%%) cumKCoveredBases %d (%.2f%%)\n", cumKGapBases, cumKGapBases * 100.0 / contig_k->len, cumKCoveredBases,
-								cumKCoveredBases * 100.0 / contig_k->len);
+						printf("cumKGapBases %d (%.2f%%) cumKCoveredBases %d (%.2f%%)\n", cumKGapBases, cumKGapBases * 100.0 / contig_k->property.len, cumKCoveredBases,
+								cumKCoveredBases * 100.0 / contig_k->property.len);
 #endif
 						int cumJGapBases = 0;
 						int cumJCoveredBases = 0;
@@ -3434,7 +3441,7 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 						int preClassFlagJ = 0;
 
 						// contig k is contained in J
-						if (numComReads * 100.0 / numkReads > 70.0 || (cumKCoveredBases * 100.0 / contig_k->len >= 50))
+						if (numComReads * 100.0 / numkReads > 70.0 || (cumKCoveredBases * 100.0 / contig_k->property.len >= 50))
 						{
 							preClassFlagK |= CONTIG_IS_CONTAINED;
 							preClassFlagJ |= CONTIG_HAS_CONTAINED;
@@ -3447,56 +3454,54 @@ void classifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 #ifdef DEBUG_STEP1C
 						printContigClassification(stdout, preClassFlagK, ' ');
-						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_k->idx, contig_j->idx, covIvlK[0], covIvlK[numCovIvlK * 3 - 2], covIvlJ[0],
+						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_k->property.contigID, contig_j->property.contigID, covIvlK[0], covIvlK[numCovIvlK * 3 - 2], covIvlJ[0],
 								covIvlJ[numCovIvlJ * 3 - 2]);
 
 						printContigClassification(stdout, preClassFlagJ, ' ');
-						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_j->idx, contig_k->idx, covIvlJ[0], covIvlJ[numCovIvlJ * 3 - 2], covIvlK[0],
+						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_j->property.contigID, contig_k->property.contigID, covIvlJ[0], covIvlJ[numCovIvlJ * 3 - 2], covIvlK[0],
 								covIvlK[numCovIvlK * 3 - 2]);
 #endif
 
-						if (contig_k->numGClassific == contig_k->maxGClassific)
+						if (contig_k->numReadRelations == contig_k->maxReadRelations)
 						{
-							contig_k->maxGClassific = (int) (contig_k->maxGClassific * 1.2) + 5;
-							contig_k->gClassific = (ContigGraphClassification*) realloc(contig_k->gClassific, sizeof(ContigGraphClassification) * contig_k->maxGClassific);
+							contig_k->maxReadRelations = (int) (contig_k->maxReadRelations * 1.2) + 5;
+							contig_k->readRelations = (ReadRelation*) realloc(contig_k->readRelations, sizeof(ReadRelation) * contig_k->maxReadRelations);
 						}
 
-						int num = contig_k->numGClassific;
+						int num = contig_k->numReadRelations;
 
-						contig_k->gClassificFlag = preClassFlagK;
+//						contig_k->gClassificFlag = preClassFlagK;
 
-						contig_k->gClassific[num].flag = preClassFlagK;
-						contig_k->gClassific[num].numCoveredIntervals = numCovIvlK;
-						contig_k->gClassific[num].coveredIntervals = covIvlK;
-						contig_k->gClassific[num].correspID = contig_j->idx;
-						contig_k->gClassific[num].nJointReads = numComReads;
-						contig_k->numGClassific++;
+						contig_k->readRelations[num].flag = preClassFlagK;
+						contig_k->readRelations[num].numCoveredIntervals = numCovIvlK;
+						contig_k->readRelations[num].coveredIntervals = covIvlK;
+						contig_k->readRelations[num].correspID = contig_j->property.contigID;
+						contig_k->readRelations[num].nJointReads = numComReads;
+						contig_k->numReadRelations++;
 
 						// store corresponding info for contig J
 
-						if (contig_j->numGClassific == contig_j->maxGClassific)
+						if (contig_j->numReadRelations == contig_j->maxReadRelations)
 						{
-							contig_j->maxGClassific = (int) (contig_j->maxGClassific * 1.2) + 5;
-							contig_j->gClassific = (ContigGraphClassification*) realloc(contig_j->gClassific, sizeof(ContigGraphClassification) * contig_j->maxGClassific);
+							contig_j->maxReadRelations = (int) (contig_j->maxReadRelations* 1.2) + 5;
+							contig_j->readRelations = (ReadRelation*) realloc(contig_j->readRelations, sizeof(ReadRelation) * contig_j->maxReadRelations);
 						}
 
-						num = contig_j->numGClassific;
+						num = contig_j->numReadRelations;
 
-						contig_j->gClassificFlag = preClassFlagJ;
+//						contig_j->gClassificFlag = preClassFlagJ;
 
-						contig_j->gClassific[num].flag = preClassFlagJ;
-						contig_j->gClassific[num].numCoveredIntervals = numCovIvlJ;
-						contig_j->gClassific[num].coveredIntervals = covIvlJ;
-						contig_j->gClassific[num].correspID = contig_k->idx;
-						contig_j->gClassific[num].nJointReads = numComReads;
+						contig_j->readRelations[num].flag = preClassFlagJ;
+						contig_j->readRelations[num].numCoveredIntervals = numCovIvlJ;
+						contig_j->readRelations[num].coveredIntervals = covIvlJ;
+						contig_j->readRelations[num].correspID = contig_k->property.contigID;
+						contig_j->readRelations[num].nJointReads = numComReads;
 
-						contig_j->numGClassific++;
+						contig_j->numReadRelations++;
 					}
 				}
 			}
 		}
-		prevOffset = offset;
-		i++;
 	}
 
 // cleanup
@@ -4274,14 +4279,14 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 
 	assert(ctx->curChains == 0);
 
-	if (conA->idx == 131 && conB->idx == 132)
+	if (conA->property.contigID == 131 && conB->property.contigID == 132)
 		printf("conA 1 conB 10: a[%d ,%d] b[%d ,%d]\n", ovls->path.abpos, ovls->path.aepos, ovls->path.bbpos, ovls->path.bepos);
 
 	if (n < 2)
 	{
 		// add a single overlap into chain if its somehow long enough
-		if ((ovls->path.aepos - ovls->path.abpos) >= 0.5 * conA->len || (ovls->path.bepos - ovls->path.bbpos) >= 0.5 * conB->len
-				|| (((ovls->path.abpos == 0) || (ovls->path.aepos == conA->len)) && ((ovls->path.bbpos == 0) || (ovls->path.bepos == conB->len))
+		if ((ovls->path.aepos - ovls->path.abpos) >= 0.5 * conA->property.len || (ovls->path.bepos - ovls->path.bbpos) >= 0.5 * conB->property.len
+				|| (((ovls->path.abpos == 0) || (ovls->path.aepos == conA->property.len)) && ((ovls->path.bbpos == 0) || (ovls->path.bepos == conB->property.len))
 						&& (ovls->path.aepos - ovls->path.abpos > 15000)) // putative join
 				)
 		{
@@ -4300,10 +4305,10 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				chain->ovls = (Overlap**) realloc(chain->ovls, sizeof(Overlap *) * chain->maxOvl);
 				bzero(chain->ovls + chain->novl, sizeof(Overlap*) * (chain->maxOvl - chain->novl));
 			}
-			if (conA->idx == 131 && conB->idx == 132)
-				printf(" 1 vs 10 --> is a chain? %d || %d || %d || ((%d || %d) && (%d && %d) && %d\n", (ovls->path.aepos - ovls->path.abpos) >= 0.5 * conA->len,
-						(ovls->path.bepos - ovls->path.bbpos) >= 0.5 * conB->len, (ovls->path.abpos == 0), (ovls->path.aepos == conA->len), (ovls->path.bbpos == 0),
-						(ovls->path.bepos == conB->len), (ovls->path.aepos - ovls->path.abpos > 15000));
+			if (conA->property.contigID == 131 && conB->property.contigID == 132)
+				printf(" 1 vs 10 --> is a chain? %d || %d || %d || ((%d || %d) && (%d && %d) && %d\n", (ovls->path.aepos - ovls->path.abpos) >= 0.5 * conA->property.len,
+						(ovls->path.bepos - ovls->path.bbpos) >= 0.5 * conB->property.len, (ovls->path.abpos == 0), (ovls->path.aepos == conA->property.len), (ovls->path.bbpos == 0),
+						(ovls->path.bepos == conB->property.len), (ovls->path.aepos - ovls->path.abpos > 15000));
 			chain->ovls[0] = ovls;
 			chain->novl = 1;
 			ovls->flags |= OVL_TEMP;
@@ -4431,12 +4436,12 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			}
 
 			if (ovls->aread == 131 && ovls->bread == 132)
-				printf("checkBreakOut %d && %d && !(%d || %d)\n", ctx->curChains, longestOvlBases < 5000, longestOvlBases * 1.0 / conB->len > 0.5,
-						longestOvlBases * 1.0 / conA->len > 0.5);
+				printf("checkBreakOut %d && %d && !(%d || %d)\n", ctx->curChains, longestOvlBases < 5000, longestOvlBases * 1.0 / conB->property.len > 0.5,
+						longestOvlBases * 1.0 / conA->property.len > 0.5);
 
 			// break out
 			if ((ctx->curChains || whileIdx > 2)
-					&& (longestOvlBases < 10000 && !((longestOvlBases * 1.0 / conB->len > 0.5) || (longestOvlBases * 1.0 / conA->len > 0.5))))
+					&& (longestOvlBases < 10000 && !((longestOvlBases * 1.0 / conB->property.len > 0.5) || (longestOvlBases * 1.0 / conA->property.len > 0.5))))
 			{
 				for (i = 0; i < n; i++)
 				{
@@ -4534,7 +4539,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				int curBestUniqBases = -1;
 				int curBestBases = -1;
 				int curBestOffset = 1;
-				int curBestIntersection = MAX(conA->len, conB->len);
+				int curBestIntersection = MAX(conA->property.len, conB->property.len);
 
 				while (cont)
 				{
@@ -4722,7 +4727,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 					curBestUniqBases = -1;
 					curBestBases = -1;
 
-					curBestIntersection = MAX(conA->len, conB->len);
+					curBestIntersection = MAX(conA->property.len, conB->property.len);
 
 					if (longestUniqOvlIdx + curBestUniqOffset >= n)
 					{
@@ -4749,7 +4754,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 				int curBestUniqBases = -1;
 				int curBestBases = -1;
 				int curBestOffset = 1;
-				int curBestIntersection = MAX(conA->len, conB->len);
+				int curBestIntersection = MAX(conA->property.len, conB->property.len);
 
 				while (cont)
 				{
@@ -4942,7 +4947,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 					curBestUniqBases = -1;
 					curBestBases = -1;
 
-					curBestIntersection = MAX(conA->len, conB->len);
+					curBestIntersection = MAX(conA->property.len, conB->property.len);
 
 					if (longestUniqOvlIdx - curBestUniqOffset < 0)
 					{
@@ -5041,9 +5046,9 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 								|| ((chain->ovls[j]->flags & OVL_COMP) && (ovl->flags & OVL_COMP)
 										&& (intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, ovl->path.bbpos, ovl->path.bepos)))
 								|| ((chain->ovls[j]->flags & OVL_COMP) && !(ovl->flags & OVL_COMP)
-										&& (intersect(conB->len - chain->ovls[j]->path.bepos, conB->len - chain->ovls[j]->path.bbpos, ovl->path.bbpos, ovl->path.bepos)))
+										&& (intersect(conB->property.len - chain->ovls[j]->path.bepos, conB->property.len - chain->ovls[j]->path.bbpos, ovl->path.bbpos, ovl->path.bepos)))
 								|| (!(chain->ovls[j]->flags & OVL_COMP) && (ovl->flags & OVL_COMP)
-										&& (intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, conB->len - ovl->path.bepos, conB->len - ovl->path.bbpos))))
+										&& (intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, conB->property.len - ovl->path.bepos, conB->property.len - ovl->path.bbpos))))
 						{
 							ovl->flags |= OVL_DISCARD;
 							nremain--;
@@ -5096,7 +5101,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 					}
 					else if (validChain->ovls[0]->flags & OVL_COMP)
 					{
-						if (intersect(conB->len - validChain->ovls[validChain->novl - 1]->path.bepos, conB->len - validChain->ovls[0]->path.bbpos,
+						if (intersect(conB->property.len - validChain->ovls[validChain->novl - 1]->path.bepos, conB->property.len - validChain->ovls[0]->path.bbpos,
 								chain->ovls[0]->path.bbpos, chain->ovls[chain->novl - 1]->path.bepos))
 						{
 #ifdef DEBUG_CHAIN
@@ -5109,7 +5114,7 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 					else // i.e. (curChain->ovls[0]->flags && OVL_COMP)
 					{
 						if (intersect(validChain->ovls[0]->path.bbpos, validChain->ovls[validChain->novl - 1]->path.bepos,
-								conB->len - chain->ovls[chain->novl - 1]->path.bepos, conB->len - chain->ovls[0]->path.bbpos))
+								conB->property.len - chain->ovls[chain->novl - 1]->path.bepos, conB->property.len - chain->ovls[0]->path.bbpos))
 						{
 #ifdef DEBUG_CHAIN
 							printf("CHAIN is invalid - DISCARD\n");
@@ -5130,12 +5135,12 @@ void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
 			}
 
 			if (
-					(aCoveredBases < 0.5 * conA->len && bCoveredBases < 0.5 * conB->len)
+					(aCoveredBases < 0.5 * conA->property.len && bCoveredBases < 0.5 * conB->property.len)
 					&& !(
 							 (
-							 	 ((chain->ovls[0]->path.abpos < 10000) && (chain->ovls[chain->novl - 1]->path.bepos + 10000 > conB->len))
+							 	 ((chain->ovls[0]->path.abpos < 10000) && (chain->ovls[chain->novl - 1]->path.bepos + 10000 > conB->property.len))
 								 ||
-								 ((chain->ovls[chain->novl - 1]->path.aepos + 10000 > conA->len) && (chain->ovls[0]->path.bbpos < 10000))
+								 ((chain->ovls[chain->novl - 1]->path.aepos + 10000 > conA->property.len) && (chain->ovls[0]->path.bbpos < 10000))
 							 )
 							 && MIN(aCoveredBases, bCoveredBases) > 30000)
 							)
@@ -5232,16 +5237,16 @@ int analyzeChains(AnalyzeContext *ctx)
 		nOvlABases = (chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos);
 		nOvlBBases = (chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos);
 
-		nUniqOvlABases = getRepeatBasesOfContigRange(ctx, chain->ovls[0], chain->ovls[0]->aread);
-		nUniqOvlBBases = getRepeatBasesOfContigRange(ctx, chain->ovls[0], chain->ovls[0]->bread);
+		nUniqOvlABases = (chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos) - getRepeatBasesOfContigRange(ctx, chain->ovls[0], chain->ovls[0]->aread);
+		nUniqOvlBBases = (chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos) - getRepeatBasesOfContigRange(ctx, chain->ovls[0], chain->ovls[0]->bread);
 
 		for (j = 1; j < chain->novl; j++)
 		{
 			nOvlABases += (chain->ovls[j]->path.aepos - chain->ovls[j]->path.abpos);
 			nOvlBBases += (chain->ovls[j]->path.bepos - chain->ovls[j]->path.bbpos);
 
-			nUniqOvlABases += getRepeatBasesOfContigRange(ctx, chain->ovls[j], chain->ovls[j]->aread);
-			nUniqOvlBBases += getRepeatBasesOfContigRange(ctx, chain->ovls[j], chain->ovls[j]->bread);
+			nUniqOvlABases += (chain->ovls[j]->path.aepos - chain->ovls[j]->path.abpos) - getRepeatBasesOfContigRange(ctx, chain->ovls[j], chain->ovls[j]->aread);
+			nUniqOvlBBases += (chain->ovls[j]->path.bepos - chain->ovls[j]->path.bbpos) - getRepeatBasesOfContigRange(ctx, chain->ovls[j], chain->ovls[j]->bread);
 
 			// remove overhangs between neighboring overlaps
 			if(chain->ovls[j]->path.abpos < chain->ovls[j-1]->path.aepos)
@@ -5266,7 +5271,8 @@ int analyzeChains(AnalyzeContext *ctx)
 			}
 		}
 
-		printf("	Chain_%d_a[%d_%d]_b[%d_%d] [", i, nOvlABases, nUniqOvlABases, nOvlBBases, nUniqOvlBBases);
+		printf("	Chain_%d_a[%d_%d_%d]_b[%d_%d_%d] [", i, nOvlABases, nUniqOvlABases, nOvlABases*100.0/(chain->ovls[chain->novl-1]->path.aepos - chain->ovls[0]->path.abpos),
+				nOvlBBases, nUniqOvlBBases, nOvlBBases*100.0/(chain->ovls[chain->novl-1]->path.bepos - chain->ovls[0]->path.bbpos));
 		for (j = 0; j < chain->novl; j++)
 		{
 			printf("%d-%d", chain->ovls[j]->path.abpos, chain->ovls[j]->path.aepos);
@@ -5276,15 +5282,14 @@ int analyzeChains(AnalyzeContext *ctx)
 		printf("]\n");
 	}
 
-
-	return 0;
+	return 1;
 }
 
-int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
+int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 {
 	AnalyzeContext* actx = (AnalyzeContext*) _ctx;
 
-	if (actx->contigs[ovls->aread].flag & CONTIG_DISCARD)
+	if (actx->contigs[ovls->aread].property.flag & CONTIG_DISCARD)
 		return 1;
 
 	if (actx->VERBOSE)
@@ -5296,7 +5301,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 	// speed up things for long contigs
 	int MIN_OLEN = 10000;
 	int MIN_CLEN = 1000000;
-	if (conA->len > MIN_CLEN)
+	if (conA->property.len > MIN_CLEN)
 	{
 		int k;
 		j = k = 0;
@@ -5353,7 +5358,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 			}
 
 		}
-		else if (conA->len > MIN_CLEN && !(ovls[j].flags & OVL_MODULE))
+		else if (conA->property.len > MIN_CLEN && !(ovls[j].flags & OVL_MODULE))
 		{
 			int i;
 			for (i = j; i <= k; i++)
@@ -5377,15 +5382,15 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 					if (chain->novl == 0)
 						continue;
 
-					if (conA->numCChains == conA->maxCChains)
+					if (conA->numContigRelations == conA->maxContigRelations)
 					{
-						conA->maxCChains = conA->maxCChains * 1.2 + 5;
-						conA->cChains = (ContigChain*) realloc(conA->cChains, sizeof(ContigChain) * conA->maxCChains);
-						bzero(conA->cChains + conA->numCChains, sizeof(ContigChain) * (conA->maxCChains - conA->numCChains));
+						conA->maxContigRelations = conA->maxContigRelations * 1.2 + 5;
+						conA->contigRelations = (ContigRelation*) realloc(conA->contigRelations, sizeof(ContigRelation) * conA->maxContigRelations);
+						bzero(conA->contigRelations + conA->numContigRelations, sizeof(ContigRelation) * (conA->maxContigRelations - conA->numContigRelations));
 					}
 
-					ContigChain *cchain = conA->cChains + conA->numCChains;
-					cchain->corContigIdx = conB->idx;
+					ContigRelation *cchain = conA->contigRelations + conA->numContigRelations;
+					cchain->corContigIdx = conB->property.contigID;
 					cchain->numPos = chain->novl;
 					cchain->abpos = (int*) malloc(sizeof(int) * chain->novl * 2);
 					cchain->aepos = cchain->abpos + chain->novl;
@@ -5425,7 +5430,7 @@ int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl)
 	return 1;
 }
 
-void classifyContigsByOverlaps(AnalyzeContext *actx)
+void preClassifyContigsByContigOverlaps(AnalyzeContext *actx)
 {
 // sort contigs according length (smallest first)
 	int i, j;
@@ -5434,19 +5439,19 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 
 	for (i = 0; i < actx->numContigs; i++)
 	{
-		//printf("%5d contig: %d, len: %d", i, actx->contigs[i].idx, actx->contigs[i].len);
+		printf("%5d contig: %d, len: %d", i, actx->contigs[i].property.contigID, actx->contigs[i].property.len);
 
 		Contig *contigA = actx->contigs + i;
 
-		if (contigA->flag & CONTIG_DISCARD)
+		if (contigA->property.flag & CONTIG_DISCARD)
 			continue;
 
 		// no valid overlap groups --> its unique
-//		if (contigA->numOvlGrps == 0)
-//		{
-//			contigA->ovlGrpsClassificFlag |= CONTIG_UNIQUE;
-//			continue;
-//		}
+		if (contigA->numContigRelations == 0)
+		{
+			contigA->property.contigRelationFlags |= CONTIG_UNIQUE;
+			continue;
+		}
 
 		// analyze all overlap groups
 		int overAllNotClassified = 1;
@@ -5456,8 +5461,8 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 ////			printOverlapGroup(stdout, actx, olg);
 //
 //			// get repeat bases in front and behind overlap group (aread)
-//			repBasesAbeg = getRepeatBasesFromInterval(actx, contigA->idx, 0, olg->first_abpos);
-//			repBasesAend = getRepeatBasesFromInterval(actx, contigA->idx, olg->last_aepos, contigA->len);
+//			repBasesAbeg = getRepeatBasesFromInterval(actx, contigA->property.contigID, 0, olg->first_abpos);
+//			repBasesAend = getRepeatBasesFromInterval(actx, contigA->property.contigID, olg->last_aepos, contigA->property.len);
 //
 //			Contig *contigB = actx->contigs + olg->bread;
 //
@@ -5471,13 +5476,13 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 //			// get repeat bases in front and behind overlap group (bread)
 //			if (olg->flag & OVLGRP_COMP)
 //			{
-//				repBasesBbeg = getRepeatBasesFromInterval(actx, contigB->idx, 0, olg->last_bbpos);
-//				repBasesBend = getRepeatBasesFromInterval(actx, contigB->idx, olg->first_bepos, contigB->len);
+//				repBasesBbeg = getRepeatBasesFromInterval(actx, contigB->property.contigID, 0, olg->last_bbpos);
+//				repBasesBend = getRepeatBasesFromInterval(actx, contigB->property.contigID, olg->first_bepos, contigB->property.len);
 //			}
 //			else
 //			{
-//				repBasesBbeg = getRepeatBasesFromInterval(actx, contigB->idx, 0, olg->first_bbpos);
-//				repBasesBend = getRepeatBasesFromInterval(actx, contigB->idx, olg->last_bepos, contigB->len);
+//				repBasesBbeg = getRepeatBasesFromInterval(actx, contigB->property.contigID, 0, olg->first_bbpos);
+//				repBasesBend = getRepeatBasesFromInterval(actx, contigB->property.contigID, olg->last_bepos, contigB->property.len);
 //			}
 //
 //			int spanningA, spanningB;
@@ -5490,24 +5495,24 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 ////			printf("c %d vs c %d \n", olg->aread, olg->bread);
 ////			printf("spanning a %d , b: %d\n", spanningA, spanningB);
 ////			printf("anchors a %d , b: %d\n", olg->coveredBasesInA - olg->repeatBasesInA, olg->coveredBasesInB - olg->repeatBasesInB);
-////			printf("repA: %.2f, repB: %.2f\n", contigA->repBases * 100.0 / contigA->len, contigB->repBases * 100.0 / contigB->len);
+////			printf("repA: %.2f, repB: %.2f\n", contigA->repBases * 100.0 / contigA->property.len, contigB->repBases * 100.0 / contigB->property.len);
 ////			if (olg->flag & OVLGRP_COMP)
 ////			{
-////				printf("unaligned a [%d, %d] , b: [%d, %d]\n", olg->first_abpos, contigA->len - olg->last_aepos, olg->last_bbpos,
-////						contigB->len - olg->first_bepos);
+////				printf("unaligned a [%d, %d] , b: [%d, %d]\n", olg->first_abpos, contigA->property.len - olg->last_aepos, olg->last_bbpos,
+////						contigB->property.len - olg->first_bepos);
 ////				printf("unaligned repeat bases A before [%d, %.2f] after [%d, %.2f]\n", repBasesAbeg, 100.0 * repBasesAbeg / olg->first_abpos, repBasesAend,
-////						100.0 * repBasesAend / (contigA->len - olg->last_aepos));
+////						100.0 * repBasesAend / (contigA->property.len - olg->last_aepos));
 ////				printf("unaligned repeat bases B before [%d, %.2f] after [%d, %.2f]\n", repBasesBbeg, 100.0 * repBasesBbeg / olg->last_bbpos, repBasesBend,
-////						100.0 * repBasesBend / (contigB->len - olg->first_bepos));
+////						100.0 * repBasesBend / (contigB->property.len - olg->first_bepos));
 ////			}
 ////			else
 ////			{
-////				printf("unaligned a [%d, %d] , b: [%d, %d]\n", olg->first_abpos, contigA->len - olg->last_aepos, olg->first_bbpos,
-////						contigB->len - olg->last_bepos);
+////				printf("unaligned a [%d, %d] , b: [%d, %d]\n", olg->first_abpos, contigA->property.len - olg->last_aepos, olg->first_bbpos,
+////						contigB->property.len - olg->last_bepos);
 ////				printf("unaligned repeat bases A before [%d, %.2f] after [%d, %.2f]\n", repBasesAbeg, 100.0 * repBasesAbeg / olg->first_abpos, repBasesAend,
-////						100.0 * repBasesAend / (contigA->len - olg->last_aepos));
+////						100.0 * repBasesAend / (contigA->property.len - olg->last_aepos));
 ////				printf("unaligned repeat bases B before [%d, %.2f] after [%d, %.2f]\n", repBasesBbeg, 100.0 * repBasesBbeg / olg->first_bbpos, repBasesBend,
-////						100.0 * repBasesBend / (contigB->len - olg->last_bepos));
+////						100.0 * repBasesBend / (contigB->property.len - olg->last_bepos));
 ////			}
 //
 //			if (spanningA < ConVsConMinAlign && spanningB < ConVsConMinAlign)
@@ -5521,9 +5526,9 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 //			if (olg->coveredBasesInA - olg->repeatBasesInA > ConVsConAnchorBases || olg->coveredBasesInB - olg->repeatBasesInB > ConVsConAnchorBases)
 //			{
 //				// 70 % of the bread overlaps with aread
-//				if (spanningB * 1.0 / contigB->len >= ConVsConContainmentThreshold)
+//				if (spanningB * 1.0 / contigB->property.len >= ConVsConContainmentThreshold)
 //				{
-////					printf("contig %d is contained >= %3f%% in contig %d\n", contigB->idx, 100*ConVsConContainmentThreshold, contigA->idx, );
+////					printf("contig %d is contained >= %3f%% in contig %d\n", contigB->property.contigID, 100*ConVsConContainmentThreshold, contigA->property.contigID, );
 ////					contigB->ovlGrpsClassificFlag |= CONTIG_IS_CONTAINED;
 ////					contigA->ovlGrpsClassificFlag |= CONTIG_HAS_CONTAINED;
 //
@@ -5531,9 +5536,9 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 //					notClassified = 0;
 //				}
 //				// 70 % of the repeat-trimmed bread overlaps with aread, end begin and end of bread are tagged repetitive
-//				else if (spanningB * 1.0 / (contigB->len - repBasesBbeg - repBasesBend) >= ConVsConContainmentThreshold)
+//				else if (spanningB * 1.0 / (contigB->property.len - repBasesBbeg - repBasesBend) >= ConVsConContainmentThreshold)
 //				{
-////					printf("repeat trimmed contig %d is contained >= %3f%% in contig %d\n", contigB->idx, 100*ConVsConContainmentThreshold, contigA->idx);
+////					printf("repeat trimmed contig %d is contained >= %3f%% in contig %d\n", contigB->property.contigID, 100*ConVsConContainmentThreshold, contigA->property.contigID);
 ////					contigB->ovlGrpsClassificFlag |= CONTIG_IS_CONTAINED;
 ////					contigA->ovlGrpsClassificFlag |= CONTIG_HAS_CONTAINED;
 //
@@ -5541,9 +5546,9 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 //					notClassified = 0;
 //				}
 //				// for short contigs < 100k allow 50% match in the middle of contigA to be contained
-//				else if (contigB->len < ConVsConShortContigLen && spanningB * 1.0 / contigB->len >= ConVsConShortContigContainmentThreshold)
+//				else if (contigB->property.len < ConVsConShortContigLen && spanningB * 1.0 / contigB->property.len >= ConVsConShortContigContainmentThreshold)
 //				{
-////					printf("contig %d is short (< %d) and contained >= %3f%% in contig %d\n", contigB->idx, ConVsConShortContigLen, 100*ConVsConShortContigContainmentThreshold, contigA->idx);
+////					printf("contig %d is short (< %d) and contained >= %3f%% in contig %d\n", contigB->property.contigID, ConVsConShortContigLen, 100*ConVsConShortContigContainmentThreshold, contigA->property.contigID);
 ////					contigB->ovlGrpsClassificFlag |= CONTIG_IS_CONTAINED;
 ////					contigA->ovlGrpsClassificFlag |= CONTIG_HAS_CONTAINED;
 //
@@ -5552,9 +5557,9 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 //				}
 //
 //				// 70 % of the aread overlaps with bread
-//				if (spanningA * 1.0 / contigA->len >= ConVsConContainmentThreshold)
+//				if (spanningA * 1.0 / contigA->property.len >= ConVsConContainmentThreshold)
 //				{
-////					printf("contig %d is contained > %3f%% in contig %d\n", contigA->idx, 100*ConVsConContainmentThreshold, contigB->idx);
+////					printf("contig %d is contained > %3f%% in contig %d\n", contigA->property.contigID, 100*ConVsConContainmentThreshold, contigB->property.contigID);
 ////					contigA->ovlGrpsClassificFlag |= CONTIG_IS_CONTAINED;
 ////					contigB->ovlGrpsClassificFlag |= CONTIG_HAS_CONTAINED;
 //
@@ -5563,9 +5568,9 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 //				}
 //
 //				// 70 % of the aread overlaps with bread, end begin and end of aread are tagged repetitive
-//				else if (spanningA * 1.0 / (contigA->len - repBasesAbeg - repBasesAend) >= ConVsConContainmentThreshold)
+//				else if (spanningA * 1.0 / (contigA->property.len - repBasesAbeg - repBasesAend) >= ConVsConContainmentThreshold)
 //				{
-////					printf("repeat trimmed contig %d is contained > %3f%% in contig %d\n", contigA->idx, 100*ConVsConContainmentThreshold, contigB->idx);
+////					printf("repeat trimmed contig %d is contained > %3f%% in contig %d\n", contigA->property.contigID, 100*ConVsConContainmentThreshold, contigB->property.contigID);
 ////					contigA->ovlGrpsClassificFlag |= CONTIG_IS_CONTAINED;
 ////					contigB->ovlGrpsClassificFlag |= CONTIG_HAS_CONTAINED;
 //
@@ -5573,9 +5578,9 @@ void classifyContigsByOverlaps(AnalyzeContext *actx)
 //					notClassified = 0;
 //				}
 //				// for short contigs < 100k allow 50% match in the middle of contigA to be contained
-//				else if (contigA->len < ConVsConShortContigLen && spanningA * 1.0 / contigA->len >= ConVsConShortContigContainmentThreshold)
+//				else if (contigA->property.len < ConVsConShortContigLen && spanningA * 1.0 / contigA->property.len >= ConVsConShortContigContainmentThreshold)
 //				{
-////					printf("contig %d is short (< %d) and contained >= %3f%% in contig %d\n", contigB->idx, ConVsConShortContigLen, 100*ConVsConShortContigContainmentThreshold, contigA->idx);
+////					printf("contig %d is short (< %d) and contained >= %3f%% in contig %d\n", contigB->property.contigID, ConVsConShortContigLen, 100*ConVsConShortContigContainmentThreshold, contigA->property.contigID);
 ////					contigA->ovlGrpsClassificFlag |= CONTIG_IS_CONTAINED;
 ////					contigB->ovlGrpsClassificFlag |= CONTIG_HAS_CONTAINED;
 //
@@ -5724,15 +5729,15 @@ static void writeContigInfoFile(AnalyzeContext *actx, Contig* contig, FILE* cont
 
 // repeat annotation:
 	fprintf(contigFile, "REPEAT_%s", actx->corContigRepeats_track->name);
-	fprintf(contigFile, " %d", getRepeatBasesFromInterval(actx, contig->idx, cBegPos, cEndPos));
+	fprintf(contigFile, " %d", getRepeatBasesFromInterval(actx, contig->property.contigID, cBegPos, cEndPos));
 	{
 		track_anno* rep_anno = actx->corContigRepeats_track->anno;
 		track_data* rep_data = actx->corContigRepeats_track->data;
 
 		track_anno rb, re;
 		// repeat bases in a-read
-		rb = rep_anno[contig->idx] / sizeof(track_data);
-		re = rep_anno[contig->idx + 1] / sizeof(track_data);
+		rb = rep_anno[contig->property.contigID] / sizeof(track_data);
+		re = rep_anno[contig->property.contigID + 1] / sizeof(track_data);
 
 		while (rb < re)
 		{
@@ -5761,7 +5766,7 @@ static void writeContigInfoFile(AnalyzeContext *actx, Contig* contig, FILE* cont
 	fprintf(contigFile, "\n");
 
 // report splits for raw contigs
-//	if (contig->len == cEndPos - cBegPos && contig->numSplits && !(contig->split->type & SPLIT_IGNORE))
+//	if (contig->property.len == cEndPos - cBegPos && contig->numSplits && !(contig->split->type & SPLIT_IGNORE))
 //	{
 //		fprintf(contigFile, "SPLITS");
 //
@@ -5782,14 +5787,14 @@ void writeFasta(AnalyzeContext *actx, Contig* contig, FILE* contigFile, int spli
 	int i;
 	int WIDTH = 100;
 
-	int path = getPathID(actx, contig->idx);
+	int path = getPathID(actx, contig->property.contigID);
 	int end1, end2;
-	getContigsEndIDs(actx, contig->idx, &end1, &end2);
-	char *InFastaName = getFastaFileNameFromDB(actx, contig->idx);
+	getContigsEndIDs(actx, contig->property.contigID, &end1, &end2);
+	char *InFastaName = getContigFastaFileName(actx, contig);
 
 ///// create header
 // new name = fasta file name + Contig idx
-	fprintf(contigFile, ">%s_%d", InFastaName, contig->idx);
+	fprintf(contigFile, ">%s_%d", InFastaName, contig->property.contigID);
 
 ///// add some track info
 // path track
@@ -5870,8 +5875,8 @@ void writeFasta(AnalyzeContext *actx, Contig* contig, FILE* contigFile, int spli
 		track_anno* sreadanno = actx->corContigRawReads_track->anno;
 		track_data* sreaddata = actx->corContigRawReads_track->data;
 
-		track_anno rb = sreadanno[contig->idx] / sizeof(track_data);
-		track_anno re = sreadanno[contig->idx + 1] / sizeof(track_data);
+		track_anno rb = sreadanno[contig->property.contigID] / sizeof(track_data);
+		track_anno re = sreadanno[contig->property.contigID + 1] / sizeof(track_data);
 
 		assert(rb < re && (int) (re - rb) == contig->numcReads);
 
@@ -5897,118 +5902,118 @@ void writeFasta(AnalyzeContext *actx, Contig* contig, FILE* contigFile, int spli
 	}
 // classification tracks
 // 1)  based on fixed read overlaps
-	if (contig->gClassificFlag & CONTIG_HAS_CONTAINED)
-	{
-		int multi = 0;
-		ContigGraphClassification *gclass;
-		for (i = 0; i < contig->numGClassific; i++)
-		{
-			gclass = contig->gClassific + i;
-
-			if (gclass->flag & CONTIG_HAS_CONTAINED)
-			{
-				if (multi)
-				{
-					fprintf(contigFile, ",%d,%d,%d", gclass->correspID, gclass->coveredIntervals[0], gclass->coveredIntervals[gclass->numCoveredIntervals * 3 - 2]);
-				}
-				else
-				{
-					fprintf(contigFile, " gContains=%d,%d,%d", gclass->correspID, gclass->coveredIntervals[0],
-							gclass->coveredIntervals[gclass->numCoveredIntervals * 3 - 2]);
-					multi = 1;
-				}
-			}
-		}
-	}
-	if (contig->gClassificFlag & CONTIG_IS_CONTAINED)
-	{
-		int multi = 0;
-		ContigGraphClassification *gclass;
-		for (i = 0; i < contig->numGClassific; i++)
-		{
-			gclass = contig->gClassific + i;
-
-			if (gclass->flag & CONTIG_IS_CONTAINED)
-			{
-				if (multi)
-				{
-					fprintf(contigFile, ",%d,%d,%d", gclass->correspID, gclass->coveredIntervals[0], gclass->coveredIntervals[gclass->numCoveredIntervals * 3 - 2]);
-				}
-				else
-				{
-					fprintf(contigFile, " gContainedIn=%d,%d,%d", gclass->correspID, gclass->coveredIntervals[0],
-							gclass->coveredIntervals[gclass->numCoveredIntervals * 3 - 2]);
-					multi = 1;
-				}
-			}
-		}
-	}
-// 2)  based on contig overlap groups
-	if (contig->flag & CONTIG_HAS_CONTAINED)
-	{
-		int multi = 0;
-		OverlapGroup *ogr;
-//		for (i = 0; i < contig->numOvlGrps; i++)
+//	if (contig->gClassificFlag & CONTIG_HAS_CONTAINED)
+//	{
+//		int multi = 0;
+//		ContigReadClassification *gclass;
+//		for (i = 0; i < contig->numGClassific; i++)
 //		{
-//			ogr = contig->ovlGrps[i];
+//			gclass = contig->gClassific + i;
 //
-//			if ((ogr->flag & CONTIG_HAS_CONTAINED) && contig->len > DB_READ_LEN(actx->corContigDB, ogr->bread))
+//			if (gclass->flag & CONTIG_HAS_CONTAINED)
 //			{
 //				if (multi)
 //				{
-//					fprintf(contigFile, ",%d,%d,%d", ogr->bread, ogr->first_abpos, ogr->last_aepos);
+//					fprintf(contigFile, ",%d,%d,%d", gclass->correspID, gclass->coveredIntervals[0], gclass->coveredIntervals[gclass->numCoveredIntervals * 3 - 2]);
 //				}
 //				else
 //				{
-//					fprintf(contigFile, " cContains=%d,%d,%d", ogr->bread, ogr->first_abpos, ogr->last_aepos);
+//					fprintf(contigFile, " gContains=%d,%d,%d", gclass->correspID, gclass->coveredIntervals[0],
+//							gclass->coveredIntervals[gclass->numCoveredIntervals * 3 - 2]);
 //					multi = 1;
 //				}
 //			}
 //		}
-	}
-	if (contig->flag & CONTIG_IS_CONTAINED)
-	{
-		int multi = 0;
-		OverlapGroup *ogr;
-//		for (i = 0; i < contig->numOvlGrps; i++)
+//	}
+//	if (contig->gClassificFlag & CONTIG_IS_CONTAINED)
+//	{
+//		int multi = 0;
+//		ContigReadClassification *gclass;
+//		for (i = 0; i < contig->numGClassific; i++)
 //		{
-//			ogr = contig->ovlGrps[i];
+//			gclass = contig->gClassific + i;
 //
-//			if ((ogr->flag & CONTIG_IS_CONTAINED) && contig->len < DB_READ_LEN(actx->corContigDB, ogr->bread))
+//			if (gclass->flag & CONTIG_IS_CONTAINED)
 //			{
 //				if (multi)
 //				{
-//					fprintf(contigFile, ",%d,%d,%d", ogr->bread, ogr->first_abpos, ogr->last_aepos);
+//					fprintf(contigFile, ",%d,%d,%d", gclass->correspID, gclass->coveredIntervals[0], gclass->coveredIntervals[gclass->numCoveredIntervals * 3 - 2]);
 //				}
 //				else
 //				{
-//					fprintf(contigFile, " cContainedIn=%d,%d,%d", ogr->bread, ogr->first_abpos, ogr->last_aepos);
+//					fprintf(contigFile, " gContainedIn=%d,%d,%d", gclass->correspID, gclass->coveredIntervals[0],
+//							gclass->coveredIntervals[gclass->numCoveredIntervals * 3 - 2]);
 //					multi = 1;
 //				}
 //			}
 //		}
-	}
-
-	if (contig->flag & CONTIG_AL50PCTCOVERED)
-	{
-		int multi = 0;
-
-		for (i = 0; i < actx->numContigs; i++)
-		{
-//			if ((int) contig->pctCoveredBasesInOtherContigs[i] >= 50)
-//			{
-//				if (multi)
-//				{
-//					fprintf(contigFile, ",%d,%d", i, (int) contig->pctCoveredBasesInOtherContigs[i]);
-//				}
-//				else
-//				{
-//					fprintf(contigFile, " cCoveredIn=%d,%d", i, (int) contig->pctCoveredBasesInOtherContigs[i]);
-//					multi = 1;
-//				}
-//			}
-		}
-	}
+//	}
+//// 2)  based on contig overlap groups
+//	if (contig->flag & CONTIG_HAS_CONTAINED)
+//	{
+//		int multi = 0;
+//		OverlapGroup *ogr;
+////		for (i = 0; i < contig->numOvlGrps; i++)
+////		{
+////			ogr = contig->ovlGrps[i];
+////
+////			if ((ogr->flag & CONTIG_HAS_CONTAINED) && contig->property.len > DB_READ_LEN(actx->corContigDB, ogr->bread))
+////			{
+////				if (multi)
+////				{
+////					fprintf(contigFile, ",%d,%d,%d", ogr->bread, ogr->first_abpos, ogr->last_aepos);
+////				}
+////				else
+////				{
+////					fprintf(contigFile, " cContains=%d,%d,%d", ogr->bread, ogr->first_abpos, ogr->last_aepos);
+////					multi = 1;
+////				}
+////			}
+////		}
+//	}
+//	if (contig->flag & CONTIG_IS_CONTAINED)
+//	{
+//		int multi = 0;
+//		OverlapGroup *ogr;
+////		for (i = 0; i < contig->numOvlGrps; i++)
+////		{
+////			ogr = contig->ovlGrps[i];
+////
+////			if ((ogr->flag & CONTIG_IS_CONTAINED) && contig->property.len < DB_READ_LEN(actx->corContigDB, ogr->bread))
+////			{
+////				if (multi)
+////				{
+////					fprintf(contigFile, ",%d,%d,%d", ogr->bread, ogr->first_abpos, ogr->last_aepos);
+////				}
+////				else
+////				{
+////					fprintf(contigFile, " cContainedIn=%d,%d,%d", ogr->bread, ogr->first_abpos, ogr->last_aepos);
+////					multi = 1;
+////				}
+////			}
+////		}
+//	}
+//
+//	if (contig->flag & CONTIG_AL50PCTCOVERED)
+//	{
+//		int multi = 0;
+//
+//		for (i = 0; i < actx->numContigs; i++)
+//		{
+////			if ((int) contig->pctCoveredBasesInOtherContigs[i] >= 50)
+////			{
+////				if (multi)
+////				{
+////					fprintf(contigFile, ",%d,%d", i, (int) contig->pctCoveredBasesInOtherContigs[i]);
+////				}
+////				else
+////				{
+////					fprintf(contigFile, " cCoveredIn=%d,%d", i, (int) contig->pctCoveredBasesInOtherContigs[i]);
+////					multi = 1;
+////				}
+////			}
+//		}
+//	}
 
 // todo sort splits according positions ?
 // todo write out only real splits, i.e. skip heterozygoues ones, and print out only one valid split position either left or, or right or sometimes both
@@ -6051,7 +6056,7 @@ void writeFasta(AnalyzeContext *actx, Contig* contig, FILE* contigFile, int spli
 	fprintf(contigFile, "\n");
 
 ///// add sequence
-	Load_Read(actx->corContigDB, contig->idx, actx->readSeq, 1);
+	Load_Read(actx->corContigDB, contig->property.contigID, actx->readSeq, 1);
 
 	for (i = cBegPos; i + WIDTH < cEndPos; i += WIDTH)
 		fprintf(contigFile, "%.*s\n", WIDTH, actx->readSeq + i);
@@ -6227,19 +6232,19 @@ static int cmpOVLGroupByPos(const void* a, const void* b)
 	return (o1->first_abpos - o2->first_abpos);
 }
 
-static int cmpGraphClassByPos(const void* a, const void* b)
-{
-	ContigGraphClassification* c1 = (ContigGraphClassification*) a;
-	ContigGraphClassification* c2 = (ContigGraphClassification*) b;
-
-	if (c1->flag & (CONTIG_UNCLASSIFIED | CONTIG_DISCARD | CONTIG_NORELATION | CONTIG_UNIQUE))
-		return 1;
-
-	if (c2->flag & (CONTIG_UNCLASSIFIED | CONTIG_DISCARD | CONTIG_NORELATION | CONTIG_UNIQUE))
-		return -1;
-
-	return (c1->coveredIntervals - c2->coveredIntervals);
-}
+//static int cmpGraphClassByPos(const void* a, const void* b)
+//{
+//	ContigReadClassification* c1 = (ContigReadClassification*) a;
+//	ContigReadClassification* c2 = (ContigReadClassification*) b;
+//
+//	if (c1->flag & (CONTIG_UNCLASSIFIED | CONTIG_DISCARD | CONTIG_NORELATION | CONTIG_UNIQUE))
+//		return 1;
+//
+//	if (c2->flag & (CONTIG_UNCLASSIFIED | CONTIG_DISCARD | CONTIG_NORELATION | CONTIG_UNIQUE))
+//		return -1;
+//
+//	return (c1->coveredIntervals - c2->coveredIntervals);
+//}
 
 void rawClassification(AnalyzeContext *actx)
 {
@@ -6281,8 +6286,8 @@ void rawClassification(AnalyzeContext *actx)
 	 if (actx->contigs[i].fClass == HAPLOID && ba_value(contigVisited, i) == FALSE)
 	 {
 	 contig_hap = actx->contigs + i;
-	 path_hap = getPathID(actx, contig_hap->idx);
-	 getContigsEndIDs(actx, contig_hap->idx, &end1_hap, &end2_hap);
+	 path_hap = getPathID(actx, contig_hap->property.contigID);
+	 getContigsEndIDs(actx, contig_hap->property.contigID, &end1_hap, &end2_hap);
 	 break;
 	 }
 	 }
@@ -6321,11 +6326,11 @@ void rawClassification(AnalyzeContext *actx)
 
 	 Contig * contig_other = actx->contigs + og->bread;
 
-	 if (ba_value(contigVisited, contig_other->idx) == FALSE)
+	 if (ba_value(contigVisited, contig_other->property.contigID) == FALSE)
 	 {
-	 InFastaName = getFastaFileNameFromDB(actx, contig_other->idx);
-	 path_other = getPathID(actx, contig_other->idx);
-	 getContigsEndIDs(actx, contig_other->idx, &end1_other, &end2_other);
+	 InFastaName = getFastaFileNameFromDB(actx, contig_other->property.contigID);
+	 path_other = getPathID(actx, contig_other->property.contigID);
+	 getContigsEndIDs(actx, contig_other->property.contigID, &end1_other, &end2_other);
 
 	 // write + for haploid seqeunce, - otherwise
 	 fprintf(stdout, "  %c", getClassification(contig_other->fClass));
@@ -6334,13 +6339,13 @@ void rawClassification(AnalyzeContext *actx)
 	 // write path idx
 	 fprintf(stdout, "\t%d", path_other);
 	 // write db idx
-	 fprintf(stdout, "\t%d", contig_other->idx);
+	 fprintf(stdout, "\t%d", contig_other->property.contigID);
 	 // output fasta name: in + path + split + classifier
 	 fprintf(stdout, "\t%s_%d_%d_%c.fa", InFastaName, path_other, 0, getClassification(contig_other->fClass));
 	 // length
-	 fprintf(stdout, "\t%8d", contig_other->len);
+	 fprintf(stdout, "\t%8d", contig_other->property.len);
 	 // percent repeat
-	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->len);
+	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->property.len);
 	 // position in contig --> only meaningful in contained contigs
 	 if (og->flag & OVLGRP_COMP)
 	 fprintf(stdout, "\t%8d\t%8d", og->first_bepos, og->last_bbpos);
@@ -6359,7 +6364,7 @@ void rawClassification(AnalyzeContext *actx)
 
 	 fprintf(stdout, "\n");
 
-	 ba_assign(contigVisited, contig_other->idx, TRUE);
+	 ba_assign(contigVisited, contig_other->property.contigID, TRUE);
 	 process++;
 
 	 switch (contig_other->fAltClass)
@@ -6367,23 +6372,23 @@ void rawClassification(AnalyzeContext *actx)
 	 case BUBBLE_ALT:
 	 case SPUR_ALT:
 	 numALTcontigs++;
-	 numALTbases += contig_other->len;
+	 numALTbases += contig_other->property.len;
 	 break;
 	 case BUBBLE_REPEAT:
 	 case BUBBLE_HUGEDIF:
 	 case BUBBLE_LOWCOVEREDREPEAT:
 	 numREPcontigs++;
-	 numREPbases += contig_other->len;
+	 numREPbases += contig_other->property.len;
 	 break;
 	 default:
 	 numWEIRDcontigs++;
-	 numWEIRDbases += contig_other->len;
+	 numWEIRDbases += contig_other->property.len;
 	 break;
 	 }
 	 }
 	 else
 	 {
-	 printf("found ovl group and gclass between contigs %d and %d more then once!!\n", contig_hap->idx, contig_other->idx);
+	 printf("found ovl group and gclass between contigs %d and %d more then once!!\n", contig_hap->property.contigID, contig_other->property.contigID);
 	 }
 	 j++;
 	 k++;
@@ -6393,11 +6398,11 @@ void rawClassification(AnalyzeContext *actx)
 	 {
 	 Contig * contig_other = actx->contigs + og->bread;
 
-	 if (ba_value(contigVisited, contig_other->idx) == FALSE)
+	 if (ba_value(contigVisited, contig_other->property.contigID) == FALSE)
 	 {
-	 InFastaName = getFastaFileNameFromDB(actx, contig_other->idx);
-	 path_other = getPathID(actx, contig_other->idx);
-	 getContigsEndIDs(actx, contig_other->idx, &end1_other, &end2_other);
+	 InFastaName = getFastaFileNameFromDB(actx, contig_other->property.contigID);
+	 path_other = getPathID(actx, contig_other->property.contigID);
+	 getContigsEndIDs(actx, contig_other->property.contigID, &end1_other, &end2_other);
 
 	 //
 	 fprintf(stdout, "  %c", getClassification(contig_other->fClass));
@@ -6406,13 +6411,13 @@ void rawClassification(AnalyzeContext *actx)
 	 // write path idx
 	 fprintf(stdout, "\t%d", path_other);
 	 // write db idx
-	 fprintf(stdout, "\t%d", contig_other->idx);
+	 fprintf(stdout, "\t%d", contig_other->property.contigID);
 	 // output fasta name: in + path + split + classifier
 	 fprintf(stdout, "\t%s_%d_%d_%c.fa", InFastaName, path_hap, 0, getClassification(contig_other->fClass));
 	 // length
-	 fprintf(stdout, "\t%8d", contig_other->len);
+	 fprintf(stdout, "\t%8d", contig_other->property.len);
 	 // percent repeat
-	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->len);
+	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->property.len);
 	 // position in contig --> only meaningful in contained contigs
 	 if (og->flag & OVLGRP_COMP)
 	 fprintf(stdout, "\t%8d\t%8d", og->first_bepos, og->last_bbpos);
@@ -6431,30 +6436,30 @@ void rawClassification(AnalyzeContext *actx)
 
 	 fprintf(stdout, "\n");
 
-	 ba_assign(contigVisited, contig_other->idx, TRUE);
+	 ba_assign(contigVisited, contig_other->property.contigID, TRUE);
 	 process++;
 	 switch (contig_other->fAltClass)
 	 {
 	 case BUBBLE_ALT:
 	 case SPUR_ALT:
 	 numALTcontigs++;
-	 numALTbases += contig_other->len;
+	 numALTbases += contig_other->property.len;
 	 break;
 	 case BUBBLE_REPEAT:
 	 case BUBBLE_HUGEDIF:
 	 case BUBBLE_LOWCOVEREDREPEAT:
 	 numREPcontigs++;
-	 numREPbases += contig_other->len;
+	 numREPbases += contig_other->property.len;
 	 break;
 	 default:
 	 numWEIRDcontigs++;
-	 numWEIRDbases += contig_other->len;
+	 numWEIRDbases += contig_other->property.len;
 	 break;
 	 }
 	 }
 	 else
 	 {
-	 printf("found ovl group and gclass between contigs %d and %d more then once!!\n", contig_hap->idx, contig_other->idx);
+	 printf("found ovl group and gclass between contigs %d and %d more then once!!\n", contig_hap->property.contigID, contig_other->property.contigID);
 	 }
 	 j++;
 
@@ -6464,11 +6469,11 @@ void rawClassification(AnalyzeContext *actx)
 	 {
 	 Contig * contig_other = actx->contigs + cgc->correspID;
 
-	 if (ba_value(contigVisited, contig_other->idx) == FALSE)
+	 if (ba_value(contigVisited, contig_other->property.contigID) == FALSE)
 	 {
-	 InFastaName = getFastaFileNameFromDB(actx, contig_other->idx);
-	 path_other = getPathID(actx, contig_other->idx);
-	 getContigsEndIDs(actx, contig_other->idx, &end1_other, &end2_other);
+	 InFastaName = getFastaFileNameFromDB(actx, contig_other->property.contigID);
+	 path_other = getPathID(actx, contig_other->property.contigID);
+	 getContigsEndIDs(actx, contig_other->property.contigID, &end1_other, &end2_other);
 
 	 // write + for haploid seqeunce, - otherwise
 	 fprintf(stdout, "  %c", getClassification(contig_other->fClass));
@@ -6477,13 +6482,13 @@ void rawClassification(AnalyzeContext *actx)
 	 // write path idx
 	 fprintf(stdout, "\t%d", path_other);
 	 // write db idx
-	 fprintf(stdout, "\t%d", contig_other->idx);
+	 fprintf(stdout, "\t%d", contig_other->property.contigID);
 	 // output fasta name: in + path + split + classifier
 	 fprintf(stdout, "\t%s_%d_%d_%c.fa", InFastaName, path_hap, 0, getClassification(contig_other->fClass));
 	 // length
-	 fprintf(stdout, "\t%8d", contig_other->len);
+	 fprintf(stdout, "\t%8d", contig_other->property.len);
 	 // percent repeat
-	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->len);
+	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->property.len);
 	 // position in contig --> only meaningful in contained contigs
 	 fprintf(stdout, "\t      na\t      na");
 	 // position in corresponding contig --> only meaningful in contained contigs
@@ -6498,31 +6503,31 @@ void rawClassification(AnalyzeContext *actx)
 	 printFinalAltContigClassification(stdout, contig_other->fAltClass);
 	 fprintf(stdout, "\n");
 
-	 ba_assign(contigVisited, contig_other->idx, TRUE);
+	 ba_assign(contigVisited, contig_other->property.contigID, TRUE);
 	 process++;
 	 switch (contig_other->fAltClass)
 	 {
 	 case BUBBLE_ALT:
 	 case SPUR_ALT:
 	 numALTcontigs++;
-	 numALTbases += contig_other->len;
+	 numALTbases += contig_other->property.len;
 	 break;
 	 case BUBBLE_REPEAT:
 	 case BUBBLE_HUGEDIF:
 	 case BUBBLE_LOWCOVEREDREPEAT:
 	 numREPcontigs++;
-	 numREPbases += contig_other->len;
+	 numREPbases += contig_other->property.len;
 	 break;
 	 default:
 	 numWEIRDcontigs++;
-	 numWEIRDbases += contig_other->len;
+	 numWEIRDbases += contig_other->property.len;
 	 break;
 	 }
 
 	 }
 	 else
 	 {
-	 printf("found ovl group and gclass between contigs %d and %d more then once!!\n", contig_hap->idx, contig_other->idx);
+	 printf("found ovl group and gclass between contigs %d and %d more then once!!\n", contig_hap->property.contigID, contig_other->property.contigID);
 	 }
 	 k++;
 	 continue;
@@ -6538,11 +6543,11 @@ void rawClassification(AnalyzeContext *actx)
 	 break;
 	 Contig * contig_other = actx->contigs + og->bread;
 
-	 if (ba_value(contigVisited, contig_other->idx) == FALSE)
+	 if (ba_value(contigVisited, contig_other->property.contigID) == FALSE)
 	 {
-	 InFastaName = getFastaFileNameFromDB(actx, contig_other->idx);
-	 path_other = getPathID(actx, contig_other->idx);
-	 getContigsEndIDs(actx, contig_other->idx, &end1_other, &end2_other);
+	 InFastaName = getFastaFileNameFromDB(actx, contig_other->property.contigID);
+	 path_other = getPathID(actx, contig_other->property.contigID);
+	 getContigsEndIDs(actx, contig_other->property.contigID, &end1_other, &end2_other);
 
 	 //
 	 fprintf(stdout, "  %c", getClassification(contig_other->fClass));
@@ -6551,13 +6556,13 @@ void rawClassification(AnalyzeContext *actx)
 	 // write path idx
 	 fprintf(stdout, "\t%d", path_other);
 	 // write db idx
-	 fprintf(stdout, "\t%d", contig_other->idx);
+	 fprintf(stdout, "\t%d", contig_other->property.contigID);
 	 // output fasta name: in + path + split + classifier
 	 fprintf(stdout, "\t%s_%d_%d_%c.fa", InFastaName, path_hap, 0, getClassification(contig_other->fClass));
 	 // length
-	 fprintf(stdout, "\t%8d", contig_other->len);
+	 fprintf(stdout, "\t%8d", contig_other->property.len);
 	 // percent repeat
-	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->len);
+	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->property.len);
 	 // position in contig --> only meaningful in contained contigs
 	 if (og->flag & OVLGRP_COMP)
 	 fprintf(stdout, "\t%8d\t%8d", og->first_bepos, og->last_bbpos);
@@ -6575,24 +6580,24 @@ void rawClassification(AnalyzeContext *actx)
 	 printFinalAltContigClassification(stdout, contig_other->fAltClass);
 	 fprintf(stdout, "\n");
 
-	 ba_assign(contigVisited, contig_other->idx, TRUE);
+	 ba_assign(contigVisited, contig_other->property.contigID, TRUE);
 	 process++;
 	 switch (contig_other->fAltClass)
 	 {
 	 case BUBBLE_ALT:
 	 case SPUR_ALT:
 	 numALTcontigs++;
-	 numALTbases += contig_other->len;
+	 numALTbases += contig_other->property.len;
 	 break;
 	 case BUBBLE_REPEAT:
 	 case BUBBLE_HUGEDIF:
 	 case BUBBLE_LOWCOVEREDREPEAT:
 	 numREPcontigs++;
-	 numREPbases += contig_other->len;
+	 numREPbases += contig_other->property.len;
 	 break;
 	 default:
 	 numWEIRDcontigs++;
-	 numWEIRDbases += contig_other->len;
+	 numWEIRDbases += contig_other->property.len;
 	 break;
 	 }
 	 }
@@ -6607,11 +6612,11 @@ void rawClassification(AnalyzeContext *actx)
 
 	 Contig * contig_other = actx->contigs + cgc->correspID;
 
-	 if (ba_value(contigVisited, contig_other->idx) == FALSE)
+	 if (ba_value(contigVisited, contig_other->property.contigID) == FALSE)
 	 {
-	 InFastaName = getFastaFileNameFromDB(actx, contig_other->idx);
-	 path_other = getPathID(actx, contig_other->idx);
-	 getContigsEndIDs(actx, contig_other->idx, &end1_other, &end2_other);
+	 InFastaName = getFastaFileNameFromDB(actx, contig_other->property.contigID);
+	 path_other = getPathID(actx, contig_other->property.contigID);
+	 getContigsEndIDs(actx, contig_other->property.contigID, &end1_other, &end2_other);
 
 	 // write + for haploid seqeunce, - otherwise
 	 fprintf(stdout, "   %c", getClassification(contig_other->fClass));
@@ -6620,13 +6625,13 @@ void rawClassification(AnalyzeContext *actx)
 	 // write path idx
 	 fprintf(stdout, "\t%d", path_other);
 	 // write db idx
-	 fprintf(stdout, "\t%d", contig_other->idx);
+	 fprintf(stdout, "\t%d", contig_other->property.contigID);
 	 // output fasta name: in + path + split + classifier
 	 fprintf(stdout, "\t%s_%d_%d_%c.fa", InFastaName, path_hap, 0, getClassification(contig_other->fClass));
 	 // length
-	 fprintf(stdout, "\t%8d", contig_other->len);
+	 fprintf(stdout, "\t%8d", contig_other->property.len);
 	 // percent repeat
-	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->len);
+	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->property.len);
 	 // position in contig --> only meaningful in contained contigs
 	 fprintf(stdout, "\t      na\t      na");
 	 // position in corresponding contig --> only meaningful in contained contigs
@@ -6641,30 +6646,30 @@ void rawClassification(AnalyzeContext *actx)
 	 printFinalAltContigClassification(stdout, contig_other->fAltClass);
 	 fprintf(stdout, "\n");
 
-	 ba_assign(contigVisited, contig_other->idx, TRUE);
+	 ba_assign(contigVisited, contig_other->property.contigID, TRUE);
 	 process++;
 	 switch (contig_other->fAltClass)
 	 {
 	 case BUBBLE_ALT:
 	 case SPUR_ALT:
 	 numALTcontigs++;
-	 numALTbases += contig_other->len;
+	 numALTbases += contig_other->property.len;
 	 break;
 	 case BUBBLE_REPEAT:
 	 case BUBBLE_HUGEDIF:
 	 case BUBBLE_LOWCOVEREDREPEAT:
 	 numREPcontigs++;
-	 numREPbases += contig_other->len;
+	 numREPbases += contig_other->property.len;
 	 break;
 	 default:
 	 numWEIRDcontigs++;
-	 numWEIRDbases += contig_other->len;
+	 numWEIRDbases += contig_other->property.len;
 	 break;
 	 }
 	 }
 	 }
 
-	 InFastaName = getFastaFileNameFromDB(actx, contig_hap->idx);
+	 InFastaName = getFastaFileNameFromDB(actx, contig_hap->property.contigID);
 
 	 // write + for haploid seqeunce, - otherwise
 	 fprintf(stdout, "%c", getClassification(contig_hap->fClass));
@@ -6673,13 +6678,13 @@ void rawClassification(AnalyzeContext *actx)
 	 // write path idx
 	 fprintf(stdout, "\t%d", path_hap);
 	 // write db idx
-	 fprintf(stdout, "\t%d", contig_hap->idx);
+	 fprintf(stdout, "\t%d", contig_hap->property.contigID);
 	 // output fasta name: in + path + split + classifier
 	 fprintf(stdout, "\t%s_%d_%d_%c.fa", InFastaName, path_hap, 0, getClassification(contig_hap->fClass));
 	 // length
-	 fprintf(stdout, "\t%8d", contig_hap->len);
+	 fprintf(stdout, "\t%8d", contig_hap->property.len);
 	 // percent repeat
-	 fprintf(stdout, "\t%5.2f", contig_hap->repBases * 100.0 / contig_hap->len);
+	 fprintf(stdout, "\t%5.2f", contig_hap->repBases * 100.0 / contig_hap->property.len);
 	 // position in contig --> only meaningful in contained contigs
 	 fprintf(stdout, "\t      na\t      na");
 	 // position in corresponding contig --> only meaningful in contained contigs
@@ -6695,10 +6700,10 @@ void rawClassification(AnalyzeContext *actx)
 	 fprintf(stdout, "\n");
 	 // haploid contig summary: print number of bubbles/spurs and percentage of bases according to contig length
 	 fprintf(stdout, "# HAPLOID-Summary\n");
-	 fprintf(stdout, "# HAPcontig  \tBp\t%%Bp\t-\t%3d\t%8d\t%5.2f\n", 1, contig_hap->len, 100.00);
-	 fprintf(stdout, "# ALTcontig  \tBp\t%%Bp\t-\t%3d\t%8d\t%5.2f\n", numALTcontigs, numALTbases, numALTbases * 100.0 / contig_hap->len);
-	 fprintf(stdout, "# REPcontig  \tBp\t%%Bp\t-\t%3d\t%8d\t%5.2f\n", numREPcontigs, numREPbases, numREPbases * 100.0 / contig_hap->len);
-	 fprintf(stdout, "# WEIRDcontig\tBp\t%%Bp\t-\t%3d\t%8d\t%5.2f\n", numWEIRDcontigs, numWEIRDbases, numWEIRDbases * 100.0 / contig_hap->len);
+	 fprintf(stdout, "# HAPcontig  \tBp\t%%Bp\t-\t%3d\t%8d\t%5.2f\n", 1, contig_hap->property.len, 100.00);
+	 fprintf(stdout, "# ALTcontig  \tBp\t%%Bp\t-\t%3d\t%8d\t%5.2f\n", numALTcontigs, numALTbases, numALTbases * 100.0 / contig_hap->property.len);
+	 fprintf(stdout, "# REPcontig  \tBp\t%%Bp\t-\t%3d\t%8d\t%5.2f\n", numREPcontigs, numREPbases, numREPbases * 100.0 / contig_hap->property.len);
+	 fprintf(stdout, "# WEIRDcontig\tBp\t%%Bp\t-\t%3d\t%8d\t%5.2f\n", numWEIRDcontigs, numWEIRDbases, numWEIRDbases * 100.0 / contig_hap->property.len);
 
 	 // log splits
 	 printf("splits: \n");
@@ -6718,7 +6723,7 @@ void rawClassification(AnalyzeContext *actx)
 	 compoundNumWEIRDcontigs += numWEIRDcontigs;
 	 compoundNumWEIRDbases += numWEIRDbases;
 	 compoundNumHapContigs++;
-	 compoundNumHapBases += contig_hap->len;
+	 compoundNumHapBases += contig_hap->property.len;
 	 continue;
 	 }
 	 else // print out remaining contigs
@@ -6730,11 +6735,11 @@ void rawClassification(AnalyzeContext *actx)
 	 {
 	 Contig * contig_other = actx->contigs + i;
 
-	 if (ba_value(contigVisited, contig_other->idx) == FALSE)
+	 if (ba_value(contigVisited, contig_other->property.contigID) == FALSE)
 	 {
-	 InFastaName = getFastaFileNameFromDB(actx, contig_other->idx);
-	 path_other = getPathID(actx, contig_other->idx);
-	 getContigsEndIDs(actx, contig_other->idx, &end1_other, &end2_other);
+	 InFastaName = getFastaFileNameFromDB(actx, contig_other->property.contigID);
+	 path_other = getPathID(actx, contig_other->property.contigID);
+	 getContigsEndIDs(actx, contig_other->property.contigID, &end1_other, &end2_other);
 
 	 // write + for haploid seqeunce, - otherwise
 	 fprintf(stdout, "   %c", getClassification(contig_other->fClass));
@@ -6743,13 +6748,13 @@ void rawClassification(AnalyzeContext *actx)
 	 // write path idx
 	 fprintf(stdout, "\t%d", path_other);
 	 // write db idx
-	 fprintf(stdout, "\t%d", contig_other->idx);
+	 fprintf(stdout, "\t%d", contig_other->property.contigID);
 	 // output fasta name: in + path + split + classifier
 	 fprintf(stdout, "\t%s_%d_%d_%c.fa", InFastaName, path_hap, 0, getClassification(contig_other->fClass));
 	 // length
-	 fprintf(stdout, "\t%8d", contig_other->len);
+	 fprintf(stdout, "\t%8d", contig_other->property.len);
 	 // percent repeat
-	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->len);
+	 fprintf(stdout, "\t%5.2f", contig_other->repBases * 100.0 / contig_other->property.len);
 	 // position in contig --> only meaningful in contained contigs
 	 fprintf(stdout, "\t      na\t      na");
 	 // position in corresponding contig --> only meaningful in contained contigs
@@ -6765,11 +6770,11 @@ void rawClassification(AnalyzeContext *actx)
 
 	 fprintf(stdout, "\n");
 
-	 ba_assign(contigVisited, contig_other->idx, TRUE);
+	 ba_assign(contigVisited, contig_other->property.contigID, TRUE);
 	 process++;
 
 	 // update compound numbers
-	 compoundNumAllBases += contig_other->len;
+	 compoundNumAllBases += contig_other->property.len;
 
 	 }
 	 }
@@ -6800,10 +6805,10 @@ void classify(AnalyzeContext *actx)
 	for (i = 0; i < actx->numContigs; i++)
 	{
 		Contig *contig = actx->contigs + i;
-		path = getPathID(actx, contig->idx);
-		getContigsEndIDs(actx, contig->idx, &end1, &end2);
+		path = getPathID(actx, contig->property.contigID);
+		getContigsEndIDs(actx, contig->property.contigID, &end1, &end2);
 
-		contig->flag |= CONTIG_UNCLASSIFIED;
+		contig->property.flag |= CONTIG_UNCLASSIFIED;
 
 //		if ((contig->ovlGrpsClassificFlag & CONTIG_IS_CONTAINED))
 //		{
@@ -6853,7 +6858,7 @@ void classify(AnalyzeContext *actx)
 //					{
 //						gclass = contig->gClassific + k;
 //
-//						if ((gclass->flag & CONTIG_IS_CONTAINED) && contig->idx == 145)
+//						if ((gclass->flag & CONTIG_IS_CONTAINED) && contig->property.contigID == 145)
 //							printf("Contig 145 is contained in %d,  check by graphClassific\n", gclass->correspID);
 //
 //						if ((gclass->flag & CONTIG_IS_CONTAINED) && ovlgr->bread == gclass->correspID)
@@ -6890,7 +6895,7 @@ void classify(AnalyzeContext *actx)
 //			// todo how often does this happen, how to make a reliable classification ?
 //			if (!match)
 //			{
-//				printf("Contig %d --> match != 1\n", contig->idx);
+//				printf("Contig %d --> match != 1\n", contig->property.contigID);
 //				fflush(stdout);
 //			}
 //			assert(match == 1);
@@ -6933,7 +6938,7 @@ void classify(AnalyzeContext *actx)
 //				// check which one is contained
 //				for (j = 0; j < actx->numContigs; j++)
 //				{
-//					if ((int) contig->pctCoveredBasesInOtherContigs[j] > 70 && DB_READ_LEN(actx->corContigDB, contig->idx) < DB_READ_LEN(actx->corContigDB, j))
+//					if ((int) contig->pctCoveredBasesInOtherContigs[j] > 70 && DB_READ_LEN(actx->corContigDB, contig->property.contigID) < DB_READ_LEN(actx->corContigDB, j))
 //					{
 //						exclude = 1;
 //						break;
@@ -6961,7 +6966,7 @@ int checkJunctionCoverage(AnalyzeContext *actx, Contig *contig, int read) // ret
 // todo pass variable, set by user ?
 	int NUM_NODES_TOCHECK = 3; // number or reads to check before and after duplicated reads
 
-	printf("checkJunctionCoverage for read %d and contig %d\n", read, contig->idx);
+	printf("checkJunctionCoverage for read %d and contig %d\n", read, contig->property.contigID);
 
 	j = 0;
 	while (j < contig->numcReads)
@@ -7311,27 +7316,30 @@ int main(int argc, char* argv[])
 // STEP1
 	if (1)
 	{
-		printf("START    ---   STEP1A: analyze overlapping reads from patched database, with contig reads\n");
-		pass(patched_pctx, processFixedReadOverlap_handler1);
-		printf("DONE     ---   STEP1A: analyze overlapping reads from patched database, with contig reads\n");
-		printf("START    ---   STEP1B: -- analyzeContigOverlapGraph\n");
-		analyzeContigOverlapGraph(&actx);
-		printf("DONE     ---   STEP1B: -- analyzeContigOverlapGraph\n");
-		printf("START    ---   STEP1C: -- classifyContigsByBReadsAndPath\n");
-//		classifyContigsByBReadsAndPath(&actx);
-		printf("DONE     ---   STEP1C: -- classifyContigsByBReadsAndPath\n");
+		printf("START    ---   STEP1A: -- use patched read overlaps (from touring) and assign those to corresponding contigs\n");
+		pass(patched_pctx, processReadOverlapsAndMapThemToContigs);
+		printf("DONE     ---   STEP1A: -- use patched read overlaps (from touring) and assign those to corresponding contigs\n");
+
+		printf("START    ---   STEP1B: -- do coverage analysis for contig-read-overlaps, set absolute contig positions\n");
+		analyzeContigCoverageOfMappedReads(&actx);
+		printf("DONE     ---   STEP1B: -- do coverage analysis for contig-read-overlaps, set absolute contig positions\n");
+
+		printf("START    ---   STEP1C: -- preclassify Contig-Contig relationships by doing a mapped-read intersection strategy\n");
+		preclassifyContigsByBReadsAndPath(&actx);
+		printf("DONE     ---   STEP1C: -- preclassify Contig-Contig relationships by doing a mapped-read intersection strategy\n");
 	}
 
 // analyze overlaps between contigs
 // STEP2
 	if (1)
 	{
-		printf("START    ---   STEP2a: analyze contig alignments\n");
-		pass(contig_pctx, processContigOverlap_handler);
-		printf("DONE     ---   STEP2a: analyze contig alignments\n");
-		printf("START    ---   STEP2b: classify contig by contig alignments\n");
-//		classifyContigsByOverlaps(&actx);
-		printf("DONE     ---   STEP2b: classify contig by contig alignments\n");
+		printf("START    ---   STEP2a: analyze contig vs contig overlaps\n");
+		pass(contig_pctx, analyzeContigVsContigOverlaps);
+		printf("DONE     ---   STEP2a: analyze contig vs contig overlaps\n");
+
+		printf("START    ---   STEP2b: preclassify contig by contig overlaps\n");
+		preClassifyContigsByContigOverlaps(&actx);
+		printf("DONE     ---   STEP2b: preclassify contig by contig overlaps\n");
 	}
 
 // final classification, based on STEP1 and STEP2
@@ -7339,7 +7347,7 @@ int main(int argc, char* argv[])
 	if (1)
 	{
 		printf("START    ---   STEP3: refine contig classification (based on STEP1 and STEP2)");
-//		classify(&actx);
+		classify(&actx);
 		printf("DONE     ---   STEP3: refine contig classification (based on STEP1 and STEP2)");
 	}
 // check reads that occur multiple times in contigs, and set proper split positions if required
@@ -7347,14 +7355,13 @@ int main(int argc, char* argv[])
 	{
 		printf("STEP4: analyze reads that occur multiple times in contigs, and set proper split positions if required\n");
 		// analyze number of shared reads between contigs, trim them back if possible /// split contigs ??
-//		finalContigValidation(&actx);
+		finalContigValidation(&actx);
 	}
 // create output: contigs, splitted contigs, stat and bed files with i.e. coverage histogram, repeat tracks, split coordinates, ...
 // STEP5
 	{
 		printf("STEP5: create output\n");
-//		rawClassification(&actx);
-
+		rawClassification(&actx);
 	}
 
 	// clean up - put everything in a method
@@ -7368,13 +7375,26 @@ int main(int argc, char* argv[])
 	Close_DB(&correctedReadDB);
 	Close_DB(&correctedContigDB);
 	free(actx.readSeq - 1);
-	free(actx.contigFileNameOffsets);
+
 	int i;
-	if (actx.ContigFileNames)
+	if (actx.contigFileNamesAndOffsets)
 	{
-		for (i = 1; i <= actx.numContigFileNames; i++)
-			free(actx.ContigFileNames[i]);
-		free(actx.ContigFileNames);
+		for (i = 0; i < actx.contigFileNamesAndOffsets->numFileNames; i++)
+		{
+			free(actx.contigFileNamesAndOffsets->fastaNames[i]);
+			free(actx.contigFileNamesAndOffsets->fileNames[i]);
+		}
+		free(actx.contigFileNamesAndOffsets);
+	}
+
+	if (actx.rawReadFileNamesAndOffsets)
+	{
+		for (i = 0; i < actx.rawReadFileNamesAndOffsets->numFileNames; i++)
+		{
+			free(actx.rawReadFileNamesAndOffsets->fastaNames[i]);
+			free(actx.rawReadFileNamesAndOffsets->fileNames[i]);
+		}
+		free(actx.rawReadFileNamesAndOffsets);
 	}
 
 	for (i = 0; i < actx.maxChains; i++)

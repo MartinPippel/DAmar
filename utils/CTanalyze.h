@@ -115,7 +115,7 @@ typedef struct
 
 //// contig flags
 #define CONTIG_UNIQUE        (1 << 0)        //	1	contigs has no valid overlap group
-#define CONTIG_DISCARD       (1 << 1)        //	2	 contig tagged for removal
+//#define CONTIG_DISCARD       (1 << 1)        //	2	 contig tagged for removal
 #define CONTIG_IS_CONTAINED  (1 << 2)        // 	4	contig is contained in another contig
 #define CONTIG_HAS_CONTAINED (1 << 3)        // 	8	contig includes contained
 #define CONTIG_UNCLASSIFIED  (1 << 4)        // 	16
@@ -139,18 +139,9 @@ typedef struct
 	int numCoveredIntervals;
 	int *coveredIntervals; // begPos, endPos, avgCov --> positions according to the contig  where this ContigGraphClassification belongs to
 	int nJointReads;
-} ContigGraphClassification;
+} ReadRelation;
 
-///// contig classification flags
-#define CONTIG_CLASS_UNKNOWN			(1 << 0)			//	1
-#define CONTIG_CLASS_HAPLOID			(1 << 1)     	// 	2	haploid contig
-#define CONTIG_CLASS_ALT   			(1 << 2)     	// 	4	alternative contig (heterozygous difference)
-#define CONTIG_CLASS_ALT_SPUR		(1 << 3)    		// 	8	alternative contig is a Spur
-#define CONTIG_CLASS_ALT_BUBBLE		(1 << 4)    		// 	16	alternative contig is a Bubble
-#define CONTIG_CLASS_ALT_HUGEDIFF	(1 << 5)  		// 	32	alternative contig with hiuge difference
-#define CONTIG_CLASS_REPEAT			(1 << 6)     	// 	64	repeat
-#define CONTIG_CLASS_WEIRD 			(1 << 7)     	// 	128	weird
-#define CONTIG_VISITED 				(1 << 8)     	// 	256	visited flag
+
 
 typedef struct
 {
@@ -170,39 +161,100 @@ typedef struct
 
 typedef struct
 {
+	int flag;
 	int corContigIdx;
 	int *abpos;
 	int *aepos;
 	int numPos;
-} ContigChain;
+} ContigRelation;
 
 typedef struct
 {
-	int flag;              // (above) CONTIG flags
-	int len;               // contig length
-	int idx;               // initial index from Contig-DB
+	int contigID1;
+	int contigID2;	// only necessary if a contig bridges 2 other contigs
+	int flag;
+} TourRelation;
+
+
+///// contig classification flags
+#define CONTIG_CLASS_UNKNOWN			(1 << 0)			//	1
+#define CONTIG_CLASS_HAPLOID			(1 << 1)     	// 	2	haploid contig
+#define CONTIG_CLASS_ALT   			(1 << 2)     	// 	4	alternative contig (heterozygous difference)
+#define CONTIG_CLASS_ALT_SPUR		(1 << 3)    		// 	8	alternative contig is a Spur
+#define CONTIG_CLASS_ALT_BUBBLE		(1 << 4)    		// 	16	alternative contig is a Bubble
+#define CONTIG_CLASS_ALT_HUGEDIFF	(1 << 5)  		// 	32	alternative contig with hiuge difference
+#define CONTIG_CLASS_REPEAT			(1 << 6)     	// 	64	repeat
+#define CONTIG_CLASS_WEIRD 			(1 << 7)     	// 	128	weird
+#define CONTIG_VISITED 				(1 << 8)     	// 	256	visited flag
+#define CONTIG_DISCARD				(1 << 9)
+
+/// TourRelationFlags - based on touring evaluates ends arguments
+#define TOUR_HAS_BUBBLE					(1 << 0)	// contig has some bubbles
+#define TOUR_IS_BUBBLE					(1 << 1) 	// contig is a bubble of another contig
+#define TOUR_IS_SPUR 			 			(1 << 2)	// contig is a spur
+#define TOUR_HAS_SPUR 			 		(1 << 3)	// contig has spurs
+#define TOUR_IS_BRIDGECONTIG  	(1 << 4)	// contig joins different contigs
+#define TOUR_HAS_BRIDGECONTIG  	(1 << 5)	// contig joins different contigs
+
+/// ContigRelationFlags - based on Contig vs Contig overlaps
+#define CONT_HAS_CONTAINED		(1 << 0)
+#define CONT_IS_CONTAINED			(1 << 1)
+#define CONT_HAS_LEFTEXIT 		(1 << 2)
+#define CONT_HAS_RIGHTEXIT 		(1 << 3)
+
+/// ReadRelationFlags - based on Contig vs patched read overlaps
+#define READ_HAS_CONTAINED		(1 << 0)
+#define READ_IS_CONTAINED			(1 << 1)
+#define READ_HAS_LEFTEXIT 		(1 << 2)
+#define READ_HAS_RIGHTEXIT 		(1 << 3)
+#define READ_IS_UNIQUE	 			(1 << 4)
+
+typedef struct
+{
+	int len;
+	int contigID;
+	int fileID; 	  // contigs are usually split into connected compounds and stored different files
+	int pathID;     // pathID represents an individual contig ID within a connected compound
+
+	int tmp;			 // reusable variable
+
+	int flag;
+
+	int tourRelationFlags;
+	int contigRelationFlags;
+	int readRelationFlags;
+} ContigProperties;
+
+typedef struct
+{
+  ContigProperties property;
 
 	ContigRead *cReads;
 	int numcReads;
 	float avgCov;
 
-	// valid overlap chains with other contigs, i.e. all repeat induced overlaps are filtered out !!!!
-	Chain *contigChains;
-	int curContigChains;
-	int maxContigChains;
+	ContigRelation *contigRelations;
+	int numContigRelations;
+	int maxContigRelations;
 
-	ContigChain *cChains;
-	int numCChains;
-	int maxCChains;
+	ReadRelation *readRelations;
+	int numReadRelations;
+	int maxReadRelations;
 
-	ContigGraphClassification *gClassific;
-	int gClassificFlag;
-	int numGClassific;
-	int maxGClassific;
+	TourRelation *tourRelations;
+	int numTourRelations;
 
-	int tmp;
-	int class;
 } Contig;
+
+typedef struct
+{
+	int numFileNames;
+
+	char **fileNames;
+	char **fastaNames;
+	int  *fromDbIdx;
+	int  *toDbIdx;		// inclusive
+} FileNamesAndOffsets;
 
 typedef struct
 {
@@ -250,10 +302,8 @@ typedef struct
 	int SPUR_LEN;
 	int TIP_LEN;
 
-	// TODO change this, use file indexes and not names!!!
-	int *contigFileNameOffsets;
-	char **ContigFileNames;
-	int numContigFileNames;
+	FileNamesAndOffsets *contigFileNamesAndOffsets;
+	FileNamesAndOffsets *rawReadFileNamesAndOffsets;
 
 	// detect and store temporarily contig chains
 	Chain *ovlChains;
@@ -270,9 +320,7 @@ void finalContigValidation(AnalyzeContext *actx);
 int getFullReadPositionInContig(AnalyzeContext *actx, Contig* c, int readID, int *cbeg, int *cend);
 ContigRead* getContigRead(Contig* contig, int readID);
 
-char* getFastaFileNameFromDB(AnalyzeContext *actx, int contigID);
-int getNumberOfSequencesFromFastaFileName(AnalyzeContext *actx, int contigID);
-int getFirstDBIdxFromFastaFileName(AnalyzeContext *actx, int contigID);
+char* getContigFastaFileName(AnalyzeContext *actx, Contig *contig);
 int createOutDir(char *out);
 
 //////// analyze contigs based on fixed-read overlaps and intersection of read ids
@@ -283,7 +331,7 @@ void getCorrespondingPositionInARead(AnalyzeContext *actx, Overlap *ovl, int* po
 /// do coverage analysis for contig-read-overlaps, set absolute contig positions
 void analyzeContigOverlapGraph(AnalyzeContext *actx);
 int cmpOVLreadById(const void *a, const void *b);
-int parseDBFileNames(char *dbName, int **fileOffsets, char ***fileNames, char ***readNames);
+void parseDBFileNames(char *dbName, FileNamesAndOffsets *fileNamesAndOffsets);
 void classifyContigsByBReadsAndPath(AnalyzeContext *actx);
 typedef struct
 {
@@ -293,6 +341,8 @@ typedef struct
 } ContigIDAndLen;
 int cmpContigLength(const void *a, const void *b);
 int getPathID(AnalyzeContext *actx, int contigID);
+int getFileID(FileNamesAndOffsets *fileAndNameOffset, int contigID);
+
 void getContigsEndIDs(AnalyzeContext *actx, int contigID, int* beg, int *end);
 
 //////// analyze contigs on their alignments with each other

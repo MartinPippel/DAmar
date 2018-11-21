@@ -92,9 +92,11 @@ function getPhaseFilePrefix()
     elif [[ ${currentPhase} -eq 10 ]]
     then
         echo "purgeHaplotigs"       
-               
+    elif [[ ${currentPhase} -eq 11 ]]
+    then
+        echo "freebayes"                     
     else
-        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs)")
+        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs, 11-freebayes)")
         exit 1
     fi
 }
@@ -107,11 +109,11 @@ function getCurrentDB()
     elif [[ ${currentPhase} -lt 3 ]]
     then 
         echo "${RAW_DB%.db}"
-	elif [[ ${currentPhase} -eq 8 ]]
+	elif [[ ${currentPhase} -lt 8 ]]
     then 
-        echo "${CONT_DB%.db}"        
+       	echo "${FIX_DB%.db}"       
     else
-        echo "${FIX_DB%.db}"
+        echo "${CONT_DB%.db}"
     fi
 }
 echo $(pwd)
@@ -214,12 +216,15 @@ then
 	                echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	            fi 
 	            
-				if [[ ${prefix} == "arrow" ]]
+				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" ]]
 				then
-					echo -e "\n${PACBIO_ARROW_ENV}" >> ${file}.slurm
+					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 				elif [[ ${prefix} == "purgeHaplotigs" ]]
 				then	
-					echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm			
+					echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+				elif [[ ${prefix} == "whatshap" ]]
+				then	
+					echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm				
 				fi
 				
 	            echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -261,12 +266,15 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
 
-				if [[ ${prefix} == "arrow" ]]
+				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" ]]
 				then
-					echo -e "\n${PACBIO_ARROW_ENV}" >> ${file}.slurm
+					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 				elif [[ ${prefix} == "purgeHaplotigs" ]]
 				then	
-					echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm			
+					echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+				elif [[ ${prefix} == "whatshap" ]]
+				then	
+					echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm			
 				fi
 
 				echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -323,12 +331,15 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
 	            echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	        fi 
 	        
-			if [[ ${prefix} == "arrow" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" ]]
 			then
-				echo -e "\n${PACBIO_ARROW_ENV}" >> ${file}.slurm
+				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
-				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm			
+				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "whatshap" ]]
+			then	
+				echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm										
 			fi
 	
 	        echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -370,12 +381,15 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
 
-			if [[ ${prefix} == "arrow" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" ]]
 			then
-				echo -e "\n${PACBIO_ARROW_ENV}" >> ${file}.slurm
+				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
-				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm			
+				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "whatshap" ]]
+			then	
+				echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm				
 			fi
 
 			echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -473,7 +487,9 @@ then
 				   [[ ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -le ${FIX_TOUR_SUBMIT_SCRIPTS_TO} ]] ||
 				   [[ ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -le ${FIX_CORR_SUBMIT_SCRIPTS_TO} ]] ||
 				   [[ ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -gt 0 && ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -le ${COR_CONTIG_SUBMIT_SCRIPTS_TO} ]] ||
-				   [[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]]
+				   [[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]] ||
+				   [[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
+				   [[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]]
 			then
 				cd ../
 				mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
@@ -621,7 +637,16 @@ then
         sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     fi
-fi    
+fi
+
+if [[ ${currentPhase} -eq 11 && ${foundNext} -eq 0 ]]
+then 
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]]
+    then 
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+    fi
+fi        
 
 if [[ ${foundNext} -eq 0 ]]
 then

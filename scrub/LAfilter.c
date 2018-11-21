@@ -2122,8 +2122,6 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 		int rp_mergeTip_ab = trim_ab;
 		int rp_mergeTip_ae = trim_ae;
 
-		int extendRepeatAtFront = 0;
-
 		if (ctx->rp_mergeTips)
 		{
 			int cumRep = 0;
