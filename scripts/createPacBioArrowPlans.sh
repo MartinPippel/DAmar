@@ -176,7 +176,7 @@ then
 		echo "samtools faidx ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		echo "grep -e \">\" ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta | sed -e 's:^>::' > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.version
-		echo "samtools $(samtools 2>&1 | grep Version | awk '{print $2}')" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.version
     ### 2-pbalign
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -235,9 +235,9 @@ then
     		
     		echo "pbalign${logfile}${unalignFile}${ARROW_PBALIGN_OPT} ${x} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}.pbalign.bam"        	
     	done > arrow_02_pbalign_block_${CONT_DB}.${slurmID}.plan 
-    	echo "pbalign $(pbalign --version)" > arrow_02_pbalign_block_${CONT_DB}.${slurmID}.version
-		echo "samtools $(samtools 2>&1 | grep Version | awk '{print $2}')" >> arrow_02_pbalign_block_${CONT_DB}.${slurmID}.version
-		echo "blasr $(blasr --version | awk '{print $2}')">> arrow_02_pbalign_block_${CONT_DB}.${slurmID}.version
+    	echo "pbalign $(${PACBIO_BASE_ENV} && pbalign --version && ${PACBIO_BASE_ENV_DEACT})" > arrow_02_pbalign_block_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> arrow_02_pbalign_block_${CONT_DB}.${slurmID}.version
+		echo "blasr $(${PACBIO_BASE_ENV} && blasr --version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})">> arrow_02_pbalign_block_${CONT_DB}.${slurmID}.version
     ### 3-bamsplit
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -285,7 +285,7 @@ then
         	file=${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}.pbalign.bam
         	echo "bamtools split -in  ${file} -reference"			   			   		
 		done > arrow_03_bamtools_block_${CONT_DB}.${slurmID}.plan
-		echo "$(bamtools --version | grep bamtools)" > arrow_03_bamtools_block_${CONT_DB}.${slurmID}.version
+		echo "$(${PACBIO_BASE_ENV} && bamtools --version | grep bamtools && ${PACBIO_BASE_ENV_DEACT})" > arrow_03_bamtools_block_${CONT_DB}.${slurmID}.version
     ### 4-bamseparate
     elif [[ ${currentStep} -eq 4 ]]
     then
@@ -339,7 +339,7 @@ then
    		do
    			echo "bamtools merge -list ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof -out ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && if [[ -s ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof ]]; then xargs rm < ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/in.fof; fi"
 		done > arrow_05_bamtools_block_${CONT_DB}.${slurmID}.plan
-		echo "$(bamtools --version | grep bamtools)" >arrow_05_bamtools_block_${CONT_DB}.${slurmID}.version
+		echo "$(${PACBIO_BASE_ENV} && bamtools --version | grep bamtools && ${PACBIO_BASE_ENV_DEACT})" >arrow_05_bamtools_block_${CONT_DB}.${slurmID}.version
 	### 6-arrow 
     elif [[ ${currentStep} -eq 6 ]]
     then
@@ -401,9 +401,9 @@ then
    				echo "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && arrow${ARROW_ARROW_OPT}${gff}${vcf}${fq} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta -w ${x} -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam"	
    			fi
 		done > arrow_06_arrow_block_${CONT_DB}.${slurmID}.plan	
-		echo "$(bamtools --version | grep bamtools)" > arrow_06_arrow_block_${CONT_DB}.${slurmID}.version
-		echo "pbindex $(pbindex --version)" >> arrow_06_arrow_block_${CONT_DB}.${slurmID}.version
-		echo "arrow $(arrow --version)" >> arrow_06_arrow_block_${CONT_DB}.${slurmID}.version				
+		echo "$(${PACBIO_BASE_ENV} && bamtools --version | grep bamtools && ${PACBIO_BASE_ENV_DEACT})" > arrow_06_arrow_block_${CONT_DB}.${slurmID}.version
+		echo "pbindex $(${PACBIO_BASE_ENV} && pbindex --version && ${PACBIO_BASE_ENV_DEACT})" >> arrow_06_arrow_block_${CONT_DB}.${slurmID}.version
+		echo "arrow $(${PACBIO_BASE_ENV} && arrow --version && ${PACBIO_BASE_ENV_DEACT})" >> arrow_06_arrow_block_${CONT_DB}.${slurmID}.version				
 	### 7-statistics 
     elif [[ ${currentStep} -eq 7 ]]
     then
