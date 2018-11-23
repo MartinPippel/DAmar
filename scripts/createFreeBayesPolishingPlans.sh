@@ -246,9 +246,9 @@ then
 				id=$(dirname ${r1})
 				f1=$(basename ${r1})
 				f2=$(echo "${f1}" | sed -e "s:_R1_:_R2_:")
-				o="${f1%_R2_???.fastq.gz}"											
+				o="${f1%_R1_???.fastq.gz}"											
 				
-				echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG${PROJECT_ID}\tID:\tSM:10X\" ${ref} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f1} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f2} | samtools sort${CONTIG_SAMTOOLS_OPT} -O BAM -o ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${o}_bwa.bam && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${o}_bwa.bam" 				 
+				echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${PROJECT_ID}\tSM:10X\" ${ref} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f1} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f2} | samtools sort${CONTIG_SAMTOOLS_OPT} -O BAM -o ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${o}_bwa.bam && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${o}_bwa.bam" 				 
 			done > freebayes_03_FBbwa_block_${CONT_DB}.${slurmID}.plan
 			
 	   		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > freebayes_03_FBbwa_block_${CONT_DB}.${slurmID}.version
