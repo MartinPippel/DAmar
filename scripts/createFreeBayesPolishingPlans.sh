@@ -102,8 +102,10 @@ then
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "ln -s -r ${CT_FREEBAYES_REFFASTA} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "samtools faidx ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/$(basename ${CT_FREEBAYES_REFFASTA})" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "bwa index ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/$(basename ${CT_FREEBAYES_REFFASTA})" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		
 		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.version
 	### 2-FBfastp 
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -165,7 +167,7 @@ then
 				id=$(dirname ${r1})
 				f1=$(basename ${r1})
 				f2=$(echo "${f1}" | sed -e "s:_R1_:_R2_:")
-				o="${f1%_R2_???.fastq.gz}"											
+				o="${f1%_R1_???.fastq.gz}"											
 				
 				echo "fastp -i ${id}/${f1} -I ${id}/${f2} -f 23 -G -Q -j ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${o}.json -h ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${o}.html -w ${CT_FREEBAYES_FASTP_THREADS} -o ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f1} -O ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f2}"				 
 			done > freebayes_02_FBfastp_block_${CONT_DB}.${slurmID}.plan
