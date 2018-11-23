@@ -544,7 +544,7 @@ PB_ARROW_ARROW_GFFOUT=1
 PB_ARROW_ARROW_FQOUT=1
 PB_ARROW_ARROW_VCFOUT=1
 
-# ----------------------------------------------------------------- CONTIG PURGEHAPLPOTIGS OPTIONS ----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------- CONTIG FREEBAYES OPTIONS ----------------------------------------------------------------------------------------------------
 
 ### general options
 CT_FREEBAYES_RUNID=1												# used for output directory purgeHaplotigs_run${PB_ARROW_RUNID}

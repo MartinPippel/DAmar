@@ -95,7 +95,7 @@ then
         	exit 1
    		fi
    		
-   		echo "if [[ -d ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} ]]; then mv ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} ${CT_FREEBAYES_OUTDIR}/purgeHaplotigs_${CT_FREEBAYES_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_FREEBAYES_OUTDIR}/purgeHaplotigs_${CT_FREEBAYES_RUNID}" > freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+   		echo "if [[ -d ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} ]]; then mv ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}" > freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
@@ -367,7 +367,7 @@ then
       	echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.version  
                 	   						
     else
-        (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_FREEBAYES_TYPE} not supported")
+        (>&2 echo "step ${currentStep} in CT_FREEBAYES_TYPE ${CT_FREEBAYES_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_FREEBAYES_TYPE}]}")
         exit 1            
     fi    		
