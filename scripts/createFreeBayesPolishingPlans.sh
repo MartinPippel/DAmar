@@ -286,7 +286,7 @@ then
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
-        for x in $(ls freebayes_05_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls freebayes_05_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -338,7 +338,7 @@ then
     elif [[ ${currentStep} -eq 6 ]]
     then
         ### clean up plans 
-        for x in $(ls freebayes_06_*_*_${FIX_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls freebayes_06_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
