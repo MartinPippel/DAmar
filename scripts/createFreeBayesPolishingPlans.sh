@@ -330,7 +330,7 @@ then
         	exit 1
    		fi
 		
-   		echo "$(awk -v bam=${bamList} -v ref=${ref} -v out=${outdir} '{print "freebayes --bam-list "bam" --region "$1":1-"$2" -f "${ref}" | bcftools view --no-version -Ob -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.plan
+   		echo "$(awk -v bam=${bamList} -v ref=${ref} -v out=${outdir} '{print "freebayes --bam-list "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ob -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.plan
 
 		echo "freebayes $(${PACBIO_BASE_ENV} && freebayes --version && ${PACBIO_BASE_ENV_DEACT})" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
 		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
