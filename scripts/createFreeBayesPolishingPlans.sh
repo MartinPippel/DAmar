@@ -361,7 +361,7 @@ then
    		outdir="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/"
         
     	# create list of bcf files, same order as in ref.fai
-        echo "awk -v d=${indir} '{print d$1":1-"$2".bcf"}' ${ref}.fai > ${outdir}/${PROJECT_ID}_10x_concatList.txt" > freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
+        echo "awk '{print $1":1-"$2".bcf"}' ${ref}.fai > ${outdir}/${PROJECT_ID}_10x_concatList.txt" > freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
         echo "bcftools concat -nf ${outdir}/${PROJECT_ID}_concatList.txt | bcftools view -Ou -e'type="ref"' | bcftools norm -Ob -f $ref -o ${outdir}/${PROJECT_ID}_10x.bcf" >> freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
         echo "bcftools index ${outdir}/${PROJECT_ID}_10x.bcf" >> freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
         echo "bcftools consensus -i'QUAL>1 && (GT="AA" || GT="Aa")' -Hla -f ${ref} ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.fasta" >> freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
