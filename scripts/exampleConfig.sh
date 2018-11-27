@@ -593,7 +593,7 @@ CT_PURGEHAPLOTIGS_THREADS=24
 
 ### general options
 CT_HIC_RUNID=1												# used for output directory purgeHaplotigs_run${PB_ARROW_RUNID}
-CT_HIC_READS="${TENX_PATH}"   								# directory with pacbio fasta files
+CT_HIC_READS="${HIC_PATH}"   								# directory with pacbio fasta files
 CT_HIC_OUTDIR="${FIX_FILT_OUTDIR}"
 CT_HIC_REFFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
 ### fastp

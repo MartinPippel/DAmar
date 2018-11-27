@@ -95,11 +95,18 @@ then
         	exit 1
    		fi
    		
+   		if [[ ! -d "${CT_HIC_READS}" ]]
+        then
+        	(>&2 echo "ERROR - set CT_HIC_READS to HiC read directory")
+        	exit 1
+   		fi
+   		
    		echo "if [[ -d ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} ]]; then mv ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}" > hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/config" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -r ${CT_HIC_REFFASTA} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "ln -s -r ${CT_HIC_REFFASTA} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "samtools faidx ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
@@ -146,7 +153,7 @@ then
 		done
    		   				
    		numR1Files=0
-		for x in ${CT_HIC_READS}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R1.fastq.gz
+		for x in ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R1.fastq.gz
 		do
 			if [[ -f ${x} ]]
 			then	
@@ -156,12 +163,12 @@ then
 		
 		if [[ ${numR1Files} -eq 0 ]]
         then
-        	(>&2 echo "ERROR - cannot read HiC R1 files with following pattern: ${CT_HIC_READS}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R1.fastq.gz")
+        	(>&2 echo "ERROR - cannot read HiC R1 files with following pattern: ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R1.fastq.gz")
         	exit 1
    		fi
    		
    		numR2Files=0
-		for x in ${CT_HIC_READS}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R2.fastq.gz
+		for x in ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R2.fastq.gz
 		do
 			if [[ -f ${x} ]]
 			then	
@@ -171,7 +178,7 @@ then
 		
 		if [[ ${numR2Files} -eq 0 ]]
         then
-        	(>&2 echo "ERROR - cannot read HiC R2 files with following pattern: ${CT_HIC_READS}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R2.fastq.gz")
+        	(>&2 echo "ERROR - cannot read HiC R2 files with following pattern: ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R2.fastq.gz")
         	exit 1
    		fi
    		
@@ -183,7 +190,7 @@ then
    		
    		setbwaOptions
    		
-		for r1 in ${CT_HIC_READS}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R1.fastq.gz
+		for r1 in ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${PROJECT_ID}_*_*_R1.fastq.gz
 		do
 			id=$(dirname ${r1})
 			f1=$(basename ${r1})
