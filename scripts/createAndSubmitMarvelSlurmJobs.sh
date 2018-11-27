@@ -95,8 +95,11 @@ function getPhaseFilePrefix()
     elif [[ ${currentPhase} -eq 11 ]]
     then
         echo "freebayes"                     
+    elif [[ ${currentPhase} -eq 11 ]]
+    then
+        echo "hic"                     
     else
-        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs, 11-freebayes)")
+        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs, 11-freebayes, 12-hic)")
         exit 1
     fi
 }
@@ -216,7 +219,7 @@ then
 	                echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	            fi 
 	            
-				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" ]]
+				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 				then
 					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 				elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -266,7 +269,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
 
-				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" ]]
+				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 				then
 					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 				elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -331,7 +334,7 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
 	            echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	        fi 
 	        
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -381,7 +384,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
 
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -490,6 +493,7 @@ then
 				   [[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]] ||
 				   [[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
 				   [[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]]
+				   [[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]
 			then
 				cd ../
 				mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
@@ -646,7 +650,17 @@ then
         sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     fi
+fi
+
+if [[ ${currentPhase} -eq 12 && ${foundNext} -eq 0 ]]
+then 
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]
+    then 
+        sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+    fi
 fi        
+        
 
 if [[ ${foundNext} -eq 0 ]]
 then

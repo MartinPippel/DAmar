@@ -35,7 +35,7 @@ export PYTHONPATH=${MARVEL_PATH}/lib.python:$PYTHONPATH
 ## general information
 PROJECT_ID=iHylVes1
 GSIZE=600M
-SLURM_PARTITION=batch
+SLURM_PARTITION=batch		# default slurm partition - todo define individual partion for tasks 
 
 ## general settings raw read data bases  
 RAW_DB=LAB1608_HYLES_VESPERTILIO_MARVEL
@@ -157,6 +157,24 @@ CT_FREEBAYES_TYPE=0
 #type-1 steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
 CT_FREEBAYES_SUBMIT_SCRIPTS_FROM=1
 CT_FREEBAYES_SUBMIT_SCRIPTS_TO=8
+
+
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 12 - HiC QC and scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+CT_HIC_TYPE=0
+# Type: 0 Arima Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools
+# Type: 1 Phase Genomics Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
+# Type: 2 - Aiden Lab Juicer Pipeline (For QC)
+# Type: 3 - Salsa2 Pipeline (For Scaffolding)
+# Type: 4 - 3d-dna Pipeline (For Scaffolding)
+CT_HIC_SUBMIT_SCRIPTS_FROM=1
+CT_HIC_SUBMIT_SCRIPTS_TO=6
+
+myTypes=("1-HICprepareInput, 2-HICbwa, 3-HICfilter, 4-HICmerge, 5-HICmarkduplicates, 6-HICstatistics", 
+"1-HICprepareInput, 2-HICbwa, 3-HICfilter, 4-HICmatlock")
+
+
 
 # ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 
@@ -560,13 +578,6 @@ CT_FREEBAYES_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging 
 ### samtools sort
 CT_FREEBAYES_SAMTOOLS_THREADS=10
 CT_FREEBAYES_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
-### freebayes
-
-### bcftools
-
-### markduplicates 
-
-### samtools
 
 # ----------------------------------------------------------------- CONTIG PURGEHAPLPOTIGS OPTIONS ----------------------------------------------------------------------------------------------------
 
@@ -582,6 +593,24 @@ CT_PURGEHAPLOTIGS_SAMTOOLSTHREADS=8
 CT_PURGEHAPLOTIGS_SAMTOOLSMEM=1
 ### purgeHaplotigs
 CT_PURGEHAPLOTIGS_THREADS=24
+
+# ----------------------------------------------------------------- CONTIG HIC QC AND SCAFFOLDING OPTIONS ----------------------------------------------------------------------------------------------------
+
+### general options
+CT_HIC_RUNID=1												# used for output directory purgeHaplotigs_run${PB_ARROW_RUNID}
+CT_HIC_READS="${TENX_PATH}"   								# directory with pacbio fasta files
+CT_HIC_OUTDIR="${FIX_FILT_OUTDIR}"
+CT_HIC_REFFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
+### fastp
+CT_HIC_FASTP_THREADS=4
+### bwa
+CT_HIC_BWA_THREADS=40
+CT_HIC_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
+### samtools sort
+CT_HIC_SAMTOOLS_THREADS=10
+CT_HIC_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
+### arima qv min mapping quality
+CT_HIC_MINMAPQV=10
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
@@ -738,5 +767,15 @@ TIME_FBbwa=24:00:00
 THREADS_FBmarkDuplicates=${CT_FREEBAYES_SAMTOOLS_THREADS}
 MEM_FBmarkDuplicates=$((${CT_FREEBAYES_SAMTOOLS_THREADS}*${CT_FREEBAYES_SAMTOOLS_MEM}*1024))     
 TIME_FBmarkDuplicates=24:00:00
+
+########### HIC bwa 
+THREADS_HICbwa=${CT_HIC_BWA_THREADS}
+MEM_HICbwa=$((${CT_HIC_BWA_THREADS}*1024+${CT_HIC_SAMTOOLS_THREADS}*${CT_HIC_SAMTOOLS_MEM}*1024))     
+TIME_HICbwa=24:00:00
+
+########### HIC picard markduplicates - run indexing parallel  
+THREADS_HICmarkduplicates=${CT_HIC_SAMTOOLS_THREADS}
+MEM_HICmarkduplicates=$((${CT_HIC_SAMTOOLS_THREADS}*${CT_HIC_SAMTOOLS_MEM}*1024))     
+TIME_HICmarkduplicates=24:00:00
 
 
