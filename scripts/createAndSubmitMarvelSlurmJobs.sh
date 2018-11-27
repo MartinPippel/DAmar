@@ -43,10 +43,12 @@ source ${configFile}
 
 function getPhaseFilePrefix()
 {
-	if [[ ${currentPhase} -eq 0 ]]
+	if [[ ${currentPhase} -eq -1 ]]
     then
-        echo "cover"
-	
+        echo "mito"
+	elif [[ ${currentPhase} -eq 0 ]]
+    then
+        echo "cover"	
     elif [[ ${currentPhase} -eq 1 || ${currentPhase} -eq 3 ]]
     then
         echo "mask"
@@ -106,7 +108,10 @@ function getPhaseFilePrefix()
 
 function getCurrentDB()
 {	
-	if [[ ${currentPhase} -eq 0 ]]
+	if [[ ${currentPhase} -eq -1 ]]
+    then 
+        echo "${RAW_DB%.db}"
+	elif [[ ${currentPhase} -eq 0 ]]
     then 
         echo "${RAW_DAZZ_DB%.db}"
     elif [[ ${currentPhase} -lt 3 ]]
@@ -466,7 +471,29 @@ then
 	fi	
 fi
 
-if [[ ${currentPhase} -eq 0 ]]
+if [[ ${currentPhase} -eq -1 ]]
+then
+	if [[ $((${currentStep}+1)) -le ${RAW_MITO_SUBMIT_SCRIPTS_TO} ]]
+    then
+    	sbatch --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${db}.out -e ${prefix}_step$((${currentStep}+1))_${db%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem=12g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+	else
+		currentPhase=0
+        currentStep=$((${RAW_REPMASK_SUBMIT_SCRIPTS_FROM}-1))
+		### we have to create the coverage directory and change into that dir 
+		if [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${MITO_DIR} ]]
+		then
+			if [[ ${RAW_DASCOVER_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_DASCOVER_SUBMIT_SCRIPTS_FROM} -le ${RAW_DASCOVER_SUBMIT_SCRIPTS_TO} ]]
+			then
+				cd ../
+				mkdir -p ${DASCOVER_DIR}
+				cd ${DASCOVER_DIR}
+			fi 
+		fi
+	fi
+fi
+
+if [[ ${currentPhase} -eq 0 && ${foundNext} -eq 0 ]]
 then 
     if [[ $((${currentStep}+1)) -le ${RAW_DASCOVER_SUBMIT_SCRIPTS_TO} ]]
     then 
@@ -476,7 +503,7 @@ then
         currentPhase=1
         currentStep=$((${RAW_REPMASK_SUBMIT_SCRIPTS_FROM}-1))
 		### we have to create the patching directory and change into that dir 
-		if [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${COVERAGE_DIR} ]]
+		if [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${MITO_DIR} ]] || [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${COVERAGE_DIR} ]]
 		then
 			if [[ ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${RAW_REPMASK_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${RAW_PATCH_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_PATCH_SUBMIT_SCRIPTS_FROM} -le ${RAW_PATCH_SUBMIT_SCRIPTS_TO} ]]
@@ -484,20 +511,6 @@ then
 				cd ../
 				mkdir -p ${PATCHING_DIR}
 				cd ${PATCHING_DIR}
-			elif [[ ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]] ||
-		   		   [[ ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -le ${FIX_SCRUB_SUBMIT_SCRIPTS_TO} ]] ||
-				   [[ ${FIX_FILT_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_FILT_SUBMIT_SCRIPTS_FROM} -le ${FIX_FILT_SUBMIT_SCRIPTS_TO} ]] ||
-				   [[ ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -le ${FIX_TOUR_SUBMIT_SCRIPTS_TO} ]] ||
-				   [[ ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -le ${FIX_CORR_SUBMIT_SCRIPTS_TO} ]] ||
-				   [[ ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -gt 0 && ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -le ${COR_CONTIG_SUBMIT_SCRIPTS_TO} ]] ||
-				   [[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]] ||
-				   [[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
-				   [[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]]
-				   [[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]
-			then
-				cd ../
-				mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
-				cd ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
 			fi 
 		fi
     fi
@@ -525,7 +538,7 @@ then
         currentPhase=3
         currentStep=$((${FIX_REPMASK_SUBMIT_SCRIPTS_FROM}-1))
         ### we have to create the assembly directory and change into that dir 
-		if [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${PATCHING_DIR} ]]
+		if [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${MITO_DIR} ]] || [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${COVERAGE_DIR} ]] || [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${PATCHING_DIR} ]]
 		then
 			if [[ ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]] ||
 		  	 	[[ ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -le ${FIX_SCRUB_SUBMIT_SCRIPTS_TO} ]] ||
@@ -533,7 +546,10 @@ then
 		   		[[ ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -le ${FIX_TOUR_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -le ${FIX_CORR_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -gt 0 && ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -le ${COR_CONTIG_SUBMIT_SCRIPTS_TO} ]] ||
-		   		[[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]]
+		   		[[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${PB_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${PB_FREEBAYES_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
 			then
 				cd ../	
 			

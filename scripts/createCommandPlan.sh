@@ -21,7 +21,24 @@ source ${configFile}
 ## phases 0-DAScover, 1-repmask, 2-patching, 3-repmask, 4-scrubbing, 5-filtering, 6-touring, 7-correction, 8-contigAnalysis, 9-arrow 
 
 
-if [[ ${currentPhase} -eq 0 ]]
+if [[ ${currentPhase} -eq -1 ]]
+then	 
+	if [[ ! -f ${RAW_DB%db}.db ]]
+	then 
+		if [[ ! -f ${DB_PATH}/${RAW_DB%db}.db ]]
+		then 
+			(>&2 echo "Cannot find initial databases ${RAW_DB%db}.db in directory ${DB_PATH}")
+	        exit 1	
+		fi		
+		cp ${DB_PATH}/${RAW_DB%db}.db ${DB_PATH}/.${RAW_DB%db}.idx ${DB_PATH}/.${RAW_DB%db}.bps .
+	fi		
+    ${SUBMIT_SCRIPTS_PATH}/createMitoAssemblyPlans.sh ${configFile} ${currentStep} ${slurmID}
+    if [ $? -ne 0 ]
+    then 
+        (>&2 echo "createMitoAssemblyPlans.sh failed some how. Stop here.")
+        exit 1      
+    fi
+elif [[ ${currentPhase} -eq 0 ]]
 then	 
 	if [[ ! -f ${RAW_DB%db}.db ]]
 	then 

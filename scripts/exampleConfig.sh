@@ -61,6 +61,15 @@ TENX_PATH=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/10x
 PATCHING_DIR="patching"
 ASSMEBLY_DIR="assembly"
 COVERAGE_DIR="coverage"
+MITO_DIR="mitochondrion"
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -1 - mitochondrium assembly <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+# type-0 steps [1-3]: 1-mitoPrepareInput, 2-daligner, 3-LAmerge
+RAW_MITO_TYPE=0
+
+RAW_MITO_SUBMIT_SCRIPTS_FROM=1
+RAW_MITO_SUBMIT_SCRIPTS_TO=3
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase 0 - DAScover <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -158,8 +167,6 @@ CT_FREEBAYES_TYPE=0
 CT_FREEBAYES_SUBMIT_SCRIPTS_FROM=1
 CT_FREEBAYES_SUBMIT_SCRIPTS_TO=8
 
-
-
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 12 - HiC QC and scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 CT_HIC_TYPE=0
@@ -170,6 +177,19 @@ CT_HIC_TYPE=0
 # Type: 4 - 3d-dna Pipeline (For Scaffolding)
 CT_HIC_SUBMIT_SCRIPTS_FROM=1
 CT_HIC_SUBMIT_SCRIPTS_TO=6
+
+# ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
+
+RAW_MITO_REFFASTA=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/mitochondria_ref/iHylVes_mt.fasta
+
+#RAW_MITO_DALIGNER_KMER=14
+RAW_MITO_DALIGNER_ERR=0.7
+RAW_MITO_DALIGNER_BIAS=0
+RAW_MITO_DALIGNER_OLEN=1000
+RAW_MITO_DALIGNER_MEM=32
+RAW_MITO_DALIGNER_BLOCKCMP=4
+RAW_MITO_DALIGNER_FORBLOCK=1
+RAW_MITO_DALIGNER_NUMACTL=1
 
 # ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 
