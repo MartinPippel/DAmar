@@ -264,24 +264,35 @@ then
         for x in $(ls freebayes_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
-        done
+        done               
 
 		if [[ ! -d "${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams" ]]
         then
         	(>&2 echo "ERROR - cannot access directory ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams!")
         	exit 1
    		fi
-   		   		   				
-		for ib in ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/*_bwa.bam
-		do
-			d=$(dirname ${ib})
-			ob="${ib%_bwa.bam}_bwaMarkDups.bam"
-			m="${ib%_bwa.bam}_bwaMarkDups.metrics"
-			
-			echo "picard MarkDuplicates I=${ib} O=${ob} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${ob}" 				 
-		done > freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.plan
-		
-	   	echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" > freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version
+   		
+   		## if multiple bam files are available (e.g. different Lanes) then merge files prior to markduplicates
+   		files=$(ls ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/*_bwa.bam)
+   		
+   		echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" > freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version
+   		if [[ $(echo $files | wc -w) -eq 1 ]]
+   		then
+   			ob="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam"
+			m="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.metrics"
+   			
+   			echo "picard MarkDuplicates I=${files} O=${ob} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${ob}" 				 
+   		elif [[ $(echo $files | wc -w) -gt 1 ]]
+   		then
+   			mrg=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_merged10x.bam
+   			o=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam
+   			m=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.metrics
+   			echo "picard MergeSamFiles ${files} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${o}"
+   			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" >> freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version	   			
+		else
+   	 		(>&2 echo "ERROR - cannot find file with following pattern: ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/*_bwa.bam")
+        	exit 1
+   	 	fi > freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.plan   			   		   		   						   	
 	### 5-FBfreebayes
     elif [[ ${currentStep} -eq 5 ]]
     then
@@ -312,25 +323,14 @@ then
         	exit 1
    		fi
    		
-   		### create list of input bam files 
-   		numFiles=0
-   		bamList=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/bamlist.txt
-   		for ib in ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/*_bwaMarkDups.bam
-		do
-			if [[ -f ${ib} ]]
-			then
-				echo "${ib}"	
-				numFiles=$((${numFiles}+1))
-			fi			
-		done > ${bamList}
-		
-		if [[ ${numFiles} -eq 0 ]]
-        then
-    		(>&2 echo "ERROR - No duplicate marked bam files available!")
+   		bam=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam
+   		if [[ ! -f ${bam} ]]
+   		then 
+   			(>&2 echo "ERROR - cannot final duplicate marked bam file: ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam!")
         	exit 1
-   		fi
-		
-   		echo "$(awk -v bam=${bamList} -v ref=${ref} -v out=${outdir} '{print "freebayes --bam-list "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ob -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.plan
+   		fi 
+   		
+   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} '{print "freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ob -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.plan
 
 		echo "freebayes $(${PACBIO_BASE_ENV} && freebayes --version && ${PACBIO_BASE_ENV_DEACT})" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
 		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
