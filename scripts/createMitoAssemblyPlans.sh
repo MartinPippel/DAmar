@@ -162,7 +162,7 @@ then
         	exit 1
    		fi        
         
-        echo "echo "${MARVEL_PATH}/bin/FA2db -v -a ${RAW_DB%.db}.db ${RAW_MITO_REFFASTA}" > mito_01_mitoPrepareInput_single_${RAW_DB%.db}.${slurmID}.plan 
+        echo "${MARVEL_PATH}/bin/FA2db -v -a ${RAW_DB%.db}.db ${RAW_MITO_REFFASTA}" > mito_01_mitoPrepareInput_single_${RAW_DB%.db}.${slurmID}.plan 
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_01_mitoPrepareInput_single_${RAW_DB%.db}.${slurmID}.version
     ### 2-daligner
     elif [[ ${currentStep} -eq 2 ]]
