@@ -171,11 +171,6 @@ CT_HIC_TYPE=0
 CT_HIC_SUBMIT_SCRIPTS_FROM=1
 CT_HIC_SUBMIT_SCRIPTS_TO=6
 
-myTypes=("1-HICprepareInput, 2-HICbwa, 3-HICfilter, 4-HICmerge, 5-HICmarkduplicates, 6-HICstatistics", 
-"1-HICprepareInput, 2-HICbwa, 3-HICfilter, 4-HICmatlock")
-
-
-
 # ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 
 RAW_DASCOVER_DBDUST_BIAS=0

@@ -95,7 +95,7 @@ function getPhaseFilePrefix()
     elif [[ ${currentPhase} -eq 11 ]]
     then
         echo "freebayes"                     
-    elif [[ ${currentPhase} -eq 11 ]]
+    elif [[ ${currentPhase} -eq 12 ]]
     then
         echo "hic"                     
     else
