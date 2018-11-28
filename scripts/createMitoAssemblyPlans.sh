@@ -172,24 +172,25 @@ then
         do            
             rm $x
         done
-        
-        ### todo get this from a config file or derive it directly from the system
-        if [[ -n ${RAW_MITO_DALIGNER_NUMACTL} && ${RAW_MITO_DALIGNER_NUMACTL} -gt 0 ]]
-		then
-		    if [[ $((${x} % 2)) -eq  0 ]]
-		    then
-		        NUMACTL="numactl -m0 -N0 "
-		    else
-		        NUMACTL="numactl -m1 -N1 "    
-		    fi
-		else
-		    NUMACTL=""
-		fi
-            
+                    
         setDalignerOptions
         
         for x in $(seq 1 $((${rawblocks}-1)))
         do
+        	### todo get this from a config file or derive it directly from the system 
+        	### for now this is valid the MPI batch and gpu partition
+	        if [[ -n ${RAW_MITO_DALIGNER_NUMACTL} && ${RAW_MITO_DALIGNER_NUMACTL} -gt 0 ]]
+			then
+			    if [[ $((${x} % 2)) -eq  0 ]]
+			    then
+			        NUMACTL="numactl -m0 -N0 "
+			    else
+			        NUMACTL="numactl -m1 -N1 "    
+			    fi
+			else
+			    NUMACTL=""
+			fi
+	        	
         	echo "${NUMACTL}${MARVEL_PATH}/bin/daligner${MITO_DALIGNER_OPT} -A ${RAW_DB%.db}.${rawblocks} ${RAW_DB%.db}.${x}"        	
 		done > mito_02_daligner_block_${RAW_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_02_daligner_block_${RAW_DB%.db}.${slurmID}.version
