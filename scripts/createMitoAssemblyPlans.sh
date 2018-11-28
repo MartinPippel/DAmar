@@ -85,7 +85,7 @@ then
 	rawblocks=$(getNumOfDbBlocks ${RAW_DB%.db}.db)	
 fi
 
-function setDaligerOptions()
+function setDalignerOptions()
 {
     MITO_DALIGNER_OPT=""
     if [[ -n ${RAW_MITO_DALIGNER_IDENTITY_OVLS} && ${RAW_MITO_DALIGNER_IDENTITY_OVLS} -gt 0 ]]
