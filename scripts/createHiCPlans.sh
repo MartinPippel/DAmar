@@ -197,8 +197,8 @@ then
 			f2=$(echo "${f1}" | sed -e "s:_R1.fastq.gz:_R2.fastq.gz:")
 			o="${f1%_R1.fastq.gz}"											
 			
-			echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${o}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:ILLUMINA:\tPU:none\" ${ref} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${f1} | samtools view -Sb - > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${o}_bwa_1.bam"
-			echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${o}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:ILLUMINA:\tPU:none\" ${ref} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${f2} | samtools view -Sb - > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${o}_bwa_2.bam" 				 
+			echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${o}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:ILLUMINA\tPU:none\" ${ref} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${f1} | samtools view -Sb - > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${o}_bwa_1.bam"
+			echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${o}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:ILLUMINA\tPU:none\" ${ref} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${f2} | samtools view -Sb - > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${o}_bwa_2.bam" 				 
 		done > hic_02_HICbwa_block_${CONT_DB}.${slurmID}.plan
 		
    		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_02_HICbwa_block_${CONT_DB}.${slurmID}.version
