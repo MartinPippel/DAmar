@@ -220,7 +220,7 @@ then
    		   		   				
 		for b1 in ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/*_bwa_1.bam
 		do
-			d=$(dirname ${ib})
+			d=$(dirname ${b1})
 			b2="${b1%_1.bam}_2.bam"
 			f1=$(basename ${b1%_bwa_1.bam})_bwaFilt_1.bam
 			f2="${f1%_1.bam}_2.bam"			
