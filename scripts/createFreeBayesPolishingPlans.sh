@@ -287,7 +287,8 @@ then
    			mrg=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_merged10x.bam
    			o=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam
    			m=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.metrics
-   			echo "picard MergeSamFiles ${files} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${o}"
+   			i=$(echo -e ${files} | sed -e "s:${CT_FREEBAYES_OUTDIR}:I=${CT_FREEBAYES_OUTDIR}:g")
+   			echo "picard MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${o}"
    			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" >> freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version	   			
 		else
    	 		(>&2 echo "ERROR - cannot find file with following pattern: ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/*_bwa.bam")
