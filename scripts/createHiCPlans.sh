@@ -297,7 +297,8 @@ then
    			mrg=${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_mergedHiC.bam
    			o=${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam
    			m=${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.metrics
-   			echo "picard MergeSamFiles ${files} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_HIC_SAMTOOLS_THREADS} ${o} && ln -s -f -r ${o} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} && ln -s -f -r ${ob}.bai ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}"
+   			i=$(echo -e ${files} | sed -e "s:${CT_HIC_OUTDIR}:I=${CT_HIC_OUTDIR}:g")
+   			echo "picard MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_HIC_SAMTOOLS_THREADS} ${o} && ln -s -f -r ${o} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} && ln -s -f -r ${ob}.bai ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}"
    			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" >> hic_05_HICmarkduplicates_single_${CONT_DB}.${slurmID}.version	
    		else
    	 		(>&2 echo "ERROR - cannot find file with following pattern: ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/*_bwaFilt.bam!")
