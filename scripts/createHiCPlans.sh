@@ -225,8 +225,8 @@ then
 			f1=$(basename ${b1%_bwa_1.bam})_bwaFilt_1.bam
 			f2="${f1%_1.bam}_2.bam"			
 			
-			echo "samtools view -h ${b1} | perl filter_five_end.pl | samtools view -Sb - > ${x}/${f1}"
-			echo "samtools view -h ${b2} | perl filter_five_end.pl | samtools view -Sb - > ${x}/${f2}" 				 
+			echo "samtools view -h ${b1} | perl ${MARVEL_PATH}/scripts/filter_five_end.pl | samtools view -Sb - > ${x}/${f1}"
+			echo "samtools view -h ${b2} | perl ${MARVEL_PATH}/scripts/filter_five_end.pl | samtools view -Sb - > ${x}/${f2}" 				 
 		done > hic_03_HICfilter_block_${CONT_DB}.${slurmID}.plan
 					
 		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_03_HICfilter_block_${CONT_DB}.${slurmID}.version	   	
@@ -263,7 +263,7 @@ then
 			b2="${b1%_1.bam}_2.bam"
 			o="${f1%_1.bam}.bam"			
 			
-			echo "perl two_read_bam_combiner.pl ${b1} ${b2} $(which samtools) ${CT_HIC_MINMAPQV} | samtools view -bS -t ${ref}.fai - | samtools sort -o ${o} -"			 				 
+			echo "perl ${MARVEL_PATH}/scripts/two_read_bam_combiner.pl ${b1} ${b2} $(which samtools) ${CT_HIC_MINMAPQV} | samtools view -bS -t ${ref}.fai - | samtools sort -o ${o} -"			 				 
 			done > hic_04_HICmerge_single_${CONT_DB}.${slurmID}.plan
 		   
 		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_03_HICfilter_single_${CONT_DB}.${slurmID}.version		
@@ -319,7 +319,7 @@ then
         	exit 1
    		fi
    		   		  
-   		echo "perl get_stats.pl ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.stats" > hic_06_HICstatistics _single_${CONT_DB}.${slurmID}.plan
+   		echo "perl ${MARVEL_PATH}/scripts/get_stats.pl ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.stats" > hic_06_HICstatistics _single_${CONT_DB}.${slurmID}.plan
     else
         (>&2 echo "step ${currentStep} in CT_HIC_TYPE ${CT_HIC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_HIC_TYPE}]}")
