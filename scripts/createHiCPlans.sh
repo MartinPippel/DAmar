@@ -261,7 +261,7 @@ then
 		for b1 in ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/*_bwaFilt_1.bam
 		do
 			b2="${b1%_1.bam}_2.bam"
-			o="${f1%_1.bam}.bam"			
+			o="${b1%_1.bam}.bam"			
 			
 			echo "perl ${MARVEL_PATH}/scripts/two_read_bam_combiner.pl ${b1} ${b2} $(which samtools) ${CT_HIC_MINMAPQV} | samtools view -bS -t ${ref}.fai - | samtools sort -o ${o} -"			 				 
 			done > hic_04_HICmerge_single_${CONT_DB}.${slurmID}.plan
