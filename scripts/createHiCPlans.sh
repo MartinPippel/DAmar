@@ -319,7 +319,7 @@ then
         	exit 1
    		fi
    		   		  
-   		echo "perl ${MARVEL_PATH}/scripts/get_stats.pl ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.stats" > hic_06_HICstatistics _single_${CONT_DB}.${slurmID}.plan
+   		echo "perl ${MARVEL_PATH}/scripts/get_stats.pl ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.stats" > hic_06_HICstatistics_single_${CONT_DB}.${slurmID}.plan
     else
         (>&2 echo "step ${currentStep} in CT_HIC_TYPE ${CT_HIC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_HIC_TYPE}]}")
