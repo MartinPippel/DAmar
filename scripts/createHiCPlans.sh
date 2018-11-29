@@ -225,8 +225,8 @@ then
 			f1=$(basename ${b1%_bwa_1.bam})_bwaFilt_1.bam
 			f2="${f1%_1.bam}_2.bam"			
 			
-			echo "samtools view -h ${b1} | perl ${MARVEL_PATH}/scripts/filter_five_end.pl | samtools view -Sb - > ${x}/${f1}"
-			echo "samtools view -h ${b2} | perl ${MARVEL_PATH}/scripts/filter_five_end.pl | samtools view -Sb - > ${x}/${f2}" 				 
+			echo "samtools view -h ${b1} | perl ${MARVEL_PATH}/scripts/filter_five_end.pl | samtools view -Sb - > ${d}/${f1}"
+			echo "samtools view -h ${b2} | perl ${MARVEL_PATH}/scripts/filter_five_end.pl | samtools view -Sb - > ${d}/${f2}" 				 
 		done > hic_03_HICfilter_block_${CONT_DB}.${slurmID}.plan
 					
 		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_03_HICfilter_block_${CONT_DB}.${slurmID}.version	   	
