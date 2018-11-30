@@ -223,7 +223,10 @@ then
 	            then
 	                echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	            fi 
-	            
+                    if [[ -n ${SLURM_ACCOUNT} ]]
+                    then
+                        echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
+                    fi
 				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 				then
 					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
@@ -273,6 +276,10 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mem=${MEM}
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
+		    if [[ -n ${SLURM_ACCOUNT} ]]
+                    then
+                        echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
+                    fi
 
 				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 				then
@@ -338,6 +345,10 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
 	        then
 	            echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	        fi 
+                if [[ -n ${SLURM_ACCOUNT} ]]
+                then
+                    echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
+                fi
 	        
 			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 			then
@@ -388,6 +399,10 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mem=${MEM}
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
+                    if [[ -n ${SLURM_ACCOUNT} ]]
+                    then
+                        echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
+                    fi
 
 			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 			then
