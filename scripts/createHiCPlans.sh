@@ -107,7 +107,6 @@ then
 		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/config" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "ln -s -r ${CT_HIC_REFFASTA} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -r ${CT_HIC_REFFASTA} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "samtools faidx ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
