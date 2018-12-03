@@ -97,6 +97,7 @@ typedef struct
 	int lowCoverageFilter;
 	int hghCoverageFilter;
 	char* cov_read_active;
+	int do_bimodalQcheck;
 
 	int removeFlags; 	// 1 << 0 ... stitched overlaps, 1 << 1 ... module overlaps, 1 << 2 .. trace points, 1 << 3 .. non-identity overlaps,
 	// 1 << 4 .. remove B-read repeat overlaps, if a proper overlap between A and B exist i.e A ------------ or A ------------ or A ------------ or A   ------------
@@ -136,6 +137,7 @@ typedef struct
 	HITS_DB* db;
 	HITS_TRACK* trackRepeat;
 	HITS_TRACK* trackTrim;
+	HITS_TRACK* trackQ;
 
 	int* r2bin;
 	int max_r2bin;
@@ -2582,6 +2584,47 @@ static void filter_post(FilterContext* ctx)
 	}
 }
 
+static int cmp_ovls_qual(const void* a, const void* b)
+{
+    Overlap* o1 = *(Overlap**) a;
+    Overlap* o2 = *(Overlap**) b;
+
+    return ((100 - (o1->path.diffs * 100.0 / (o1->path.aepos - o1->path.abpos))) * 10 - (100 - (o2->path.diffs * 100.0 / (o2->path.aepos - o2->path.abpos))) * 10);
+}
+
+
+static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int novl)
+{
+	int i;
+	Overlap** ovl_sort = (Overlap**)malloc(sizeof(Overlap*)*novl);
+
+	int E[101];
+
+	for (i=0; i<101; i++)
+		E[i]=0;
+
+	for (i=0; i<novl; i++)
+		ovl_sort[i] = ovl + i;
+
+	qsort(ovl_sort, novl, sizeof(Overlap*), cmp_ovls_qual);
+
+	for (i=0; i<novl; i++)
+	{
+		Overlap* so = ovl_sort + i;
+		int err = (int)(so->path.diffs * 100.0 / (so->path.aepos - so->path.abpos));
+		E[err] += 1;
+	}
+
+	if (ovl->aread == 3330839)
+	{
+		printf("Ehist[%d]\n", 3330839);
+		for (i=0; i<101; i++)
+				printf("#%d_e%d ", E[i], i);
+		printf("\n");
+	}
+
+}
+
 static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
 {
 
@@ -2808,6 +2851,11 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 	if (ctx->lowCoverageFilter < ctx->hghCoverageFilter)
 		filterByCoverage(ctx, ovl, novl);
+
+	if(ctx->do_bimodalQcheck)
+	{
+		checkBimodalQvDistribution(ctx, ovl, novl);
+	}
 
 	if (ctx->stitch >= 0)
 	{
@@ -3178,6 +3226,11 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
+	if(ctx->do_bimodalQcheck)
+	{
+		checkBimodalQvDistribution(ctx, ovl, novl);
+	}
+
 	// find repeat modules and rescue overlaps
 
 	if (ctx->rm_cov != -1)
@@ -3234,7 +3287,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpLqTwW] [-dnolRsSumMfyYzN <int>] [-rt <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpLqTwWZ] [-dnolRsSumMfyYzNZ <int>] [-rt <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v ... verbose\n");
 	fprintf(stderr, "         -d ... max divergence allowed [0,100]\n");
@@ -3279,6 +3332,7 @@ static void usage()
 	fprintf(stderr, "         -c ... discard overlaps that don't show given coverage range. Intention get rid of contamination by coverage\n");
 	fprintf(stderr, "                e.g. -c -1000  ... discard overlaps that where A-read has lower than 1000x coverage \n");
 	fprintf(stderr, "                     -c  1000  ... discard overlaps that where A-read has higher than 1000x coverage \n");
+	fprintf(stderr, "         -Z ... if a bimodal quality distribution is present, then remove all overlaps that represent the second peak!\n");
 }
 
 static int opt_repeat_count(int argc, char** argv, char opt)
@@ -3362,6 +3416,7 @@ int main(int argc, char* argv[])
 	fctx.lowCoverageFilter = -1;
 	fctx.hghCoverageFilter = -1;
 	fctx.cov_read_active = NULL;
+	fctx.do_bimodalQcheck = 0;
 
 	int c;
 
@@ -3372,7 +3427,7 @@ int main(int argc, char* argv[])
 	}
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "TvLpwWy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:N:C:c:")) != -1)
+	while ((c = getopt(argc, argv, "TZvLpwWy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:N:C:c:")) != -1)
 	{
 		switch (c)
 		{
@@ -3386,6 +3441,10 @@ int main(int argc, char* argv[])
 
 		case 'x':
 			pathExcludeReads = optarg;
+			break;
+
+		case 'Z':
+			fctx.do_bimodalQcheck = 1;
 			break;
 
 		case 'I':
