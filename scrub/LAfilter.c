@@ -2691,7 +2691,7 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 			break;
 		}
 
-		if(i < maxQV)
+		if(i > maxQV)
 			break;
 	}
 
