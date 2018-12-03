@@ -2598,11 +2598,6 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 
 	int maxQV = 25;
 
-	int E[101];
-
-	for (i = 0; i < 101; i++)
-		E[i] = 0;
-
 	int numIncomingRead, numLeavinReads;
 	int cumOverallBases;
 	int cumOverallBasesFirstQuarter;
@@ -2689,6 +2684,10 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 		}
 		else
 		{
+			printf("DO NOT DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread,
+					so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
+			printf("%d {%d, %d, %d, %d} of %d {%d, %d, %d, %d}\n", removeAlnBases, removeAlnBasesFirstQuarter, removeAlnBasesSecondQuarter, removeAlnBasesThirdQuarter, removeAlnBasesFourthQuarter,
+					cumOverallBases, cumOverallBasesFirstQuarter, cumOverallBasesSecondQuarter, cumOverallBasesThirdQuarter, cumOverallBasesFourthQuarter);
 			break;
 		}
 
