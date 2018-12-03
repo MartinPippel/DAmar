@@ -2610,7 +2610,7 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 
 	for (i=0; i<novl; i++)
 	{
-		Overlap* so = ovl_sort + i;
+		Overlap* so = ovl_sort[i];
 		int err = (int)(so->path.diffs * 100.0 / (so->path.aepos - so->path.abpos));
 		E[err] += 1;
 	}
