@@ -2666,10 +2666,10 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 
 		removeAlnBases +=  so->path.aepos - so->path.abpos;
 
-		removeAlnBasesFirstQuarter += intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg, trimABeg + aQuarterTrimLen);
-		removeAlnBasesSecondQuarter += intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + aQuarterTrimLen, trimABeg + 2*aQuarterTrimLen);
-		removeAlnBasesThirdQuarter += intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + 2*aQuarterTrimLen, trimABeg + 3*aQuarterTrimLen);
-		removeAlnBasesFourthQuarter += intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + 3*aQuarterTrimLen, trimAEnd);
+		removeAlnBasesFirstQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg, trimABeg + aQuarterTrimLen);
+		removeAlnBasesSecondQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg + aQuarterTrimLen, trimABeg + 2*aQuarterTrimLen);
+		removeAlnBasesThirdQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg + 2*aQuarterTrimLen, trimABeg + 3*aQuarterTrimLen);
+		removeAlnBasesFourthQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg + 3*aQuarterTrimLen, trimAEnd);
 
 		if (removeAlnBases*100.0/cumOverallBases < MaxRemovedAlnBasesPerc &&
 				removeAlnBasesFirstQuarter * 100.0 / cumOverallBasesFirstQuarter < MaxRemovedAlnBasesPerc &&
@@ -2691,8 +2691,12 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 			break;
 		}
 
-		if(i > maxQV)
+		if(err < maxQV)
+		{
+			printf("STOP reached maxqv of %d [%d, %d] a[%d, %d] b [%d, %d] %c\n",err, so->aread, so->bread,
+					so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N');
 			break;
+		}
 	}
 
 	free(ovl_sort);
