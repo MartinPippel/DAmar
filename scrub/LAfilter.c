@@ -2619,10 +2619,9 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 	{
 		printf("Ehist[%d]\n", 3330839);
 		for (i=0; i<101; i++)
-				printf("#%d_e%d ", E[i], i);
-		printf("\n");
+				printf("%d\t%d\n", i, E[i]);
 	}
-
+	free(ovl_sort);
 }
 
 static void filterByCoverage(FilterContext* ctx, Overlap* ovl, int novl)
