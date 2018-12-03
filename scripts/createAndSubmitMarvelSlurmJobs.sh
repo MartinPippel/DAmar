@@ -495,7 +495,7 @@ RET="${TMPRET##* }"
 foundNext=0 
 ### add if account if necessary
 appAccount=""
-[[ -n ${SLURM_ACCOUNT} ]]
+if [[ -n ${SLURM_ACCOUNT} ]]
 then
 	appAccount " -A ${SLURM_ACCOUNT}"
 fi
