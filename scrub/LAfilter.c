@@ -2645,7 +2645,7 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 		cumOverallBasesFourthQuarter += isct;
 	}
 
-	printf("Coverage[%d]: beg,end [%3d, %3d] cover [%.2f %.2f %.2f %2.f] avgCov %2f\n", ovl_sort[i]->aread, numIncomingReads, numLeavingReads,
+	printf("Coverage[%d]: beg,end [%3d, %3d] cover [%.2f %.2f %.2f %2.f] avgCov %2f\n", ovl->aread, numIncomingReads, numLeavingReads,
 			cumOverallBasesFirstQuarter*1.0/aQuarterTrimLen, cumOverallBasesSecondQuarter*1.0/aQuarterTrimLen,
 			cumOverallBasesThirdQuarter*1.0/aQuarterTrimLen, cumOverallBasesFourthQuarter*1.0/aQuarterTrimLen,
 			cumOverallBases*1.0/aTrimLen);
