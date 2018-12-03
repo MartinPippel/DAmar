@@ -383,7 +383,7 @@ then
             then
                 REP="-m${RAW_REPMASK_REPEATTRACK}"
             fi
-            if [[ -n ${RAW_REPMASK_DALIGNER_NUMACTL} && ${RAW_REPMASK_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${RAW_REPMASK_DALIGNER_NUMACTL} && ${RAW_REPMASK_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
             then
                 if [[ $((${x} % 2)) -eq  0 ]]
                 then
@@ -475,7 +475,7 @@ then
             then
                 REP="-m${RAW_REPMASK_REPEATTRACK}"
             fi
-            if [[ -n ${RAW_REPMASK_DALIGNER_NUMACTL} && ${RAW_REPMASK_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${RAW_REPMASK_DALIGNER_NUMACTL} && ${RAW_REPMASK_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
             then
                 if [[ $((${x} % 2)) -eq  0 ]]
                 then

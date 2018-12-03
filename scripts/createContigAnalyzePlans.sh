@@ -787,7 +787,7 @@ then
         ### create daligner commands
         for x in $(seq 1 ${contigblocks})
         do 
-            if [[ -n ${COR_CONTIG_DALIGNER_NUMACTL} && ${COR_CONTIG_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${COR_CONTIG_DALIGNER_NUMACTL} && ${COR_CONTIG_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
             then
                 if [[ $((${cmdLine} % 2)) -eq  0 ]]
                 then
@@ -809,7 +809,7 @@ then
                     count=$((${count}+1))
                 else    
                     echo "${cmd} && cd $d"
-                    if [[ -n ${COR_CONTIG_DALIGNER_NUMACTL} && ${COR_CONTIG_DALIGNER_NUMACTL} -gt 0 ]]
+                    if [[ -n ${COR_CONTIG_DALIGNER_NUMACTL} && ${COR_CONTIG_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -902,7 +902,7 @@ then
                 
             if [[ -f ${inFile} ]]
                 then 
-                    if [[ -n ${COR_CONTIG_FORCEALIGN_NUMACTL} && ${COR_CONTIG_FORCEALIGN_NUMACTL} -gt 0 ]]
+                    if [[ -n ${COR_CONTIG_FORCEALIGN_NUMACTL} && ${COR_CONTIG_FORCEALIGN_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then

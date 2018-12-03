@@ -488,7 +488,7 @@ then
         for x in $(seq 1 ${nblocks})
         do 
 
-            if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
             then
                 if [[ $((${cmdLine} % 2)) -eq  0 ]]
                 then
@@ -511,7 +511,7 @@ then
                     count=$((${count}+1))
                 else    
                     echo "${cmd}"
-                    if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]]
+                    if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -733,7 +733,7 @@ then
         for x in $(seq 1 ${nblocks})
         do 
 
-            if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
             then
                 if [[ $((${cmdLine} % 2)) -eq  0 ]]
                 then
@@ -756,7 +756,7 @@ then
                     count=$((${count}+1))
                 else    
                     echo "${cmd}"
-                    if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]]
+                    if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -1010,7 +1010,7 @@ then
                 movDir=$(getSubDirName ${RAW_FIX_REPCOMP_RUNID} ${y})
                 if [[ -f ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ]]
                 then 
-                    if [[ -n ${RAW_FIX_REPCOMP_NUMACTL} && ${RAW_FIX_REPCOMP_NUMACTL} -gt 0 ]]
+                    if [[ -n ${RAW_FIX_REPCOMP_NUMACTL} && ${RAW_FIX_REPCOMP_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -1294,7 +1294,7 @@ then
 
                 if [[ -f ${inFile} ]]
                 then 
-                    if [[ -n ${RAW_FIX_FORCEALIGN_NUMACTL} && ${RAW_FIX_FORCEALIGN_NUMACTL} -gt 0 ]]
+                    if [[ -n ${RAW_FIX_FORCEALIGN_NUMACTL} && ${RAW_FIX_FORCEALIGN_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -1337,7 +1337,7 @@ then
                 
                 if [[ -f ${inFile} ]]
                 then 
-                    if [[ -n ${RAW_FIX_FORCEALIGN_NUMACTL} && ${RAW_FIX_FORCEALIGN_NUMACTL} -gt 0 ]]
+                    if [[ -n ${RAW_FIX_FORCEALIGN_NUMACTL} && ${RAW_FIX_FORCEALIGN_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then

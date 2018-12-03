@@ -643,7 +643,7 @@ then
         ### create daligner commands
         for x in $(seq 1 ${fixblocks})
         do 
-            if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
             then
                 if [[ $((${cmdLine} % 2)) -eq  0 ]]
                 then
@@ -665,7 +665,7 @@ then
                     count=$((${count}+1))
                 else    
                     echo "${cmd}"
-                    if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]]
+                    if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -976,7 +976,7 @@ then
         ### create daligner commands
         for x in $(seq 1 ${fixblocks})
         do 
-            if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
             then
                 if [[ $((${cmdLine} % 2)) -eq  0 ]]
                 then
@@ -998,7 +998,7 @@ then
                     count=$((${count}+1))
                 else    
                     echo "${cmd}"
-                    if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]]
+                    if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -1339,7 +1339,7 @@ then
                 movDir=$(getSubDirName ${FIX_SCRUB_REPCOMP_RUNID} ${y})
                 if [[ -f ${srcDir}/${FIX_DB%.db}.${x}.${FIX_DB%.db}.${y}.las ]]
                 then 
-                    if [[ -n ${FIX_SCRUB_REPCOMP_NUMACTL} && ${FIX_SCRUB_REPCOMP_NUMACTL} -gt 0 ]]
+                    if [[ -n ${FIX_SCRUB_REPCOMP_NUMACTL} && ${FIX_SCRUB_REPCOMP_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -1723,7 +1723,7 @@ then
 
                 if [[ -f ${inFile} ]]
                 then 
-                    if [[ -n ${FIX_SCRUB_FORCEALIGN_NUMACTL} && ${FIX_SCRUB_FORCEALIGN_NUMACTL} -gt 0 ]]
+                    if [[ -n ${FIX_SCRUB_FORCEALIGN_NUMACTL} && ${FIX_SCRUB_FORCEALIGN_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then
@@ -1766,7 +1766,7 @@ then
                 
                 if [[ -f ${inFile} ]]
                 then 
-                    if [[ -n ${FIX_SCRUB_FORCEALIGN_NUMACTL} && ${FIX_SCRUB_FORCEALIGN_NUMACTL} -gt 0 ]]
+                    if [[ -n ${FIX_SCRUB_FORCEALIGN_NUMACTL} && ${FIX_SCRUB_FORCEALIGN_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
                         then

@@ -500,7 +500,7 @@ then
             then
                 REP="-m${FIX_REPMASK_REPEATTRACK}"
             fi
-            if [[ -n ${FIX_REPMASK_DALIGNER_NUMACTL} && ${FIX_REPMASK_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${FIX_REPMASK_DALIGNER_NUMACTL} && ${FIX_REPMASK_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
             then
                 if [[ $((${x} % 2)) -eq  0 ]]
                 then
@@ -592,7 +592,7 @@ then
             then
                 REP="-m${FIX_REPMASK_REPEATTRACK}"
             fi
-            if [[ -n ${FIX_REPMASK_DALIGNER_NUMACTL} && ${FIX_REPMASK_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${FIX_REPMASK_DALIGNER_NUMACTL} && ${FIX_REPMASK_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
             then
                 if [[ $((${x} % 2)) -eq  0 ]]
                 then
