@@ -2309,7 +2309,6 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 			}
 		}
 
-
 		if (!(ret & OVL_REPEAT))
 		{
 			int bbpos, bepos;
@@ -2586,46 +2585,117 @@ static void filter_post(FilterContext* ctx)
 
 static int cmp_ovls_qual(const void* a, const void* b)
 {
-    Overlap* o1 = *(Overlap**) a;
-    Overlap* o2 = *(Overlap**) b;
+	Overlap* o1 = *(Overlap**) a;
+	Overlap* o2 = *(Overlap**) b;
 
-    return ((100 - (o1->path.diffs * 100.0 / (o1->path.aepos - o1->path.abpos))) * 10 - (100 - (o2->path.diffs * 100.0 / (o2->path.aepos - o2->path.abpos))) * 10);
+	return ((100 - (o1->path.diffs * 100.0 / (o1->path.aepos - o1->path.abpos))) * 10 - (100 - (o2->path.diffs * 100.0 / (o2->path.aepos - o2->path.abpos))) * 10);
 }
-
 
 static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int novl)
 {
 	int i;
-	Overlap** ovl_sort = (Overlap**)malloc(sizeof(Overlap*)*novl);
+	Overlap** ovl_sort = (Overlap**) malloc(sizeof(Overlap*) * novl);
+
+	int maxQV = 25;
 
 	int E[101];
 
-	for (i=0; i<101; i++)
-		E[i]=0;
+	for (i = 0; i < 101; i++)
+		E[i] = 0;
 
-	for (i=0; i<novl; i++)
+	int numIncomingRead, numLeavinReads;
+	int cumOverallBases;
+	int cumOverallBasesFirstQuarter;
+	int cumOverallBasesSecondQuarter;
+	int cumOverallBasesThirdQuarter;
+	int cumOverallBasesFourthQuarter;
+
+	numIncomingRead = numLeavinReads = cumOverallBases = cumOverallBasesFirstQuarter = cumOverallBasesSecondQuarter = cumOverallBasesThirdQuarter =
+			cumOverallBasesFourthQuarter = 0;
+
+	int trimABeg, trimAEnd;
+
+	trimABeg = 0;
+	trimAEnd = DB_READ_LEN(ctx->db, ovl->aread);
+
+	if (ctx->trackTrim)
+		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimABeg, &trimAEnd);
+
+	int aTrimLen = trimAEnd - trimABeg;
+	int aQuarterTrimLen = aTrimLen / 4;
+
+	for (i = 0; i < novl; i++)
+	{
 		ovl_sort[i] = ovl + i;
+
+		if (ovl_sort[i]->flags & OVL_DISCARD)
+			continue;
+
+		if (ovl_sort[i]->path.abpos <= trimABeg)
+			numIncomingRead += 1;
+
+		if (ovl_sort[i]->path.aepos >= trimABeg)
+			numLeavinReads += 1;
+
+		cumOverallBases += ovl_sort[i]->path.aepos - ovl_sort[i]->path.abpos;
+
+		int isct;
+		isct = intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg, trimABeg + aQuarterTrimLen);
+		cumOverallBasesFirstQuarter += isct;
+		isct = intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + aQuarterTrimLen, trimABeg + 2*aQuarterTrimLen);
+		cumOverallBasesSecondQuarter += isct;
+		isct = intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + 2*aQuarterTrimLen, trimABeg + 3*aQuarterTrimLen);
+		cumOverallBasesThirdQuarter += isct;
+		isct = intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + 3*aQuarterTrimLen, trimAEnd);
+		cumOverallBasesFourthQuarter += isct;
+	}
+
+	printf("Coverage: beg,end [%3d, %3d] cover [%.2f %2f %2f %2f] avgCov %2f", numIncomingRead, numLeavinReads,
+			cumOverallBasesFirstQuarter*1.0/aQuarterTrimLen, cumOverallBasesSecondQuarter*1.0/aQuarterTrimLen,
+			cumOverallBasesThirdQuarter*1.0/aQuarterTrimLen, cumOverallBasesFourthQuarter*1.0/aQuarterTrimLen,
+			cumOverallBases*1.0/aTrimLen);
 
 	qsort(ovl_sort, novl, sizeof(Overlap*), cmp_ovls_qual);
 
-	int begCov, endCov, avgCov;
+	int MaxRemovedAlnBasesPerc = 10;
+	int removeAlnBases, removeAlnBasesFirstQuarter, removeAlnBasesSecondQuarter, removeAlnBasesThirdQuarter, removeAlnBasesFourthQuarter;
+	removeAlnBases = removeAlnBasesFirstQuarter = removeAlnBasesSecondQuarter = removeAlnBasesThirdQuarter = removeAlnBasesFourthQuarter = 0;
 
-	for (i=0; i<novl; i++)
+	for (i = novl - 1; i >= 0; i--)
 	{
 		Overlap* so = ovl_sort[i];
-		if(so->flags & OVL_DISCARD)
+		if (so->flags & OVL_DISCARD)
 			continue;
 
-		int err = (int)(so->path.diffs * 100.0 / (so->path.aepos - so->path.abpos));
-		E[err] += 1;
+		int err = (int) (so->path.diffs * 100.0 / (so->path.aepos - so->path.abpos));
+
+		removeAlnBases +=  so->path.aepos - so->path.abpos;
+
+		removeAlnBasesFirstQuarter += intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg, trimABeg + aQuarterTrimLen);
+		removeAlnBasesSecondQuarter += intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + aQuarterTrimLen, trimABeg + 2*aQuarterTrimLen);
+		removeAlnBasesThirdQuarter += intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + 2*aQuarterTrimLen, trimABeg + 3*aQuarterTrimLen);
+		removeAlnBasesFourthQuarter += intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + 3*aQuarterTrimLen, trimAEnd);
+
+		if (removeAlnBases*100.0/cumOverallBases < MaxRemovedAlnBasesPerc &&
+				removeAlnBasesFirstQuarter * 100.0 / cumOverallBasesFirstQuarter < MaxRemovedAlnBasesPerc &&
+				removeAlnBasesSecondQuarter* 100.0 / cumOverallBasesSecondQuarter< MaxRemovedAlnBasesPerc &&
+				removeAlnBasesThirdQuarter * 100.0 / cumOverallBasesThirdQuarter < MaxRemovedAlnBasesPerc &&
+				removeAlnBasesFourthQuarter* 100.0 / cumOverallBasesFourthQuarter< MaxRemovedAlnBasesPerc)
+		{
+				so->flags |= OVL_DISCARD | OVL_DIFF;
+				ctx->nFilteredDiffs += 1;
+				printf("DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread,
+						so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
+		}
+		else
+		{
+			break;
+		}
+
+		if(i < maxQV)
+			break;
 	}
 
-	if (ovl->aread == 3330839)
-	{
-		printf("Ehist[%d]\n", 3330839);
-		for (i=0; i<101; i++)
-				printf("%d\t%d\n", i, E[i]);
-	}
 	free(ovl_sort);
 }
 
@@ -3225,7 +3295,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
-	if(ctx->do_bimodalQcheck)
+	if (ctx->do_bimodalQcheck)
 	{
 		checkBimodalQvDistribution(ctx, ovl, novl);
 	}
