@@ -2650,7 +2650,7 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 		cumOverallBasesFourthQuarter += isct;
 	}
 
-	printf("Coverage: beg,end [%3d, %3d] cover [%.2f %2f %2f %2f] avgCov %2f", numIncomingRead, numLeavinReads,
+	printf("Coverage: beg,end [%3d, %3d] cover [%.2f %2f %2f %2f] avgCov %2f\n", numIncomingRead, numLeavinReads,
 			cumOverallBasesFirstQuarter*1.0/aQuarterTrimLen, cumOverallBasesSecondQuarter*1.0/aQuarterTrimLen,
 			cumOverallBasesThirdQuarter*1.0/aQuarterTrimLen, cumOverallBasesFourthQuarter*1.0/aQuarterTrimLen,
 			cumOverallBases*1.0/aTrimLen);
@@ -2661,7 +2661,7 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 	int removeAlnBases, removeAlnBasesFirstQuarter, removeAlnBasesSecondQuarter, removeAlnBasesThirdQuarter, removeAlnBasesFourthQuarter;
 	removeAlnBases = removeAlnBasesFirstQuarter = removeAlnBasesSecondQuarter = removeAlnBasesThirdQuarter = removeAlnBasesFourthQuarter = 0;
 
-	for (i = novl - 1; i >= 0; i--)
+	for (i = 0; i < novl; i++)
 	{
 		Overlap* so = ovl_sort[i];
 		if (so->flags & OVL_DISCARD)
