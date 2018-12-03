@@ -2608,9 +2608,14 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 
 	qsort(ovl_sort, novl, sizeof(Overlap*), cmp_ovls_qual);
 
+	int begCov, endCov, avgCov;
+
 	for (i=0; i<novl; i++)
 	{
 		Overlap* so = ovl_sort[i];
+		if(so->flags & OVL_DISCARD)
+			continue;
+
 		int err = (int)(so->path.diffs * 100.0 / (so->path.aepos - so->path.abpos));
 		E[err] += 1;
 	}
@@ -2850,11 +2855,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 	if (ctx->lowCoverageFilter < ctx->hghCoverageFilter)
 		filterByCoverage(ctx, ovl, novl);
-
-	if(ctx->do_bimodalQcheck)
-	{
-		checkBimodalQvDistribution(ctx, ovl, novl);
-	}
 
 	if (ctx->stitch >= 0)
 	{
