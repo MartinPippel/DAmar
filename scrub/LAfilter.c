@@ -2629,7 +2629,7 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 		if (ovl_sort[i]->path.abpos <= trimABeg)
 			numIncomingRead += 1;
 
-		if (ovl_sort[i]->path.aepos >= trimABeg)
+		if (ovl_sort[i]->path.aepos >= trimAEnd)
 			numLeavinReads += 1;
 
 		cumOverallBases += ovl_sort[i]->path.aepos - ovl_sort[i]->path.abpos;
@@ -2645,16 +2645,20 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 		cumOverallBasesFourthQuarter += isct;
 	}
 
-	printf("Coverage: beg,end [%3d, %3d] cover [%.2f %2f %2f %2f] avgCov %2f\n", numIncomingRead, numLeavinReads,
+	printf("Coverage[%d]: beg,end [%3d, %3d] cover [%.2f %.2f %.2f %2.f] avgCov %2f\n", ovl_sort[i]->aread, numIncomingRead, numLeavinReads,
 			cumOverallBasesFirstQuarter*1.0/aQuarterTrimLen, cumOverallBasesSecondQuarter*1.0/aQuarterTrimLen,
 			cumOverallBasesThirdQuarter*1.0/aQuarterTrimLen, cumOverallBasesFourthQuarter*1.0/aQuarterTrimLen,
 			cumOverallBases*1.0/aTrimLen);
 
 	qsort(ovl_sort, novl, sizeof(Overlap*), cmp_ovls_qual);
 
+	int MinTipCov = 10;
 	int MaxRemovedAlnBasesPerc = 10;
 	int removeAlnBases, removeAlnBasesFirstQuarter, removeAlnBasesSecondQuarter, removeAlnBasesThirdQuarter, removeAlnBasesFourthQuarter;
 	removeAlnBases = removeAlnBasesFirstQuarter = removeAlnBasesSecondQuarter = removeAlnBasesThirdQuarter = removeAlnBasesFourthQuarter = 0;
+
+	int numRemovedIncomingRead, numRemovedLeavingReads;
+	numRemovedIncomingRead = numRemovedLeavingReads = 0;
 
 	for (i = 0; i < novl; i++)
 	{
@@ -2664,6 +2668,12 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 
 		int err = (int) (so->path.diffs * 100.0 / (so->path.aepos - so->path.abpos));
 
+		if(so->path.abpos <= trimABeg)
+			numRemovedIncomingRead++;
+
+		if(so->path.aepos >= trimAEnd)
+			numRemovedLeavingReads++;
+
 		removeAlnBases +=  so->path.aepos - so->path.abpos;
 
 		removeAlnBasesFirstQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg, trimABeg + aQuarterTrimLen);
@@ -2671,11 +2681,14 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 		removeAlnBasesThirdQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg + 2*aQuarterTrimLen, trimABeg + 3*aQuarterTrimLen);
 		removeAlnBasesFourthQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg + 3*aQuarterTrimLen, trimAEnd);
 
-		if (removeAlnBases*100.0/cumOverallBases < MaxRemovedAlnBasesPerc &&
+		if (removeAlnBases*100.0/cumOverallBases < MaxRemovedAlnBasesPerc && numIncomingRead - numRemovedIncomingRead > MinTipCov
+				&& numLeavinReads - numRemovedLeavingReads > MinTipCov
+				/*&&
 				removeAlnBasesFirstQuarter * 100.0 / cumOverallBasesFirstQuarter < MaxRemovedAlnBasesPerc &&
 				removeAlnBasesSecondQuarter* 100.0 / cumOverallBasesSecondQuarter< MaxRemovedAlnBasesPerc &&
 				removeAlnBasesThirdQuarter * 100.0 / cumOverallBasesThirdQuarter < MaxRemovedAlnBasesPerc &&
-				removeAlnBasesFourthQuarter* 100.0 / cumOverallBasesFourthQuarter< MaxRemovedAlnBasesPerc)
+				removeAlnBasesFourthQuarter* 100.0 / cumOverallBasesFourthQuarter< MaxRemovedAlnBasesPerc
+				*/)
 		{
 				so->flags |= OVL_DISCARD | OVL_DIFF;
 				ctx->nFilteredDiffs += 1;
