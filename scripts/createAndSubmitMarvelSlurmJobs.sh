@@ -223,6 +223,10 @@ then
 	            then
 	                echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	            fi 
+	        	if [[ -n ${SLURM_NUMACT} && ${SLURM_NUMACT} -gt 0  ]]
+				then	
+					echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
+				fi
 	            
 				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 				then
@@ -273,19 +277,23 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mem=${MEM}
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
+			if [[ -n ${SLURM_NUMACT} && ${SLURM_NUMACT} -gt 0  ]]
+			then	
+				echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
+			fi
 
-				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
-				then
-					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
-				elif [[ ${prefix} == "purgeHaplotigs" ]]
-				then	
-					echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
-				elif [[ ${prefix} == "whatshap" ]]
-				then	
-					echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm			
-				fi
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
+			then
+				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "purgeHaplotigs" ]]
+			then	
+				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "whatshap" ]]
+			then	
+				echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm			
+			fi
 
-				echo "export PATH=${MARVEL_PATH}/bin:\$PATH
+			echo "export PATH=${MARVEL_PATH}/bin:\$PATH
 export PATH=${MARVEL_PATH}/scripts:\$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:\$PYTHONPATH
 
@@ -338,6 +346,10 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
 	        then
 	            echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	        fi 
+	        if [[ -n ${SLURM_NUMACT} && ${SLURM_NUMACT} -gt 0  ]]
+			then	
+				echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
+			fi	        
 	        
 			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 			then
@@ -389,6 +401,10 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
 
+			if [[ -n ${SLURM_NUMACT} && ${SLURM_NUMACT} -gt 0  ]]
+			then	
+				echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
+			fi
 			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm

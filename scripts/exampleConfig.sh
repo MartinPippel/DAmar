@@ -35,7 +35,8 @@ export PYTHONPATH=${MARVEL_PATH}/lib.python:$PYTHONPATH
 ## general information
 PROJECT_ID=iHylVes1
 GSIZE=600M
-SLURM_PARTITION=batch		# default slurm partition - todo define individual partion for tasks 
+SLURM_PARTITION=batch		# default slurm partition - todo define individual partion for tasks
+SLURM_NUMACTL=1 
 
 ## general settings raw read data bases  
 RAW_DB=LAB1608_HYLES_VESPERTILIO_MARVEL

@@ -365,7 +365,7 @@ then
         ### create daligner commands
         for x in $(seq 1 ${nblocks})
         do
-            if [[ -n ${RAW_DASCOVER_DALIGNER_NUMACTL} && ${RAW_DASCOVER_DALIGNER_NUMACTL} -gt 0 ]]
+    		if [[ -n ${RAW_DASCOVER_DALIGNER_NUMACTL} && ${RAW_DASCOVER_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACT}" == "x" || ${SLURM_NUMACT} -eq 0 ]]
             then
                 if [[ $((${x} % 2)) -eq  0 ]]
                 then
@@ -470,7 +470,7 @@ then
         setDaligerOptions
 
         ### create daligner commands
-       	if [[ -n ${RAW_DASCOVER_DALIGNER_NUMACTL} && ${RAW_DASCOVER_DALIGNER_NUMACTL} -gt 0 ]]
+       	if [[ -n ${RAW_DASCOVER_DALIGNER_NUMACTL} && ${RAW_DASCOVER_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACT}" == "x" || ${SLURM_NUMACT} -eq 0 ]]
 		then
         	NUMACTL="numactl -m1 -N1 "    
        	else
@@ -480,7 +480,7 @@ then
         x=1;
         while [[ ${x} -le ${nblocks} ]]
         do
-            if [[ -n ${RAW_DASCOVER_DALIGNER_NUMACTL} && ${RAW_DASCOVER_DALIGNER_NUMACTL} -gt 0 ]]
+            if [[ -n ${RAW_DASCOVER_DALIGNER_NUMACTL} && ${RAW_DASCOVER_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACT}" == "x" || ${SLURM_NUMACT} -eq 0 ]]
             then
                 if [[ $((${x} % 2)) -eq  0 ]]
                 then
