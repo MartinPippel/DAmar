@@ -223,7 +223,7 @@ then
 	            then
 	                echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	            fi 
-	        	if [[ -n ${SLURM_NUMACT} && ${SLURM_NUMACT} -gt 0  ]]
+	        	if [[ -n ${SLURM_NUMACTL} && ${SLURM_NUMACTL} -gt 0  ]]
 				then	
 					echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
 				fi
@@ -280,7 +280,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mem=${MEM}
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
-			if [[ -n ${SLURM_NUMACT} && ${SLURM_NUMACT} -gt 0  ]]
+			if [[ -n ${SLURM_NUMACTL} && ${SLURM_NUMACTL} -gt 0  ]]
 			then	
 				echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
 			fi
@@ -353,7 +353,7 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
 	        then
 	            echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
 	        fi 
-	        if [[ -n ${SLURM_NUMACT} && ${SLURM_NUMACT} -gt 0  ]]
+	        if [[ -n ${SLURM_NUMACTL} && ${SLURM_NUMACTL} -gt 0  ]]
 			then	
 				echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
 			fi
@@ -412,7 +412,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
 
-			if [[ -n ${SLURM_NUMACT} && ${SLURM_NUMACT} -gt 0  ]]
+			if [[ -n ${SLURM_NUMACTL} && ${SLURM_NUMACTL} -gt 0  ]]
 			then	
 				echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
 			fi
