@@ -47,13 +47,11 @@ typedef struct
 	// stats counters
 	int nFiltReads;
 	int nFiltAlns;
-	int nFilteredDiffsAlns;
 	int nFilteredMinLenReads;
 	int nFilteredMaxLenReads;
 	int nFilteredMinLenAln;
 
 	// settings
-	float fMaxDiffs;
 	int nMinChainAlnLength;
 	int nMinReadLength, nMaxReadLength;
 	int nVerbose;
@@ -921,77 +919,6 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 	}
 }
 
-static int filter(FilterContext* ctx, Overlap* ovl)
-{
-	int nLen = ovl->path.aepos - ovl->path.abpos;
-	int nLenB = ovl->path.bepos - ovl->path.bbpos;
-	int ret = 0;
-
-	if (nLenB < nLen)
-	{
-		nLen = nLenB;
-	}
-
-	int trim_ab, trim_ae, trim_bb, trim_be;
-	int trim_alen, trim_blen;
-
-	int aReadLen = DB_READ_LEN(ctx->db, ovl->aread);
-	int bReadLen = DB_READ_LEN(ctx->db, ovl->bread);
-
-	if (ctx->trackTrim)
-	{
-		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_ab, &trim_ae);
-		trim_alen = trim_ae - trim_ab;
-
-		get_trim(ctx->db, ctx->trackTrim, ovl->bread, &trim_bb, &trim_be);
-		trim_blen = trim_be - trim_bb;
-
-		if (ovl->flags & OVL_COMP)
-		{
-			int t = trim_bb;
-			trim_bb = bReadLen - trim_be;
-			trim_be = bReadLen - t;
-		}
-	}
-	else
-	{
-		trim_ab = 0;
-		trim_ae = aReadLen;
-
-		trim_bb = 0;
-		trim_be = bReadLen;
-
-		trim_alen = aReadLen;
-		trim_blen = bReadLen;
-	}
-
-	if (ctx->nMinReadLength != -1 && bReadLen < ctx->nMinReadLength)
-	{
-		ret |= OVL_DISCARD | OVL_RLEN;
-	}
-
-	if (ctx->nMaxReadLength != -1 && bReadLen > ctx->nMaxReadLength)
-	{
-		ret |= OVL_DISCARD | OVL_RLEN;
-	}
-
-	if (ctx->fMaxDiffs > 0)
-	{
-		if (1.0 * ovl->path.diffs / nLen > ctx->fMaxDiffs)
-		{
-			if (ctx->nVerbose)
-			{
-				printf("overlap %d -> %d: drop due to diffs %d length %d\n", ovl->aread, ovl->bread, ovl->path.diffs, nLen);
-			}
-
-			ret |= OVL_DISCARD | OVL_DIFF;
-		}
-
-	}
-
-	return ret;
-}
-
 static void filter_pre(PassContext* pctx, FilterContext* fctx)
 {
 #ifdef VERBOSE
@@ -1048,25 +975,45 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 		while (j < novl)
 		{
+			int bReadLen = DB_READ_LEN(ctx->db, ovl[j].bread);
+			int skipAlns = 0;
+
+			if (ctx->nMinReadLength != -1 && (bReadLen < ctx->nMinReadLength || bReadLen > ctx->nMaxReadLength))
+			{
+				skipAlns = 1;
+				ovl[j].flags |= OVL_DISCARD | OVL_RLEN;
+			}
+
 			while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
 			{
+				if(skipAlns)
+					ovl[k+1].flags |= OVL_DISCARD | OVL_RLEN;
 				k++;
 			}
 
-			chain(ctx, ovl + j, k - j + 1);
+			if(!skipAlns)
 			{
-				int a,b ;
+				chain(ctx, ovl + j, k - j + 1);
+				int a,b;
 
 				printf("Chains for %d vs %d \n", ovl[j].aread, ovl[j].bread);
 				for (a = 0; a < ctx->curChains; a++)
 				{
-					printf(" chains %d of %d\n", a, ctx->curChains);
+					printf(" chains %d of %d\n", a+1, ctx->curChains);
 					for (b = 0; b < ctx->ovlChains[a].novl; b++)
 					{
 						printf("  a[%d, %d] b[%d, %d] %c l[%d, %d]\n", ctx->ovlChains[a].ovls[b]->path.abpos, ctx->ovlChains[a].ovls[b]->path.aepos,
 								ctx->ovlChains[a].ovls[b]->path.bbpos, ctx->ovlChains[a].ovls[b]->path.bepos, ctx->ovlChains[a].ovls[b]->flags & OVL_COMP ? 'C' : 'N',
 										DB_READ_LEN(ctx->db, ovl[j].aread), DB_READ_LEN(ctx->db, ovl[j].bread));
 					}
+
+					// keep alignment chains if:
+					// and only if:
+					// 		1. single front to end alignment (TODO Q1: Allow unaligned front ends < 1K?, Q2: run forcealign + do not allow unaligned tips)
+					// 		2. 2 chains with same orientation and circular mapping
+					// otherwise
+					// 	delete all alignments
+
 
 				}
 				// reset chain and ovl counter
@@ -1119,7 +1066,6 @@ int main(int argc, char* argv[])
 	char* pcTrackT = DEF_ARG_T;
 	int arg_purge = 0;
 
-	fctx.fMaxDiffs = -1;
 	fctx.nMinChainAlnLength = -1;
 	fctx.nMinReadLength = -1;
 	fctx.nMaxReadLength = -1;
@@ -1138,10 +1084,6 @@ int main(int argc, char* argv[])
 
 		case 'p':
 			arg_purge = 1;
-			break;
-
-		case 'd':
-			fctx.fMaxDiffs = atof(optarg) / 100.0;
 			break;
 
 		case 'o':
@@ -1211,11 +1153,6 @@ int main(int argc, char* argv[])
 	if (!fctx.trackQ)
 	{
 		fprintf(stderr, "could not load track %s\n", pcTrackQ);
-		if (fctx.fMaxDiffs < 0)
-		{
-			fprintf(stderr, "[ERROR] If option -[dD] is enabled, then a valid Q-track is mandatory. (Run LAq first!)\n");
-			exit(1);
-		}
 	}
 
 	// passes

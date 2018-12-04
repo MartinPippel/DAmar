@@ -1,0 +1,5 @@
+#partition maxCores RAM(inGb) maxRunTime
+batch 24 248 24
+long 24 248 -1
+gpu 40 496 -1
+bigmem 48 1000 -1
