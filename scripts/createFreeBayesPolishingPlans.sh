@@ -73,6 +73,22 @@ function setSamtoolsOptions()
 	fi
 }
 
+function setPicardOptions()
+{
+	CONTIG_PICARD_OPT=""
+	
+	if [[ -z ${CT_FREEBAYES_PICARD_XMX} ]]
+	then 
+		CT_FREEBAYES_PICARD_XMX=8	
+	fi
+	
+	if [[ -z ${CT_FREEBAYES_PICARD_XMS} ]]
+	then 
+		CT_FREEBAYES_PICARD_XMS=8	
+	fi
+	
+	CONTIG_PICARD_OPT="-Xmx${CT_FREEBAYES_PICARD_XMX}G -Xms${CT_FREEBAYES_PICARD_XMS}G -XX:-UseGCOverheadLimit"	
+}
 
 # Type: 0 - for 10x data 
 # Type: 1 - for Illuimina PE data
@@ -275,20 +291,22 @@ then
    		## if multiple bam files are available (e.g. different Lanes) then merge files prior to markduplicates
    		files=$(ls ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/*_bwa.bam)
    		
+   		setPicardOptions
+   		
    		echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" > freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version
    		if [[ $(echo $files | wc -w) -eq 1 ]]
    		then
    			ob="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam"
 			m="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.metrics"
    			
-   			echo "picard MarkDuplicates I=${files} O=${ob} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${ob}" 				 
+   			echo "picard ${CONTIG_PICARD_OPT} MarkDuplicates I=${files} O=${ob} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${ob}" 				 
    		elif [[ $(echo $files | wc -w) -gt 1 ]]
    		then
    			mrg=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_merged10x.bam
    			o=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam
    			m=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.metrics
    			i=$(echo -e ${files} | sed -e "s:${CT_FREEBAYES_OUTDIR}:I=${CT_FREEBAYES_OUTDIR}:g")
-   			echo "picard MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${o}"
+   			echo "picard ${CONTIG_PICARD_OPT} MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard ${CONTIG_PICARD_OPT} MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${o}"
    			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" >> freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version	   			
 		else
    	 		(>&2 echo "ERROR - cannot find file with following pattern: ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/*_bwa.bam")

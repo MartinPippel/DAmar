@@ -588,6 +588,9 @@ CT_FREEBAYES_OUTDIR="${FIX_FILT_OUTDIR}"
 CT_FREEBAYES_REFFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
 ### fastp
 CT_FREEBAYES_FASTP_THREADS=4
+### picard tools
+CT_FREEBAYES_PICARD_XMX=24						# java memory options in Gb
+CT_FREEBAYES_PICARD_XMS=24						# java memory options in Gb
 ### bwa
 CT_FREEBAYES_BWA_THREADS=40
 CT_FREEBAYES_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
@@ -622,6 +625,9 @@ CT_HIC_FASTP_THREADS=4
 ### bwa
 CT_HIC_BWA_THREADS=40
 CT_HIC_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
+### picard tools
+CT_HIC_PICARD_XMX=24						# java memory options in Gb
+CT_HIC_PICARD_XMS=24						# java memory options in Gb
 ### samtools sort
 CT_HIC_SAMTOOLS_THREADS=10
 CT_HIC_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
@@ -781,7 +787,7 @@ TIME_FBbwa=24:00:00
 
 ########### freebayes picard markduplicates - run indexing parallel  
 THREADS_FBmarkDuplicates=${CT_FREEBAYES_SAMTOOLS_THREADS}
-MEM_FBmarkDuplicates=$((${CT_FREEBAYES_SAMTOOLS_THREADS}*${CT_FREEBAYES_SAMTOOLS_MEM}*1024))     
+MEM_FBmarkDuplicates=$((${CT_FREEBAYES_SAMTOOLS_THREADS}*${CT_FREEBAYES_SAMTOOLS_MEM}*1024+${CT_FREEBAYES_PICARD_XMS}*1024))     
 TIME_FBmarkDuplicates=24:00:00
 
 ########### HIC bwa 
@@ -791,7 +797,6 @@ TIME_HICbwa=24:00:00
 
 ########### HIC picard markduplicates - run indexing parallel  
 THREADS_HICmarkduplicates=${CT_HIC_SAMTOOLS_THREADS}
-MEM_HICmarkduplicates=$((${CT_HIC_SAMTOOLS_THREADS}*${CT_HIC_SAMTOOLS_MEM}*1024))     
+MEM_HICmarkduplicates=$((${CT_HIC_SAMTOOLS_THREADS}*${CT_HIC_SAMTOOLS_MEM}*1024+${CT_HIC_PICARD_XMS}*1024))     
 TIME_HICmarkduplicates=24:00:00
-
 

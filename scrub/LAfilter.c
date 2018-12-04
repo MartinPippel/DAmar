@@ -2610,7 +2610,6 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimABeg, &trimAEnd);
 
 	int aTrimLen = trimAEnd - trimABeg;
-	int aQuarterTrimLen = aTrimLen / 4;
 
 	for (i = 0; i < novl; i++)
 	{
@@ -2628,7 +2627,8 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 		cumOverallBases += ovl_sort[i]->path.aepos - ovl_sort[i]->path.abpos;
 	}
 
-	printf("Coverage[%d]: beg,end [%3d, %3d] avgCov %.2f\n", ovl->aread, numIncomingReads, numLeavingReads,
+	if(ctx->nVerbose)
+		printf("Coverage[%d]: beg,end [%3d, %3d] avgCov %.2f\n", ovl->aread, numIncomingReads, numLeavingReads,
 			cumOverallBases*1.0/aTrimLen);
 
 	qsort(ovl_sort, novl, sizeof(Overlap*), cmp_ovls_qual);

@@ -70,6 +70,22 @@ function setSamtoolsOptions()
 	fi		
 }
 
+function setPicardOptions()
+{
+	CONTIG_PICARD_OPT=""
+	
+	if [[ -z ${CT_HIC_PICARD_XMX} ]]
+	then 
+		CT_HIC_PICARD_XMX=8	
+	fi
+	
+	if [[ -z ${CT_HIC_PICARD_XMS} ]]
+	then 
+		CT_HIC_PICARD_XMS=8	
+	fi
+	
+	CONTIG_PICARD_OPT="-Xmx${CT_HIC_PICARD_XMX}G -Xms${CT_HIC_PICARD_XMS}G -XX:-UseGCOverheadLimit"	
+}
 
 # Type: 0 - Arima Mapping Pipeline (For QC) 
 # Type: 1 - Phase Genomics Mapping Pipeline (For QC)
@@ -280,24 +296,26 @@ then
         	(>&2 echo "ERROR - cannot access directory ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams!")
         	exit 1
    		fi
+   		
+   		setPicardOptions
    		   		
    		## if multiple bam files are available (e.g. different Lanes) then merge files prior to markduplicates
    		files=$(ls ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/*_bwaFilt.bam)
-   		
+   		   		   		
    		echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" > hic_05_HICmarkduplicates_single_${CONT_DB}.${slurmID}.version
    		
    		if [[ $(echo $files | wc -w) -eq 1 ]]
    		then
    			ob="${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam"
 			m="${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.metrics"
-		   echo "picard MarkDuplicates I=${files} O=${ob} M=${m} && samtools index -@ ${CT_HIC_SAMTOOLS_THREADS} ${ob} && ln -s -f -r ${ob} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} && ln -s -f -r ${ob}.bai ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}"
+		   echo "picard ${CONTIG_PICARD_OPT} MarkDuplicates I=${files} O=${ob} M=${m} && samtools index -@ ${CT_HIC_SAMTOOLS_THREADS} ${ob} && ln -s -f -r ${ob} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} && ln -s -f -r ${ob}.bai ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}"
    		elif [[ $(echo $files | wc -w) -gt 1 ]]
    		then
    			mrg=${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_mergedHiC.bam
    			o=${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam
    			m=${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.metrics
    			i=$(echo -e ${files} | sed -e "s:${CT_HIC_OUTDIR}:I=${CT_HIC_OUTDIR}:g")
-   			echo "picard MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_HIC_SAMTOOLS_THREADS} ${o} && ln -s -f -r ${o} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} && ln -s -f -r ${ob}.bai ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}"
+   			echo "picard ${CONTIG_PICARD_OPT} MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard ${CONTIG_PICARD_OPT} MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_HIC_SAMTOOLS_THREADS} ${o} && ln -s -f -r ${o} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} && ln -s -f -r ${ob}.bai ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}"
    			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" >> hic_05_HICmarkduplicates_single_${CONT_DB}.${slurmID}.version	
    		else
    	 		(>&2 echo "ERROR - cannot find file with following pattern: ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/*_bwaFilt.bam!")
