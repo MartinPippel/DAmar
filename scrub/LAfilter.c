@@ -3285,7 +3285,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 	if (ctx->remUpToXPercAln)
 	{
-		checkBimodalQvDistribution(ctx, ovl, novl);
+		removeWorstAlignments(ctx, ovl, novl);
 	}
 
 	// find repeat modules and rescue overlaps
