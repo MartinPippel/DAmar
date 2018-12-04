@@ -497,7 +497,7 @@ foundNext=0
 appAccount=""
 if [[ -n ${SLURM_ACCOUNT} ]]
 then
-	appAccount " -A ${SLURM_ACCOUNT}"
+	appAccount=" -A ${SLURM_ACCOUNT}"
 fi
 
 if [[ ${resumeIdx} -gt 0 ]]
