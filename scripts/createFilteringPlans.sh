@@ -238,7 +238,11 @@ function setLAfilterOptions()
         else
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -W"
         fi
-    fi            
+    fi
+    if [[ -n ${FIX_FILT_LAFILTER_REMPERCWORSTALN} && ${FIX_FILT_LAFILTER_REMPERCWORSTALN} -gt 0 ]]
+    then
+        FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -Z ${FIX_FILT_LAFILTER_REMPERCWORSTALN}"
+    fi                
     if [[ -n ${FIX_FILT_LAFILTER_EXCLUDEREADS} || -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
     then
         if [[ -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
