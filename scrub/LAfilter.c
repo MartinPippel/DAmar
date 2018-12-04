@@ -97,7 +97,7 @@ typedef struct
 	int lowCoverageFilter;
 	int hghCoverageFilter;
 	char* cov_read_active;
-	int do_bimodalQcheck;
+	int remUpToXPercAln;
 
 	int removeFlags; 	// 1 << 0 ... stitched overlaps, 1 << 1 ... module overlaps, 1 << 2 .. trace points, 1 << 3 .. non-identity overlaps,
 	// 1 << 4 .. remove B-read repeat overlaps, if a proper overlap between A and B exist i.e A ------------ or A ------------ or A ------------ or A   ------------
@@ -2093,7 +2093,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 		}
 	}
 
-	if (ctx->fMaxDiffs > 0)
+	if (ctx->fMaxDiffs > 0 && ctx->remUpToXPercAln == 0)
 	{
 		if (1.0 * ovl->path.diffs / nLen > ctx->fMaxDiffs)
 		{
@@ -2591,22 +2591,15 @@ static int cmp_ovls_qual(const void* a, const void* b)
 	return ((100 - (o1->path.diffs * 100.0 / (o1->path.aepos - o1->path.abpos))) * 10 - (100 - (o2->path.diffs * 100.0 / (o2->path.aepos - o2->path.abpos))) * 10);
 }
 
-static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int novl)
+static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 {
 	int i;
 	Overlap** ovl_sort = (Overlap**) malloc(sizeof(Overlap*) * novl);
 
-	int maxQV = 25;
-
 	int numIncomingReads, numLeavingReads;
 	int cumOverallBases;
-	int cumOverallBasesFirstQuarter;
-	int cumOverallBasesSecondQuarter;
-	int cumOverallBasesThirdQuarter;
-	int cumOverallBasesFourthQuarter;
 
-	numIncomingReads = numLeavingReads = cumOverallBases = cumOverallBasesFirstQuarter = cumOverallBasesSecondQuarter = cumOverallBasesThirdQuarter =
-			cumOverallBasesFourthQuarter = 0;
+	numIncomingReads = numLeavingReads = cumOverallBases = 0;
 
 	int trimABeg, trimAEnd;
 
@@ -2633,29 +2626,18 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 			numLeavingReads += 1;
 
 		cumOverallBases += ovl_sort[i]->path.aepos - ovl_sort[i]->path.abpos;
-
-		int isct;
-		isct = intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg, trimABeg + aQuarterTrimLen);
-		cumOverallBasesFirstQuarter += isct;
-		isct = intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + aQuarterTrimLen, trimABeg + 2*aQuarterTrimLen);
-		cumOverallBasesSecondQuarter += isct;
-		isct = intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + 2*aQuarterTrimLen, trimABeg + 3*aQuarterTrimLen);
-		cumOverallBasesThirdQuarter += isct;
-		isct = intersect(ovl_sort[i]->path.abpos, ovl_sort[i]->path.aepos, trimABeg + 3*aQuarterTrimLen, trimAEnd);
-		cumOverallBasesFourthQuarter += isct;
 	}
 
-	printf("Coverage[%d]: beg,end [%3d, %3d] cover [%.2f %.2f %.2f %2.f] avgCov %2f\n", ovl->aread, numIncomingReads, numLeavingReads,
-			cumOverallBasesFirstQuarter*1.0/aQuarterTrimLen, cumOverallBasesSecondQuarter*1.0/aQuarterTrimLen,
-			cumOverallBasesThirdQuarter*1.0/aQuarterTrimLen, cumOverallBasesFourthQuarter*1.0/aQuarterTrimLen,
+	printf("Coverage[%d]: beg,end [%3d, %3d] avgCov %.2f\n", ovl->aread, numIncomingReads, numLeavingReads,
 			cumOverallBases*1.0/aTrimLen);
 
 	qsort(ovl_sort, novl, sizeof(Overlap*), cmp_ovls_qual);
 
-	int MinTipCov = 10;
-	int MaxRemovedAlnBasesPerc = 10;
-	int removeAlnBases, removeAlnBasesFirstQuarter, removeAlnBasesSecondQuarter, removeAlnBasesThirdQuarter, removeAlnBasesFourthQuarter;
-	removeAlnBases = removeAlnBasesFirstQuarter = removeAlnBasesSecondQuarter = removeAlnBasesThirdQuarter = removeAlnBasesFourthQuarter = 0;
+	// todo hard coded
+	int MinTipCov = MIN(3, ctx->removeLowCoverageOverlaps);
+	int MaxRemovedAlnBasesPerc = ctx->remUpToXPercAln;
+	float maxQV = (ctx->fMaxDiffs > 0) ? ctx->fMaxDiffs : 28;
+	int removeAlnBases = 0;
 
 	int numRemovedIncomingReads, numRemovedLeavingReads;
 	numRemovedIncomingReads = numRemovedLeavingReads = 0;
@@ -2676,37 +2658,27 @@ static void checkBimodalQvDistribution(FilterContext* ctx, Overlap* ovl, int nov
 
 		removeAlnBases +=  so->path.aepos - so->path.abpos;
 
-		removeAlnBasesFirstQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg, trimABeg + aQuarterTrimLen);
-		removeAlnBasesSecondQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg + aQuarterTrimLen, trimABeg + 2*aQuarterTrimLen);
-		removeAlnBasesThirdQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg + 2*aQuarterTrimLen, trimABeg + 3*aQuarterTrimLen);
-		removeAlnBasesFourthQuarter += intersect(so->path.abpos, so->path.aepos, trimABeg + 3*aQuarterTrimLen, trimAEnd);
-
 		if (removeAlnBases*100.0/cumOverallBases < MaxRemovedAlnBasesPerc && numIncomingReads - numRemovedIncomingReads > MinTipCov
-				&& numLeavingReads - numRemovedLeavingReads > MinTipCov
-				/*&&
-				removeAlnBasesFirstQuarter * 100.0 / cumOverallBasesFirstQuarter < MaxRemovedAlnBasesPerc &&
-				removeAlnBasesSecondQuarter* 100.0 / cumOverallBasesSecondQuarter< MaxRemovedAlnBasesPerc &&
-				removeAlnBasesThirdQuarter * 100.0 / cumOverallBasesThirdQuarter < MaxRemovedAlnBasesPerc &&
-				removeAlnBasesFourthQuarter* 100.0 / cumOverallBasesFourthQuarter< MaxRemovedAlnBasesPerc
-				*/)
+				&& numLeavingReads - numRemovedLeavingReads > MinTipCov)
 		{
 				so->flags |= OVL_DISCARD | OVL_DIFF;
 				ctx->nFilteredDiffs += 1;
+				if(ctx->nVerbose)
 				printf("DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread,
 						so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
 		}
 		else
 		{
-			printf("DO NOT DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread,
+			if(ctx->nVerbose)
+				printf("DO NOT DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread,
 					so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
-			printf("%d {%d, %d, %d, %d} of %d {%d, %d, %d, %d}\n", removeAlnBases, removeAlnBasesFirstQuarter, removeAlnBasesSecondQuarter, removeAlnBasesThirdQuarter, removeAlnBasesFourthQuarter,
-					cumOverallBases, cumOverallBasesFirstQuarter, cumOverallBasesSecondQuarter, cumOverallBasesThirdQuarter, cumOverallBasesFourthQuarter);
 			break;
 		}
 
 		if(err < maxQV)
 		{
-			printf("STOP reached maxqv of %d [%d, %d] a[%d, %d] b [%d, %d] %c\n",err, so->aread, so->bread,
+			if(ctx->nVerbose)
+				printf("STOP reached maxqv of %d [%d, %d] a[%d, %d] b [%d, %d] %c\n",err, so->aread, so->bread,
 					so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N');
 			break;
 		}
@@ -3208,7 +3180,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 
 		// actually if this happens the whole aread should be discarded,
-		// because it leaves regions in the aread the have no overlaps at all (depends on -u flag, number of unaligned bases, which is 0 by default)
+		// because it leaves regions in the aread that have no overlaps at all (depends on -u flag, number of unaligned bases, which is 0 by default)
 		if (entercov && entercov < ctx->removeLowCoverageOverlaps)
 		{
 //			printf("found entercov %d < %d: aread %d: remove", entercov, ctx->removeLowCoverageOverlaps, ovl->aread);
@@ -3311,7 +3283,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
-	if (ctx->do_bimodalQcheck)
+	if (ctx->remUpToXPercAln)
 	{
 		checkBimodalQvDistribution(ctx, ovl, novl);
 	}
@@ -3417,7 +3389,8 @@ static void usage()
 	fprintf(stderr, "         -c ... discard overlaps that don't show given coverage range. Intention get rid of contamination by coverage\n");
 	fprintf(stderr, "                e.g. -c -1000  ... discard overlaps that where A-read has lower than 1000x coverage \n");
 	fprintf(stderr, "                     -c  1000  ... discard overlaps that where A-read has higher than 1000x coverage \n");
-	fprintf(stderr, "         -Z ... if a bimodal quality distribution is present, then remove all overlaps that represent the second peak!\n");
+	fprintf(stderr, "         -Z ... remove at most -Z percent of the worst alignments. Set -d INT to avoid loss of good alignments. Set -z INT to avoid loss of contiguity !\n");
+	fprintf(stderr, "                This option was included to get rid of low coverage repeats or random alignments, that clearly get separated by diff scores\n");
 }
 
 static int opt_repeat_count(int argc, char** argv, char opt)
@@ -3501,7 +3474,7 @@ int main(int argc, char* argv[])
 	fctx.lowCoverageFilter = -1;
 	fctx.hghCoverageFilter = -1;
 	fctx.cov_read_active = NULL;
-	fctx.do_bimodalQcheck = 0;
+	fctx.remUpToXPercAln = 0;
 
 	int c;
 
@@ -3512,7 +3485,7 @@ int main(int argc, char* argv[])
 	}
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "TZvLpwWy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:N:C:c:")) != -1)
+	while ((c = getopt(argc, argv, "TvLpwWy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:N:C:c:Z:")) != -1)
 	{
 		switch (c)
 		{
@@ -3529,7 +3502,7 @@ int main(int argc, char* argv[])
 			break;
 
 		case 'Z':
-			fctx.do_bimodalQcheck = 1;
+			fctx.remUpToXPercAln = atoi(optarg);
 			break;
 
 		case 'I':
@@ -3781,6 +3754,7 @@ int main(int argc, char* argv[])
 			db.reads[values[i]].flags = READ_DISCARD;
 		}
 
+		free(values);
 		fclose(fileIn);
 	}
 	if (pathIncludeReads)
@@ -3806,7 +3780,7 @@ int main(int argc, char* argv[])
 		}
 
 		fctx.includeReadFlag = 1;
-
+		free(values);
 		fclose(fileIn);
 	}
 
