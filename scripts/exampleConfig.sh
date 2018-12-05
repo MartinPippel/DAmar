@@ -634,6 +634,44 @@ CT_HIC_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
 ### arima qv min mapping quality
 CT_HIC_MINMAPQV=10
 
+
+# ----------------------------------------------------------------- CONTIG WHATSHAP PAHSING OPTIONS ----------------------------------------------------------------------------------------------------
+
+### general whatshap options
+CT_WHATSHAP_RUNID=1
+CT_WHATSHAP_OUTDIR="${FIX_FILT_OUTDIR}"
+CT_WHATSHAP_REFFASTA="stats/contigs/m1/freebayes/mMyoMyo_m1_f.p.fasta"
+### use either reads - then full pipeline is started ...
+CT_WHATSHAP_READS_10X=
+CT_WHATSHAP_READS_PACBIO=
+CT_WHATSHAP_READS_HIC=
+### .... or use bams and vcf files 
+CT_WHATSHAP_BAM_10X=
+CT_WHATSHAP_VCF_10X=
+CT_WHATSHAP_BAM_PACBIO=
+CT_WHATSHAP_VCF_PACBIO=
+CT_WHATSHAP_BAM_HIC=
+CT_WHATSHAP_VCF_HIC=
+### bwa
+CT_WHATSHAP_BWA_THREADS=40
+CT_WHATSHAP_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
+### picard tools
+CT_WHATSHAP_PICARD_XMX=24						# java memory options in Gb
+CT_WHATSHAP_PICARD_XMS=24						# java memory options in Gb
+### samtools sort
+CT_WHATSHAP_SAMTOOLS_THREADS=10
+CT_WHATSHAP_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
+### qv min mapping quality
+CT_WHATSHAP_HIC_MINMAPQV=10
+CT_WHATSHAP_10X_MINMAPQV=10
+CT_WHATSHAP_PACBIO_MINMAPQV=10
+ ### minimap2
+CT_WHATSHAP_MINIMAP2IDXTHREADS=8										# number of threads to create reference index
+CT_WHATSHAP_MINIMAP2ALNTHREADS=24										# number of threads to align reads
+CT_WHATSHAP_SAMTOOLSTHREADS=8
+CT_WHATSHAP_SAMTOOLSMEM=1
+
+
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
 ### default parameter for 24-core nodes  #####

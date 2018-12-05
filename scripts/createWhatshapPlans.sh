@@ -73,14 +73,11 @@ function setSamtoolsOptions()
 	fi
 }
 
-
-# Type: 0 - for 10x data 
-# Type: 1 - for Illuimina PE data
-myTypes=("1-WHprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBwhatshap, 6-FBbcftools", 
-"1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBwhatshap, 5-FBbcftools")
+## type-1: Pacbio and 10x Genomcis reads 
+myTypes=("1-WHprepareInput, 2-WHminimap2, 3-")
 if [[ ${CT_WHATSHAP_TYPE} -eq 0 ]]
 then 
-    ### 1-FBprepareInput
+    ### 1-WHprepareInput
     if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
@@ -95,18 +92,19 @@ then
         	exit 1
    		fi
    		
-   		echo "if [[ -d ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID} ]]; then mv ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}" > whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads" >> whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams" >> whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref" >> whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/whatshap" >> whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -r ${CT_WHATSHAP_REFFASTA} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref" >> whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "samtools faidx ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})" >> whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "bwa index ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})" >> whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+   		echo "if [[ -d ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID} ]]; then mv ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}" > whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_reads" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/10x_reads" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/10x_bams" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan		
+		echo "ln -s -r ${CT_WHATSHAP_REFFASTA} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "samtools faidx ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "bwa index ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
 		
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> whatshap_01_FBprepareInput_single_${CONT_DB}.${slurmID}.version
-	### 2-FBfastp 
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.version
+	### 2-WHminimap2 
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
