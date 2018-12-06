@@ -260,6 +260,11 @@ function setOGlayoutOptions()
     then
         TOUR_OGLAYOUT_OPT="${TOUR_OGLAYOUT_OPT} -R"
     fi
+    
+    if [[  "x${FIX_TOUR_OGLAYOUT_OUTPUTFORMAT}" == "$x" ]]
+    then
+    	FIX_TOUR_OGLAYOUT_OUTPUTFORMAT="graphml"        
+    fi    
 }
 
 ## ensure some paths
@@ -357,7 +362,7 @@ then
         do 
             if [[ -s ${x} ]]
             then
-                echo "${MARVEL_PATH}/bin/OGlayout${TOUR_OGLAYOUT_OPT} ${x%.paths}.graphml ${x%.paths}.layout.dot" 
+                echo "${MARVEL_PATH}/bin/OGlayout${TOUR_OGLAYOUT_OPT} ${x%.paths}.graphml ${x%.paths}.layout.${FIX_TOUR_OGLAYOUT_OUTPUTFORMAT}" 
             fi
     	done > tour_04_OGlayout_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_04_OGlayout_block_${FIX_DB%.db}.${slurmID}.version

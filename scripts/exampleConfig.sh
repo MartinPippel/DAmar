@@ -472,6 +472,7 @@ FIX_TOUR_2FASTA_SPLIT=0 ### split at every junction
 FIX_TOUR_OGLAYOUT_VERBOSE=1
 FIX_TOUR_OGLAYOUT_DIST=200
 FIX_TOUR_OGLAYOUT_RMREVERSEEDGE=1
+FIX_TOUR_OGLAYOUT_OUTPUTFORMAT=graphml		### required for Gephi >=0.9, otherwise color attributes are not recognized
 
 # ----------------------------------------------------------------- CORRECTION OPTIONS ------------------------------------------------------------------------------------------------------
 COR_DIR=correction

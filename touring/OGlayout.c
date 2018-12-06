@@ -3099,6 +3099,12 @@ int main(int argc, char* argv[])
     if (parseOptions(&octx, argc, argv))
         return 1;
 
+    if(octx.giformat != FORMAT_GRAPHML && octx.goformat == FORMAT_GRAPHML)
+    {
+      fprintf(stderr, "When output format graphml is chosen the input format must be graphml as well (for now :)\n");
+       exit(1);
+    }
+
     // read graph
     if (octx.giformat == FORMAT_GRAPHML)
     {
