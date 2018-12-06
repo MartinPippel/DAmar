@@ -1772,14 +1772,14 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
   {
   	OgAttribute* attr = octx->graph->attrLookup + i;
 
-  	fprintf(f, "<key attr.name=\"%s\" attr.type=\"%s\" for=\"%s\" id=\"d%d\"/>\n",
+  	fprintf(f, " <key attr.name=\"%s\" attr.type=\"%s\" for=\"%s\" id=\"d%d\"/>\n",
   			attr->name, attr->type, (attr->forNode ? "node" : "edge"), attr->id);
   }
   // append coordinate attribute
-  fprintf(f, "<key attr.name=\"x\" attr.type=\"double\" for=\"node\" id=\"d%d\"/>\n",i++);
-  fprintf(f, "<key attr.name=\"y\" attr.type=\"double\" for=\"node\" id=\"d%d\"/>\n",i++);
+  fprintf(f, " <key attr.name=\"x\" attr.type=\"double\" for=\"node\" id=\"d%d\"/>\n",i++);
+  fprintf(f, " <key attr.name=\"y\" attr.type=\"double\" for=\"node\" id=\"d%d\"/>\n",i++);
   // write graph
-  fprintf(f, "  <graph id=\"G\" edgedefault=\"directed\">\n");
+  fprintf(f, " <graph id=\"G\" edgedefault=\"directed\">\n");
 
   // dump out nodes
 
@@ -1793,7 +1793,7 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
       assert(c != NULL);
 
       nnodes++;
-      fprintf(f, "   <node id=\"%d\">", node->nodeID);
+      fprintf(f, "  <node id=\"%d\">\n", node->nodeID);
       fflush(f);
       for (j = 0; j < node->numAttributes; j++)
       {
@@ -1806,21 +1806,21 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
               if ((strcmp(octx->graph->attrLookup[keyIdx].name, "pos") == 0))
                   continue;
 
-              fprintf(f, "    <data key=\"d%s\">%s</data>\n", node->attributes[j].key, node->attributes[j].value);
+              fprintf(f, "   <data key=\"%s\">%s</data>\n", node->attributes[j].key, node->attributes[j].value);
           }
           else
           {
               if (strcmp(node->attributes[j].key, "pos") == 0)
                   continue;
-              fprintf(f, "    <data key=\"d%s\">%s</data>\n", node->attributes[j].key, node->attributes[j].value);
+              fprintf(f, "   <data key=\"%s\">%s</data>\n", node->attributes[j].key, node->attributes[j].value);
           }
           fflush(f);
       }
-      fprintf(f, "    <data key=\"d%s\">%.3f</data>\n", "x", c->x);
-      fprintf(f, "    <data key=\"d%s\">%.3f</data>\n", "y", c->y);
+      fprintf(f, "   <data key=\"d%d\">%.3f</data>\n", octx->graph->numAttr, c->x);
+      fprintf(f, "   <data key=\"d%d\">%.3f</data>\n", octx->graph->numAttr+1, c->y);
 
       fflush(f);
-      fprintf(f, "<node/>\n");
+      fprintf(f, "  <node/>\n");
       fflush(f);
   }
 
@@ -1915,14 +1915,13 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
       }
 
       nedges++;
-      fprintf(f, "    <edge id=\"%d\"",nedges);
-      fprintf(f, " source=\"%d\" target=\"%d\">\n", edge->sourceId, edge->targetId);
+      fprintf(f, "  <edge id=\"%d\" source=\"%d\" target=\"%d\">\n",nedges, edge->sourceId, edge->targetId);
       for (j = 0; j < edge->numAttributes; j++)
       {
 
-      	fprintf(f, "    <data key=\"d%s\">%s</data>\n", edge->attributes[j].key, edge->attributes[j].value);
+      	fprintf(f, "   <data key=\"%s\">%s</data>\n", edge->attributes[j].key, edge->attributes[j].value);
       }
-      fprintf(f, "    <edge/>\n");
+      fprintf(f, "  <edge/>\n");
   }
 
   fprintf(f, "  </graph>\n");
