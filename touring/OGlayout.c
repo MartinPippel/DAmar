@@ -1820,7 +1820,7 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
       fprintf(f, "   <data key=\"d%d\">%.3f</data>\n", octx->graph->numAttr+1, c->y);
 
       fflush(f);
-      fprintf(f, "  <node/>\n");
+      fprintf(f, "  </node>\n");
       fflush(f);
   }
 
