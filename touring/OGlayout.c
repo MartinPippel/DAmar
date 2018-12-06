@@ -1921,7 +1921,7 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
 
       	fprintf(f, "   <data key=\"%s\">%s</data>\n", edge->attributes[j].key, edge->attributes[j].value);
       }
-      fprintf(f, "  <edge/>\n");
+      fprintf(f, "  </edge>\n");
   }
 
   fprintf(f, "  </graph>\n");
