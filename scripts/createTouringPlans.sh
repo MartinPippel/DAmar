@@ -261,7 +261,7 @@ function setOGlayoutOptions()
         TOUR_OGLAYOUT_OPT="${TOUR_OGLAYOUT_OPT} -R"
     fi
     
-    if [[  "x${FIX_TOUR_OGLAYOUT_OUTPUTFORMAT}" == "$x" ]]
+    if [[  "x${FIX_TOUR_OGLAYOUT_OUTPUTFORMAT}" == "x" ]]
     then
     	FIX_TOUR_OGLAYOUT_OUTPUTFORMAT="graphml"        
     fi    
