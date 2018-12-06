@@ -1748,6 +1748,185 @@ void write_svg(OgLayoutContext *octx, Graph *g)
     }
 }
 
+void write_graphml(OgLayoutContext *octx, Graph *g)
+{
+  FILE *f = fopen(octx->path_graph_out, "w");
+
+  int nedges = 0;
+  int nnodes = 0;
+
+  if (f == NULL)
+  {
+      fprintf(stderr, "Cannot write graph into file: %s!\n", octx->path_graph_out);
+  }
+
+  // write header
+  fprintf(f, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+  fprintf(f, "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n");
+  fprintf(f, "      xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
+  fprintf(f, "      xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n");
+  fprintf(f, "      http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">\n");
+  // write graph
+  fprintf(f, "  <graph id=\"G\" edgedefault=\"undirected\">\n");
+
+  // dump out nodes
+  int i, j;
+  Node dummy;
+  for (i = 0; i < octx->graph->numNodes; i++)
+  {
+      OgNode *node = octx->graph->nodes + i;
+
+      dummy.id = node->nodeID;
+      Node *c = bsearch(&dummy, g->nodes, g->curNodes, sizeof(Node), cmpNodesById);
+      assert(c != NULL);
+
+      nnodes++;
+      fprintf(f, "   <node id=\"%d\"", node->nodeID);
+      fflush(f);
+      for (j = 0; j < node->numAttributes; j++)
+      {
+          // ignore previous position
+          if (octx->graph->numAttr)
+          {
+              int keyIdx = atoi(node->attributes[j].key + 1);
+              assert(keyIdx >= 0 && keyIdx < octx->graph->numAttr);
+
+              if ((strcmp(octx->graph->attrLookup[keyIdx].name, "pos") == 0))
+                  continue;
+
+              fprintf(f, " %s=\"%s\"", octx->graph->attrLookup[keyIdx].name, node->attributes[j].value);
+          }
+          else
+          {
+              if (strcmp(node->attributes[j].key, "pos") == 0)
+                  continue;
+              fprintf(f, " %s=\"%s\"", node->attributes[j].key, node->attributes[j].value);
+          }
+          fflush(f);
+      }
+      fprintf(f, " pos=\"%f,%f\"", c->x, c->y);
+      fflush(f);
+      fprintf(f, "/>\n");
+      fflush(f);
+  }
+
+  if (octx->cleanReverseEdges)
+  {
+      for (i = 0; i < octx->graph->numEdges; i++)
+      {
+          OgEdge *e = octx->graph->edges + i;
+          if (e->sourceId > e->targetId)
+          {
+              int tmp = e->sourceId;
+              e->sourceId = e->targetId;
+              e->targetId = tmp;
+          }
+      }
+      qsort(octx->graph->edges, octx->graph->numEdges, sizeof(OgEdge), cmpOgEdges);
+  }
+
+  for (i = 0; i < octx->graph->numEdges; i++)
+  {
+      OgEdge *edge = octx->graph->edges + i;
+
+      int use = -1;
+      if (octx->cleanReverseEdges)
+      {
+          if (i + 1 < octx->graph->numEdges && edge->sourceId == octx->graph->edges[i + 1].sourceId && edge->targetId == octx->graph->edges[i + 1].targetId)
+          {
+              for (j = 0; j < edge->numAttributes; j++)
+              {
+                  if (octx->graph->numAttr) // i.e. attributes must be translated via idNUM into attribute name
+                  {
+                      int keyIdx = atoi(octx->graph->edges[i].attributes[j].key + 1);
+                      assert(keyIdx >= 0 && keyIdx < octx->graph->numAttr);
+
+                      if ((strcmp(octx->graph->attrLookup[keyIdx].name, "path") == 0) && (atoi(edge->attributes[j].value) >= 0))
+                      {
+                          use = i;
+                          break;
+                      }
+                  }
+                  else
+                  {
+                      if (strcmp(edge->attributes[j].key, "path") == 0)
+                      {
+                          if (atoi(edge->attributes[j].value) >= 0)
+                          {
+                              use = i;
+                              break;
+                          }
+                      }
+                  }
+              }
+              if (use < 0)
+              {
+                  if (octx->graph->numAttr) // i.e. attributes must be translated via idNUM into attribute name
+                  {
+                      for (j = 0; j < octx->graph->edges[i + 1].numAttributes; j++)
+                      {
+                          int keyIdx = atoi(octx->graph->edges[i + 1].attributes[j].key + 1);
+                          assert(keyIdx >= 0 && keyIdx < octx->graph->numAttr);
+
+                          if ((strcmp(octx->graph->attrLookup[keyIdx].name, "path") == 0) && (atoi(octx->graph->edges[i + 1].attributes[j].value) >= 0))
+                          {
+                              use = i + 1;
+                              break;
+                          }
+                      }
+                  }
+                  else
+                  {
+                      for (j = 0; j < octx->graph->edges[i + 1].numAttributes; j++)
+                      {
+                          if (strcmp(octx->graph->edges[i + 1].attributes[j].key, "path") == 0)
+                          {
+                              if (atoi(octx->graph->edges[i + 1].attributes[j].value) >= 0)
+                              {
+                                  use = i + 1;
+                                  break;
+                              }
+                          }
+                      }
+                  }
+
+              }
+
+              if (use < 0 || use > i) // take reverse edge
+              {
+                  edge = octx->graph->edges + i + 1;
+              }
+              i += 1;
+          }
+      }
+
+      nedges++;
+      fprintf(f, "   <edge id=\"%d\"",nedges);
+      fprintf(f, " source=\"%d\" target=\"%d\"", edge->sourceId, edge->targetId);
+      for (j = 0; j < edge->numAttributes; j++)
+      {
+          if (octx->graph->numAttr)
+          {
+              int keyIdx = atoi(edge->attributes[j].key + 1);
+              assert(keyIdx >= 0 && keyIdx < octx->graph->numAttr);
+              fprintf(f, " %s=\"%s\"", octx->graph->attrLookup[keyIdx].name, edge->attributes[j].value);
+          }
+          else
+              fprintf(f, " %s=\"%s\"", edge->attributes[j].key, edge->attributes[j].value);
+      }
+      fprintf(f, "/>\n");
+  }
+
+  fprintf(f, "  </graph>\n");
+  fprintf(f, "</graphml>\n");
+  fclose(f);
+
+  if (octx->verbose)
+  {
+      printf("write: %d nodes and %d edges\n", nnodes, nedges);
+  }
+}
+
 void write_dot(OgLayoutContext *octx, Graph *g)
 {
     FILE *f = fopen(octx->path_graph_out, "w");
@@ -2243,7 +2422,7 @@ void sortGraphEdges(Graph *g)
 
 static void usage(FILE* fout, const char* app)
 {
-    fprintf(fout, "usage: %s [-vRS] [-f [dot|graphml]] [-F [dot|svg]] [-qC n] [-tlcsdg f] input.graph output.graph\n\n", app);
+    fprintf(fout, "usage: %s [-vRS] [-f [dot|graphml]] [-F [dot|svg|graphml]] [-qC n] [-tlcsdg f] input.graph output.graph\n\n", app);
 
     fprintf( fout, "Computes a layout for the (usually toured) input graph.\n\n" );
 
@@ -2453,6 +2632,10 @@ static int parseOptions(OgLayoutContext *octx, int argc, char *argv[])
     {
         octx->goformat = FORMAT_DOT;
     }
+    else if (strcmp(goformat, "grapml") == 0)
+		{
+				octx->goformat = FORMAT_GRAPHML;
+		}
     else if (strcmp(goformat, "svg") == 0)
     {
         octx->goformat = FORMAT_SVG;
@@ -2468,8 +2651,13 @@ static int parseOptions(OgLayoutContext *octx, int argc, char *argv[])
                 octx->goformat = FORMAT_DOT;
             else if (strcasecmp(octx->path_graph_out + len - 3, "svg") == 0)
                 octx->goformat = FORMAT_SVG;
-
         }
+        if (len > 7)
+        {
+            if (strcasecmp(octx->path_graph_in + len - 7, "graphml") == 0)
+                octx->goformat = FORMAT_GRAPHML;
+        }
+
 
         if (octx->goformat == FORMAT_UNKNOWN)
         {
@@ -2955,6 +3143,8 @@ int main(int argc, char* argv[])
     // write graph
     if (octx.goformat == FORMAT_DOT)
         write_dot(&octx, ig);
+    else if (octx.goformat == FORMAT_GRAPHML)
+      	write_graphml(&octx, ig);
     else
         write_svg(&octx, ig);
 

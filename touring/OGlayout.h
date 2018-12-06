@@ -262,6 +262,7 @@ int read_dot(OgLayoutContext* octx);
 int read_graphml(OgLayoutContext* octx);
 void write_dot(OgLayoutContext *octx, Graph *g);
 void write_svg(OgLayoutContext *octx, Graph *g);
+void write_graphml(OgLayoutContext *octx, Graph *g);
 
 #endif /* TOURING_OGLAYOUT_H_ */
 
