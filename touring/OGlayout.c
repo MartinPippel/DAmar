@@ -2654,7 +2654,7 @@ static int parseOptions(OgLayoutContext *octx, int argc, char *argv[])
         }
         if (len > 7)
         {
-            if (strcasecmp(octx->path_graph_in + len - 7, "graphml") == 0)
+            if (strcasecmp(octx->path_graph_out + len - 7, "graphml") == 0)
                 octx->goformat = FORMAT_GRAPHML;
         }
 
