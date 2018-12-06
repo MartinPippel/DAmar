@@ -1766,11 +1766,23 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
   fprintf(f, "      xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
   fprintf(f, "      xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n");
   fprintf(f, "      http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">\n");
+  // write node attributes
+  int i, j;
+  for (i=0; i<octx->graph->numAttr; i++)
+  {
+  	OgAttribute* attr = octx->graph->attrLookup + i;
+
+  	fprintf(f, "<key attr.name=\"%s\" attr.type=\"%s\" for=\"%s\" id=\"d%d\"/>\n",
+  			attr->name, attr->type, (attr->forNode ? "node" : "edge"), attr->id);
+  }
+  // append coordinate attribute
+  fprintf(f, "<key attr.name=\"x\" attr.type=\"double\" for=\"node\" id=\"d%d\"/>\n",i++);
+  fprintf(f, "<key attr.name=\"y\" attr.type=\"double\" for=\"node\" id=\"d%d\"/>\n",i++);
   // write graph
-  fprintf(f, "  <graph id=\"G\" edgedefault=\"undirected\">\n");
+  fprintf(f, "  <graph id=\"G\" edgedefault=\"directed\">\n");
 
   // dump out nodes
-  int i, j;
+
   Node dummy;
   for (i = 0; i < octx->graph->numNodes; i++)
   {
@@ -1781,12 +1793,12 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
       assert(c != NULL);
 
       nnodes++;
-      fprintf(f, "   <node id=\"%d\"", node->nodeID);
+      fprintf(f, "   <node id=\"%d\">", node->nodeID);
       fflush(f);
       for (j = 0; j < node->numAttributes; j++)
       {
           // ignore previous position
-          if (octx->graph->numAttr)
+          if (octx->graph->numAttr) // thats only true if input graph was graphml
           {
               int keyIdx = atoi(node->attributes[j].key + 1);
               assert(keyIdx >= 0 && keyIdx < octx->graph->numAttr);
@@ -1794,19 +1806,21 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
               if ((strcmp(octx->graph->attrLookup[keyIdx].name, "pos") == 0))
                   continue;
 
-              fprintf(f, " %s=\"%s\"", octx->graph->attrLookup[keyIdx].name, node->attributes[j].value);
+              fprintf(f, "    <data key=\"d%s\">%s</data>\n", node->attributes[j].key, node->attributes[j].value);
           }
           else
           {
               if (strcmp(node->attributes[j].key, "pos") == 0)
                   continue;
-              fprintf(f, " %s=\"%s\"", node->attributes[j].key, node->attributes[j].value);
+              fprintf(f, "    <data key=\"d%s\">%s</data>\n", node->attributes[j].key, node->attributes[j].value);
           }
           fflush(f);
       }
-      fprintf(f, " pos=\"%f,%f\"", c->x, c->y);
+      fprintf(f, "    <data key=\"d%s\">%.3f</data>\n", "x", c->x);
+      fprintf(f, "    <data key=\"d%s\">%.3f</data>\n", "y", c->y);
+
       fflush(f);
-      fprintf(f, "/>\n");
+      fprintf(f, "<node/>\n");
       fflush(f);
   }
 
@@ -1901,20 +1915,14 @@ void write_graphml(OgLayoutContext *octx, Graph *g)
       }
 
       nedges++;
-      fprintf(f, "   <edge id=\"%d\"",nedges);
-      fprintf(f, " source=\"%d\" target=\"%d\"", edge->sourceId, edge->targetId);
+      fprintf(f, "    <edge id=\"%d\"",nedges);
+      fprintf(f, " source=\"%d\" target=\"%d\">\n", edge->sourceId, edge->targetId);
       for (j = 0; j < edge->numAttributes; j++)
       {
-          if (octx->graph->numAttr)
-          {
-              int keyIdx = atoi(edge->attributes[j].key + 1);
-              assert(keyIdx >= 0 && keyIdx < octx->graph->numAttr);
-              fprintf(f, " %s=\"%s\"", octx->graph->attrLookup[keyIdx].name, edge->attributes[j].value);
-          }
-          else
-              fprintf(f, " %s=\"%s\"", edge->attributes[j].key, edge->attributes[j].value);
+
+      	fprintf(f, "    <data key=\"d%s\">%s</data>\n", edge->attributes[j].key, edge->attributes[j].value);
       }
-      fprintf(f, "/>\n");
+      fprintf(f, "    <edge/>\n");
   }
 
   fprintf(f, "  </graph>\n");
