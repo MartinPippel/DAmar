@@ -301,9 +301,9 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	if(fctx->nMinCoveredReadLength < 50 || fctx->nMinCoveredReadLength > 100)
+	if(fctx.nMinCoveredReadLength < 50 || fctx.nMinCoveredReadLength > 100)
 	{
-		fprintf(stderr, "Minimum covered read length in percent: %d not supported! Valid range [50, 100]\n", fctx->nMinCoveredReadLength);
+		fprintf(stderr, "Minimum covered read length in percent: %d not supported! Valid range [50, 100]\n", fctx.nMinCoveredReadLength);
 		exit(1);
 	}
 
