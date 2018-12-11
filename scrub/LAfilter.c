@@ -2648,7 +2648,7 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 		if (so->flags & OVL_DISCARD)
 			continue;
 
-		int err = (int) (so->path.diffs * 100.0 / (so->path.aepos - so->path.abpos));
+		int err = (int) (so->path.diffs * 100.0 / MIN(so->path.aepos - so->path.abpos, so->path.bepos - so->path.bbpos));
 
 		if(so->path.abpos <= trimABeg)
 			numRemovedIncomingReads++;
@@ -2658,8 +2658,8 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 
 		removeAlnBases +=  so->path.aepos - so->path.abpos;
 
-		if (removeAlnBases*100.0/cumOverallBases < MaxRemovedAlnBasesPerc && numIncomingReads - numRemovedIncomingReads > MinTipCov
-				&& numLeavingReads - numRemovedLeavingReads > MinTipCov)
+		if (removeAlnBases*100.0/cumOverallBases < MaxRemovedAlnBasesPerc && numIncomingReads - numRemovedIncomingReads >= MinTipCov
+				&& numLeavingReads - numRemovedLeavingReads >= MinTipCov)
 		{
 				so->flags |= OVL_DISCARD | OVL_DIFF;
 				ctx->nFilteredDiffs += 1;
