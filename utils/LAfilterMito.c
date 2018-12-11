@@ -198,9 +198,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			// discard all alignments no valid chain could be found
 			if (cyclicChain(ctx, ovl + j, k - j + 1) == 0)
 			{
-				for (i = 0; i<=k; i++)
+				for (i = j; i<=k; i++)
 				{
-					ovl[j+i].flags |= OVL_DISCARD;
+					ovl[i].flags |= OVL_DISCARD;
 				}
 			}
 		}
