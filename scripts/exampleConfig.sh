@@ -179,6 +179,13 @@ CT_HIC_TYPE=0
 CT_HIC_SUBMIT_SCRIPTS_FROM=1
 CT_HIC_SUBMIT_SCRIPTS_TO=6
 
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - Whatshap phasing  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+CT_WHATSHAP_TYPE=0
+# Type: 0 steps: 1-WHprepareInput, 2-WHminimap2PacBio, 3-inProgress 
+CT_WHATSHAP_SUBMIT_SCRIPTS_FROM=1
+CT_WHATSHAP_SUBMIT_SCRIPTS_TO=2
+
 # ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
 RAW_MITO_REFFASTA=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/mitochondria_ref/iHylVes_mt.fasta
@@ -643,16 +650,9 @@ CT_WHATSHAP_RUNID=1
 CT_WHATSHAP_OUTDIR="${FIX_FILT_OUTDIR}"
 CT_WHATSHAP_REFFASTA="stats/contigs/m1/freebayes/mMyoMyo_m1_f.p.fasta"
 ### use either reads - then full pipeline is started ...
-CT_WHATSHAP_READS_10X=
-CT_WHATSHAP_READS_PACBIO=
-CT_WHATSHAP_READS_HIC=
-### .... or use bams and vcf files 
-CT_WHATSHAP_BAM_10X=
-CT_WHATSHAP_VCF_10X=
-CT_WHATSHAP_BAM_PACBIO=
-CT_WHATSHAP_VCF_PACBIO=
-CT_WHATSHAP_BAM_HIC=
-CT_WHATSHAP_VCF_HIC=
+CT_WHATSHAP_READS_10X=${TENX_PATH}
+CT_WHATSHAP_READS_PACBIO=${DB_PATH}
+CT_WHATSHAP_READS_HIC=${HIC_PATH}
 ### bwa
 CT_WHATSHAP_BWA_THREADS=40
 CT_WHATSHAP_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
@@ -671,7 +671,6 @@ CT_WHATSHAP_MINIMAP2IDXTHREADS=8										# number of threads to create referenc
 CT_WHATSHAP_MINIMAP2ALNTHREADS=24										# number of threads to align reads
 CT_WHATSHAP_SAMTOOLSTHREADS=8
 CT_WHATSHAP_SAMTOOLSMEM=1
-
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 

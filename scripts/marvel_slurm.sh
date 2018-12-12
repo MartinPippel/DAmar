@@ -118,6 +118,10 @@ elif [[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 ]]
 then 
     currentPhase=12
     currentStep=${CT_HIC_SUBMIT_SCRIPTS_FROM}
+elif [[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+then 
+    currentPhase=13
+    currentStep=${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}
 else 
     echo "nothing to do"
     exit 0
@@ -145,7 +149,7 @@ then
 	cd ${PATCHING_DIR}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
-elif [[ ${currentPhase} -lt 13 ]]
+elif [[ ${currentPhase} -lt 14 ]]
 then
 	if [[ -z "${FIX_REPMASK_USELAFIX_PATH}" ]]
 	then 

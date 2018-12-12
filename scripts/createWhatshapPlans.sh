@@ -74,7 +74,7 @@ function setSamtoolsOptions()
 }
 
 ## type-1: Pacbio and 10x Genomcis reads 
-myTypes=("1-WHprepareInput, 2-WHminimap2, 3-")
+myTypes=("1-WHprepareInput, 2-WHminimap2PacBio, 3-")
 if [[ ${CT_WHATSHAP_TYPE} -eq 0 ]]
 then 
     ### 1-WHprepareInput
@@ -92,19 +92,52 @@ then
         	exit 1
    		fi
    		
-   		echo "if [[ -d ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID} ]]; then mv ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}" > whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_reads" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/10x_reads" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/10x_bams" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan		
-		echo "ln -s -r ${CT_WHATSHAP_REFFASTA} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "samtools faidx ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "bwa index ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.plan
+   		echo "if [[ -d ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID} ]]; then mv ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}" > whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_reads" >> whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/10x_reads" >> whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams" >> whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/10x_bams" >> whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref && ln -s -r ${CT_WHATSHAP_REFFASTA} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref && samtools faidx ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA}) && bwa index ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})" >> whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.plan		
 		
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> whatshap_01_WHprepareInput_single_${CONT_DB}.${slurmID}.version
-	### 2-WHminimap2 
+		# sanity checks
+   		numFiles=0 
+   		for x in ${CT_WHATSHAP_READS_PACBIO}/*.subreads.fa.gz   		
+   		do
+   			if [[ ! -f ${x} || ! -s ${x} ]]
+   			then
+   				(>&2 echo "WARNING - file ${x} not available or empty.")
+   			else
+   				numFiles=$((${numFiles}+1))
+   				echo "ln -s -f -r ${x} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_reads/" >> whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.plan
+   			fi      						
+   		done
+
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.version
+
+		if [[ ${numFiles} -eq 0 ]]
+		then
+   		 
+	   		for x in ${CT_WHATSHAP_READS_PACBIO}/*.subreads.bam   		
+	   		do
+	   			if [[ ! -f ${x} || ! -s ${x} ]]
+	   			then
+	   				(>&2 echo "WARNING - file ${x} not available or empty.")
+	   			else
+	   				numFiles=$((${numFiles}+1))
+	   				# create dextract plans 
+	   				echo "${DAZZLER_PATH}/bin/dextract -v -f -o ${x} | gzip > ${x%.subreads.bam}.fa.gz && ln -s -f -r ${x} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_reads/" >> whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.plan
+	   				echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DEXTRACTOR/.git rev-parse --short HEAD)" >> whatshap_01_WHprepareInput_block_${CONT_DB}.${slurmID}.version  	   				
+	   			fi      						
+	   		done
+		fi
+		
+		if [[ ${numFiles} -eq 0 ]]
+        then
+        	(>&2 echo "ERROR - cannot find any pacbio sequel data with following pattern: ${CT_WHATSHAP_PACBIOFASTA}/*.subreads.bam")
+        	exit 1
+   		fi		
+	### 2-WHPacBioMinimap2 
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
@@ -112,260 +145,50 @@ then
         do            
             rm $x
         done
-		
-		if [[ ! -d "${CT_WHATSHAP_READS}" ]]
+
+		if [[ ! -f ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta}) ]]
         then
-        	(>&2 echo "ERROR - set CT_WHATSHAP_READS to directory that contain the PROJECT_ID*.fastq.qz read files")
+        	(>&2 echo "ERROR - Variable reference not found: ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta})")
         	exit 1
-   		fi
-   		   				
-		# we need to trim off barcode and adapter for 10x 
-		if [[ "x${CT_WHATSHAP_READSTYPE}" == "x10x" ]]
+        fi
+       
+        if [[ ! -f ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta}).fai ]]
+        then
+        	(>&2 echo "ERROR - Variable reference index not found: ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta}).fai")
+        	exit 1
+        fi
+                        
+        # sanity checks
+   		numFiles=0 
+   		for x in ${CT_WHATSHAP_PACBIOFASTA}/*.subreads.fa.gz   		
+   		do
+   			if [[ ! -f ${x} || ! -s ${x} ]]
+   			then
+   				(>&2 echo "WARNING - file ${x} not available or empty")
+   			else
+   				numFiles=$((${numFiles}+1))
+   			fi      						
+   		done
+
+		if [[ ${numFiles} -eq 0 ]]
 		then
-	   		numR1Files=0
-			for x in ${CT_WHATSHAP_READS}/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
-			do
-				if [[ -f ${x} ]]
-				then	
-					numR1Files=$((${numR1Files}+1))	
-				fi
-			done
-			
-			if [[ ${numR1Files} -eq 0 ]]
-	        then
-	        	(>&2 echo "ERROR - cannot read 10x R1 files with following pattern: ${CT_WHATSHAP_READS}/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz")
-	        	exit 1
-	   		fi
-	   		
-	   		numR2Files=0
-			for x in ${CT_WHATSHAP_READS}/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
-			do
-				if [[ -f ${x} ]]
-				then	
-					numR2Files=$((${numR2Files}+1))	
-				fi
-			done
-			
-			if [[ ${numR2Files} -eq 0 ]]
-	        then
-	        	(>&2 echo "ERROR - cannot read 10x R2 files with following pattern: ${CT_WHATSHAP_READS}/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz")
-	        	exit 1
-	   		fi
-	   		
-	   		if [[ ${numR1Files} -ne ${numR2Files} ]]
-	        then
-	        	(>&2 echo "ERROR - 10x R1 files ${numR1Files} does not match R2 files ${numR2Files}")
-	        	exit 1
-	   		fi
-	   		
-	   		setFastpOptions
-	   		
-			for r1 in ${CT_WHATSHAP_READS}/${PROJECT_ID}_S[0-9]_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
-			do
-				id=$(dirname ${r1})
-				f1=$(basename ${r1})
-				f2=$(echo "${f1}" | sed -e "s:_R1_:_R2_:")
-				o="${f1%_R1_???.fastq.gz}"											
-				
-				echo "fastp -i ${id}/${f1} -I ${id}/${f2} -f 23 -G -Q -j ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${o}.json -h ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${o}.html -w ${CT_WHATSHAP_FASTP_THREADS} -o ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${f1} -O ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${f2}"				 
-			done > whatshap_02_FBfastp_block_${CONT_DB}.${slurmID}.plan
-	   		echo "fastp $(${PACBIO_BASE_ENV} && fastp 2>&1 | grep version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > whatshap_02_FBfastp_block_${CONT_DB}.${slurmID}.version	   		
-		else		
-			(>&2 echo "ERROR - set CT_WHATSHAP_READSTYPE ${CT_WHATSHAP_READSTYPE} not supported yet")
-	        exit 1			
+			(>&2 echo "ERROR - no input subreads.fa.gz file found")
+	       	exit 1	
 		fi
-	### 3-FBbwa
+		
+		ref="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta})"
+				
+        for x in ${CT_PURGEHAPLOTIGS_PACBIOFASTA}/*.subreads.fa.gz   		
+   		do
+        	name=$(basename ${x%.subreads.fa.gz})
+        	echo "minimap2 -a -x map-pb -R \"@RG\tID:${name}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:PACBIO\tPU:none\" -t ${CT_WHATSHAP_MINIMAP2ALNTHREADS} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/${ref}.idx ${x} | samtools view -h - | samtools sort -@ ${CT_WHATSHAP_SAMTOOLSTHREADS} -m ${CT_WHATSHAP_SAMTOOLSMEM}G -o ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${ref}_${name}_minimap2.sort.bam -T /tmp/${ref}_${name}_minimap2.sort.tmp && samtools index -@ ${CT_WHATSHAP_SAMTOOLSTHREADS} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${ref}_${name}_minimap2.sort.bam"        	
+		done > whatshap_02_WHPacBioMinimap2_block_${CONT_DB}.${slurmID}.plan 
+    	echo "minimap2 $(${PACBIO_BASE_ENV} && minimap2 --version && ${PACBIO_BASE_ENV_DEACT})" > whatshap_02_WHPacBioMinimap2_block_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> whatshap_02_WHPacBioMinimap2_block_${CONT_DB}.${slurmID}.version
+	### 3-WHPacBioBamSplitByRef
     elif [[ ${currentStep} -eq 3 ]]
     then
-    	### clean up plans 
-        for x in $(ls whatshap_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done
-        
-        if [[ ! -d "${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads" ]]
-        then
-        	(>&2 echo "ERROR - cannot access directory ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads!")
-        	exit 1
-   		fi
-   		
-   		ref=${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})
-   		
-   		if [[ ! -f "${ref}" ]]
-        then
-        (>&2 echo "ERROR - cannot reference fasta file ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})!")
-        	exit 1
-   		fi
-   		   				
-		# we need to trim off barcode and adapter for 10x 
-		if [[ "x${CT_WHATSHAP_READSTYPE}" == "x10x" ]]
-		then
-	   		numR1Files=0
-			for x in ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
-			do
-				if [[ -f ${x} ]]
-				then	
-					numR1Files=$((${numR1Files}+1))	
-				fi
-			done
-			
-			if [[ ${numR1Files} -eq 0 ]]
-	        then
-	        	(>&2 echo "ERROR - cannot read 10x R1 files with following pattern: ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz")
-	        	exit 1
-	   		fi
-	   		
-	   		numR2Files=0
-			for x in ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
-			do
-				if [[ -f ${x} ]]
-				then	
-					numR2Files=$((${numR2Files}+1))	
-				fi
-			done
-			
-			if [[ ${numR2Files} -eq 0 ]]
-	        then
-	        	(>&2 echo "ERROR - cannot read 10x R2 files with following pattern: ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz")
-	        	exit 1
-	   		fi
-	   		
-	   		if [[ ${numR1Files} -ne ${numR2Files} ]]
-	        then
-	        	(>&2 echo "ERROR - 10x R1 files ${numR1Files} does not match R2 files ${numR2Files}")
-	        	exit 1
-	   		fi
-	   		
-	   		setbwaOptions
-	   		setSamtoolsOptions
-	   		
-			for r1 in ${CT_WHATSHAP_READS}/${PROJECT_ID}_S[0-9]_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
-			do
-				id=$(dirname ${r1})
-				f1=$(basename ${r1})
-				f2=$(echo "${f1}" | sed -e "s:_R1_:_R2_:")
-				o="${f1%_R1_???.fastq.gz}"											
-				
-				echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${PROJECT_ID}\tSM:10X\" ${ref} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${f1} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/reads/${f2} | samtools sort${CONTIG_SAMTOOLS_OPT} -O BAM -o ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${o}_bwa.bam && samtools index -@ ${CT_WHATSHAP_SAMTOOLS_THREADS} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${o}_bwa.bam" 				 
-			done > whatshap_03_FBbwa_block_${CONT_DB}.${slurmID}.plan
-			
-	   		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > whatshap_03_FBbwa_block_${CONT_DB}.${slurmID}.version
-        	echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> whatshap_03_FBbwa_block_${CONT_DB}.${slurmID}.version
-		else		
-			(>&2 echo "ERROR - set CT_WHATSHAP_READSTYPE ${CT_WHATSHAP_READSTYPE} not supported yet")
-	        exit 1			
-		fi        	
-    ### 4-FBmarkDuplicates
-    elif [[ ${currentStep} -eq 4 ]]
-    then
-        ### clean up plans 
-        for x in $(ls whatshap_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done               
 
-		if [[ ! -d "${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams" ]]
-        then
-        	(>&2 echo "ERROR - cannot access directory ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams!")
-        	exit 1
-   		fi
-   		
-   		## if multiple bam files are available (e.g. different Lanes) then merge files prior to markduplicates
-   		files=$(ls ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/*_bwa.bam)
-   		
-   		echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" > whatshap_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version
-   		if [[ $(echo $files | wc -w) -eq 1 ]]
-   		then
-   			ob="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${PROJECT_ID}_final10x.bam"
-			m="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${PROJECT_ID}_final10x.metrics"
-   			
-   			echo "picard MarkDuplicates I=${files} O=${ob} M=${m} && samtools index -@ ${CT_WHATSHAP_SAMTOOLS_THREADS} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${ob}" 				 
-   		elif [[ $(echo $files | wc -w) -gt 1 ]]
-   		then
-   			mrg=${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${PROJECT_ID}_merged10x.bam
-   			o=${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${PROJECT_ID}_final10x.bam
-   			m=${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${PROJECT_ID}_final10x.metrics
-   			i=$(echo -e ${files} | sed -e "s:${CT_WHATSHAP_OUTDIR}:I=${CT_WHATSHAP_OUTDIR}:g")
-   			echo "picard MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_WHATSHAP_SAMTOOLS_THREADS} ${o}"
-   			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" >> whatshap_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version	   			
-		else
-   	 		(>&2 echo "ERROR - cannot find file with following pattern: ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/*_bwa.bam")
-        	exit 1
-   	 	fi > whatshap_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.plan   			   		   		   						   	
-	### 5-FBwhatshap
-    elif [[ ${currentStep} -eq 5 ]]
-    then
-        ### clean up plans 
-        for x in $(ls whatshap_05_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done
-        
-        if [[ ! -d "${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams" ]]
-        then
-        	(>&2 echo "ERROR - cannot access directory ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams!")
-        	exit 1
-   		fi
-   		
-   		outdir="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/whatshap/"
-   		if [[ ! -d "${outdir}" ]]
-        then
-        	(>&2 echo "ERROR - cannot access directory ${outdir}!")
-        	exit 1
-   		fi   		
-        
-        ref=${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})
-   		
-   		if [[ ! -f "${ref}.fai" ]]
-        then
-        	(>&2 echo "ERROR - cannot reference fasta index file ${ref}.fai!")
-        	exit 1
-   		fi
-   		
-   		bam=${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${PROJECT_ID}_final10x.bam
-   		if [[ ! -f ${bam} ]]
-   		then 
-   			(>&2 echo "ERROR - cannot final duplicate marked bam file: ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/bams/${PROJECT_ID}_final10x.bam!")
-        	exit 1
-   		fi 
-   		
-   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} '{print "whatshap --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ob -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > whatshap_05_FBwhatshap_block_${CONT_DB}.${slurmID}.plan
-
-		echo "whatshap $(${PACBIO_BASE_ENV} && whatshap --version && ${PACBIO_BASE_ENV_DEACT})" > whatshap_05_FBwhatshap_block_${CONT_DB}.${slurmID}.version
-		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> whatshap_05_FBwhatshap_block_${CONT_DB}.${slurmID}.version
-   	### 6-FBbcftools
-    elif [[ ${currentStep} -eq 6 ]]
-    then
-        ### clean up plans 
-        for x in $(ls whatshap_06_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done
-        
-		ref=${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA})
-   		
-   		if [[ ! -f "${ref}.fai" ]]
-        then
-        	(>&2 echo "ERROR - cannot reference fasta index file ${ref}.fai!")
-        	exit 1
-   		fi
-   		
-   		indir="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/whatshap/"
-   		if [[ ! -d "${indir}" ]]
-        then
-        	(>&2 echo "ERROR - cannot access directory ${indir}!")
-        	exit 1
-   		fi
-   		
-   		outdir="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/"
-        
-    	# create list of bcf files, same order as in ref.fai
-        echo "awk -v d=\"${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/whatshap/\" '{print d\$1\":1-\"\$2\".bcf\"}' ${ref}.fai > ${outdir}/${PROJECT_ID}_10x_concatList.txt" > whatshap_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
-        echo "bcftools concat -nf ${outdir}/${PROJECT_ID}_10x_concatList.txt | bcftools view -Ou -e'type=\"ref\"' | bcftools norm -Ob -f $ref -o ${outdir}/${PROJECT_ID}_10x.bcf" >> whatshap_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
-        echo "bcftools index ${outdir}/${PROJECT_ID}_10x.bcf" >> whatshap_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
-        echo "bcftools consensus -i'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Hla -f ${ref} ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.fasta" >> whatshap_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
-      
-      	echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > whatshap_06_FBconsensus_single_${CONT_DB}.${slurmID}.version  
                 	   						
     else
         (>&2 echo "step ${currentStep} in CT_WHATSHAP_TYPE ${CT_WHATSHAP_TYPE} not supported")

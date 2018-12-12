@@ -100,8 +100,11 @@ function getPhaseFilePrefix()
     elif [[ ${currentPhase} -eq 12 ]]
     then
         echo "hic"                     
+    elif [[ ${currentPhase} -eq 13 ]]
+    then
+        echo "whatshap"                     
     else
-        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs, 11-freebayes, 12-hic)")
+        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs, 11-freebayes, 12-hic, 13-whatshap)")
         exit 1
     fi
 }
@@ -231,7 +234,7 @@ then
                 then
                     echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
                 fi
-				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
+				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" ]]
 				then
 					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 				elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -289,7 +292,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
 
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -362,7 +365,7 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi	        
 	        
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -420,7 +423,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
             then
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -587,7 +590,8 @@ then
 		   		[[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${PB_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${PB_FREEBAYES_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
-		   		[[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
+		   		[[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]]		   		
 			then
 				cd ../	
 			
@@ -713,8 +717,16 @@ then
         sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
     fi
-fi        
-        
+fi
+
+if [[ ${currentPhase} -eq 13 && ${foundNext} -eq 0 ]]
+then 
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]]
+    then 
+        sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+    fi
+fi                        
 
 if [[ ${foundNext} -eq 0 ]]
 then
