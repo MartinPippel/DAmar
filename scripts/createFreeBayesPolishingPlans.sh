@@ -92,7 +92,7 @@ function setPicardOptions()
 
 # Type: 0 - for 10x data 
 # Type: 1 - for Illuimina PE data
-myTypes=("1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools", 
+myTypes=("1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7-FBstatistics", 
 "1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools")
 if [[ ${CT_FREEBAYES_TYPE} -eq 0 ]]
 then 
@@ -386,7 +386,26 @@ then
         echo "bcftools consensus -i'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Hla -f ${ref} ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.fasta" >> freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
       
       	echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.version  
-                	   						
+    ### 7-FBstatistics
+    elif [[ ${currentStep} -eq 6 ]]
+    then
+        ### clean up plans 
+        for x in $(ls freebayes_07_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+            	### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+    	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+        then 
+        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+    	else
+        	cwd=$(pwd)
+        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+    	fi
+    	### create assemblyStats plan 
+    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 11" > freebayes_07_FBstatistics_single_${CONT_DB}.${slurmID}.plan
+    	git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > freebayes_07_FBstatistics_single_${CONT_DB}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in CT_FREEBAYES_TYPE ${CT_FREEBAYES_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_FREEBAYES_TYPE}]}")
