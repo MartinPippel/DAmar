@@ -81,8 +81,10 @@ typedef struct
 	int trim;
 	int maxspanners;
 	int minsupport;
+	int fixChimers;
 	int maxChimerLen;
 	int minChimerBorderCov;
+
 
 	char *qName;
 	HITS_TRACK* qtrack;
@@ -1379,8 +1381,10 @@ static int spanners_interval(FixContext *fctx, Overlap* ovls, int novl, int b, i
 		}
 	}
 
+#ifdef DEBUG
 	if (ovls->aread == 218393)
 		printf("spanners_interval %d minspan %d [%d ,%d] #span: %d\n", ovls->aread, minSpan, b, e, span);
+#endif
 
 	return span;
 }
@@ -1406,8 +1410,10 @@ static int spanners_point(FixContext *fctx, Overlap* ovls, int novl, int p, int 
 		}
 	}
 
+#ifdef DEBUG
 	if (ovls->aread == 218393)
 		printf("spanners_point %d minspan %d point %d #span: %d max %d\n", ovls->aread, minSpan, p, span, max);
+#endif
 
 	return (span > max);
 }
@@ -1823,21 +1829,24 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 	}
 
 	// locate chimers
-	int chimer_trim_b = trim_ab;
-	int chimer_trim_e = trim_ae;
-	if (filter_chimers(fctx, ovl, novl, &chimer_trim_b, &chimer_trim_e))
+	if(fctx->fixChimers)
 	{
-		fctx->num_chimers += 1;
-	}
+		int chimer_trim_b = trim_ab;
+		int chimer_trim_e = trim_ae;
+		if (filter_chimers(fctx, ovl, novl, &chimer_trim_b, &chimer_trim_e))
+		{
+			fctx->num_chimers += 1;
+		}
 
-	trim_ab = MAX(chimer_trim_b, trim_ab);
-	trim_ae = MIN(chimer_trim_e, trim_ae);
+		trim_ab = MAX(chimer_trim_b, trim_ab);
+		trim_ae = MIN(chimer_trim_e, trim_ae);
 
-	if (trim_ae - trim_ab < fctx->minlen)
-	{
-		printf("skip read %d len %d < min Len %d due to chimer \n", ovl->aread, trim_ae - trim_ab, fctx->minlen);
-		free(data);
-		return 1;
+		if (trim_ae - trim_ab < fctx->minlen)
+		{
+			printf("skip read %d len %d < min Len %d due to chimer \n", ovl->aread, trim_ae - trim_ab, fctx->minlen);
+			free(data);
+			return 1;
+		}
 	}
 
 	// sanity check tracks
@@ -2669,7 +2678,7 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	printf("usage: [-lad] [-bCxQg <int>] [-ctqr <track>] [-f <patched.quiva>] <db> <in.las> <patched.fasta>\n");
+	printf("usage: [-ladX] [-bCxQg <int>] [-ctqr <track>] [-f <patched.quiva>] <db> <in.las> <patched.fasta>\n");
 	printf("       -c ... convert track intervals (multiple -c possible)\n");
 	printf("       -f ... patch quality streams\n");
 	printf("       -x ... min length for fixed sequences (%d)\n", DEF_ARG_X);
@@ -2679,6 +2688,7 @@ static void usage()
 	printf("       -q ... quality track (default: %s)\n", TRACK_Q);
 	printf("       -l ... low coverage mode\n");
 	printf("EXPERIMENTAL OPTIONS\n");
+	printf("       -X ... fix chimeric reads in repeat regions\n");
 	printf("       -r ... repeat track\n");
 	printf("       -d ... discard all chimeric reads, (default: 0, i.e. keep longest part of chimeric reads)\n");
 	printf("       -b ... minimum border coverage to start a chimer detection (default: %d)\n", DEF_ARG_B);
@@ -2710,12 +2720,16 @@ int main(int argc, char* argv[])
 	int lowc = 0;
 	opterr = 0;
 
-	while ((c = getopt(argc, argv, "dlx:f:c:Q:g:t:q:r:b:C:")) != -1)
+	while ((c = getopt(argc, argv, "dlXx:f:c:Q:g:t:q:r:b:C:")) != -1)
 	{
 		switch (c)
 		{
 		case 'l':
 			lowc = 1;
+			break;
+
+		case 'X':
+			fctx.fixChimers = 1;
 			break;
 
 		case 'd':

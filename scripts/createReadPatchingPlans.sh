@@ -367,6 +367,11 @@ function setLAfixOptions()
         FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -t trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_${ptype}"
     fi
     
+    if [[ -n ${RAW_FIX_LAFIX_FIXCHIMERS} && ${RAW_FIX_LAFIX_FIXCHIMERS} -ne 0 ]]
+    then
+        FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -X"
+    fi
+    
     if [[ -n ${RAW_FIX_LAFIX_CONVERTRACKS} ]]
     then
         for x in ${RAW_FIX_LAFIX_CONVERTRACKS}
