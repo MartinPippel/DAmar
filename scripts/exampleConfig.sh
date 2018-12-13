@@ -190,6 +190,7 @@ CT_WHATSHAP_SUBMIT_SCRIPTS_TO=2
 
 RAW_MITO_REFFASTA=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/mitochondria_ref/iHylVes_mt.fasta
 
+# daligner
 #RAW_MITO_DALIGNER_KMER=14
 RAW_MITO_DALIGNER_ERR=0.7
 RAW_MITO_DALIGNER_BIAS=0
@@ -198,6 +199,14 @@ RAW_MITO_DALIGNER_MEM=32
 RAW_MITO_DALIGNER_BLOCKCMP=4
 RAW_MITO_DALIGNER_FORBLOCK=1
 RAW_MITO_DALIGNER_NUMACTL=1
+# LAfilterMito
+RAW_MITO_LAFILTERMITO_VERBOSE=0
+RAW_MITO_LAFILTERMITO_MINRLEN=4000
+RAW_MITO_LAFILTERMITO_MAXRLEN=0			## if unspecified will be set based on reference length minus 1000
+RAW_MITO_LAFILTERMITO_UTIPS=1500 		## maximum number of unaligned bases of first and/or last alignment of and alignment chain 
+RAW_MITO_LAFILTERMITO_MAXOVH=25			## maximum number of bases, that neighboring alignments of an alignment chain can overlap
+RAW_MITO_LAFILTERMITO_MAXGAPLEN=1000	## maximum number of bases, that neighboring alignments of an alignment chain can be separated
+RAW_MITO_LAFILTERMITO_PERCCOVLEN=75		## minimum base percentage [50,100], that an alignemnt chain must cover of a read   
 
 # ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 

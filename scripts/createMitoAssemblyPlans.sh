@@ -144,7 +144,58 @@ function setDalignerOptions()
     fi
 }
 
-myTypes=("1-mitoPrepareInput, 2-daligner, 3-LAmerge")
+function setLAfilterMitoOptions()
+{
+	MITO_LAFILTERMITO_OPT=" -p"		### enable purge by default
+    if [[ -n ${RAW_MITO_LAFILTERMITO_VERBOSE} && ${RAW_MITO_LAFILTERMITO_VERBOSE} -gt 0 ]]
+    then
+        MITO_LAFILTERMITO_OPT="${MITO_LAFILTERMITO_OPT} -v"
+    fi
+    
+    if [[ -n ${RAW_MITO_LAFILTERMITO_MINRLEN} && ${RAW_MITO_LAFILTERMITO_MINRLEN} -gt 0 ]]
+    then
+        MITO_LAFILTERMITO_OPT="${MITO_LAFILTERMITO_OPT} -l ${RAW_MITO_LAFILTERMITO_MINRLEN}"
+	else
+		RAW_MITO_LAFILTERMITO_MINRLEN=0
+    fi
+    
+    if [[ -n ${RAW_MITO_LAFILTERMITO_MAXRLEN} && ${RAW_MITO_LAFILTERMITO_MAXRLEN} -gt 0 ]]
+    then
+        MITO_LAFILTERMITO_OPT="${MITO_LAFILTERMITO_OPT} -L ${RAW_MITO_LAFILTERMITO_MAXRLEN}"
+	else
+		(>&2 echo "WARNING - no maximum read length specified. Set max read length to (reference read length - 1000), to avoid fetching of reads that may have missed adapters.")
+		RAW_MITO_LAFILTERMITO_MAXRLEN=$(($(grep -v -e ">" ${RAW_MITO_REFFASTA} | tr -d "\n" | wc -m)-1000))
+		MITO_LAFILTERMITO_OPT="${MITO_LAFILTERMITO_OPT} -L ${RAW_MITO_LAFILTERMITO_MAXRLEN}"			
+    fi
+    
+    if [[ ${RAW_MITO_LAFILTERMITO_MINRLEN} -gt ${RAW_MITO_LAFILTERMITO_MAXRLEN} ]]
+    then 
+    	(>&2 echo "ERROR - RAW_MITO_LAFILTERMITO_MINRLEN(${RAW_MITO_LAFILTERMITO_MINRLEN}) > RAW_MITO_LAFILTERMITO_MAXRLEN(${RAW_MITO_LAFILTERMITO_MAXRLEN})!")
+    	exit(1)
+	fi
+	
+	if [[ -n ${RAW_MITO_LAFILTERMITO_UTIPS} && ${RAW_MITO_LAFILTERMITO_UTIPS} -gt 0 ]]
+    then
+        MITO_LAFILTERMITO_OPT="${MITO_LAFILTERMITO_OPT} -u ${RAW_MITO_LAFILTERMITO_UTIPS}"
+    fi
+	
+	if [[ -n ${RAW_MITO_LAFILTERMITO_MAXGAPLEN} && ${RAW_MITO_LAFILTERMITO_MAXGAPLEN} -gt 0 ]]
+    then
+        MITO_LAFILTERMITO_OPT="${MITO_LAFILTERMITO_OPT} -g ${RAW_MITO_LAFILTERMITO_MAXGAPLEN}"
+    fi
+
+	if [[ -n ${RAW_MITO_LAFILTERMITO_MAXOVH} && ${RAW_MITO_LAFILTERMITO_MAXOVH} -gt 0 ]]
+    then
+        MITO_LAFILTERMITO_OPT="${MITO_LAFILTERMITO_OPT} -o ${RAW_MITO_LAFILTERMITO_MAXOVH}"
+    fi
+	
+	if [[ -n ${RAW_MITO_LAFILTERMITO_PERCCOVLEN} && ${RAW_MITO_LAFILTERMITO_PERCCOVLEN} -gt 0 ]]
+    then
+        MITO_LAFILTERMITO_OPT="${MITO_LAFILTERMITO_OPT} -c ${RAW_MITO_LAFILTERMITO_PERCCOVLEN}"
+    fi   
+}
+
+myTypes=("1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito")
 if [[ ${RAW_MITO_TYPE} -eq 0 ]]
 then 
     ### 1-mitoPrepareInput
@@ -192,8 +243,8 @@ then
 			fi
 	        	
         	echo "${NUMACTL}${MARVEL_PATH}/bin/daligner${MITO_DALIGNER_OPT} -A ${RAW_DB%.db}.${rawblocks} ${RAW_DB%.db}.${x}"        	
-		done > mito_02_daligner_block_${RAW_DB%.db}.${slurmID}.plan
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_02_daligner_block_${RAW_DB%.db}.${slurmID}.version
+		done > mito_02_mitodaligner_block_${RAW_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_02_mitodaligner_block_${RAW_DB%.db}.${slurmID}.version
 	### 3-LAmerge
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -207,14 +258,33 @@ then
         setDalignerOptions
         
         ### create LAmerge commands 
-    	echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mito.las $(getSubDirName ${RAW_MITO_DALIGNER_RUNID} ${rawblocks})" > mito_03_LAmerge_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mito.las $(getSubDirName ${RAW_MITO_DALIGNER_RUNID} ${rawblocks})" > mito_03_mitoLAmerge_single_${RAW_DB%.db}.${slurmID}.plan
     	      
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_03_LAmerge_single_${RAW_DB%.db}.${slurmID}.version                      	    	     
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_03_mitoLAmerge_single_${RAW_DB%.db}.${slurmID}.version                      	    	     
     else
         (>&2 echo "step ${currentStep} in RAW_MITO_TYPE ${RAW_MITO_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_MITO_TYPE}]}")
         exit 1            
-    fi    		
+    fi  
+	### 4-mitoLAfilterMito
+    elif [[ ${currentStep} -eq 4 ]]
+    then
+		### clean up plans 
+        for x in $(ls mito_04_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+    	setLAfilterMitoOptions
+        
+        ### create LAmerge commands 
+    	echo "${MARVEL_PATH}/bin/LAfilterMito${MITO_LAFILTERMITO_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mito.las ${RAW_DB%.db}.${rawblocks}.mitoHits.las" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.plan    	      
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.version                      	    	     
+    else
+        (>&2 echo "step ${currentStep} in RAW_MITO_TYPE ${RAW_MITO_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${RAW_MITO_TYPE}]}")
+        exit 1            
+    fi   		
 else
     (>&2 echo "unknown RAW_MITO_TYPE ${RAW_MITO_TYPE}")
     (>&2 echo "supported types")
