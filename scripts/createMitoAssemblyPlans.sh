@@ -261,12 +261,7 @@ then
     	echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mito.las $(getSubDirName ${RAW_MITO_DALIGNER_RUNID} ${rawblocks})" > mito_03_mitoLAmerge_single_${RAW_DB%.db}.${slurmID}.plan
     	      
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_03_mitoLAmerge_single_${RAW_DB%.db}.${slurmID}.version                      	    	     
-    else
-        (>&2 echo "step ${currentStep} in RAW_MITO_TYPE ${RAW_MITO_TYPE} not supported")
-        (>&2 echo "valid steps are: ${myTypes[${RAW_MITO_TYPE}]}")
-        exit 1            
-    fi  
-	### 4-mitoLAfilterMito
+    ### 4-mitoLAfilterMito
     elif [[ ${currentStep} -eq 4 ]]
     then
 		### clean up plans 
