@@ -387,7 +387,7 @@ then
       
       	echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.version  
     ### 7-FBstatistics
-    elif [[ ${currentStep} -eq 6 ]]
+    elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
         for x in $(ls freebayes_07_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
