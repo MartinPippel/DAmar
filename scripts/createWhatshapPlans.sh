@@ -74,7 +74,7 @@ function setSamtoolsOptions()
 }
 
 ## type-1: Pacbio and 10x Genomcis reads 
-myTypes=("1-WHprepareInput, 2-WHminimap2PacBio, 3-")
+myTypes=("1-WHprepareInput, 2-WHminimap2PacBio, 3-WHPacBioBamSplitByRef, 4-WHPacBioBamSeparate, 5-WHPacBioBamMerge")
 if [[ ${CT_WHATSHAP_TYPE} -eq 0 ]]
 then 
     ### 1-WHprepareInput
@@ -152,9 +152,9 @@ then
         	exit 1
         fi
        
-        if [[ ! -f ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta}).fai ]]
+        if [[ ! -f ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA}).fai ]]
         then
-        	(>&2 echo "ERROR - Variable reference index not found: ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta}).fai")
+        	(>&2 echo "ERROR - Variable reference index not found: ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA}).fai")
         	exit 1
         fi
                         
@@ -178,7 +178,7 @@ then
 		
 		ref="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta})"
 				
-        for x in ${CT_PURGEHAPLOTIGS_PACBIOFASTA}/*.subreads.fa.gz   		
+        for x in ${CT_WHATSHAP_READS_PACBIO}/*.subreads.fa.gz   		
    		do
         	name=$(basename ${x%.subreads.fa.gz})
         	echo "minimap2 -a -x map-pb -R \"@RG\tID:${name}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:PACBIO\tPU:none\" -t ${CT_WHATSHAP_MINIMAP2ALNTHREADS} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/${ref}.idx ${x} | samtools view -h - | samtools sort -@ ${CT_WHATSHAP_SAMTOOLSTHREADS} -m ${CT_WHATSHAP_SAMTOOLSMEM}G -o ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${ref}_${name}_minimap2.sort.bam -T /tmp/${ref}_${name}_minimap2.sort.tmp && samtools index -@ ${CT_WHATSHAP_SAMTOOLSTHREADS} ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${ref}_${name}_minimap2.sort.bam"        	
@@ -188,8 +188,95 @@ then
 	### 3-WHPacBioBamSplitByRef
     elif [[ ${currentStep} -eq 3 ]]
     then
+    	### clean up plans 
+        for x in $(ls whatshap_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        ### some sanity checks
+        if [[ ! -f ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA}).fai ]]
+        then
+        	(>&2 echo "ERROR - Variable reference index not found: ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta}).fai")
+        	exit 1
+        fi
+        
+        ref="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA%.fasta})"
+        
+        for x in ${CT_WHATSHAP_READS_PACBIO}/*.subreads.fa.gz   		
+   		do
+        	name=$(basename ${x%.subreads.fa.gz})
+        	if [[ ! -f ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${ref}_${name}_minimap2.sort.bam ]]
+        	then 
+        		(>&2 echo "ERROR - missing file ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${ref}_${name}_minimap2.sort.bam!")
+        		(>&2 echo "        Does previous job WHPacBioMinimap2 finished properly?")
+	       		exit 1	
+        	fi        	
+		done 
+                		
+		for x in ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${ref}_*_minimap2.sort.bam   		
+   		do
+        	echo "bamtools split -in  ${x} -reference"			   			   		
+		done > whatshap_03_WHPacBioBamSplitByRef_block_${CONT_DB}.${slurmID}.plan
+		echo "$(${PACBIO_BASE_ENV} && bamtools --version | grep bamtools && ${PACBIO_BASE_ENV_DEACT})" > whatshap_03_WHPacBioBamSplitByRef_block_${CONT_DB}.${slurmID}.version
+	### 4-WHPacBioBamSeparate 
+    elif [[ ${currentStep} -eq 4 ]]
+    then
+        ### clean up plans 
+        for x in $(ls whatshap_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        refIdx="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA}).fai"
+        
+	    if [[ ! -f ${refIdx} ]]
+	    then 
+	    	(>&2 echo "ERROR - missing file ${refIdx}")
+	       	exit 1
+	    fi
+	    
+		echo "for x in \$(awk '{print \$1}' ${refIdx}); do mkdir -p ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/\$x; mv ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/*.REF_\${x}.bam ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/\${x}; find \$(pwd)/${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/\${x} -name \"*.bam\" > ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/\${x}/in.fof; done" > whatshap_04_WHPacBioBamSeparate_block_${CONT_DB}.${slurmID}.plan	    
+	### 5-WHPacBioBamMerge 
+    elif [[ ${currentStep} -eq 5 ]]
+    then
+        ### clean up plans 
+        for x in $(ls whatshap_05_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        refIdx="${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/ref/$(basename ${CT_WHATSHAP_REFFASTA}).fai"
+        
+	    if [[ ! -f ${refIdx} ]]
+	    then 
+	    	(>&2 echo "ERROR - missing file ${refIdx}")
+	       	exit 1
+	    fi
+	            	    
+		# sanity checks
+   		numFiles=0 
+   		for x in $(awk '{print $1}' ${refIdx})   		
+   		do
+   			if [[ ! -f ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${x}/in.fof || ! -s ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${x}/in.fof ]]
+   			then
+   				(>&2 echo "WARNING - file ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${x}/in.fof not available or empty")
+   			else
+   				numFiles=$((${numFiles}+1))
+   			fi      						
+   		done
 
-                	   						
+		if [[ ${numFiles} -eq 0 ]]
+		then
+			(>&2 echo "ERROR - no splitted reference based alignment bam files found")
+	       	exit 1	
+		fi
+		
+		for x in $(awk '{print $1}' ${refIdx})   		
+   		do
+   			echo "bamtools merge -list ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${x}/in.fof -out ${CT_WHATSHAP_OUTDIR}/whatshap_${CT_WHATSHAP_RUNID}/pb_bams/${x}/ALL_${x}.bam"
+		done > whatshap_05_WHPacBioBamMerge_block_${CONT_DB}.${slurmID}.plan
+		echo "$(${PACBIO_BASE_ENV} && bamtools --version | grep bamtools && ${PACBIO_BASE_ENV_DEACT})" > whatshap_05_WHPacBioBamMerge_block_${CONT_DB}.${slurmID}.version    	
     else
         (>&2 echo "step ${currentStep} in CT_WHATSHAP_TYPE ${CT_WHATSHAP_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_WHATSHAP_TYPE}]}")
