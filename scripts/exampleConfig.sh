@@ -66,7 +66,7 @@ MITO_DIR="mitochondrion"
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -1 - mitochondrium assembly <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-# type-0 steps [1-3]: 1-mitoPrepareInput, 2-daligner, 3-LAmerge
+# type-0 steps [1-3]: 1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito
 RAW_MITO_TYPE=0
 
 RAW_MITO_SUBMIT_SCRIPTS_FROM=1
