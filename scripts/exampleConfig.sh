@@ -182,9 +182,9 @@ CT_HIC_SUBMIT_SCRIPTS_TO=6
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - Whatshap phasing  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 CT_WHATSHAP_TYPE=0
-# Type: 0 steps: 1-WHprepareInput, 2-WHminimap2PacBio, 3-inProgress 
+# Type: 0 steps: 1-WHprepareInput, 2-WHminimap2PacBio, 3-WHPacBioBamSplitByRef, 4-WHPacBioBamSeparate, 5-WHPacBioBamMerge, in progress 
 CT_WHATSHAP_SUBMIT_SCRIPTS_FROM=1
-CT_WHATSHAP_SUBMIT_SCRIPTS_TO=2
+CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 
 # ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
@@ -847,4 +847,14 @@ TIME_HICbwa=24:00:00
 THREADS_HICmarkduplicates=${CT_HIC_SAMTOOLS_THREADS}
 MEM_HICmarkduplicates=$((${CT_HIC_SAMTOOLS_THREADS}*${CT_HIC_SAMTOOLS_MEM}*1024+${CT_HIC_PICARD_XMS}*1024))     
 TIME_HICmarkduplicates=24:00:00
+
+########### WHATSHAP pipeline
+THREADS_WHprepareInput=1
+MEM_WHprepareInput=46000	     
+TIME_WHprepareInput=24:00:00
+
+THREADS_WHPacBioMinimap2=${CT_WHATSHAP_MINIMAP2ALNTHREADS}
+MEM_WHPacBioMinimap2=$((${CT_WHATSHAP_MINIMAP2ALNTHREADS}*4096))     
+TIME_WHPacBioMinimap2=24:00:00
+
 
