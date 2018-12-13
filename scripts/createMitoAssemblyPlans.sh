@@ -195,7 +195,7 @@ function setLAfilterMitoOptions()
     fi   
 }
 
-myTypes=("1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito")
+myTypes=("1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito, 5-mitoPrepareMitoHitDB")
 if [[ ${RAW_MITO_TYPE} -eq 0 ]]
 then 
     ### 1-mitoPrepareInput
@@ -272,9 +272,49 @@ then
         
     	setLAfilterMitoOptions
         
-        ### create LAmerge commands 
+    ### create LAfilterMito commands 
     	echo "${MARVEL_PATH}/bin/LAfilterMito${MITO_LAFILTERMITO_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mito.las ${RAW_DB%.db}.${rawblocks}.mitoHits.las" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.plan    	      
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.version                      	    	     
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.version
+    ### 5-mitoPrepareMitoHitDB 
+	elif [[ ${currentStep} -eq 5 ]]
+    then
+		### clean up plans 
+        for x in $(ls mito_05_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        ### cleanup previous run if available
+        timeStamp=$(date '+%Y-%m-%d_%H-%M-%S')
+        if [[ -f ${RAW_DB%.db}.${rawblocks}.mitoHits.readids ]]
+        then
+        	mv ${RAW_DB%.db}.${rawblocks}.mitoHits.readids ${timeStamp}_${RAW_DB%.db}.${rawblocks}.mitoHits.readids
+    	fi
+    	if [[ -f ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta ]]
+        then
+        	mv ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta ${timeStamp}_${RAW_DB%.db}.${rawblocks}.mitoHits.fasta	
+    	fi
+    	if [[ -f ${PROJECT_ID}_MITO.db ]]
+    	then
+    		mv ${PROJECT_ID}_MITO.db ${timeStamp}_${PROJECT_ID}_MITO.db
+    		for x in .${PROJECT_ID}_MITO.*
+    		do
+    			if [[ -f ${x} ]]
+    			then
+    				mv ${x} ${timeStamp}_${x}
+    			fi
+    		done
+    	fi    	
+                
+        ### pull out read IDs
+		echo "${MARVEL_PATH}/bin/LAshow -r ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mitoHits.las | awk '{print \$2}' | sort -n -u > ${RAW_DB%.db}.${rawblocks}.mitoHits.readids" > mito_05_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${MARVEL_PATH}/bin/DBshow ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mitoHits.readids > ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta" >> mito_05_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${MARVEL_PATH}/bin/FA2db -v -x0 ${PROJECT_ID}_MITO ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta" >> mito_05_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${MARVEL_PATH}/bin/DBsplit ${PROJECT_ID}_MITO" >> mito_05_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan        
+        
+    	echo "${MARVEL_PATH}/bin/LAfilterMito${MITO_LAFILTERMITO_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mito.las ${RAW_DB%.db}.${rawblocks}.mitoHits.las" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.plan    	      
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.version
+                             	    	     
     else
         (>&2 echo "step ${currentStep} in RAW_MITO_TYPE ${RAW_MITO_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_MITO_TYPE}]}")
