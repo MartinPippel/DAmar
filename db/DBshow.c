@@ -718,8 +718,9 @@ int main(int argc, char *argv[])
 							s = seqID_anno[i] / sizeof(track_data);
 							f = seqID_anno[i + 1] / sizeof(track_data);
 							if (s < f)
-
 								printf(">%s_%d_%d_%d", flist[map], seqID_data[s], i, len);
+							else  // fall back if seqID is empty for corresponding reads
+								printf(">%s_%d_%d_%d", flist[map], -1, i, len);
 						}
 						else
 						{
