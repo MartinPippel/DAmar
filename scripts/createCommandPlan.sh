@@ -31,6 +31,14 @@ then
 	        exit 1	
 		fi		
 		cp ${DB_PATH}/${RAW_DB%db}.db ${DB_PATH}/.${RAW_DB%db}.idx ${DB_PATH}/.${RAW_DB%db}.bps .
+		if [[ -f ${DB_PATH}/.${RAW_DB%db}.pacbio.anno && -f ${DB_PATH}/.${RAW_DB%db}.pacbio.data ]]
+		then 
+			cp 	${DB_PATH}/.${RAW_DB%db}.pacbio.anno ${DB_PATH}/.${RAW_DB%db}.pacbio.data .
+		fi
+		if [[ -f ${DB_PATH}/.${RAW_DB%db}.seqID.anno && -f ${DB_PATH}/.${RAW_DB%db}.seqID.data ]]
+		then 
+			cp 	${DB_PATH}/.${RAW_DB%db}.seqID.anno ${DB_PATH}/.${RAW_DB%db}.seqID.data .
+		fi
 	fi		
     ${SUBMIT_SCRIPTS_PATH}/createMitoAssemblyPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
