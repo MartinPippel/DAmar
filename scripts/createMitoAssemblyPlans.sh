@@ -581,18 +581,18 @@ then
         done
         
         ## sanity check 
-        if [[ ! -f ${PROJECT_ID}_MITO_FIX.fasta ]]
+        if [[ ! -f ${PROJECT_ID}_MITO_FIX_M.fasta ]]
         then
-        	(>&2 echo "Patched mito reads not available: ${PROJECT_ID}_MITO_FIX.fasta")
+        	(>&2 echo "Patched mito reads not available: ${PROJECT_ID}_MITO_FIX_M.fasta")
         	exit 1
     	fi
                
         ### cleanup previous run if available
         timeStamp=$(date '+%Y-%m-%d_%H-%M-%S')
-    	if [[ -f ${PROJECT_ID}_MITO_FIX.db ]]
+    	if [[ -f ${PROJECT_ID}_MITO_FIX_M.db ]]
     	then
-    		mv ${PROJECT_ID}_MITO_FIX.db ${timeStamp}_${PROJECT_ID}_MITO_FIX.db
-    		for x in .${PROJECT_ID}_MITO_FIX.*
+    		mv ${PROJECT_ID}_MITO_FIX_M.db ${timeStamp}_${PROJECT_ID}_MITO_FIX_M.db
+    		for x in .${PROJECT_ID}_MITO_FIX_M.*
     		do
     			if [[ -f ${x} ]]
     			then
