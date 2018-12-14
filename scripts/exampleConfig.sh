@@ -66,11 +66,11 @@ MITO_DIR="mitochondrion"
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -1 - mitochondrium assembly <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-# type-0 steps [1-3]: 1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito, 5-mitoPrepareMitoHitDB
+# type-0 steps [1-15]: 1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito, 5-mitoPrepareMitoHitDB, 6-mitoHitDBdaligner, 7-mitoHitDBLAmerge, 8-mitoHitDBLAq, 9-mitoHitDBLAfilter, 10-mitoHitDBLAcorrect, 11-mitoPrepareMitoHitCorDB, 12-mitoHitCorDBdaligner, 13-mitoHitCorDBLAmerge, 14-mitoHitCorDBLAq 15-mitoHitCorDBLAfilter
 RAW_MITO_TYPE=0
 
 RAW_MITO_SUBMIT_SCRIPTS_FROM=1
-RAW_MITO_SUBMIT_SCRIPTS_TO=5
+RAW_MITO_SUBMIT_SCRIPTS_TO=15
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase 0 - DAScover <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -207,6 +207,23 @@ RAW_MITO_LAFILTERMITO_UTIPS=1500 		## maximum number of unaligned bases of first
 RAW_MITO_LAFILTERMITO_MAXOVH=25			## maximum number of bases, that neighboring alignments of an alignment chain can overlap
 RAW_MITO_LAFILTERMITO_MAXGAPLEN=1000	## maximum number of bases, that neighboring alignments of an alignment chain can be separated
 RAW_MITO_LAFILTERMITO_PERCCOVLEN=75		## minimum base percentage [50,100], that an alignemnt chain must cover of a read   
+#LAq 
+RAW_MITO_LAQ_QTRIMCUTOFF=25
+RAW_MITO_LAQ_MINSEG=2
+### LAfilter
+RAW_MITO_LAFILTER_VERBOSE=1
+RAW_MITO_LAFILTER_PURGE=1
+#RAW_MITO_LAFILTER_OLEN=1000
+#RAW_MITO_LAFILTER_RLEN=4000
+#RAW_MITO_LAFILTER_DIF=20
+RAW_MITO_LAFILTER_UBAS=0
+#RAW_MITO_LAFILTER_MINTIPCOV=5
+#RAW_MITO_LAFILTER_MULTIMAPPER=2
+#RAW_MITO_LAFILTER_REMPERCWORSTALN=20
+#RAW_MITO_LAFILTER_EXCLUDEREADS=blacklist.txt
+#RAW_MITO_LAFILTER_STITCH=100
+#RAW_MITO_LAFILTER_STITCH_AGG=0
+RAW_MITO_LAFILTER_TRIM=1
 
 # ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 

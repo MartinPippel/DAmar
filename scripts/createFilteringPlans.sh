@@ -369,7 +369,7 @@ function setLAfilterOptions()
     else
         (>&2 echo "step ${currentStep} in FIX_FILT_SCRUB_TYPE ${FIX_FILT_SCRUB_TYPE} not supported")
         exit 1
-fi
+	fi
 }
 
 function setTKmergeOptions() 

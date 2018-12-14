@@ -305,7 +305,7 @@ then
 		cat ${fname} > ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta
 		gzip -c ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta > ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fa.gz
 		cat ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.stats
-		cp ${config} ${freebayesPath}/$(date '+%Y-%m-%d_%H-%M-%S')_${config}
+		cp ${config} ${freebayesPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$((basename ${config}))
 	else
 		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} not available")
   		exit 1

@@ -104,13 +104,6 @@ function setDalignerOptions()
     then
         MITO_DALIGNER_OPT="${MITO_DALIGNER_OPT} -b"
     fi
-    if [[ -n ${RAW_MITO_DALIGNER_RUNID} ]]
-    then
-        MITO_DALIGNER_OPT="${MITO_DALIGNER_OPT} -r ${RAW_MITO_DALIGNER_RUNID}"
-	else
-		RAW_MITO_DALIGNER_RUNID=1
-		MITO_DALIGNER_OPT="${MITO_DALIGNER_OPT} -r ${RAW_MITO_DALIGNER_RUNID}"
-    fi
     if [[ -n ${RAW_MITO_DALIGNER_OLEN} ]]
     then
         MITO_DALIGNER_OPT="${MITO_DALIGNER_OPT} -l ${RAW_MITO_DALIGNER_OLEN}"
@@ -195,7 +188,128 @@ function setLAfilterMitoOptions()
     fi   
 }
 
-myTypes=("1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito, 5-mitoPrepareMitoHitDB")
+function setLAqOptions()
+{
+    MITO_LAQ_OPT=""
+    adaptQTRIMCUTOFF=""    
+
+    if [[ -n ${RAW_MITO_LAQ_MINSEG} && ${RAW_MITO_LAQ_MINSEG} -ne 0 ]]
+    then
+        MITO_LAQ_OPT="${MITO_LAQ_OPT} -s ${RAW_MITO_LAQ_MINSEG}"
+    else 
+        RAW_MITO_LAQ_MINSEG=25
+        MITO_LAQ_OPT="${MITO_LAQ_OPT} -s ${RAW_MITO_LAQ_MINSEG}"
+    fi
+
+    if [[ -n ${RAW_MITO_LAQ_QTRIMCUTOFF} && ${RAW_MITO_LAQ_QTRIMCUTOFF} -ne 0 ]]
+    then
+        if [[ -n ${RAW_MITO_DALIGNER_TRACESPACE} && ${RAW_MITO_DALIGNER_TRACESPACE} -ne 100 ]]
+        then 
+            adaptQTRIMCUTOFF=$(echo "${RAW_MITO_LAQ_QTRIMCUTOFF}*${RAW_MITO_DALIGNER_TRACESPACE}/100+1" | bc)
+            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"
+        else
+            adaptQTRIMCUTOFF=${RAW_MITO_LAQ_QTRIMCUTOFF}
+            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
+        fi
+    else 
+        if [[ -n ${RAW_MITO_DALIGNER_TRACESPACE} && ${RAW_MITO_DALIGNER_TRACESPACE} -ne 100 ]]
+        then 
+            RAW_MITO_LAQ_QTRIMCUTOFF=25
+            adaptQTRIMCUTOFF=$(echo "${RAW_MITO_LAQ_QTRIMCUTOFF}*${RAW_MITO_DALIGNER_TRACESPACE}/100+1" | bc)
+            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"
+        else
+            adaptQTRIMCUTOFF=25
+            RAW_MITO_LAQ_QTRIMCUTOFF=25
+            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
+        fi
+    fi
+}
+
+function setLAfilterOptions()
+{
+    MITO_LAFILTER_OPT=""
+    	    
+    if [[ -n ${RAW_MITO_LAFILTER_VERBOSE} && ${RAW_MITO_LAFILTER_VERBOSE} -ne 0 ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -v"
+    fi
+    
+    if [[ -n ${RAW_MITO_LAFILTER_PURGE} && ${RAW_MITO_LAFILTER_PURGE} -ne 0 ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -p"
+    fi
+
+    if [[ -n ${RAW_MITO_LAFILTER_OLEN} && ${RAW_MITO_LAFILTER_OLEN} -ne 0 ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -o ${RAW_MITO_LAFILTER_OLEN}"
+    fi    
+
+    if [[ -n ${RAW_MITO_LAFILTER_RLEN} && ${RAW_MITO_LAFILTER_RLEN} -ne 0 ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -l ${RAW_MITO_LAFILTER_RLEN}"
+    fi   
+
+    if [[ -n ${RAW_MITO_LAFILTER_DIF} && ${RAW_MITO_LAFILTER_DIF} -ne 0 ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -d ${RAW_MITO_LAFILTER_DIF}"
+    fi
+
+    if [[ -n ${RAW_MITO_LAFILTER_UBAS} ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -u ${RAW_MITO_LAFILTER_UBAS}"
+    fi
+
+    if [[ -n ${RAW_MITO_LAFILTER_PRELOAD} && ${RAW_MITO_LAFILTER_PRELOAD} -ne 0 ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -L"
+    fi    
+
+    if [[ -n ${RAW_MITO_LAFILTER_MINTIPCOV} && ${RAW_MITO_LAFILTER_MINTIPCOV} -gt 0 ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -z ${RAW_MITO_LAFILTER_MINTIPCOV}"
+    fi            
+
+    if [[ -n ${RAW_MITO_LAFILTER_MULTIMAPPER} && ${RAW_MITO_LAFILTER_MULTIMAPPER} -gt 0 ]]
+    then
+        if [[ ${RAW_MITO_LAFILTER_MULTIMAPPER} -eq 1 ]]
+        then
+            MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -w"
+        else
+            MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -W"
+        fi
+    fi
+
+    if [[ -n ${RAW_MITO_LAFILTER_REMPERCWORSTALN} && ${RAW_MITO_LAFILTER_REMPERCWORSTALN} -gt 0 ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -Z ${RAW_MITO_LAFILTER_REMPERCWORSTALN}"
+    fi
+                    
+    if [[ -n ${RAW_MITO_LAFILTER_EXCLUDEREADS} ]]
+    then
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -x ${RAW_MITO_LAFILTER_EXCLUDEREADS}"
+    fi    
+
+    if [[ -n ${RAW_MITO_LAFILTER_STITCH} && ${RAW_MITO_LAFILTER_STITCH} -gt 0 ]]
+    then
+        if [[ -n ${RAW_MITO_LAFILTER_STITCH_AGG} && ${RAW_MITO_LAFILTER_STITCH_AGG} -gt 0 ]]
+        then
+            MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -S ${RAW_MITO_LAFILTER_STITCH}"
+        else
+            MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -s ${RAW_MITO_LAFILTER_STITCH}"
+        fi
+    fi
+    
+    if [[ -n ${RAW_MITO_LAFILTER_TRIM} && ${RAW_MITO_LAFILTER_TRIM} -ne 0 ]]
+    then
+        if [[ -z ${MITO_LAQ_OPT} ]]
+        then 
+            setLAqOptions
+        fi
+    fi
+fi
+}
+
+myTypes=("1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito, 5-mitoPrepareMitoHitDB, 6-mitoHitDBdaligner, 7-mitoHitDBLAmerge, 8-mitoHitDBLAq, 9-mitoHitDBLAfilter, 10-mitoHitDBLAcorrect, 11-mitoPrepareMitoHitCorDB, 12-mitoHitCorDBdaligner, 13-mitoHitCorDBLAmerge, 14-mitoHitCorDBLAq 15-mitoHitCorDBLAfilter")
 if [[ ${RAW_MITO_TYPE} -eq 0 ]]
 then 
     ### 1-mitoPrepareInput
@@ -226,6 +340,16 @@ then
                     
         setDalignerOptions
         
+        #cleanup previous runs
+        timeStamp=$(date '+%Y-%m-%d_%H-%M-%S')
+        for x in d000_?????
+        do
+        	if [[ -d ${x} ]]
+        	then
+        		mv ${x} ${timeStamp}_${x}
+        	fi	
+    	done        
+        
         for x in $(seq 1 $((${rawblocks}-1)))
         do
         	### todo get this from a config file or derive it directly from the system 
@@ -242,7 +366,8 @@ then
 			    NUMACTL=""
 			fi
 	        	
-        	echo "${NUMACTL}${MARVEL_PATH}/bin/daligner${MITO_DALIGNER_OPT} -A ${RAW_DB%.db}.${rawblocks} ${RAW_DB%.db}.${x}"        	
+	        ## by default run in asymmetric mode and run_id 0 
+        	echo "${NUMACTL}${MARVEL_PATH}/bin/daligner${MITO_DALIGNER_OPT} -A -r 0 ${RAW_DB%.db}.${rawblocks} ${RAW_DB%.db}.${x}"        	
 		done > mito_02_mitodaligner_block_${RAW_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_02_mitodaligner_block_${RAW_DB%.db}.${slurmID}.version
 	### 3-LAmerge
@@ -254,13 +379,9 @@ then
             rm $x
         done
         
-		### call daligner options to ensure that variable RAW_MITO_DALIGNER_RUNID is set (even its not specified in the config file)
-        setDalignerOptions
-        
-        ### create LAmerge commands 
-    	echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mito.las $(getSubDirName ${RAW_MITO_DALIGNER_RUNID} ${rawblocks})" > mito_03_mitoLAmerge_single_${RAW_DB%.db}.${slurmID}.plan
-    	      
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_03_mitoLAmerge_single_${RAW_DB%.db}.${slurmID}.version                      	    	     
+		### create LAmerge commands 
+    	echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mito.las $(getSubDirName 0 ${rawblocks})" > mito_03_mitoLAmerge_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_03_mitoLAmerge_single_${RAW_DB%.db}.${slurmID}.version                      	    	     
     ### 4-mitoLAfilterMito
     elif [[ ${currentStep} -eq 4 ]]
     then
@@ -312,9 +433,248 @@ then
 		echo "${MARVEL_PATH}/bin/FA2db -v -x0 ${PROJECT_ID}_MITO ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta" >> mito_05_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${MARVEL_PATH}/bin/DBsplit ${PROJECT_ID}_MITO" >> mito_05_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan        
         
-    	echo "${MARVEL_PATH}/bin/LAfilterMito${MITO_LAFILTERMITO_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mito.las ${RAW_DB%.db}.${rawblocks}.mitoHits.las" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.plan    	      
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.version
-                             	    	     
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_04_mitoLAfilterMito_single_${RAW_DB%.db}.${slurmID}.version
+    ### 6-mitoHitDBdaligner
+    elif [[ ${currentStep} -eq 6 ]]
+    then
+		### clean up plans 
+        for x in $(ls mito_06_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done   
+        
+        setDalignerOptions
+        
+        #cleanup previous runs
+        timeStamp=$(date '+%Y-%m-%d_%H-%M-%S')
+        for x in d001_?????
+        do
+        	if [[ -d ${x} ]]
+        	then
+        		mv ${x} ${timeStamp}_${x}
+        	fi	
+    	done        
+        
+        mitoblocks=$(getNumOfDbBlocks ${PROJECT_ID}_MITO.db)
+        
+        for x in $(seq 1 ${mitoblocks})
+        do
+        	### todo get this from a config file or derive it directly from the system 
+        	### for now this is valid the MPI batch and gpu partition
+	        if [[ -n ${RAW_MITO_DALIGNER_NUMACTL} && ${RAW_MITO_DALIGNER_NUMACTL} -gt 0 ]]
+			then
+			    if [[ $((${x} % 2)) -eq  0 ]]
+			    then
+			        NUMACTL="numactl -m0 -N0 "
+			    else
+			        NUMACTL="numactl -m1 -N1 "    
+			    fi
+			else
+			    NUMACTL=""
+			fi
+	        	
+	        ## by default run_id 1
+	        jobs=""
+	    	for y in $(seq ${x} ${mitoblocks})
+	    	do
+	    		jobs="${jobs} ${PROJECT_ID}_MITO.${y}"
+	    	done 
+        	echo "${NUMACTL}${MARVEL_PATH}/bin/daligner${MITO_DALIGNER_OPT} -r 1 ${PROJECT_ID}_MITO.${x}${jobs}"
+        	        	
+		done > mito_06_mitoHitDBdaligner_block_${RAW_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_06_mitoHitDBdaligner_block_${RAW_DB%.db}.${slurmID}.version
+    ### 7-mitoHitDBLAmerge
+    elif [[ ${currentStep} -eq 7 ]]
+    then    
+        ### clean up plans 
+        for x in $(ls mito_07_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        mitoblocks=$(getNumOfDbBlocks ${PROJECT_ID}_MITO.db)
+        jobs=""
+    	for x in $(seq 1 ${mitoblocks})
+    	do
+    		jobs="${jobs} $(getSubDirName 1 ${x})"
+    	done
+        
+        ### create LAmerge commands 
+    	echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.las${jobs}" > mito_07_mitoHitDBLAmerge_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_07_mitoHitDBLAmerge_single_${RAW_DB%.db}.${slurmID}.version
+    ### 8-mitoHitDBLAq
+    elif [[ ${currentStep} -eq 8 ]]
+    then    
+        ### clean up plans 
+        for x in $(ls mito_08_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        ### find and set LAq options 
+        setLAqOptions
+        
+        echo "${MARVEL_PATH}/bin/LAq${MITO_LAQ_OPT} -T trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -Q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.las"  > mito_08_mitoHitDBLAq_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_08_mitoHitDBLAq_single_${RAW_DB%.db}.${slurmID}.version
+    ### 9-mitoHitDBLAfilter
+    elif [[ ${currentStep} -eq 9 ]]
+    then    
+        ### clean up plans 
+        for x in $(ls mito_09_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+    	setLafilterOptions
+    	
+    	echo "${MARVEL_PATH}/bin/LAfilter${MITO_LAFILTER_OPT} ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.las ${PROJECT_ID}_MITO.filt.las" > mito_09_mitoHitDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_09_mitoHitDBLAfilter_single_${RAW_DB%.db}.${slurmID}.version
+    ### 10-mitoHitDBLAcorrect
+    elif [[ ${currentStep} -eq 10 ]]
+    then    
+        ### clean up plans 
+        for x in $(ls mito_10_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        setLAqOptions
+        
+        echo "${MARVEL_PATH}/bin/LAcorrect$ -v -j1 -q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.filt.las ${PROJECT_ID}_MITO.corrected" > mito_10_mitoHitDBLAcorrect_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_10_mitoHitDBLAcorrect_single_${RAW_DB%.db}.${slurmID}.version
+    ### 11-mitoPrepareMitoHitCorDB
+    elif [[ ${currentStep} -eq 11 ]]
+    then    
+        ### clean up plans 
+        for x in $(ls mito_11_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        ## sanity check 
+        if [[ ! -f ${PROJECT_ID}_MITO.corrected.00.fasta ]]
+        then
+        	(>&2 echo "Corrected mito reads not available: ${PROJECT_ID}_MITO.corrected.00.fasta")
+        	exit 1
+    	fi
+        
+        
+        ### cleanup previous run if available
+        timeStamp=$(date '+%Y-%m-%d_%H-%M-%S')
+    	if [[ -f ${PROJECT_ID}_MITO_COR.db ]]
+    	then
+    		mv ${PROJECT_ID}_MITO_COR.db ${timeStamp}_${PROJECT_ID}_MITO_COR.db
+    		for x in .${PROJECT_ID}_MITO_COR.*
+    		do
+    			if [[ -f ${x} ]]
+    			then
+    				mv ${x} ${timeStamp}_${x}
+    			fi
+    		done
+    	fi    	
+                
+        ### pull out read IDs
+		echo "${MARVEL_PATH}/bin/FA2db -v -x0 ${PROJECT_ID}_MITO_COR ${PROJECT_ID}_MITO.corrected.00.fasta" > mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${MARVEL_PATH}/bin/DBsplit ${PROJECT_ID}_MITO" >> mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan        
+        
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version
+    ### 12-mitoHitCorDBdaligner
+    elif [[ ${currentStep} -eq 12 ]]
+    then    
+        ### clean up plans 
+        for x in $(ls mito_12_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        setDalignerOptions
+        
+        #cleanup previous runs
+        timeStamp=$(date '+%Y-%m-%d_%H-%M-%S')
+        for x in d002_?????
+        do
+        	if [[ -d ${x} ]]
+        	then
+        		mv ${x} ${timeStamp}_${x}
+        	fi	
+    	done        
+        
+        mitoblocks=$(getNumOfDbBlocks ${PROJECT_ID}_MITO_COR.db)
+        
+        for x in $(seq 1 ${mitoblocks})
+        do
+        	### todo get this from a config file or derive it directly from the system 
+        	### for now this is valid the MPI batch and gpu partition
+	        if [[ -n ${RAW_MITO_DALIGNER_NUMACTL} && ${RAW_MITO_DALIGNER_NUMACTL} -gt 0 ]]
+			then
+			    if [[ $((${x} % 2)) -eq  0 ]]
+			    then
+			        NUMACTL="numactl -m0 -N0 "
+			    else
+			        NUMACTL="numactl -m1 -N1 "    
+			    fi
+			else
+			    NUMACTL=""
+			fi
+	        	
+	        ## by default run_id 1
+	        jobs=""
+	    	for y in $(seq ${x} ${mitoblocks})
+	    	do
+	    		jobs="${jobs} ${PROJECT_ID}_MITO_COR.${y}"
+	    	done 
+        	echo "${NUMACTL}${MARVEL_PATH}/bin/daligner${MITO_DALIGNER_OPT} -r 2 ${PROJECT_ID}_MITO_COR.${x}${jobs}"
+        	        	
+		done > mito_12_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_12_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.version
+	### 13-mitoHitCorDBLAmerge
+    elif [[ ${currentStep} -eq 13 ]]
+    then    
+        ### clean up plans 
+        for x in $(ls mito_13_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        mitoblocks=$(getNumOfDbBlocks ${PROJECT_ID}_MITO_COR.db)
+        jobs=""
+    	for x in $(seq 1 ${mitoblocks})
+    	do
+    		jobs="${jobs} $(getSubDirName 2 ${x})"
+    	done
+        
+        ### create LAmerge commands 
+    	echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${PROJECT_ID}_MITO_COR ${PROJECT_ID}_MITO_COR.las${jobs}" > mito_13_mitoHitCorDBLAmerge_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_13_mitoHitCorDBLAmerge_single_${RAW_DB%.db}.${slurmID}.version
+    ### 14-mitoHitCorDBLAq
+    elif [[ ${currentStep} -eq 14 ]]
+    then    
+        ### clean up plans 
+        for x in $(ls mito_14_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        ### find and set LAq options 
+        setLAqOptions
+        
+        echo "${MARVEL_PATH}/bin/LAq${MITO_LAQ_OPT} -T trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -Q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_COR ${PROJECT_ID}_MITO_COR.las"  > mito_14_mitoHitCorDBLAq_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_14_mitoHitCorDBLAq_single_${RAW_DB%.db}.${slurmID}.version
+    ### 15-mitoHitCorDBLAfilter
+    elif [[ ${currentStep} -eq 15 ]]
+    then    
+        ### clean up plans 
+        for x in $(ls mito_15_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+    	setLafilterOptions
+    	
+    	echo "${MARVEL_PATH}/bin/LAfilter${MITO_LAFILTER_OPT} ${PROJECT_ID}_MITO_COR ${PROJECT_ID}_MITO_COR.las ${PROJECT_ID}_MITO_COR.filt.las" > mito_15_mitoHitCorDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_15_mitoHitCorDBLAfilter_single_${RAW_DB%.db}.${slurmID}.version
+            rm $x
+        done
     else
         (>&2 echo "step ${currentStep} in RAW_MITO_TYPE ${RAW_MITO_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_MITO_TYPE}]}")
