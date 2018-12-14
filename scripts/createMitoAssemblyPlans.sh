@@ -599,6 +599,18 @@ then
     				mv ${x} ${timeStamp}_${x}
     			fi
     		done
+    	fi
+    	
+    	if [[ -f ${PROJECT_ID}_MITO_FIX_D.db ]]
+    	then
+    		mv ${PROJECT_ID}_MITO_FIX_D.db ${timeStamp}_${PROJECT_ID}_MITO_FIX_D.db
+    		for x in .${PROJECT_ID}_MITO_FIX_D.*
+    		do
+    			if [[ -f ${x} ]]
+    			then
+    				mv ${x} ${timeStamp}_${x}
+    			fi
+    		done
     	fi    	
                 
         ### pull out read IDs
@@ -632,7 +644,7 @@ then
         
         setForcealignOptions        
                 
-        echo "${DACCORD_PATH}/bin/${MITO_FORCEALIGN_OPT} ${PROJECT_ID}_MITO_FIX_D ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.las" > mito_11_mitoHitFixDBforcealign_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${DACCORD_PATH}/bin/forcealign${MITO_FORCEALIGN_OPT} ${PROJECT_ID}_MITO_FIX_D ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.las" > mito_11_mitoHitFixDBforcealign_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "forcealign $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_11_mitoHitFixDBforcealign_single_${RAW_DB%.db}.${slurmID}.version	
 	### 12_mitoHitFixDBLAmerge 
     elif [[ ${currentStep} -eq 12 ]]
