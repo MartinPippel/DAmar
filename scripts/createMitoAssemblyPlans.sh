@@ -672,8 +672,6 @@ then
     	
     	echo "${MARVEL_PATH}/bin/LAfilter${MITO_LAFILTER_OPT} ${PROJECT_ID}_MITO_COR ${PROJECT_ID}_MITO_COR.las ${PROJECT_ID}_MITO_COR.filt.las" > mito_15_mitoHitCorDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_15_mitoHitCorDBLAfilter_single_${RAW_DB%.db}.${slurmID}.version
-            rm $x
-        done
     else
         (>&2 echo "step ${currentStep} in RAW_MITO_TYPE ${RAW_MITO_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_MITO_TYPE}]}")
