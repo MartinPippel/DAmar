@@ -6219,8 +6219,6 @@ void Write_Overlap_Buffer(Align_Spec *spec, char *dirName1, char *dirName2, char
 			exit(1);
 		}
 
-		assert(ablockID == bblockID);
-
 		if (ablockID > 0)
 			sprintf(path, "%s/%s.%d.%s.%d.las", dirName1, aroot, ablockID, broot, bblockID);
 		else
