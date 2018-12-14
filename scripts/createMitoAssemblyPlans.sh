@@ -529,6 +529,7 @@ then
     	setLAfilterOptions
     	
     	echo "${MARVEL_PATH}/bin/LAfilter${MITO_LAFILTER_OPT} ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.las ${PROJECT_ID}_MITO.filt.las" > mito_09_mitoHitDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "${MARVEL_PATH}/bin/LAshow -r ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.filt.las | awk '{print $1}' | uniq > ${PROJECT_ID}_MITO.filt.readIds.txt" >> mito_09_mitoHitDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_09_mitoHitDBLAfilter_single_${RAW_DB%.db}.${slurmID}.version
     ### 10-mitoHitDBLAcorrect
     elif [[ ${currentStep} -eq 10 ]]
@@ -541,7 +542,7 @@ then
         
         setLAqOptions
         
-        echo "${MARVEL_PATH}/bin/LAcorrect -v -j1 -q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.filt.las ${PROJECT_ID}_MITO.corrected" > mito_10_mitoHitDBLAcorrect_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/LAcorrect -v -j1 -r ${PROJECT_ID}_MITO.filt.readIds.txt -q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.filt.las ${PROJECT_ID}_MITO_COR" > mito_10_mitoHitDBLAcorrect_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_10_mitoHitDBLAcorrect_single_${RAW_DB%.db}.${slurmID}.version
     ### 11-mitoPrepareMitoHitCorDB
     elif [[ ${currentStep} -eq 11 ]]
@@ -575,7 +576,7 @@ then
     	fi    	
                 
         ### pull out read IDs
-		echo "${MARVEL_PATH}/bin/FA2db -v -x0 ${PROJECT_ID}_MITO_COR ${PROJECT_ID}_MITO.corrected.00.fasta" > mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${MARVEL_PATH}/bin/FA2db -v -x0 -c source -c correctionq -c postrace ${PROJECT_ID}_MITO_COR ${PROJECT_ID}_MITO_COR.00.fasta" > mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${MARVEL_PATH}/bin/DBsplit ${PROJECT_ID}_MITO" >> mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan        
         
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version
