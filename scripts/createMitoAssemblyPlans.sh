@@ -704,7 +704,7 @@ then
         ### find and set LAq options 
         setLAqOptions
         
-        echo "${MARVEL_PATH}/bin/LAq${MITO_LAQ_OPT} -T trim1_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -t trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.gap.las" > mito_15_mitoHitFixDBLAq_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/LAq${MITO_LAQ_OPT} -T trim1_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -t trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -u -q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.gap.las" > mito_15_mitoHitFixDBLAq_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_15_mitoHitFixDBLAq_single_${RAW_DB%.db}.${slurmID}.version        
 	### 16_mitoHitFixDBLAfilter 
     elif [[ ${currentStep} -eq 16 ]]
@@ -719,6 +719,7 @@ then
     	setLAfilterOptions
         
 		echo "${MARVEL_PATH}/bin/LAfilter${MITO_LAFILTER_OPT} -T -t trim1_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.gap.las ${PROJECT_ID}_MITO_FIX_M.filt.las" > mito_16_mitoHitFixDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "${MARVEL_PATH}/bin/LAshow -r ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.filt.las | awk '{print \$1}' | uniq > ${PROJECT_ID}_MITO_FIX_M.filt.readIds.txt" >> mito_16_mitoHitFixDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_16_mitoHitFixDBLAfilter_single_${RAW_DB%.db}.${slurmID}.version        
     ### 17_mitoHitFixDBLAcorrect 
     elif [[ ${currentStep} -eq 17 ]]
