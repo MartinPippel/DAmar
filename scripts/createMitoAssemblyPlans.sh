@@ -524,7 +524,7 @@ then
             rm $x
         done
         
-    	setLafilterOptions
+    	setLAfilterOptions
     	
     	echo "${MARVEL_PATH}/bin/LAfilter${MITO_LAFILTER_OPT} ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.las ${PROJECT_ID}_MITO.filt.las" > mito_09_mitoHitDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_09_mitoHitDBLAfilter_single_${RAW_DB%.db}.${slurmID}.version
