@@ -306,7 +306,6 @@ function setLAfilterOptions()
             setLAqOptions
         fi
     fi
-fi
 }
 
 myTypes=("1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito, 5-mitoPrepareMitoHitDB, 6-mitoHitDBdaligner, 7-mitoHitDBLAmerge, 8-mitoHitDBLAq, 9-mitoHitDBLAfilter, 10-mitoHitDBLAcorrect, 11-mitoPrepareMitoHitCorDB, 12-mitoHitCorDBdaligner, 13-mitoHitCorDBLAmerge, 14-mitoHitCorDBLAq 15-mitoHitCorDBLAfilter")
