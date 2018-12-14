@@ -299,12 +299,14 @@ function setLAfilterOptions()
         fi
     fi
     
-    if [[ -n ${RAW_MITO_LAFILTER_TRIM} && ${RAW_MITO_LAFILTER_TRIM} -ne 0 ]]
+	if [[ -n ${RAW_MITO_LAFILTER_TRIM} && ${RAW_MITO_LAFILTER_TRIM} -ne 0 ]] || [[ -n ${RAW_MITO_LAFILTER_UBAS} ]]
     then
         if [[ -z ${MITO_LAQ_OPT} ]]
         then 
             setLAqOptions
-        fi
+        fi               
+        
+        MITO_LAFILTER_OPT=${MITO_LAFILTER_OPT} -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -T" 
     fi
 }
 
