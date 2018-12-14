@@ -306,7 +306,7 @@ function setLAfilterOptions()
             setLAqOptions
         fi               
         
-        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG} -T" 
+        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -t trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -T" 
     fi
 }
 
