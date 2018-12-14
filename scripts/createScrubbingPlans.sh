@@ -460,13 +460,15 @@ function setLAgapOptions()
     then
         SCRUB_LAGAP_OPT="${SCRUB_LAGAP_OPT} -p"
     fi
+    
     if [[ -n ${FIX_SCRUB_LAGAP_TRIM} && ${FIX_SCRUB_LAGAP_TRIM} -ne 0 ]]
     then
         if [[ -z ${SCRUB_LAQ_OPT} ]]
         then
             setLAqOptions
         fi
-        SCRUB_LAGAP_OPT="${SCRUB_LAGAP_OPT} -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}"
+        ### should bet set within the plans
+        ###SCRUB_LAGAP_OPT="${SCRUB_LAGAP_OPT} -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}"
     fi
 
     if [[ -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
