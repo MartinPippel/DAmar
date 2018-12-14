@@ -662,8 +662,8 @@ then
         	exit 1	
     	fi                             
                 
-    	echo "${MARVEL_PATH}/bin/LAmerge ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.forcealign.las ${PROJECT_ID}_MITO_FIX_M_f.las ${PROJECT_ID}_MITO_FIX_M_r.las" > mito_12_mitoHitFixDBLAmerge_single_${RAW_DB%.db}.${slurmID}.plan
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_12_mitoHitFixLAmerge_single_${RAW_DB%.db}.${slurmID}.version
+    	echo "${DAZZLER_PATH}/bin/LAmerge -v ${PROJECT_ID}_MITO_FIX_M.forcealign.las ${PROJECT_ID}_MITO_FIX_M_f.las ${PROJECT_ID}_MITO_FIX_M_r.las" > mito_12_mitoHitFixDBLAmerge_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > mito_12_mitoHitFixLAmerge_single_${RAW_DB%.db}.${slurmID}.version
     ### 13_mitoHitFixDBLAq
     elif [[ ${currentStep} -eq 13 ]]
     then    
