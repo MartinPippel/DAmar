@@ -6219,14 +6219,12 @@ void Write_Overlap_Buffer(Align_Spec *spec, char *dirName1, char *dirName2, char
 			exit(1);
 		}
 
-		if (ablockID > 0 && bblockID > 0)
+		assert(ablockID == bblockID);
+
+		if (ablockID > 0)
 			sprintf(path, "%s/%s.%d.%s.%d.las", dirName1, aroot, ablockID, broot, bblockID);
-		else if (ablockID > 0)
-			sprintf(path, "%s/%s.%d.%s.las", dirName1, aroot, ablockID, broot);
-		else if (bblockID > 0)
-			sprintf(path, "%s.%s.%d.las", aroot, broot, bblockID);
 		else
-			sprintf(path, "%s.%s.las", aroot, broot);
+			sprintf(path, "%s.las", ablock);
 
 		FILE *out = fopen(path, "w");
 		if (out == NULL)
@@ -6272,22 +6270,22 @@ void Write_Overlap_Buffer(Align_Spec *spec, char *dirName1, char *dirName2, char
 			}
 			else
 			{
-				sprintf(path1, "%s/%s.%d.%s.las", dirName1, aroot, ablockID, broot);
-				sprintf(path2, "%s.%s.%d.las", broot, aroot, ablockID);
+				sprintf(path1, "%s/%s.%d.%s.las", dirName1, aroot, ablockID, bblock);
+				sprintf(path2, "%s.%s.%d.las", bblock, aroot, ablockID);
 			}
 		}
 		else
 		{
 			if (bblockID > 0)
 			{
-				sprintf(path1, "%s.%s.%d.las", aroot, broot, bblockID);
-				sprintf(path2, "%s/%s.%d.%s.las", dirName2, broot, bblockID, aroot);
+				sprintf(path1, "%s.%s.%d.las", ablock, broot, bblockID);
+				sprintf(path2, "%s/%s.%d.%s.las", dirName2, broot, bblockID, ablock);
 
 			}
 			else
 			{
-				sprintf(path1, "%s.%s.las", aroot, broot);
-				sprintf(path2, "%s.%s.las", broot, aroot);
+				sprintf(path1, "%s.%s.las", ablock, bblock);
+				sprintf(path2, "%s.%s.las", bblock, ablock);
 			}
 		}
 
