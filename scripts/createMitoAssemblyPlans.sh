@@ -541,7 +541,7 @@ then
         
         setLAqOptions
         
-        echo "${MARVEL_PATH}/bin/LAcorrect$ -v -j1 -q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.filt.las ${PROJECT_ID}_MITO.corrected" > mito_10_mitoHitDBLAcorrect_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/LAcorrect -v -j1 -q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO ${PROJECT_ID}_MITO.filt.las ${PROJECT_ID}_MITO.corrected" > mito_10_mitoHitDBLAcorrect_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_10_mitoHitDBLAcorrect_single_${RAW_DB%.db}.${slurmID}.version
     ### 11-mitoPrepareMitoHitCorDB
     elif [[ ${currentStep} -eq 11 ]]
