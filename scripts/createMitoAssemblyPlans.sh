@@ -577,7 +577,7 @@ then
                 
         ### pull out read IDs
 		echo "${MARVEL_PATH}/bin/FA2db -v -x0 -c source -c correctionq -c postrace ${PROJECT_ID}_MITO_COR ${PROJECT_ID}_MITO_COR.00.fasta" > mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
-		echo "${MARVEL_PATH}/bin/DBsplit ${PROJECT_ID}_MITO" >> mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan        
+		echo "${MARVEL_PATH}/bin/DBsplit ${PROJECT_ID}_MITO_COR" >> mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan        
         
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_11_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version
     ### 12-mitoHitCorDBdaligner
