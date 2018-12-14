@@ -66,11 +66,13 @@ MITO_DIR="mitochondrion"
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -1 - mitochondrium assembly <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-# type-0 steps [1-15]: 1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito, 5-mitoPrepareMitoHitDB, 6-mitoHitDBdaligner, 7-mitoHitDBLAmerge, 8-mitoHitDBLAq, 9-mitoHitDBLAfilter, 10-mitoHitDBLAcorrect, 11-mitoPrepareMitoHitCorDB, 12-mitoHitCorDBdaligner, 13-mitoHitCorDBLAmerge, 14-mitoHitCorDBLAq 15-mitoHitCorDBLAfilter
+#type-0 steps [1-21]: 1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito, 5-mitoPrepareMitoHitDB, 6-mitoHitDBdaligner 7-mitoHitDBLAq 8-mitoHitDBLAfix 09_mitoPrepareMitoHitFixDB 10_mitoHitFixDBdaligner 
+#                     11_mitoHitFixDBforcealign 12_mitoHitFixDBLAmerge 13_mitoHitFixDBLAq 14_mitoHitFixDBLAgap 15_mitoHitFixDBLAq 16_mitoHitFixDBLAfilter 17_mitoHitFixDBLAcorrect 18_mitoPrepareMitoHitCorDB,19_mitoHitCorDBdaligner, 20_mitoHitCorDBLAq
+#                     21_mitoHitCorDBLAfilter
 RAW_MITO_TYPE=0
 
 RAW_MITO_SUBMIT_SCRIPTS_FROM=1
-RAW_MITO_SUBMIT_SCRIPTS_TO=15
+RAW_MITO_SUBMIT_SCRIPTS_TO=21
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase 0 - DAScover <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -195,7 +197,7 @@ RAW_MITO_REFFASTA=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/mitoc
 RAW_MITO_DALIGNER_ERR=0.7
 RAW_MITO_DALIGNER_BIAS=0
 RAW_MITO_DALIGNER_OLEN=1000
-RAW_MITO_DALIGNER_MEM=32
+RAW_MITO_DALIGNER_MEM=16
 RAW_MITO_DALIGNER_BLOCKCMP=4
 RAW_MITO_DALIGNER_FORBLOCK=1
 RAW_MITO_DALIGNER_NUMACTL=1
@@ -224,6 +226,17 @@ RAW_MITO_LAFILTER_UBAS=0
 #RAW_MITO_LAFILTER_STITCH=100
 #RAW_MITO_LAFILTER_STITCH_AGG=0
 RAW_MITO_LAFILTER_TRIM=1
+###LAfix
+RAW_MITO_LAFIX_GAP=-1
+RAW_MITO_LAFIX_MLEN=2000
+RAW_MITO_LAFIX_LOW_COVERAGE=0
+#RAW_MITO_LAFIX_CONVERTRACKS="track1 track2 ..."
+###forcealign
+RAW_MITO_FORCEALIGN_PARTIAL=1
+RAW_MITO_FORCEALIGN_THREADS=1
+#RAW_MITO_FORCEALIGN_MAXDIST=250
+#RAW_MITO_FORCEALIGN_BORDER=25
+#RAW_MITO_FORCEALIGN_CORRELATION=0.65
 
 # ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 
@@ -874,4 +887,8 @@ THREADS_WHPacBioMinimap2=${CT_WHATSHAP_MINIMAP2ALNTHREADS}
 MEM_WHPacBioMinimap2=$((${CT_WHATSHAP_MINIMAP2ALNTHREADS}*4096))     
 TIME_WHPacBioMinimap2=24:00:00
 
+##### MITO PIPELINE
+THREADS_mitodaligner=4
+MEM_mitodaligner=$((24*1024))
+TIME_mitodaligner=04:00:00
 

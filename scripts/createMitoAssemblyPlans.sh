@@ -397,8 +397,6 @@ function setForcealignOptions()
     fi 
 }
 
-
-
 myTypes=("1-mitoPrepareInput, 2-mitodaligner, 3-mitoLAmerge, 4-mitoLAfilterMito, 5-mitoPrepareMitoHitDB, 6-mitoHitDBdaligner 7-mitoHitDBLAq 8-mitoHitDBLAfix 09_mitoPrepareMitoHitFixDB 10_mitoHitFixDBdaligner 11_mitoHitFixDBforcealign 12_mitoHitFixDBLAmerge 13_mitoHitFixDBLAq 14_mitoHitFixDBLAgap 15_mitoHitFixDBLAq 16_mitoHitFixDBLAfilter 17_mitoHitFixDBLAcorrect 18_mitoPrepareMitoHitCorDB,19_mitoHitCorDBdaligner, 20_mitoHitCorDBLAq, 21_mitoHitCorDBLAfilter")
 if [[ ${RAW_MITO_TYPE} -eq 0 ]]
 then 
