@@ -27,6 +27,12 @@ then
  gsize=$((${GSIZE:0:$i}*1000))
 fi
 
+if [[ -z ${SCAFF10X_PATH} || ! -f ${SCAFF10X_PATH}/scaff_reads ]]
+then
+	(>&2 echo "Variable SCAFF10X_PATH must be set to a proper scaff10x installation directory!!")
+    exit 1
+fi
+
 myTypes=("01_scaff10Xprepare ")
 if [[ ${SC_SCAFF10X_TYPE} -eq 0 ]]
 then 
