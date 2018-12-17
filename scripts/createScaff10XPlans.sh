@@ -177,7 +177,7 @@ then
 		# scaff_reads file.dat reads-BC_1.fastq reads-BC_2.fastq > try.out
 		
 		options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"
-		echo "${SCAFF10X_PATH}/scaff_reads ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_inputReads.txt ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_BC_1.fastq ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_BC_2.fastq" >> scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+		echo "${SCAFF10X_PATH}/scaff_reads${options} ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_inputReads.txt ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_BC_1.fastq ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_BC_2.fastq" >> scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
 		echo "scaff_reads $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.version
     ### 02_scaff10Xscaff10x		
 	elif [[ ${currentStep} -eq 2 ]]
