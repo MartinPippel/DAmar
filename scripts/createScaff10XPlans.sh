@@ -33,7 +33,71 @@ then
     exit 1
 fi
 
-myTypes=("01_scaff10Xprepare ")
+function setScaff10xOptions()
+{
+	SCAFF10X_SCAFF10X_OPT=""
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_THREADS} && ${SCAF_SCAFF10X_SCAFF10X_THREADS} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -nodes ${SCAF_SCAFF10X_SCAFF10X_THREADS}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_ALIGNER} ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -align ${SCAF_SCAFF10X_SCAFF10X_ALIGNER}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_SCORE} && ${SCAF_SCAFF10X_SCAFF10X_SCORE} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -score ${SCAF_SCAFF10X_SCAFF10X_SCORE}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_MATRIX} && ${SCAF_SCAFF10X_SCAFF10X_MATRIX} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -matrix ${SCAF_SCAFF10X_SCAFF10X_MATRIX}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_MINREADS} && ${SCAF_SCAFF10X_SCAFF10X_MINREADS} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -reads ${SCAF_SCAFF10X_SCAFF10X_MINREADS}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_LONGREAD} && ${SCAF_SCAFF10X_SCAFF10X_LONGREAD} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -longread ${SCAF_SCAFF10X_SCAFF10X_LONGREAD}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_GAPSIZE} && ${SCAF_SCAFF10X_SCAFF10X_GAPSIZE} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -gap ${SCAF_SCAFF10X_SCAFF10X_GAPSIZE}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_EDGELEN} && ${SCAF_SCAFF10X_SCAFF10X_EDGELEN} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -edge ${SCAF_SCAFF10X_SCAFF10X_EDGELEN}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_MINSHAREDBARCODES} && ${SCAF_SCAFF10X_SCAFF10X_MINSHAREDBARCODES} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -link ${SCAF_SCAFF10X_SCAFF10X_MINSHAREDBARCODES}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_BLOCK} && ${SCAF_SCAFF10X_SCAFF10X_BLOCK} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -block ${SCAF_SCAFF10X_SCAFF10X_BLOCK}"		
+	fi
+	
+    ### check input variable variables, and overwrite default pipeline if required
+    if [[ -n ${SCAF_SCAFF10X_SCAFF10X_SAM} && -f ${SCAF_SCAFF10X_SCAFF10X_SAM} ]]
+    then
+    	SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -sam ${SCAF_SCAFF10X_SCAFF10X_SAM}"
+    elif [[ -n ${SCAF_SCAFF10X_SCAFF10X_BAM} && -f ${SCAF_SCAFF10X_SCAFF10X_BAM} ]]
+    then
+    	SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -bam ${SCAF_SCAFF10X_SCAFF10X_BAM}"	
+	fi
+}
+
+myTypes=("01_scaff10Xprepare, 02_scaff10Xscaff10x")
 if [[ ${SC_SCAFF10X_TYPE} -eq 0 ]]
 then 
     ### 01_scaff10Xprepare
@@ -93,7 +157,7 @@ then
         	exit 1	
    		fi
    		
-   		echo "if [[ -d ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID} ]]; then mv ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID} ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" > scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "if [[ -d ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID} ]]; then mv ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID} ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}" > scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/ref" >> scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/reads" >> scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
    		echo "ln -s -r ${SC_SCAFF10X_REF} ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/ref" >> scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
@@ -112,8 +176,10 @@ then
 		
 		# scaff_reads file.dat reads-BC_1.fastq reads-BC_2.fastq > try.out
 		
+		options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"
 		echo "${SCAFF10X_PATH}/scaff_reads ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_inputReads.txt ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_BC_1.fastq ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_BC_2.fastq" >> scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
-   		echo "scaff_reads $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.version
+		echo "scaff_reads $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.version
+    ### 02_scaff10Xscaff10x		
 	elif [[ ${currentStep} -eq 2 ]]
     then
     	### clean up plans 
@@ -122,7 +188,19 @@ then
             rm $x
         done
         
-	   						
+        setScaff10xOptions()
+                  	
+    	# add reference
+    	infiles"${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/ref/$(basename ${SC_SCAFF10X_REF})"
+    	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -n ${SCAF_SCAFF10X_SCAFF10X_READSBC2} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC2} ]]
+    	then
+    		infiles="${infiles} ${SCAF_SCAFF10X_SCAFF10X_READSBC1} ${SCAF_SCAFF10X_SCAFF10X_READSBC2}"
+    	else
+    		infiles="${infiles} ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_BC_1.fastq ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_BC_2.fastq"
+    	fi
+        
+        echo "${SCAFF10X_PATH}/scaff10X${SCAFF10X_SCAFF10X_OPT} ${infiles} ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/${PROJECT_ID}_m${FIX_FILT_OUTDIR}_x.p.fasta" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
+		echo "scaff10X $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in SC_SCAFF10X_TYPE ${SC_SCAFF10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_SCAFF10X_TYPE}]}")

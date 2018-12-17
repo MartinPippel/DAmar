@@ -192,7 +192,7 @@ CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 SC_SCAFF10X_TYPE=0
-# Type: 0 steps: scaff10Xprepare in progress 
+# Type: 0 steps: 01_scaff10Xprepare, 02_scaff10Xscaff10x 
 SC_SCAFF10X_SUBMIT_SCRIPTS_FROM=1
 SC_SCAFF10X_SUBMIT_SCRIPTS_TO=1
 
@@ -722,11 +722,27 @@ CT_WHATSHAP_SAMTOOLSMEM=1
 
 # ----------------------------------------------------------------- SCAFFOLDING - SCAFF10X OPTIONS ----------------------------------------------------------------------------------------------------
 
-### general whatshap options
+### general scaff10x options
 SC_SCAFF10X_RUNID=1
 SC_SCAFF10X_OUTDIR="${FIX_FILT_OUTDIR}"
 SC_SCAFF10X_REF="stats/contigs/m1/freebayes/mMyoMyo_m1_f.p.fasta"
 SC_SCAFF10X_READS=${TENX_PATH}
+### scaff10x options
+SCAF_SCAFF10X_SCAFF10X_THREADS=48
+SCAF_SCAFF10X_SCAFF10X_ALIGNER=bwa		### bwa or smalt
+SCAF_SCAFF10X_SCAFF10X_SCORE=20
+SCAF_SCAFF10X_SCAFF10X_MATRIX=2000
+SCAF_SCAFF10X_SCAFF10X_MINREADS=10
+SCAF_SCAFF10X_SCAFF10X_LONGREAD=1
+SCAF_SCAFF10X_SCAFF10X_GAPSIZE=100		### should be the same as used in scaff_reads
+SCAF_SCAFF10X_SCAFF10X_EDGELEN=50000
+SCAF_SCAFF10X_SCAFF10X_MINSHAREDBARCODES=8
+SCAF_SCAFF10X_SCAFF10X_BLOCK=2500
+SCAF_SCAFF10X_SCAFF10X_SAM="path to previously created sam file"
+SCAF_SCAFF10X_SCAFF10X_BAM="path to previously created bam file"
+SCAF_SCAFF10X_SCAFF10X_READSBC1="path to previously created BC_1 file" 		## produced in step1 of scaff10x pipeleine
+SCAF_SCAFF10X_SCAFF10X_READSBC2="path to previously created BC_1 file"		## produced in step1 of scaff10x pipeleine
+
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
