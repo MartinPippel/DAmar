@@ -188,10 +188,10 @@ then
             rm $x
         done
         
-        setScaff10xOptions()
+        setScaff10xOptions
                   	
     	# add reference
-    	infiles"${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/ref/$(basename ${SC_SCAFF10X_REF})"
+    	infiles="${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/ref/$(basename ${SC_SCAFF10X_REF})"
     	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -n ${SCAF_SCAFF10X_SCAFF10X_READSBC2} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC2} ]]
     	then
     		infiles="${infiles} ${SCAF_SCAFF10X_SCAFF10X_READSBC1} ${SCAF_SCAFF10X_SCAFF10X_READSBC2}"
