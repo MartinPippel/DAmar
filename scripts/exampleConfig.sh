@@ -189,6 +189,13 @@ CT_WHATSHAP_TYPE=0
 CT_WHATSHAP_SUBMIT_SCRIPTS_FROM=1
 CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+SC_SCAFF10X_TYPE=0
+# Type: 0 steps: scaff10Xprepare in progress 
+SC_SCAFF10X_SUBMIT_SCRIPTS_FROM=1
+SC_SCAFF10X_SUBMIT_SCRIPTS_TO=1
+
 # ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
 RAW_MITO_REFFASTA=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/mitochondria_ref/iHylVes_mt.fasta
@@ -712,6 +719,14 @@ CT_WHATSHAP_MINIMAP2IDXTHREADS=8										# number of threads to create referenc
 CT_WHATSHAP_MINIMAP2ALNTHREADS=24										# number of threads to align reads
 CT_WHATSHAP_SAMTOOLSTHREADS=8
 CT_WHATSHAP_SAMTOOLSMEM=1
+
+# ----------------------------------------------------------------- SCAFFOLDING - SCAFF10X OPTIONS ----------------------------------------------------------------------------------------------------
+
+### general whatshap options
+SC_SCAFF10X_RUNID=1
+SC_SCAFF10X_OUTDIR="${FIX_FILT_OUTDIR}"
+SC_SCAFF10X_REF="stats/contigs/m1/freebayes/mMyoMyo_m1_f.p.fasta"
+SC_SCAFF10X_READS=${TENX_PATH}
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
