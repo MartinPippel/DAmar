@@ -194,7 +194,7 @@ CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 SC_SCAFF10X_TYPE=0
 # Type: 0 steps: 01_scaff10Xprepare, 02_scaff10Xscaff10x 
 SC_SCAFF10X_SUBMIT_SCRIPTS_FROM=1
-SC_SCAFF10X_SUBMIT_SCRIPTS_TO=1
+SC_SCAFF10X_SUBMIT_SCRIPTS_TO=2
 
 # ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
@@ -729,19 +729,19 @@ SC_SCAFF10X_REF="stats/contigs/m1/freebayes/mMyoMyo_m1_f.p.fasta"
 SC_SCAFF10X_READS=${TENX_PATH}
 ### scaff10x options
 SCAF_SCAFF10X_SCAFF10X_THREADS=48
-SCAF_SCAFF10X_SCAFF10X_ALIGNER=bwa		### bwa or smalt
-SCAF_SCAFF10X_SCAFF10X_SCORE=20
-SCAF_SCAFF10X_SCAFF10X_MATRIX=2000
-SCAF_SCAFF10X_SCAFF10X_MINREADS=10
-SCAF_SCAFF10X_SCAFF10X_LONGREAD=1
-SCAF_SCAFF10X_SCAFF10X_GAPSIZE=100		### should be the same as used in scaff_reads
-SCAF_SCAFF10X_SCAFF10X_EDGELEN=50000
-SCAF_SCAFF10X_SCAFF10X_MINSHAREDBARCODES=8
-SCAF_SCAFF10X_SCAFF10X_BLOCK=2500
-SCAF_SCAFF10X_SCAFF10X_SAM="path to previously created sam file"
-SCAF_SCAFF10X_SCAFF10X_BAM="path to previously created bam file"
-SCAF_SCAFF10X_SCAFF10X_READSBC1="path to previously created BC_1 file" 		## produced in step1 of scaff10x pipeleine
-SCAF_SCAFF10X_SCAFF10X_READSBC2="path to previously created BC_1 file"		## produced in step1 of scaff10x pipeleine
+#SCAF_SCAFF10X_SCAFF10X_ALIGNER=bwa		### bwa or smalt
+#SCAF_SCAFF10X_SCAFF10X_SCORE=20
+#SCAF_SCAFF10X_SCAFF10X_MATRIX=2000
+#SCAF_SCAFF10X_SCAFF10X_MINREADS=10
+#SCAF_SCAFF10X_SCAFF10X_LONGREAD=1
+#SCAF_SCAFF10X_SCAFF10X_GAPSIZE=100		### should be the same as used in scaff_reads
+#SCAF_SCAFF10X_SCAFF10X_EDGELEN=50000
+#SCAF_SCAFF10X_SCAFF10X_MINSHAREDBARCODES=8
+#SCAF_SCAFF10X_SCAFF10X_BLOCK=2500
+#SCAF_SCAFF10X_SCAFF10X_SAM="path to previously created sam file"
+#SCAF_SCAFF10X_SCAFF10X_BAM="path to previously created bam file"
+#SCAF_SCAFF10X_SCAFF10X_READSBC1="path to previously created BC_1 file" 		## produced in step1 of scaff10x pipeleine
+#SCAF_SCAFF10X_SCAFF10X_READSBC2="path to previously created BC_1 file"		## produced in step1 of scaff10x pipeleine
 
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
@@ -924,3 +924,7 @@ THREADS_mitodaligner=4
 MEM_mitodaligner=$((24*1024))
 TIME_mitodaligner=04:00:00
 
+##### SCAFF10X pipeline
+THREADS_scaff10Xscaff10x=${SCAF_SCAFF10X_SCAFF10X_THREADS}
+MEM_scaff10Xscaff10x=$((${SCAF_SCAFF10X_SCAFF10X_THREADS}*4096))
+TIME_scaff10Xscaff10x=24:00:00
