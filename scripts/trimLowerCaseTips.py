@@ -45,6 +45,7 @@ f=open(fIn, 'r')
 
 for (name, args, seq) in fasta_iter(f):
     
+    slen   =len(seq)
     trimBeg=0
     trimEnd=0
     
@@ -59,16 +60,19 @@ for (name, args, seq) in fasta_iter(f):
             trimEnd+=1
         else:
             break
+        
+    if trimEnd > 0 and trimEnd < slen:
+        trimEnd=-trimEnd
+        
+    if trimEnd == 0:
+        trimEnd = slen
     
-    if trimBeg == trimEnd:
-        if trimBeg == 0:
-            fout.write(">{} trimBeg={} trimEnd={}".format(name, trimBeg, trimEnd))
-            fout.write("\n{}\n".format(wrap_seq(seq, 100)))
-        else:
-            fout_garbage.write("{} trimBeg={} trimEnd={}\n".format(name, trimBeg, trimEnd))
+    if trimBeg == slen:
+        fout_garbage.write(">{} trimBeg={} trimEnd={}\n".format(name, trimBeg, trimEnd))
+        fout_garbage.write("\n{}\n".format(wrap_seq(seq, 100)))
     else:
-        fout.write(">{} trimBeg={} trimEnd={}".format(name, trimBeg, trimEnd))
-        fout.write("\n{}\n".format(wrap_seq(seq[trimBeg:-trimEnd], 100)))
+        fout.write(">{} trimBeg={} trimEnd={}".format(name, trimBeg, slen - abs(trimEnd)))
+        fout.write("\n{}\n".format(wrap_seq(seq[trimBeg:trimEnd], 100)))
         
 f.close()
 fout.close()
