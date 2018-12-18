@@ -37,12 +37,12 @@ fIn    = sys.argv[1]
 nout   = sys.argv[2]
 
 if len(sys.argv) > 3:
-    maxLen = sys.argv[3]
+    maxLen = int(sys.argv[3])
 else:
     maxLen = 5000
 
 if len(sys.argv) > 4:
-    ovh    = sys.argv[4]
+    ovh    = int(sys.argv[4])
 else:
     ovh    = 1000
     
@@ -58,26 +58,27 @@ c=0
 for (name, args, seq) in fasta_iter(f):
     
     numSplits = len(seq)//maxLen
+    source = int(args["source"][0])
     
     if numSplits:
         splitLastTwoEvenly=0
-        if len(seq) % maxLen < ovh:
+        if len(seq) % maxLen < (ovh + 1500):
             splitLastTwoEvenly=1
         beg=0
-        for i in range(1,numSplits):
-            if i == numSplits and splitLastTwoEvenly:
+        for i in range(0,numSplits):
+            if i == numSplits - 1 and splitLastTwoEvenly:
                 end = beg + (len(seq) - beg)//2
             else:
                 end=beg+maxLen
-            fout.write(">splitRead/{}/{}_{} oldName={} beg={}".format(c,beg,end,name))
+            fout.write(">splitRead/{}/{}_{} oldName={} source={}".format(c,beg,end,name, source))
             fout.write("\n{}\n".format(wrap_seq(seq[beg:end], 100)))
             beg=end-ovh
             c=c+1
-        fout.write(">splitRead/{}/{}_{} oldName={} beg={}".format(c,beg,len(seq),name))
+        fout.write(">splitRead/{}/{}_{} oldName={} source={}".format(c,beg,len(seq),name,source))
         fout.write("\n{}\n".format(wrap_seq(seq[beg:len(seq)], 100)))
         c=c+1        
     else:
-        fout.write(">splitRead/{}/{}_{} oldName={} beg={}".format(c,0,len(seq),name))
+        fout.write(">splitRead/{}/{}_{} oldName={} source={}".format(c,0,len(seq),name,source))
         fout.write("\n{}\n".format(wrap_seq(seq, 100)))
         c=c+1            
 f.close()
