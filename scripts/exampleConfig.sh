@@ -32,6 +32,7 @@ WHATSHAP_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate whats
 export PATH=${MARVEL_PATH}/bin:${MARVEL_PATH}/scripts:$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:$PYTHONPATH
 export SCAFF10X_PATH="/projects/dazzler/pippel/prog/scaffolding/scaff10x"
+export BIONANO_PATH="/projects/dazzler/pippel/prog/bionano/Solve3.3_10252018"
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -191,10 +192,18 @@ CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-SC_SCAFF10X_TYPE=0
-# Type: 0 steps: 01_scaff10Xprepare, 02_scaff10Xscaff10x 
+SC_BIONANO_TYPE=0
+# Type: 0 steps: 01_BNscaffold 
 SC_SCAFF10X_SUBMIT_SCRIPTS_FROM=1
 SC_SCAFF10X_SUBMIT_SCRIPTS_TO=2
+
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 15 - bionano scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+SC_BIONANO_TYPE=0
+# Type: 0 steps: 01_BNscaffold 
+SC_BIONANO_SUBMIT_SCRIPTS_FROM=1
+SC_BIONANO_SUBMIT_SCRIPTS_TO=2
 
 # ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
@@ -725,7 +734,7 @@ CT_WHATSHAP_SAMTOOLSMEM=1
 ### general scaff10x options
 SC_SCAFF10X_RUNID=1
 SC_SCAFF10X_OUTDIR="${FIX_FILT_OUTDIR}"
-SC_SCAFF10X_REF="stats/contigs/m1/freebayes/mMyoMyo_m1_f.p.fasta"
+SC_SCAFF10X_REF="stats/contigs/m1/freebayes_1/mMyoMyo_m1_f.p.fasta"
 SC_SCAFF10X_READS=${TENX_PATH}
 ### scaff10x options
 SCAF_SCAFF10X_SCAFF10X_THREADS=48
@@ -743,6 +752,26 @@ SCAF_SCAFF10X_SCAFF10X_THREADS=48
 #SCAF_SCAFF10X_SCAFF10X_READSBC1="path to previously created BC_1 file" 		## produced in step1 of scaff10x pipeleine
 #SCAF_SCAFF10X_SCAFF10X_READSBC2="path to previously created BC_1 file"		## produced in step1 of scaff10x pipeleine
 
+# ----------------------------------------------------------------- SCAFFOLDING - BIONANO OPTIONS ----------------------------------------------------------------------------------------------------
+
+### general bionano options
+SC_BIONANO_RUNID=1
+SC_BIONANO_REF="stats/contigs/m1/scaff10x_1/mMyoMyo_m1_f.p.fasta"
+SC_BIONANO_OUTDIR="${FIX_FILT_OUTDIR}"
+
+SC_BIONANO_CONFLICTLEVEL_GENOMEMAPS=2			## 1 no filter, 2 cut contig at conflict, 3 exclude conflicting contig
+SC_BIONANO_CONFLICTLEVEL_SEQUENCE=2			## 1 no filter, 2 cut contig at conflict, 3 exclude conflicting contig
+## single enzyme
+SC_BIONANO_ENZYME_1="BSSSI"
+SC_BIONANO_ASSEMBLY_1="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/Solve3.2.2_withoutReference/mRhiFer_BSSSI_1_fullAssembly_SNRfilt_run01_v322/contigs/mRhiFer_refineFinal1/MRHIFER_REFINEFINAL1.cmap"
+# optional parameter, required to map molecules to hybrid scaffold, and compute chimeric quality scores 
+SC_BIONANO_MOLCULES_1="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/Solve3.2.2_withoutReference/mRhiFer1_Saphyr_BSSSI_SNRfilt.bnx"
+SC_BIONANO_ASSEMBLYSCRIPT_1="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/Solve3.2.2_withoutReference/clusterArguments_customGPU.xml"
+SC_BIONANO_ASSEMBLYOPTARGS_1="/projects/dazzler/pippel/prog/bionano/Solve3.2.2_08222018/RefAligner/7782.7865rel/optArguments_nonhaplotype_saphyr.xml"
+SC_BIONANO_ASSEMBLY_NOISE_1="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/Solve3.2.2_withoutReference/mRhiFer_BSSSI_1_fullAssembly_SNRfilt_run01_v322/contigs/auto_noise/autoNoise1.errbin"
+## two enzyme workflow, optional mapping and chimeric quality score caculation are not supported
+#SC_BIONANO_ENZYME_2="BSPQI"
+#SC_BIONANO_ASSEMBLY_2="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/Solve3.2.2_withoutReference/mRhiFer_BSPQI_1_fullAssembly_SNRfilt_run01_v322/contigs/mRhiFer_refineFinal1/MRHIFER_REFINEFINAL1.cmap"
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 

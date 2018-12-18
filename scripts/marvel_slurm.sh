@@ -126,6 +126,10 @@ elif [[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 ]]
 then 
     currentPhase=14
     currentStep=${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}
+elif [[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+then 
+    currentPhase=15
+    currentStep=${SC_BIONANO_SUBMIT_SCRIPTS_FROM}    
 else 
     echo "nothing to do"
     exit 0
@@ -153,7 +157,7 @@ then
 	cd ${PATCHING_DIR}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
-elif [[ ${currentPhase} -lt 15 ]]
+elif [[ ${currentPhase} -lt 16 ]]
 then
 	if [[ -z "${FIX_REPMASK_USELAFIX_PATH}" ]]
 	then 
