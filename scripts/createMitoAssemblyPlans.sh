@@ -614,9 +614,10 @@ then
     	fi    	
                 
         ### pull out read IDs
-		echo "${MARVEL_PATH}/bin/FA2db -v -x0 -c source ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.fasta" > mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.plan
-		echo "${DACCORD_PATH}/bin/fastaidrename < ${PROJECT_ID}_MITO_FIX_M.fasta | awk '{print \$1}' > ${PROJECT_ID}_MITO_FIX_D.fasta" >> mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.plan            
-		echo "${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_MITO_FIX_D ${PROJECT_ID}_MITO_FIX_D.fasta" >> mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.plan		                
+        echo "${MARVEL_PATH}/scripts/splitReads.py ${PROJECT_ID}_MITO_FIX_M.fasta ${PROJECT_ID}_MITO_FIX_SPLIT_M.fasta 5000 0" > mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${MARVEL_PATH}/bin/FA2db -v -x0 -c source ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_SPLIT_M.fasta" >> mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${DACCORD_PATH}/bin/fastaidrename < ${PROJECT_ID}_MITO_FIX_SPLIT_M.fasta | awk '{print \$1}' > ${PROJECT_ID}_MITO_FIX_SPLIT_D.fasta" >> mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.plan            
+		echo "${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_MITO_FIX_D ${PROJECT_ID}_MITO_FIX_SPLIT_D.fasta" >> mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.plan		                
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.version
     	echo "fastaidrename $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mito_09_mitoPrepareMitoHitFixDB_single_${RAW_DB%.db}.${slurmID}.version
