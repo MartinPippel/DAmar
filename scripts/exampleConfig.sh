@@ -33,6 +33,7 @@ export PATH=${MARVEL_PATH}/bin:${MARVEL_PATH}/scripts:$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:$PYTHONPATH
 export SCAFF10X_PATH="/projects/dazzler/pippel/prog/scaffolding/scaff10x"
 export BIONANO_PATH="/projects/dazzler/pippel/prog/bionano/Solve3.3_10252018"
+export SALSA_PATH="/projects/dazzler/pippel/prog/scaffolding/SALSA"
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -197,13 +198,12 @@ SC_BIONANO_SUBMIT_SCRIPTS_TO=1
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 15 - HiC QC and scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 SC_HIC_TYPE=0
-# Type: 0 Arima Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools
+# Type: 0 Arima Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7_HICrunSalsa
 # Type: 1 Phase Genomics Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
 # Type: 2 - Aiden Lab Juicer Pipeline (For QC)
-# Type: 3 - Salsa2 Pipeline (For Scaffolding)
-# Type: 4 - 3d-dna Pipeline (For Scaffolding)
+# Type: 3 - 3d-dna Pipeline (For Scaffolding)
 SC_HIC_SUBMIT_SCRIPTS_FROM=1
-SC_HIC_SUBMIT_SCRIPTS_TO=6
+SC_HIC_SUBMIT_SCRIPTS_TO=7
 
 # ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
