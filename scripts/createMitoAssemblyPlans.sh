@@ -191,38 +191,72 @@ function setLAfilterMitoOptions()
 function setLAqOptions()
 {
     MITO_LAQ_OPT=""
-    adaptQTRIMCUTOFF=""    
-
-    if [[ -n ${RAW_MITO_LAQ_MINSEG} && ${RAW_MITO_LAQ_MINSEG} -ne 0 ]]
+    adaptQTRIMCUTOFF=""
+    
+    if [[ "x$1" == "x1" ]]
     then
-        MITO_LAQ_OPT="${MITO_LAQ_OPT} -s ${RAW_MITO_LAQ_MINSEG}"
-    else 
-        RAW_MITO_LAQ_MINSEG=25
-        MITO_LAQ_OPT="${MITO_LAQ_OPT} -s ${RAW_MITO_LAQ_MINSEG}"
-    fi
-
-    if [[ -n ${RAW_MITO_LAQ_QTRIMCUTOFF} && ${RAW_MITO_LAQ_QTRIMCUTOFF} -ne 0 ]]
-    then
-        if [[ -n ${RAW_MITO_DALIGNER_TRACESPACE} && ${RAW_MITO_DALIGNER_TRACESPACE} -ne 100 ]]
-        then 
-            adaptQTRIMCUTOFF=$(echo "${RAW_MITO_LAQ_QTRIMCUTOFF}*${RAW_MITO_DALIGNER_TRACESPACE}/100+1" | bc)
-            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"
-        else
-            adaptQTRIMCUTOFF=${RAW_MITO_LAQ_QTRIMCUTOFF}
-            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
-        fi
-    else 
-        if [[ -n ${RAW_MITO_DALIGNER_TRACESPACE} && ${RAW_MITO_DALIGNER_TRACESPACE} -ne 100 ]]
-        then 
-            RAW_MITO_LAQ_QTRIMCUTOFF=25
-            adaptQTRIMCUTOFF=$(echo "${RAW_MITO_LAQ_QTRIMCUTOFF}*${RAW_MITO_DALIGNER_TRACESPACE}/100+1" | bc)
-            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"
-        else
-            adaptQTRIMCUTOFF=25
-            RAW_MITO_LAQ_QTRIMCUTOFF=25
-            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
-        fi
-    fi
+		if [[ -n ${COR_MITO_LAQ_MINSEG} && ${COR_MITO_LAQ_MINSEG} -ne 0 ]]
+	    then
+	        MITO_LAQ_OPT="${COR_LAQ_OPT} -s ${COR_MITO_LAQ_MINSEG}"
+	    else 
+	        COR_MITO_LAQ_MINSEG=2
+	        MITO_LAQ_OPT="${MITO_LAQ_OPT} -s ${COR_MITO_LAQ_MINSEG}"
+	    fi
+	
+	    if [[ -n ${COR_MITO_LAQ_QTRIMCUTOFF} && ${COR_MITO_LAQ_QTRIMCUTOFF} -ne 0 ]]
+	    then
+	        if [[ -n ${RAW_MITO_DALIGNER_TRACESPACE} && ${RAW_MITO_DALIGNER_TRACESPACE} -ne 100 ]]
+	        then 
+	            adaptQTRIMCUTOFF=$(echo "${COR_MITO_LAQ_QTRIMCUTOFF}*${RAW_MITO_DALIGNER_TRACESPACE}/100+1" | bc)
+	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"
+	        else
+	            adaptQTRIMCUTOFF=${COR_MITO_LAQ_QTRIMCUTOFF}
+	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
+	        fi
+	    else 
+	        if [[ -n ${COR_MITO_DALIGNER_TRACESPACE} && ${COR_MITO_DALIGNER_TRACESPACE} -ne 100 ]]
+	        then 
+	            COR_MITO_LAQ_QTRIMCUTOFF=25
+	            adaptQTRIMCUTOFF=$(echo "${COR_MITO_LAQ_QTRIMCUTOFF}*${RAW_MITO_DALIGNER_TRACESPACE}/100+1" | bc)
+	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"
+	        else
+	            adaptQTRIMCUTOFF=25
+	            COR_MITO_LAQ_QTRIMCUTOFF=25
+	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
+	        fi
+	    fi    	
+	else
+	    if [[ -n ${RAW_MITO_LAQ_MINSEG} && ${RAW_MITO_LAQ_MINSEG} -ne 0 ]]
+	    then
+	        MITO_LAQ_OPT="${MITO_LAQ_OPT} -s ${RAW_MITO_LAQ_MINSEG}"
+	    else 
+	        RAW_MITO_LAQ_MINSEG=2
+	        MITO_LAQ_OPT="${MITO_LAQ_OPT} -s ${RAW_MITO_LAQ_MINSEG}"
+	    fi
+	
+	    if [[ -n ${RAW_MITO_LAQ_QTRIMCUTOFF} && ${RAW_MITO_LAQ_QTRIMCUTOFF} -ne 0 ]]
+	    then
+	        if [[ -n ${RAW_MITO_DALIGNER_TRACESPACE} && ${RAW_MITO_DALIGNER_TRACESPACE} -ne 100 ]]
+	        then 
+	            adaptQTRIMCUTOFF=$(echo "${RAW_MITO_LAQ_QTRIMCUTOFF}*${RAW_MITO_DALIGNER_TRACESPACE}/100+1" | bc)
+	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"
+	        else
+	            adaptQTRIMCUTOFF=${RAW_MITO_LAQ_QTRIMCUTOFF}
+	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
+	        fi
+	    else 
+	        if [[ -n ${RAW_MITO_DALIGNER_TRACESPACE} && ${RAW_MITO_DALIGNER_TRACESPACE} -ne 100 ]]
+	        then 
+	            RAW_MITO_LAQ_QTRIMCUTOFF=25
+	            adaptQTRIMCUTOFF=$(echo "${RAW_MITO_LAQ_QTRIMCUTOFF}*${RAW_MITO_DALIGNER_TRACESPACE}/100+1" | bc)
+	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"
+	        else
+	            adaptQTRIMCUTOFF=25
+	            RAW_MITO_LAQ_QTRIMCUTOFF=25
+	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
+	        fi
+	    fi
+	fi
 }
 
 function setLAfilterOptions()
@@ -301,9 +335,11 @@ function setLAfilterOptions()
     
 	if [[ -n ${RAW_MITO_LAFILTER_TRIM} && ${RAW_MITO_LAFILTER_TRIM} -ne 0 ]] || [[ -n ${RAW_MITO_LAFILTER_UBAS} ]]
     then
-        if [[ -z ${MITO_LAQ_OPT} ]]
+        if [[ "x$1" == "x1" ]]
         then 
-            setLAqOptions
+            setLAqOptions 1
+    	else
+    		setLAqOptions
         fi               
         
         MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -t trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -T" 
@@ -767,7 +803,11 @@ then
                 
         ### pull out read IDs
 		echo "${MARVEL_PATH}/bin/FA2db -v -x0 -c source -c correctionq -c postrace ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.00.fasta" > mito_18_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${DACCORD_PATH}/bin/fastaidrename < ${PROJECT_ID}_MITO_COR_M.00.fasta | awk '{print \$1}' > ${PROJECT_ID}_MITO_COR_D.00.fasta" >> mito_18_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan            
+		echo "${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_MITO_COR_D ${PROJECT_ID}_MITO_COR_D.00.fasta" >> mito_18_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan		                
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_18_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mito_18_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version
+    	echo "fastaidrename $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mito_18_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version				
     ### 19_mitoHitCorDBdaligner
     elif [[ ${currentStep} -eq 19 ]]
     then    
@@ -805,9 +845,9 @@ then
         done
         
         ### find and set LAq options 
-        setLAqOptions
+        setLAqOptions 1
         
-        echo "${MARVEL_PATH}/bin/LAq${MITO_LAQ_OPT} -T trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -Q q0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.las" > mito_20_mitoHitCorDBLAq_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/LAq${MITO_LAQ_OPT} -T trim0_d${COR_MITO_LAQ_QTRIMCUTOFF}_s${COR_MITO_LAQ_MINSEG} -Q q0_d${COR_MITO_LAQ_QTRIMCUTOFF}_s${COR_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.las" > mito_20_mitoHitCorDBLAq_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_20_mitoHitCorDBLAq_single_${RAW_DB%.db}.${slurmID}.version
     ### 21_mitoHitCorDBLAfilter
     elif [[ ${currentStep} -eq 21 ]]
@@ -818,10 +858,37 @@ then
             rm $x
         done
         
-    	setLAfilterOptions
+    	setLAfilterOptions 1
     	
     	echo "${MARVEL_PATH}/bin/LAfilter${MITO_LAFILTER_OPT} ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.las ${PROJECT_ID}_MITO_COR_M.filt.las" > mito_21_mitoHitCorDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_21_mitoHitCorDBLAfilter_single_${RAW_DB%.db}.${slurmID}.version
+    ### 22_mitoHitCorDBTour    
+    elif [[ ${currentStep} -eq 22 ]]
+    then
+    	### clean up plans 
+        for x in $(ls mito_22_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done    
+        
+        setLAfilterOptions 1
+        
+        echo "${MARVEL_PATH}/bin/OGbuild -t trim0_d${COR_MITO_LAQ_QTRIMCUTOFF}_s${COR_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.filt.las ${PROJECT_ID}_MITO_COR_M" > mito_22_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/scripts/OGtour.py -c ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M_00000.graphml" >> mito_22_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/scripts/tour2fasta.py -p ${PROJECT_ID}_MITO_COR_M_00000 ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M_00000.graphml ${PROJECT_ID}_MITO_COR_M_00000.tour.paths" >> mito_22_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/OGlayout -R -d 300 ${PROJECT_ID}_MITO_COR_M_00000.tour.graphml ${PROJECT_ID}_MITO_COR_M_00000.tour.layout.graphml" >> mito_22_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_22_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.version
+    ### 23_mitoHitCorDBArrowPolishing    
+    elif [[ ${currentStep} -eq 23 ]]
+    then
+    	### clean up plans 
+        for x in $(ls mito_23_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done    
+        
+        ## TODO --> pull out raw read ids, create pacbio data set, run arrow polishing twice !!!!!!
+        
     else
         (>&2 echo "step ${currentStep} in RAW_MITO_TYPE ${RAW_MITO_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_MITO_TYPE}]}")
