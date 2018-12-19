@@ -87,12 +87,17 @@ function setPicardOptions()
 	CONTIG_PICARD_OPT="-Xmx${CT_HIC_PICARD_XMX}G -Xms${CT_HIC_PICARD_XMS}G -XX:-UseGCOverheadLimit"	
 }
 
-# Type: 0 - Arima Mapping Pipeline (For QC) 
+if [[ -z ${SALSA_PATH} || ! -f ${SALSA_PATH}/run_pipeline.py ]]
+then
+	(>&2 echo "Variable SALSA_PATH must be set to a proper salsa2 installation directory!!")
+    exit 1
+fi
+ 
+# Type: 0 - Arima Mapping Pipeline (For QC) + SALSA SCAFFOLDING 
 # Type: 1 - Phase Genomics Mapping Pipeline (For QC)
 # Type: 2 - Aiden Lab Juicer Pipeline (For QC)
-# Type: 3 - Salsa2 Pipeline (For Scaffolding)
-# Type: 4 - 3d-dna Pipeline (For Scaffolding)
-myTypes=("1-HICprepareInput, 2-HICbwa, 3-HICfilter, 4-HICmerge, 5-HICmarkduplicates, 6-HICstatistics", 
+# Type: 3 - 3d-dna Pipeline (For Scaffolding)
+myTypes=("1-HICprepareInput, 2-HICbwa, 3-HICfilter, 4-HICmerge, 5-HICmarkduplicates, 6-HICstatistics, 7_HICrunSalsa ", 
 "1-HICprepareInput, 2-HICbwa, 3-HICfilter, 4-HICmatlock")
 if [[ ${CT_HIC_TYPE} -eq 0 ]]
 then 
@@ -337,6 +342,48 @@ then
    		fi
    		   		  
    		echo "perl ${MARVEL_PATH}/scripts/get_stats.pl ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/${PROJECT_ID}_finalHiC.stats" > hic_06_HICstatistics_single_${CONT_DB}.${slurmID}.plan
+   	### 7_HICrunSalsa
+    elif [[ ${currentStep} -eq 7 ]]
+    then
+        ### clean up plans 
+        for x in $(ls hic_07_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+      	done
+       
+       	if [[ ! -f "${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam" ]]
+       	then
+    		(>&2 echo "ERROR - cannot access final duplicate marked bam file ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam!")
+        	exit 1
+		fi
+		
+		ref="${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref/$(basename ${CT_HIC_REFFASTA})"
+		
+		if [[ ! -f ${ref} ]]
+       	then
+    		(>&2 echo "ERROR - cannot access reference fasta file: \"${ref}\"!")
+        	exit 1
+		fi
+		
+		if [[ ! -f ${ref}.fai ]]
+       	then
+    		(>&2 echo "ERROR - cannot access reference fasta index file: \"${ref}.fai\"!")
+        	exit 1
+		fi
+		
+		if [[ -z ${CT_HIC_ENZYME} ]]
+       	then 
+       		(>&2 echo "ERROR - Enzyme is required, set variable CT_HIC_ENZYME!")
+        	exit 1	
+       	fi
+		
+		echo "bedtools bamToBed -i ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed" > hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.plan
+		echo "sort -k 4 ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC_sortByName.bed" >> hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.plan
+       	bed=${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC_sortByName.bed
+       	echo "python run_pipeline.py -a ${ref} -l ${ref}.fai -b ${bed} -e ${CT_HIC_ENZYME} -o ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/${PROJECT_ID}_${CT_HIC_OUTDIR}_s.p.fasta -m yes" >> hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.plan
+       	
+       	echo "SALSA $(git --git-dir=${SALSA_PATH}/.git rev-parse --short HEAD)" > hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.version
+       	echo "bedtools --version" >> hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in CT_HIC_TYPE ${CT_HIC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_HIC_TYPE}]}")

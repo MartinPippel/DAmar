@@ -183,21 +183,13 @@ then
     fi
 elif [[ ${currentPhase} -eq 12 ]]
 then 
-    ${SUBMIT_SCRIPTS_PATH}/createHiCPlans.sh ${configFile} ${currentStep} ${slurmID}
-    if [ $? -ne 0 ]
-    then 
-        (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createHiCPlans.sh failed some how. Stop here.")
-        exit 1      
-    fi      
-elif [[ ${currentPhase} -eq 13 ]]
-then 
     ${SUBMIT_SCRIPTS_PATH}/createWhatshapPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createWhatshapPlans.sh failed some how. Stop here.")
         exit 1      
     fi
-elif [[ ${currentPhase} -eq 14 ]]
+elif [[ ${currentPhase} -eq 13 ]]
 then 
     ${SUBMIT_SCRIPTS_PATH}/createScaff10XPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
@@ -205,7 +197,7 @@ then
         (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createScaff10XPlans.sh failed some how. Stop here.")
         exit 1      
     fi      
-elif [[ ${currentPhase} -eq 15 ]]
+elif [[ ${currentPhase} -eq 14 ]]
 then 
     ${SUBMIT_SCRIPTS_PATH}/createBionanoPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
@@ -213,6 +205,14 @@ then
         (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createBionanoPlans.sh failed some how. Stop here.")
         exit 1      
     fi      
+elif [[ ${currentPhase} -eq 15 ]]
+then 
+    ${SUBMIT_SCRIPTS_PATH}/createHiCPlans.sh ${configFile} ${currentStep} ${slurmID}
+    if [ $? -ne 0 ]
+    then 
+        (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createHiCPlans.sh failed some how. Stop here.")
+        exit 1      
+    fi          
 else
     (>&2 echo "unknown assembly phase: ${currentPhase}")
     exit 1

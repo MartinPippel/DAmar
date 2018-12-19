@@ -114,22 +114,22 @@ elif [[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 ]]
 then 
     currentPhase=11
     currentStep=${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM}                                           
-elif [[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
-then 
-    currentPhase=12
-    currentStep=${CT_HIC_SUBMIT_SCRIPTS_FROM}
 elif [[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
-    currentPhase=13
+    currentPhase=12
     currentStep=${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}
 elif [[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
-    currentPhase=14
+    currentPhase=13
     currentStep=${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}
 elif [[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
+    currentPhase=14
+    currentStep=${SC_BIONANO_SUBMIT_SCRIPTS_FROM}
+elif [[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+then 
     currentPhase=15
-    currentStep=${SC_BIONANO_SUBMIT_SCRIPTS_FROM}    
+    currentStep=${CT_HIC_SUBMIT_SCRIPTS_FROM}        
 else 
     echo "nothing to do"
     exit 0

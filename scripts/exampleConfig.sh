@@ -172,38 +172,38 @@ CT_FREEBAYES_TYPE=0
 CT_FREEBAYES_SUBMIT_SCRIPTS_FROM=1
 CT_FREEBAYES_SUBMIT_SCRIPTS_TO=8
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 12 - HiC QC and scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-CT_HIC_TYPE=0
-# Type: 0 Arima Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools
-# Type: 1 Phase Genomics Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
-# Type: 2 - Aiden Lab Juicer Pipeline (For QC)
-# Type: 3 - Salsa2 Pipeline (For Scaffolding)
-# Type: 4 - 3d-dna Pipeline (For Scaffolding)
-CT_HIC_SUBMIT_SCRIPTS_FROM=1
-CT_HIC_SUBMIT_SCRIPTS_TO=6
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - Whatshap phasing  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 12 - Whatshap phasing  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 CT_WHATSHAP_TYPE=0
 # Type: 0 steps: 1-WHprepareInput, 2-WHminimap2PacBio, 3-WHPacBioBamSplitByRef, 4-WHPacBioBamSeparate, 5-WHPacBioBamMerge, in progress 
 CT_WHATSHAP_SUBMIT_SCRIPTS_FROM=1
 CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 SC_BIONANO_TYPE=0
-# Type: 0 steps: 01_BNscaffold 
+# Type: 0 steps: 01_scaff10Xprepare, 02_scaff10Xscaff10x 
 SC_SCAFF10X_SUBMIT_SCRIPTS_FROM=1
 SC_SCAFF10X_SUBMIT_SCRIPTS_TO=2
 
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 15 - bionano scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - bionano scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 SC_BIONANO_TYPE=0
 # Type: 0 steps: 01_BNscaffold 
 SC_BIONANO_SUBMIT_SCRIPTS_FROM=1
-SC_BIONANO_SUBMIT_SCRIPTS_TO=2
+SC_BIONANO_SUBMIT_SCRIPTS_TO=1
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 15 - HiC QC and scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+SC_HIC_TYPE=0
+# Type: 0 Arima Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools
+# Type: 1 Phase Genomics Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
+# Type: 2 - Aiden Lab Juicer Pipeline (For QC)
+# Type: 3 - Salsa2 Pipeline (For Scaffolding)
+# Type: 4 - 3d-dna Pipeline (For Scaffolding)
+SC_HIC_SUBMIT_SCRIPTS_FROM=1
+SC_HIC_SUBMIT_SCRIPTS_TO=6
 
 # ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
@@ -678,28 +678,6 @@ CT_PURGEHAPLOTIGS_SAMTOOLSMEM=1
 ### purgeHaplotigs
 CT_PURGEHAPLOTIGS_THREADS=24
 
-# ----------------------------------------------------------------- CONTIG HIC QC AND SCAFFOLDING OPTIONS ----------------------------------------------------------------------------------------------------
-
-### general options
-CT_HIC_RUNID=1												# used for output directory purgeHaplotigs_run${PB_ARROW_RUNID}
-CT_HIC_READS="${HIC_PATH}"   								# directory with pacbio fasta files
-CT_HIC_OUTDIR="${FIX_FILT_OUTDIR}"
-CT_HIC_REFFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
-### fastp
-CT_HIC_FASTP_THREADS=4
-### bwa
-CT_HIC_BWA_THREADS=40
-CT_HIC_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
-### picard tools
-CT_HIC_PICARD_XMX=24						# java memory options in Gb
-CT_HIC_PICARD_XMS=24						# java memory options in Gb
-### samtools sort
-CT_HIC_SAMTOOLS_THREADS=10
-CT_HIC_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
-### arima qv min mapping quality
-CT_HIC_MINMAPQV=10
-
-
 # ----------------------------------------------------------------- CONTIG WHATSHAP PAHSING OPTIONS ----------------------------------------------------------------------------------------------------
 
 ### general whatshap options
@@ -772,6 +750,27 @@ SC_BIONANO_ASSEMBLY_NOISE_1="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/S
 ## two enzyme workflow, optional mapping and chimeric quality score caculation are not supported
 #SC_BIONANO_ENZYME_2="BSPQI"
 #SC_BIONANO_ASSEMBLY_2="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/Solve3.2.2_withoutReference/mRhiFer_BSPQI_1_fullAssembly_SNRfilt_run01_v322/contigs/mRhiFer_refineFinal1/MRHIFER_REFINEFINAL1.cmap"
+
+# ----------------------------------------------------------------- SCAFFOLDING - HIC QC AND SALSA, 3DNA, JUICER OPTIONS ----------------------------------------------------------------------------------------------------
+
+### general options
+SC_HIC_RUNID=1												# used for output directory purgeHaplotigs_run${PB_ARROW_RUNID}
+SC_HIC_READS="${HIC_PATH}"   								# directory with pacbio fasta files
+SC_HIC_OUTDIR="${FIX_FILT_OUTDIR}"
+SC_HIC_REFFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
+### fastp
+SC_HIC_FASTP_THREADS=4
+### bwa
+SC_HIC_BWA_THREADS=40
+SC_HIC_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
+### picard tools
+SC_HIC_PICARD_XMX=24						# java memory options in Gb
+SC_HIC_PICARD_XMS=24						# java memory options in Gb
+### samtools sort
+SC_HIC_SAMTOOLS_THREADS=10
+SC_HIC_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
+### arima qv min mapping quality
+SC_HIC_MINMAPQV=10
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
@@ -930,13 +929,13 @@ MEM_FBmarkDuplicates=$((${CT_FREEBAYES_SAMTOOLS_THREADS}*${CT_FREEBAYES_SAMTOOLS
 TIME_FBmarkDuplicates=24:00:00
 
 ########### HIC bwa 
-THREADS_HICbwa=${CT_HIC_BWA_THREADS}
-MEM_HICbwa=$((${CT_HIC_BWA_THREADS}*1024+${CT_HIC_SAMTOOLS_THREADS}*${CT_HIC_SAMTOOLS_MEM}*1024))     
+THREADS_HICbwa=${SC_HIC_BWA_THREADS}
+MEM_HICbwa=$((${SC_HIC_BWA_THREADS}*1024+${SC_HIC_SAMTOOLS_THREADS}*${SC_HIC_SAMTOOLS_MEM}*1024))     
 TIME_HICbwa=24:00:00
 
 ########### HIC picard markduplicates - run indexing parallel  
-THREADS_HICmarkduplicates=${CT_HIC_SAMTOOLS_THREADS}
-MEM_HICmarkduplicates=$((${CT_HIC_SAMTOOLS_THREADS}*${CT_HIC_SAMTOOLS_MEM}*1024+${CT_HIC_PICARD_XMS}*1024))     
+THREADS_HICmarkduplicates=${SC_HIC_SAMTOOLS_THREADS}
+MEM_HICmarkduplicates=$((${SC_HIC_SAMTOOLS_THREADS}*${SC_HIC_SAMTOOLS_MEM}*1024+${SC_HIC_PICARD_XMS}*1024))     
 TIME_HICmarkduplicates=24:00:00
 
 ########### WHATSHAP pipeline
