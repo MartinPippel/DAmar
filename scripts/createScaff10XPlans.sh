@@ -33,6 +33,12 @@ then
     exit 1
 fi
 
+if [[ -z ${QUAST_PATH} || ! -f ${QUAST_PATH}/quast.py ]]
+then
+	(>&2 echo "Variable QUAST_PATH must be set to a proper quast installation directory!!")
+    exit 1
+fi
+
 function setScaff10xOptions()
 {
 	SCAFF10X_SCAFF10X_OPT=""
@@ -97,7 +103,7 @@ function setScaff10xOptions()
 	fi
 }
 
-myTypes=("01_scaff10Xprepare, 02_scaff10Xscaff10x")
+myTypes=("01_scaff10Xprepare, 02_scaff10Xscaff10x, 03_scaff10Xstatistics")
 if [[ ${SC_SCAFF10X_TYPE} -eq 0 ]]
 then 
     ### 01_scaff10Xprepare
@@ -198,8 +204,29 @@ then
     	fi
                 
         options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${infiles} ${PROJECT_ID}_m${FIX_FILT_OUTDIR}_x.p.fasta" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${infiles} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p.fasta" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
 		echo "scaff10X $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.version
+	### 03_scaff10Xstatistics		
+	elif [[ ${currentStep} -eq 3 ]]
+    then
+		### clean up plans 
+        for x in $(ls scaff10x_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+		### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+    	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+        then 
+        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+    	else
+        	cwd=$(pwd)
+        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+    	fi
+    	### create assemblyStats plan 
+    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 12" > scaff10x_03_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scaff10x_03_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version	
+		echo "$(quast.py --version)" >> scaff10x_03_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in SC_SCAFF10X_TYPE ${SC_SCAFF10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_SCAFF10X_TYPE}]}")

@@ -17,6 +17,13 @@ then
     exit 1
 fi
 
+if [[ -z ${QUAST_PATH} || ! -f ${QUAST_PATH}/quast.py ]]
+then
+	(>&2 echo "Variable QUAST_PATH must be set to a proper quast installation directory!!")
+    exit 1
+fi
+
+
 mkdir -p stats
 
 #### create fasta stats (haploid/diploid size, ng50s, etc)
@@ -278,11 +285,9 @@ then
 	fi
 elif [[ ${phase} -eq 11 ]] ## after freebayes polishing 
 then
-	if [[ -d ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]
+	if [[ -d ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} ]]
 	then
-		
-		rawPath=stats/contigs/${FIX_FILT_OUTDIR}/raw
-		freebayesPath=stats/contigs/${FIX_FILT_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}
+		freebayesPath=stats/contigs/${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}
 		fext="f"
 		
 		mkdir -p ${freebayesPath}
@@ -302,15 +307,39 @@ then
   			exit 1
 		fi
 		
-		cat ${fname} > ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta
-		gzip -c ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta > ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fa.gz
-		cat ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${freebayesPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.stats
+		cat ${fname} > ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.fasta
+		gzip -c ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.fasta > ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.fa.gz
+		cat ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.stats
 		cp ${config} ${freebayesPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 	else
-		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} not available")
+		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} not available")
   		exit 1
 	fi
-			
+elif [[ ${phase} -eq 12 ]] ## scaff10x scaffolding 
+then
+	if [[ -d ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID} ]]
+	then
+		scaff10xPath=stats/contigs/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}
+		fext="x"
+		
+		mkdir -p ${scaff10xPath}
+		
+		fname="${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta"
+		if [[ ! -f ${fname} ]]
+		then
+			(>&2 echo "ERROR - Cannot find file ${fname}")
+  			exit 1
+		fi
+		
+		cat ${fname} > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta
+		gzip -c ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fa.gz
+		cat ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.stats
+		${QUAST_PATH}/quast.py -o ${scaff10xPath} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta
+		cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
+	else
+		(>&2 echo "ERROR - directory ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID} not available")
+  		exit 1
+	fi			
 else
 	(>&2 echo "Unknow Phase: ${phase}")
 	exit 1	
