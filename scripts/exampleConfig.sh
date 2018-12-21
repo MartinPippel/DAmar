@@ -35,6 +35,8 @@ export SCAFF10X_PATH="/projects/dazzler/pippel/prog/scaffolding/scaff10x"
 export BIONANO_PATH="/projects/dazzler/pippel/prog/bionano/Solve3.3_10252018"
 export SALSA_PATH="/projects/dazzler/pippel/prog/scaffolding/SALSA"
 export QUAST_PATH="/projects/dazzler/pippel/prog/quast/"
+export JUICER_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer"
+export JUICER_TOOLS_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer/juicer_tools.1.9.8_jcuda.0.8.jar"
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -729,6 +731,13 @@ SCAF_SCAFF10X_SCAFF10X_BLOCK=50000				### VGP: round1: 50000, round2: 50000
 #SCAF_SCAFF10X_SCAFF10X_BAM="path to previously created bam file"
 #SCAF_SCAFF10X_SCAFF10X_READSBC1="m1/scaff10x_1/scaff10x_BC_1.fastq" 		## produced in step1 of scaff10x pipeleine
 #SCAF_SCAFF10X_SCAFF10X_READSBC2="m1/scaff10x_1/scaff10x_BC_2.fastq"		## produced in step1 of scaff10x pipeleine
+### break10x options
+SCAF_SCAFF10X_BREAK10X_THREADS=48			# nodes  (30)  - number of CPUs requested
+SCAF_SCAFF10X_BREAK10X_READS=5		       	# reads  (5)   - minimum number of reads per barcode
+SCAF_SCAFF10X_BREAK10X_SCORE=20      		# score  (20)  - minimum average mapping score on an area covered by reads with the same barcode
+SCAF_SCAFF10X_BREAK10X_COVER=50       		# cover  (50)  - minimum barcode coverage at the breakpoint
+SCAF_SCAFF10X_BREAK10X_GAP=100       		# gap    (100) - gap size in building scaffold
+SCAF_SCAFF10X_BREAK10X_RATIO=15
 
 # ----------------------------------------------------------------- SCAFFOLDING - BIONANO OPTIONS ----------------------------------------------------------------------------------------------------
 
@@ -758,6 +767,7 @@ SC_HIC_RUNID=1												# used for output directory purgeHaplotigs_run${PB_ARR
 SC_HIC_READS="${HIC_PATH}"   								# directory with pacbio fasta files
 SC_HIC_OUTDIR="${FIX_FILT_OUTDIR}"
 SC_HIC_REFFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
+SC_HIC_ENZYME="Sau3AI"		
 ### fastp
 SC_HIC_FASTP_THREADS=4
 ### bwa

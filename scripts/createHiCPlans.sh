@@ -97,11 +97,12 @@ fi
 # Type: 1 - Phase Genomics Mapping Pipeline (For QC)
 # Type: 2 - Aiden Lab Juicer Pipeline (For QC)
 # Type: 3 - 3d-dna Pipeline (For Scaffolding)
-myTypes=("1-HICprepareInput, 2-HICbwa, 3-HICfilter, 4-HICmerge, 5-HICmarkduplicates, 6-HICstatistics, 7_HICrunSalsa ", 
-"1-HICprepareInput, 2-HICbwa, 3-HICfilter, 4-HICmatlock")
+myTypes=("01_HICsalsaPrepareInput, 02_HICsalsaBwa, 03_HICsalsaFilter, 04_HICsalsaMerge, 05_HICsalsaMarkduplicates, 06_HICsalsaSalsa, 07_HICsalsaStatistics", 
+"01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock", 
+"01_HIC3dnaPrepareInput")
 if [[ ${CT_HIC_TYPE} -eq 0 ]]
 then 
-    ### 1-HICprepareInput
+    ### 01_HICsalsaPrepareInput
     if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
@@ -122,19 +123,19 @@ then
         	exit 1
    		fi
    		
-   		echo "if [[ -d ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} ]]; then mv ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}" > hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/config" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -r ${CT_HIC_REFFASTA} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "samtools faidx ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "bwa index ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "cp ${configFile} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.plan
+   		echo "if [[ -d ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} ]]; then mv ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}" > hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/config" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -r ${CT_HIC_REFFASTA} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "samtools faidx ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "bwa index ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/ref/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cp ${configFile} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_01_HICprepareInput_single_${CONT_DB}.${slurmID}.version
-	### 2-HICbwa 
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.version
+	### 02_HICsalsaBwa 
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
@@ -219,11 +220,11 @@ then
 			
 			echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${o}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:ILLUMINA\tPU:none\" ${ref} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${f1} | samtools view -Sb - > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${o}_bwa_1.bam"
 			echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${o}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:ILLUMINA\tPU:none\" ${ref} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/reads/${f2} | samtools view -Sb - > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${o}_bwa_2.bam" 				 
-		done > hic_02_HICbwa_block_${CONT_DB}.${slurmID}.plan
+		done > hic_02_HICsalsaBwa_block_${CONT_DB}.${slurmID}.plan
 		
-   		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_02_HICbwa_block_${CONT_DB}.${slurmID}.version
-   		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_02_HICbwa_block_${CONT_DB}.${slurmID}.version
-	### 3-HICfilter
+   		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_02_HICsalsaBwa_block_${CONT_DB}.${slurmID}.version
+   		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_02_HICsalsaBwa_block_${CONT_DB}.${slurmID}.version
+	### 03_HICsalsaFilter
     elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
@@ -247,10 +248,10 @@ then
 			
 			echo "samtools view -h ${b1} | perl ${MARVEL_PATH}/scripts/filter_five_end.pl | samtools view -Sb - > ${d}/${f1}"
 			echo "samtools view -h ${b2} | perl ${MARVEL_PATH}/scripts/filter_five_end.pl | samtools view -Sb - > ${d}/${f2}" 				 
-		done > hic_03_HICfilter_block_${CONT_DB}.${slurmID}.plan
+		done > hic_03_HICsalsaFilter_block_${CONT_DB}.${slurmID}.plan
 					
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_03_HICfilter_block_${CONT_DB}.${slurmID}.version	   	
-	### 4-HICmerge
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_03_HICsalsaFilter_block_${CONT_DB}.${slurmID}.version	   	
+	### 04_HICsalsaMerge
     elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
@@ -284,10 +285,10 @@ then
 			o="${b1%_1.bam}.bam"			
 			
 			echo "perl ${MARVEL_PATH}/scripts/two_read_bam_combiner.pl ${b1} ${b2} $(which samtools) ${CT_HIC_MINMAPQV} | samtools view -bS -t ${ref}.fai - | samtools sort -o ${o} -"			 				 
-			done > hic_04_HICmerge_single_${CONT_DB}.${slurmID}.plan
+			done > hic_04_HICsalsaMerge_single_${CONT_DB}.${slurmID}.plan
 		   
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_03_HICfilter_single_${CONT_DB}.${slurmID}.version		
-   	### 5-HICmarkduplicates
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_04_HICsalsaMerge_single_${CONT_DB}.${slurmID}.version		
+   	### 05_HICsalsaMarkduplicates
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
@@ -307,7 +308,7 @@ then
    		## if multiple bam files are available (e.g. different Lanes) then merge files prior to markduplicates
    		files=$(ls ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/*_bwaFilt.bam)
    		   		   		
-   		echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" > hic_05_HICmarkduplicates_single_${CONT_DB}.${slurmID}.version
+   		echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" > hic_05_HICsalsaMarkduplicates_single_${CONT_DB}.${slurmID}.version
    		
    		if [[ $(echo $files | wc -w) -eq 1 ]]
    		then
@@ -321,32 +322,16 @@ then
    			m=${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.metrics
    			i=$(echo -e ${files} | sed -e "s:${CT_HIC_OUTDIR}:I=${CT_HIC_OUTDIR}:g")
    			echo "picard ${CONTIG_PICARD_OPT} MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard ${CONTIG_PICARD_OPT} MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_HIC_SAMTOOLS_THREADS} ${o} && ln -s -f -r ${o} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} && ln -s -f -r ${ob}.bai ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}"
-   			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" >> hic_05_HICmarkduplicates_single_${CONT_DB}.${slurmID}.version	
+   			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" >> hic_05_HICsalsaMarkduplicates_single_${CONT_DB}.${slurmID}.version	
    		else
    	 		(>&2 echo "ERROR - cannot find file with following pattern: ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/*_bwaFilt.bam!")
         	exit 1
-   	 	fi > hic_05_HICmarkduplicates_single_${CONT_DB}.${slurmID}.plan
-   	### 6-HICstatistics
+   	 	fi > hic_05_HICsalsaMarkduplicates_single_${CONT_DB}.${slurmID}.plan 
+   	### 06_HICsalsaSalsa
     elif [[ ${currentStep} -eq 6 ]]
     then
         ### clean up plans 
         for x in $(ls hic_06_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done
-        
-		if [[ ! -f "${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam" ]]
-        then
-    	(>&2 echo "ERROR - cannot access final duplicate marked bam file ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam!")
-        	exit 1
-   		fi
-   		   		  
-   		echo "perl ${MARVEL_PATH}/scripts/get_stats.pl ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/${PROJECT_ID}_finalHiC.stats" > hic_06_HICstatistics_single_${CONT_DB}.${slurmID}.plan
-   	### 7_HICrunSalsa
-    elif [[ ${currentStep} -eq 7 ]]
-    then
-        ### clean up plans 
-        for x in $(ls hic_07_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
       	done
@@ -377,18 +362,90 @@ then
         	exit 1	
        	fi
 		
-		echo "bedtools bamToBed -i ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed" > hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.plan
-		echo "sort -k 4 ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC_sortByName.bed" >> hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.plan
+		echo "bedtools bamToBed -i ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed" > hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
+		echo "sort -k 4 ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC_sortByName.bed" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
        	bed=${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC_sortByName.bed
-       	echo "python run_pipeline.py -a ${ref} -l ${ref}.fai -b ${bed} -e ${CT_HIC_ENZYME} -o ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/${PROJECT_ID}_${CT_HIC_OUTDIR}_s.p.fasta -m yes" >> hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.plan
+       	echo "python run_pipeline.py -a ${ref} -l ${ref}.fai -b ${bed} -e ${CT_HIC_ENZYME} -o ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/${PROJECT_ID}_${CT_HIC_OUTDIR}_s.p.fasta -m yes" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
        	
-       	echo "SALSA $(git --git-dir=${SALSA_PATH}/.git rev-parse --short HEAD)" > hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.version
-       	echo "$(${PACBIO_BASE_ENV} && bedtools --version && ${PACBIO_BASE_ENV_DEACT}" >> hic_07_HICrunSalsa_single_${CONT_DB}.${slurmID}.version
+       	echo "SALSA $(git --git-dir=${SALSA_PATH}/.git rev-parse --short HEAD)" > hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
+       	echo "$(${PACBIO_BASE_ENV} && bedtools --version && ${PACBIO_BASE_ENV_DEACT}" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
+    ### 07_HICsalsaStatistics
+    elif [[ ${currentStep} -eq 7 ]]
+    then
+        ### clean up plans 
+        for x in $(ls hic_07_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+		if [[ ! -f "${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam" ]]
+        then
+    	(>&2 echo "ERROR - cannot access final duplicate marked bam file ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam!")
+        	exit 1
+   		fi
+   		   		  
+   		echo "perl ${MARVEL_PATH}/scripts/get_stats.pl ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/${PROJECT_ID}_finalHiC.stats" > hic_07_HICsalsaStatistics_single_${CONT_DB}.${slurmID}.plan
+   		## TODO assemblyStats   	
     else
         (>&2 echo "step ${currentStep} in CT_HIC_TYPE ${CT_HIC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_HIC_TYPE}]}")
         exit 1            
-    fi    		
+    fi 
+if [[ ${CT_HIC_TYPE} -eq 1 ]] ### 01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock
+then     
+ 	(>&2 echo "Phase qc not implemented yet")
+    exit 1
+if [[ ${CT_HIC_TYPE} -eq 2 ]] ### 01_HIC3dnaPrepareInput
+then 
+	if [[ ${currentStep} -eq 1 ]]
+    then
+        ### clean up plans 
+        for x in $(ls hic_01_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        if [[ -z ${JUICER_PATH} || ! -f ${JUICER_PATH}/SLURM/scripts/juicer.sh || -z ${JUICER_TOOLS_PATH} || ! -f ${JUICER_TOOLS_PATH} ]]
+        then 
+    		(>&2 echo "[ERROR] Set variable JUICER_PATH to juicer install directory and JUICER_TOOLS_PATH to a valid jar file (e.g. juicer_tools.1.9.8_jcuda.0.8.jar)")
+    		exit 1
+    	fi
+    	
+    	
+    	if [[ ! -f "${CT_HIC_REFFASTA}" ]]
+        then
+        	(>&2 echo "ERROR - set CT_HIC_REFFASTA to reference fasta file")
+        	exit 1
+   		fi
+   		
+   		if [[ ! -d "${CT_HIC_READS}" ]]
+        then
+        	(>&2 echo "ERROR - set CT_HIC_READS to HiC read directory")
+        	exit 1
+   		fi
+   		
+   		if [[ -z ${CT_HIC_ENZYME} ]]
+   		then
+        	(>&2 echo "ERROR - set variable CT_HIC_ENZYME!")
+        	exit 1   			
+   		fi
+   		
+   		echo "if [[ -d ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} ]]; then mv ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -f -r ${JUICER_PATH}/SLURM ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/scripts" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -f -r ${JUICER_TOOLS_PATH} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/scripts" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -r ${CT_HIC_REFFASTA} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "samtools faidx ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/references/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "bwa index ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/references/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "python ${${JUICER_PATH}}/misc/generate_site_positions.py ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/references/${CT_HIC_ENZYME} ${PROJECT_ID} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/references/$(basename ${CT_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cp ${configFile} ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version    	        
+  	else
+    	(>&2 echo "step ${currentStep} in CT_HIC_TYPE ${CT_HIC_TYPE} not supported")
+    	(>&2 echo "valid steps are: ${myTypes[${CT_HIC_TYPE}]}")
+    	exit 1
 else
     (>&2 echo "unknown CT_HIC_TYPE ${CT_HIC_TYPE}")
     (>&2 echo "supported types")
