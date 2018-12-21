@@ -172,7 +172,7 @@ then
     	then
    			echo "using reads scaff10x_BC_1.fastq scaff10x_BC_2.fastq from a peevious run:"
    			echo "${SCAF_SCAFF10X_SCAFF10X_READSBC1}"
-   			echo "${SCAF_SCAFF10X_SCAFF10X_READSBC2}"
+   			echo "${SCAF_SCAFF10X_SCAFF10X_READSBC2}"   			
    		else
 	   		for r1 in ${SC_SCAFF10X_READS}/${PROJECT_ID}_S[0-9]_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
 			do
@@ -205,6 +205,15 @@ then
     	infiles="ref/$(basename ${SC_SCAFF10X_REF})"
     	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -n ${SCAF_SCAFF10X_SCAFF10X_READSBC2} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC2} ]]
     	then
+    		### we need an absolute path if --tmp flag is used in scaff10x 
+    		if[[ "${SCAF_SCAFF10X_SCAFF10X_READSBC1:0:1}" = "/" ]]
+    		then 
+    			SCAF_SCAFF10X_SCAFF10X_READSBC1=$(pwd)/${SCAF_SCAFF10X_SCAFF10X_READSBC1}
+    		fi
+    		if[[ "${SCAF_SCAFF10X_SCAFF10X_READSBC2:0:1}" = "/" ]]
+    		then 
+    			SCAF_SCAFF10X_SCAFF10X_READSBC2=$(pwd)/${SCAF_SCAFF10X_SCAFF10X_READSBC2}
+    		fi
     		infiles="${infiles} ${SCAF_SCAFF10X_SCAFF10X_READSBC1} ${SCAF_SCAFF10X_SCAFF10X_READSBC2}"
     	else
     		infiles="${infiles} scaff10x_BC_1.fastq scaff10x_BC_2.fastq"
