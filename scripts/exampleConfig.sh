@@ -719,7 +719,7 @@ SCAF_SCAFF10X_SCAFF10X_THREADS=48
 #SCAF_SCAFF10X_SCAFF10X_ALIGNER=bwa		### bwa or smalt
 #SCAF_SCAFF10X_SCAFF10X_SCORE=20
 SCAF_SCAFF10X_SCAFF10X_MATRIX=2000
-SCAF_SCAFF10X_SCAFF10X_MINREADS=12				### VGP: round1: 12, round2: 8
+SCAF_SCAFF10X_SCAFF10X_MINREADS=12				### VGP: round1: 12, round2: 8 (default: 10)
 SCAF_SCAFF10X_SCAFF10X_LONGREAD=1
 SCAF_SCAFF10X_SCAFF10X_GAPSIZE=100				### should be the same as used in scaff_reads
 SCAF_SCAFF10X_SCAFF10X_EDGELEN=50000
@@ -728,7 +728,7 @@ SCAF_SCAFF10X_SCAFF10X_BLOCK=50000				### VGP: round1: 50000, round2: 50000
 #SCAF_SCAFF10X_SCAFF10X_SAM="path to previously created sam file"
 #SCAF_SCAFF10X_SCAFF10X_BAM="path to previously created bam file"
 #SCAF_SCAFF10X_SCAFF10X_READSBC1="m1/scaff10x_1/scaff10x_BC_1.fastq" 		## produced in step1 of scaff10x pipeleine
-#SCAF_SCAFF10X_SCAFF10X_READSBC2="m1/scaff10x_1/scaff10x_BC_1.fastq"		## produced in step1 of scaff10x pipeleine
+#SCAF_SCAFF10X_SCAFF10X_READSBC2="m1/scaff10x_1/scaff10x_BC_2.fastq"		## produced in step1 of scaff10x pipeleine
 
 # ----------------------------------------------------------------- SCAFFOLDING - BIONANO OPTIONS ----------------------------------------------------------------------------------------------------
 
