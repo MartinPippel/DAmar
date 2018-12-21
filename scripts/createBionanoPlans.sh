@@ -163,7 +163,7 @@ then
    			then
    				echo "sed -e "s:CTTAAG:BssSI:" ${HYBSCAF_PATH}/hybridScaffold_config.xml > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config/hybridScaffold_BSSSI_config.xml"
 				HYB_CONF=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config/hybridScaffold_BSSSI_config.xml				   				
-   			fi > bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   			fi >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    			# set refaligner path 
    			REFALN=$(find ${BIONANO_PATH}/RefAligner/*/avx -name "RefAligner")
    			if [[ $(echo -e "${REFALN}" | wc -l ) -ne 1 ]]
