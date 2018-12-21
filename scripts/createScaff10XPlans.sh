@@ -206,12 +206,12 @@ then
     	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -n ${SCAF_SCAFF10X_SCAFF10X_READSBC2} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC2} ]]
     	then
     		### we need an absolute path if --tmp flag is used in scaff10x 
-    		if [[ "${SCAF_SCAFF10X_SCAFF10X_READSBC1:0:1}" = "/" ]]
+    		if [[ ! "${SCAF_SCAFF10X_SCAFF10X_READSBC1:0:1}" = "/" ]]
     		then 
     			SCAF_SCAFF10X_SCAFF10X_READSBC1=$(pwd)/${SCAF_SCAFF10X_SCAFF10X_READSBC1}
     		fi
     		
-    		if [[ "${SCAF_SCAFF10X_SCAFF10X_READSBC2:0:1}" = "/" ]]
+    		if [[ ! "${SCAF_SCAFF10X_SCAFF10X_READSBC2:0:1}" = "/" ]]
     		then 
     			SCAF_SCAFF10X_SCAFF10X_READSBC2=$(pwd)/${SCAF_SCAFF10X_SCAFF10X_READSBC2}
     		fi
