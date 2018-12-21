@@ -34,6 +34,7 @@ export PYTHONPATH=${MARVEL_PATH}/lib.python:$PYTHONPATH
 export SCAFF10X_PATH="/projects/dazzler/pippel/prog/scaffolding/scaff10x"
 export BIONANO_PATH="/projects/dazzler/pippel/prog/bionano/Solve3.3_10252018"
 export SALSA_PATH="/projects/dazzler/pippel/prog/scaffolding/SALSA"
+export QUAST_PATH="/projects/dazzler/pippel/prog/quast/"
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -183,10 +184,9 @@ CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 SC_BIONANO_TYPE=0
-# Type: 0 steps: 01_scaff10Xprepare, 02_scaff10Xscaff10x 
+# Type: 0 steps: 01_scaff10Xprepare, 02_scaff10Xscaff10x, 03_scaff10Xstatistics
 SC_SCAFF10X_SUBMIT_SCRIPTS_FROM=1
 SC_SCAFF10X_SUBMIT_SCRIPTS_TO=2
-
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - bionano scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -718,17 +718,17 @@ SC_SCAFF10X_READS=${TENX_PATH}
 SCAF_SCAFF10X_SCAFF10X_THREADS=48
 #SCAF_SCAFF10X_SCAFF10X_ALIGNER=bwa		### bwa or smalt
 #SCAF_SCAFF10X_SCAFF10X_SCORE=20
-#SCAF_SCAFF10X_SCAFF10X_MATRIX=2000
-#SCAF_SCAFF10X_SCAFF10X_MINREADS=10
-#SCAF_SCAFF10X_SCAFF10X_LONGREAD=1
-#SCAF_SCAFF10X_SCAFF10X_GAPSIZE=100		### should be the same as used in scaff_reads
-#SCAF_SCAFF10X_SCAFF10X_EDGELEN=50000
-#SCAF_SCAFF10X_SCAFF10X_MINSHAREDBARCODES=8
-#SCAF_SCAFF10X_SCAFF10X_BLOCK=2500
+SCAF_SCAFF10X_SCAFF10X_MATRIX=2000
+SCAF_SCAFF10X_SCAFF10X_MINREADS=12				### VGP: round1: 12, round2: 8
+SCAF_SCAFF10X_SCAFF10X_LONGREAD=1
+SCAF_SCAFF10X_SCAFF10X_GAPSIZE=100				### should be the same as used in scaff_reads
+SCAF_SCAFF10X_SCAFF10X_EDGELEN=50000
+SCAF_SCAFF10X_SCAFF10X_MINSHAREDBARCODES=8		### VGP: round1: 10, round2: 10
+SCAF_SCAFF10X_SCAFF10X_BLOCK=50000				### VGP: round1: 50000, round2: 50000
 #SCAF_SCAFF10X_SCAFF10X_SAM="path to previously created sam file"
 #SCAF_SCAFF10X_SCAFF10X_BAM="path to previously created bam file"
-#SCAF_SCAFF10X_SCAFF10X_READSBC1="path to previously created BC_1 file" 		## produced in step1 of scaff10x pipeleine
-#SCAF_SCAFF10X_SCAFF10X_READSBC2="path to previously created BC_1 file"		## produced in step1 of scaff10x pipeleine
+#SCAF_SCAFF10X_SCAFF10X_READSBC1="m1/scaff10x_1/scaff10x_BC_1.fastq" 		## produced in step1 of scaff10x pipeleine
+#SCAF_SCAFF10X_SCAFF10X_READSBC2="m1/scaff10x_1/scaff10x_BC_1.fastq"		## produced in step1 of scaff10x pipeleine
 
 # ----------------------------------------------------------------- SCAFFOLDING - BIONANO OPTIONS ----------------------------------------------------------------------------------------------------
 
