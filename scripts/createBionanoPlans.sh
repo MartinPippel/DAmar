@@ -107,13 +107,13 @@ then
    			fi        	
     	fi
     	       		   		
-   		if [[ -n ${SC_BIONANO_OUTDIR} ]]
+   		if [[ -z ${SC_BIONANO_OUTDIR} ]]
    		then 
    			(>&2 echo "ERROR - Variable SC_BIONANO_OUTDIR must be set!")
 	        exit 1	
    		fi
    		
-   		if [[ -n ${SC_BIONANO_RUNID} ]]
+   		if [[ -z ${SC_BIONANO_RUNID} ]]
    		then 
    			SC_BIONANO_RUNID=1
    		fi 
