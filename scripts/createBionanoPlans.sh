@@ -56,11 +56,11 @@ function setBionanoOptions()
 		if [[ -z ${SC_BIONANO_MOLCULES_1} || -z ${SC_BIONANO_ASSEMBLY_1} || -z ${SC_BIONANO_ASSEMBLYSCRIPT_1} || -z ${SC_BIONANO_ASSEMBLYOPTARGS_1} || -z ${SC_BIONANO_ASSEMBLY_NOISE1} ]]
 		then 
 			(>&2 echo "[WARNING] - To align molecules to hybrid scaffolds (-x) and to generate a chimeric quality score all of the following variables have to be set properly:")
-			(>&2 echo "            SC_BIONANO_MOLCULES_1, SC_BIONANO_ASSEMBLY_1, SC_BIONANO_ASSEMBLYSCRIPT_1, SC_BIONANO_ASSEMBLYOPTARGS_1, SC_BIONANO_ASSEMBLY_NOISE1"
+			(>&2 echo "            SC_BIONANO_MOLCULES_1, SC_BIONANO_ASSEMBLY_1, SC_BIONANO_ASSEMBLYSCRIPT_1, SC_BIONANO_ASSEMBLYOPTARGS_1, SC_BIONANO_ASSEMBLY_NOISE1")
 		elif [[ ! -f "${SC_BIONANO_MOLCULES_1}" || ! -f "${SC_BIONANO_ASSEMBLY_1}" || ! -f "${SC_BIONANO_ASSEMBLYSCRIPT_1}" || ! -f "${SC_BIONANO_ASSEMBLYOPTARGS_1}" || ! -f "${SC_BIONANO_ASSEMBLY_NOISE1}" ]]
 		then 
 			(>&2 echo "[WARNING] - To align molecules to hybrid scaffolds (-x) and to generate a chimeric quality score all of the following variables have to be set properly:")
-			(>&2 echo "            SC_BIONANO_MOLCULES_1, SC_BIONANO_ASSEMBLY_1, SC_BIONANO_ASSEMBLYSCRIPT_1, SC_BIONANO_ASSEMBLYOPTARGS_1, SC_BIONANO_ASSEMBLY_NOISE1"
+			(>&2 echo "            SC_BIONANO_MOLCULES_1, SC_BIONANO_ASSEMBLY_1, SC_BIONANO_ASSEMBLYSCRIPT_1, SC_BIONANO_ASSEMBLYOPTARGS_1, SC_BIONANO_ASSEMBLY_NOISE1")
 		else
 			BIONANO_OPT="${BIONANO_OPT} -x -y"
 			BIONANO_OPT="${BIONANO_OPT} -m ${SC_BIONANO_MOLCULES_1}"
