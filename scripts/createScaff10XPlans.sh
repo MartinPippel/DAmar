@@ -103,7 +103,42 @@ function setScaff10xOptions()
 	fi
 }
 
-myTypes=("01_scaff10Xprepare, 02_scaff10Xscaff10x, 03_scaff10Xstatistics")
+function setBreak10xOptions()
+{
+	SCAFF10X_BREAK10X_OPT=""
+	
+	if [[ -n ${SCAF_SCAFF10X_BREAK10X_THREADS} && ${SCAF_SCAFF10X_BREAK10X_THREADS} -ne 0 ]]
+	then
+		SCAFF10X_BREAK10X_OPT="${SCAFF10X_BREAK10X_OPT} -nodes ${SCAF_SCAFF10X_BREAK10X_THREADS}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_BREAK10X_READS} && ${SCAF_SCAFF10X_BREAK10X_READS} -ne 0 ]]
+	then
+		SCAFF10X_BREAK10X_OPT="${SCAFF10X_BREAK10X_OPT} -reads ${SCAF_SCAFF10X_BREAK10X_READS}"		
+	fi
+
+	if [[ -n ${SCAF_SCAFF10X_BREAK10X_SCORE} && ${SCAF_SCAFF10X_BREAK10X_SCORE} -ne 0 ]]
+	then
+		SCAFF10X_BREAK10X_OPT="${SCAFF10X_BREAK10X_OPT} -score ${SCAF_SCAFF10X_BREAK10X_SCORE}"		
+	fi
+
+	if [[ -n ${SCAF_SCAFF10X_BREAK10X_COVER} && ${SCAF_SCAFF10X_BREAK10X_COVER} -ne 0 ]]
+	then
+		SCAFF10X_BREAK10X_OPT="${SCAFF10X_BREAK10X_OPT} -cover ${SCAF_SCAFF10X_BREAK10X_COVER}"		
+	fi
+	
+	if [[ -n ${SCAF_SCAFF10X_BREAK10X_RATIO} && ${SCAF_SCAFF10X_BREAK10X_RATIO} -ne 0 ]]
+	then
+		SCAFF10X_BREAK10X_OPT="${SCAFF10X_BREAK10X_OPT} -ratio ${SCAF_SCAFF10X_BREAK10X_RATIO}"		
+	fi	
+	
+	if [[ -n ${SCAF_SCAFF10X_BREAK10X_GAP} && ${SCAF_SCAFF10X_BREAK10X_GAP} -ne 0 ]]
+	then
+		SCAFF10X_BREAK10X_OPT="${SCAFF10X_BREAK10X_OPT} -gap ${SCAF_SCAFF10X_BREAK10X_GAP}"		
+	fi
+}
+
+myTypes=("01_scaff10Xprepare, 02_scaff10Xscaff10x, 03_scaff10Xbreak10x, 04_scaff10Xstatistics")
 if [[ ${SC_SCAFF10X_TYPE} -eq 0 ]]
 then 
     ### 01_scaff10Xprepare
@@ -203,6 +238,7 @@ then
                   	
     	# add reference 
     	infiles="ref/$(basename ${SC_SCAFF10X_REF})"
+    	# add BCR1 and BCR2 files
     	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -n ${SCAF_SCAFF10X_SCAFF10X_READSBC2} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC2} ]]
     	then
     		### we need an absolute path if --tmp flag is used in scaff10x 
@@ -222,12 +258,50 @@ then
                 
         options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"
         echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${infiles} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p.fasta" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
-		echo "scaff10X $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.version
-	### 03_scaff10Xstatistics		
+		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.version
+	### 03_scaff10Xbreak10x		
 	elif [[ ${currentStep} -eq 3 ]]
     then
 		### clean up plans 
-        for x in $(ls scaff10x_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls scaff10x_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        setBreak10xOptions
+        # add reference 
+    	inputAssembly="ref/$(basename ${SC_SCAFF10X_REF})"
+    	inputScaffold="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p.fasta"
+    	# add BCR1 and BCR2 files
+    	if [[ -n ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC1} && -n ${SCAF_SCAFF10X_SCAFF10X_READSBC2} && -f ${SCAF_SCAFF10X_SCAFF10X_READSBC2} ]]
+    	then
+    		### we need an absolute path if --tmp flag is used in scaff10x 
+    		if [[ ! "${SCAF_SCAFF10X_SCAFF10X_READSBC1:0:1}" = "/" ]]
+    		then 
+    			SCAF_SCAFF10X_SCAFF10X_READSBC1=$(pwd)/${SCAF_SCAFF10X_SCAFF10X_READSBC1}
+    		fi
+    		
+    		if [[ ! "${SCAF_SCAFF10X_SCAFF10X_READSBC2:0:1}" = "/" ]]
+    		then 
+    			SCAF_SCAFF10X_SCAFF10X_READSBC2=$(pwd)/${SCAF_SCAFF10X_SCAFF10X_READSBC2}
+    		fi
+    		inputAssembly="${inputAssembly} ${SCAF_SCAFF10X_SCAFF10X_READSBC1} ${SCAF_SCAFF10X_SCAFF10X_READSBC2}"
+    		inputScaffold="${inputScaffold} ${SCAF_SCAFF10X_SCAFF10X_READSBC1} ${SCAF_SCAFF10X_SCAFF10X_READSBC2}"
+    	else
+    		inputAssembly="${inputAssembly} scaff10x_BC_1.fastq scaff10x_BC_2.fastq"
+    		inputScaffold="${inputScaffold} scaff10x_BC_1.fastq scaff10x_BC_2.fastq"
+    	fi
+                
+        options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"
+        
+		echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputAssembly} $(basename ${SC_SCAFF10X_REF%.*})_break10x.fasta $(basename ${SC_SCAFF10X_REF%.*})_break10x.breaks" > scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+		echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p_break10x.fasta ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p_break10x.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.version
+	### 04_scaff10Xstatistics		
+	elif [[ ${currentStep} -eq 4 ]]
+    then
+		### clean up plans 
+        for x in $(ls scaff10x_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -241,9 +315,9 @@ then
         	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
     	fi
     	### create assemblyStats plan 
-    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 12" > scaff10x_03_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.plan
-    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scaff10x_03_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version	
-		echo "$(quast.py --version)" >> scaff10x_03_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version
+    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 12" > scaff10x_04_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scaff10x_04_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version	
+		echo "$(quast.py --version)" >> scaff10x_04_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in SC_SCAFF10X_TYPE ${SC_SCAFF10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_SCAFF10X_TYPE}]}")
