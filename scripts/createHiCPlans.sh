@@ -446,6 +446,7 @@ then
     	(>&2 echo "step ${currentStep} in CT_HIC_TYPE ${CT_HIC_TYPE} not supported")
     	(>&2 echo "valid steps are: ${myTypes[${CT_HIC_TYPE}]}")
     	exit 1
+	fi
 else
     (>&2 echo "unknown CT_HIC_TYPE ${CT_HIC_TYPE}")
     (>&2 echo "supported types")
