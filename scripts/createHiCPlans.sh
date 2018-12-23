@@ -368,7 +368,7 @@ then
        	echo "python run_pipeline.py -a ${ref} -l ${ref}.fai -b ${bed} -e ${CT_HIC_ENZYME} -o ${CT_HIC_OUTDIR}/hic_${CT_HIC_RUNID}/${PROJECT_ID}_${CT_HIC_OUTDIR}_s.p.fasta -m yes" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
        	
        	echo "SALSA $(git --git-dir=${SALSA_PATH}/.git rev-parse --short HEAD)" > hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
-       	echo "$(${PACBIO_BASE_ENV} && bedtools --version && ${PACBIO_BASE_ENV_DEACT}" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
+       	echo "${PACBIO_BASE_ENV} && bedtools --version && ${PACBIO_BASE_ENV_DEACT}" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
     ### 07_HICsalsaStatistics
     elif [[ ${currentStep} -eq 7 ]]
     then
