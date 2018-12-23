@@ -391,11 +391,11 @@ then
         (>&2 echo "valid steps are: ${myTypes[${CT_HIC_TYPE}]}")
         exit 1            
     fi 
-if [[ ${CT_HIC_TYPE} -eq 1 ]] ### 01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock
+elif [[ ${CT_HIC_TYPE} -eq 1 ]] ### 01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock
 then     
  	(>&2 echo "Phase qc not implemented yet")
     exit 1
-if [[ ${CT_HIC_TYPE} -eq 2 ]] ### 01_HIC3dnaPrepareInput
+elif [[ ${CT_HIC_TYPE} -eq 2 ]] ### 01_HIC3dnaPrepareInput
 then 
 	if [[ ${currentStep} -eq 1 ]]
     then
