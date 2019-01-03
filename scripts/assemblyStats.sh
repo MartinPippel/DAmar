@@ -369,7 +369,7 @@ then
 				
 		mkdir -p ${bionanoPath}
 		
-		PROJECT_ID_CAPS=$(echo $(PROJECT_ID) | awk '{print toupper($0)}')
+		PROJECT_ID_CAPS=$(echo ${PROJECT_ID} | awk '{print toupper($0)}')
 		REF_NAME=$(basename ${SC_BIONANO_REF} | tr '.' '_')
 		fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta"
 		if [[ ! -f ${fname} ]]
