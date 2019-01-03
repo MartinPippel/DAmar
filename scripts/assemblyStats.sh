@@ -410,6 +410,35 @@ then
 	else
 		(>&2 echo "ERROR - directory ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID} not available")
   		exit 1
+	fi	
+elif [[ ${phase} -eq 14 ]] ## HIC SALSA scaffolding 
+then
+	if [[ -d ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} ]]
+	then
+		hicSalsaPath=stats/contigs/${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}
+		
+		fext="sH"
+				
+		mkdir -p ${hicSalsaPath}
+		
+		REF_NAME=$(basename ${SC_BIONANO_REF})
+		fname="${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/${REF_NAME}/scaffolds_FINAL.fasta"
+		if [[ ! -f ${fname} ]]
+		then
+			(>&2 echo "ERROR - Cannot find file ${fname}")
+  			exit 1
+		fi
+		
+		# HIC SALSA scaffolds
+		cat ${fname} > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta
+		gzip -c ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fa.gz
+		cat ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.stats
+		${QUAST_PATH}/quast.py -o ${hicSalsaPath} -t 1 -s -e --est-ref-size ${gsize} ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta
+		cp ${config} ${hicSalsaPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
+		cp ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/${REF_NAME}/input_breaks ${hicSalsaPath}				
+	else
+		(>&2 echo "ERROR - directory ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID} not available")
+  		exit 1
 	fi			
 else
 	(>&2 echo "Unknow Phase: ${phase}")
