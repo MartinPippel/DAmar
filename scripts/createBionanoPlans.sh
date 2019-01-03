@@ -68,6 +68,16 @@ function setBionanoOptions()
 			BIONANO_OPT="${BIONANO_OPT} -q ${SC_BIONANO_ASSEMBLYOPTARGS_1}"
 			BIONANO_OPT="${BIONANO_OPT} -e ${SC_BIONANO_ASSEMBLY_NOISE_1}"
 		fi
+	elif [[ $1 -eq 2 ]] ## two enzyme workflow
+	then
+		BIONANO_OPT="-f"
+		if [[ -n ${SC_BIONANO_CUTS_1} && -f ${SC_BIONANO_CUTS_1} && -n ${SC_BIONANO_CUTS_2} && -f ${SC_BIONANO_CUTS_2} ]]
+		then
+			BIONANO_OPT="${BIONANO_OPT} -m1 ${SC_BIONANO_CUTS_1} -m2 ${SC_BIONANO_CUTS_2}"
+		fi 				 
+	else
+		(>&2 echo "[ERRROR] setBionanoOptions: Unsupported argument '$1'! 1 - single enzyme workflow, 2 - two enzyme workflow")
+    	exit 1
 	fi
 }
 
@@ -135,8 +145,47 @@ then
    		if [[ ${TWO_ENZYME_WORKFLOW} ]]
 		then
 			echo "ln -s -r ${SC_BIONANO_ASSEMBLY_2} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
-   		
-   		
+   			
+   			# set path runTGH R script 
+   			HYBSCAF=$(ls ${BIONANO_PATH}/HybridScaffold/????????/runTGH.R)
+   			if [[ ! -f ${HYBSCAF} ]]
+   			then 
+   				(>&2 echo "ERROR - Cannot find runTGH.R. Should be here: ${BIONANO_PATH}/HybridScaffold/????????/runTGH.R")
+        		exit 1
+   			fi
+   			
+   			# set reference variable
+   			REF="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/$(basename ${SC_BIONANO_REF})"
+   			
+   			# set cmap variables
+   			CMAP1=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/$(basename ${SC_BIONANO_ASSEMBLY_1})
+   			CMAP2=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/$(basename ${SC_BIONANO_ASSEMBLY_2})
+   			# set enzymes 
+   			ENZ1=${SC_BIONANO_ENZYME_1}
+   			ENZ2=${SC_BIONANO_ENZYME_2}
+   			# set output directory
+   			OUT="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out"
+   			# set refaligner path 
+   			REFALN=$(find ${BIONANO_PATH}/RefAligner/*/avx -name "RefAligner")
+   			if [[ $(echo -e "${REFALN}" | wc -l ) -ne 1 ]]
+   			then
+   				(>&2 echo "ERROR - Cannot find RefAligner binary. Should be here: ${BIONANO_PATH}/RefAligner/*/avx/RefAligner")
+        		exit 1
+   			fi
+   			
+   			HYB_CONF=$(ls ${BIONANO_PATH}/HybridScaffold/????????/TGH/hybridScaffold_two_enzymes.xml)
+   			if [[ ! -f ${HYB_CONF} ]]
+   			then 
+   				(>&2 echo "ERROR - Cannot find hybridScaffold_two_enzymes.xml. Should be here: ${BIONANO_PATH}/HybridScaffold/????????/TGH/hybridScaffold_two_enzymes.xml")
+        		exit 1
+   			fi 
+   			echo "sed -e \"s:flag attr=\"enzyme\" val0=\"BSPQI:flag attr=\"enzyme\" val0=\"${ENZ1}:\" -e \"s:flag attr=\"enzyme\" val0=\"CTTAAG:flag attr=\"enzyme\" val0=\"${ENZ2}:\" ${HYB_CONF} > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config/hybridScaffold_two_enzymes.xml" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   			HYB_CONF=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config/hybridScaffold_two_enzymes.xml
+
+   			setBionanoOptions 2
+   			
+   			echo "Rscript ${HYBSCAF} -n ${REF} -b1 ${CMAP1} -b2 ${CMAP2} -e1 ${ENZ1} -e2 ${ENZ2} -O ${OUT} -R ${REFALN} ${BIONANO_OPT} ${HYB_CONF}" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   			echo "${REFALN}" > bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.version
    		else
    			# set path hybrid scaffolder 
    			HYBSCAF=$(ls ${BIONANO_PATH}/HybridScaffold/????????/hybridScaffold.pl)

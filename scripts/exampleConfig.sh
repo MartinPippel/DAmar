@@ -758,7 +758,8 @@ SC_BIONANO_ASSEMBLY_NOISE_1="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/S
 ## two enzyme workflow, optional mapping and chimeric quality score caculation are not supported
 #SC_BIONANO_ENZYME_2="BSPQI"
 #SC_BIONANO_ASSEMBLY_2="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/Solve3.2.2_withoutReference/mRhiFer_BSPQI_1_fullAssembly_SNRfilt_run01_v322/contigs/mRhiFer_refineFinal1/MRHIFER_REFINEFINAL1.cmap"
-
+#SC_BIONANO_CUTS_1=file with valid cut coordinates (absolute file path) 
+#SC_BIONANO_CUTS_2=file with valid cut coordinates (absolute file path)
 # ----------------------------------------------------------------- SCAFFOLDING - HIC QC AND SALSA, 3DNA, JUICER OPTIONS ----------------------------------------------------------------------------------------------------
 
 ### general options
