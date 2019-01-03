@@ -421,7 +421,7 @@ then
 				
 		mkdir -p ${hicSalsaPath}
 		
-		REF_NAME=$(basename ${SC_BIONANO_REF})
+		REF_NAME=$(basename ${SC_HIC_REFFASTA})
 		fname="${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/${REF_NAME}/scaffolds_FINAL.fasta"
 		if [[ ! -f ${fname} ]]
 		then
@@ -437,7 +437,7 @@ then
 		cp ${config} ${hicSalsaPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 		cp ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/${REF_NAME}/input_breaks ${hicSalsaPath}				
 	else
-		(>&2 echo "ERROR - directory ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID} not available")
+		(>&2 echo "ERROR - directory ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} not available")
   		exit 1
 	fi			
 else
