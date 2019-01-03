@@ -421,8 +421,7 @@ then
 				
 		mkdir -p ${hicSalsaPath}
 		
-		REF_NAME=$(basename ${SC_HIC_REFFASTA})
-		fname="${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/${REF_NAME}/scaffolds_FINAL.fasta"
+		fname="${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out/scaffolds_FINAL.fasta"
 		if [[ ! -f ${fname} ]]
 		then
 			(>&2 echo "ERROR - Cannot find file ${fname}")
@@ -435,7 +434,7 @@ then
 		cat ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.stats
 		${QUAST_PATH}/quast.py -o ${hicSalsaPath} -t 1 -s -e --est-ref-size ${gsize} ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta
 		cp ${config} ${hicSalsaPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
-		cp ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/${REF_NAME}/input_breaks ${hicSalsaPath}				
+		cp ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out/input_breaks ${hicSalsaPath}				
 	else
 		(>&2 echo "ERROR - directory ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} not available")
   		exit 1
