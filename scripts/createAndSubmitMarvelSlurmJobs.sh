@@ -568,7 +568,7 @@ then
 		   		[[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]] ||
-		   		[[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
+		   		[[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
 			then
 				cd ../	
 			
@@ -652,12 +652,12 @@ then
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
         			currentStep=$((${SC_BIONANO_SUBMIT_SCRIPTS_FROM}-1))
-        		elif [[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]
+        		elif [[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=15
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
-        			currentStep=$((${CT_HIC_SUBMIT_SCRIPTS_FROM}-1))			
+        			currentStep=$((${SC_HIC_SUBMIT_SCRIPTS_FROM}-1))			
         		else
         			currentPhase=100 ## nothing to do, set phase to invalid value
 				fi				
@@ -709,7 +709,7 @@ then
 		   		[[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]] ||
-		   		[[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
+		   		[[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
 			then
 				cd ../	
 			
@@ -793,12 +793,12 @@ then
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
         			currentStep=$((${SC_BIONANO_SUBMIT_SCRIPTS_FROM}-1))
-        		elif [[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]
+        		elif [[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=15
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
-        			currentStep=$((${CT_HIC_SUBMIT_SCRIPTS_FROM}-1))        				      			
+        			currentStep=$((${SC_HIC_SUBMIT_SCRIPTS_FROM}-1))        				      			
         		else
         			currentPhase=100 ## nothing to do, set phase to invalid value
 				fi				
@@ -843,7 +843,7 @@ then
 		   		[[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]] ||
-		   		[[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
+		   		[[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
 			then
 				cd ../	
 			
@@ -927,12 +927,12 @@ then
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
         			currentStep=$((${SC_BIONANO_SUBMIT_SCRIPTS_FROM}-1))
-        		elif [[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_HIC_SUBMIT_SCRIPTS_FROM} -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]
+        		elif [[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=15
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
-        			currentStep=$((${CT_HIC_SUBMIT_SCRIPTS_FROM}-1))		
+        			currentStep=$((${SC_HIC_SUBMIT_SCRIPTS_FROM}-1))		
         		else
         			currentPhase=100 ## nothing to do, set phase to invalid value
 				fi				
@@ -1073,7 +1073,7 @@ fi
 
 if [[ ${currentPhase} -eq 15 && ${foundNext} -eq 0 ]]
 then 
-    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${CT_HIC_SUBMIT_SCRIPTS_TO} ]]
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]
     then 
         sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1

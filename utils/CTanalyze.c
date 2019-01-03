@@ -7311,7 +7311,7 @@ int main(int argc, char* argv[])
 	printf("STEP0a: initialize AnalyzeContext - START\n");
 	initAnalyzeContext(&actx);
 	printf("STEP0a: initialize AnalyzeContext - DONE\n");
-// todo for now do all steps: input format should from MARVEL assembly run
+// todo for now do all steps: input format should be a MARVEL assembly run
 // analyze overlaps of fixed reads for each contig ( coverage, containments, duplicate reads used in different contigs )
 // STEP1
 	if (1)

@@ -126,10 +126,10 @@ elif [[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 ]]
 then 
     currentPhase=14
     currentStep=${SC_BIONANO_SUBMIT_SCRIPTS_FROM}
-elif [[ ${CT_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+elif [[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=15
-    currentStep=${CT_HIC_SUBMIT_SCRIPTS_FROM}        
+    currentStep=${SC_HIC_SUBMIT_SCRIPTS_FROM}        
 else 
     echo "nothing to do"
     exit 0
