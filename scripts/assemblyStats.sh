@@ -358,6 +358,58 @@ then
 	else
 		(>&2 echo "ERROR - directory ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID} not available")
   		exit 1
+	fi	
+elif [[ ${phase} -eq 13 ]] ## bionano scaffolding 
+then
+	if [[ -d ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID} ]]
+	then
+		bionanoPath=stats/contigs/${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}
+		
+		fext="b"
+				
+		mkdir -p ${bionanoPath}
+		
+		PROJECT_ID_CAPS=$(echo $(PROJECT_ID) | awk '{print toupper($0)}')
+		REF_NAME=$(basename ${SC_BIONANO_REF} | tr '.' '_')
+		fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta"
+		if [[ ! -f ${fname} ]]
+		then
+			(>&2 echo "ERROR - Cannot find file ${fname}")
+  			exit 1
+		fi
+		
+		# bionano scaffolds
+		cat ${fname} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fasta
+		gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fa.gz
+		cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.stats
+		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --est-ref-size ${gsize} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fasta
+		cp ${config} ${bionanoPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
+		cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/hybrid_scaffold_informatics_report.txt ${bionanoPath}
+		cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/hybrid_scaffold_informatics_report.txt ${bionanoPath}
+		cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/$(basename ${SC_BIONANO_REF}).cut.fasta ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_c${fext}.p.fasta
+		cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/conflicts.txt ${bionanoPath}
+		
+		# bionano not scaffolded 
+		fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta"
+		if [[ ! -f ${fname} ]]
+		then
+			(>&2 echo "ERROR - Cannot find file ${fname}")
+  			exit 1
+		fi
+		cat ${fname} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fasta
+		gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fa.gz
+		cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.stats
+		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --est-ref-size ${gsize} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fasta
+				
+		# bionano combined (scaffolded + not scaffolded)
+		cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta
+		cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta
+		gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fa.gz
+		cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.stats
+		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --est-ref-size ${gsize} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta
+	else
+		(>&2 echo "ERROR - directory ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID} not available")
+  		exit 1
 	fi			
 else
 	(>&2 echo "Unknow Phase: ${phase}")

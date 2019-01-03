@@ -71,7 +71,7 @@ function setBionanoOptions()
 	fi
 }
 
-myTypes=("01_BNscaffold")
+myTypes=("01_BNscaffold, 02_BNstatistics")
 if [[ ${SC_BIONANO_TYPE} -eq 0 ]]
 then 
     ### 01_BNscaffold
@@ -180,6 +180,26 @@ then
    			echo "${REFALN}" > bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.version
    			echo "$(perl ${HYBSCAF} -v)" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.version
    		fi
+   	### 02_BNstatistics
+    elif [[ ${currentStep} -eq 2 ]]
+    then
+        ### clean up plans 
+        for x in $(ls bionano_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+   	        
+    	### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+    	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+        then 
+        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+    	else
+        	cwd=$(pwd)
+        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+    	fi
+    	### create assemblyStats plan 
+    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 13" > bionano_02_BNstatistics_single_${CONT_DB}.${slurmID}.plan
+    	git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > bionano_02_BNstatistics_single_${CONT_DB}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in SC_BIONANO_TYPE ${SC_BIONANO_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_BIONANO_TYPE}]}")
