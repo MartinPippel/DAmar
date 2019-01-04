@@ -36,7 +36,7 @@ export BIONANO_PATH="/projects/dazzler/pippel/prog/bionano/Solve3.3_10252018"
 export SALSA_PATH="/projects/dazzler/pippel/prog/scaffolding/SALSA"
 export QUAST_PATH="/projects/dazzler/pippel/prog/quast/"
 export JUICER_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer"
-export JUICER_TOOLS_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer/juicer_tools.1.9.8_jcuda.0.8.jar"
+export JUICER_TOOLS_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer_tools.1.9.8_jcuda.0.8.jar"
 
 ## general information
 PROJECT_ID=iHylVes1

@@ -449,7 +449,7 @@ then
 		echo "ln -s -r ${SC_HIC_REFFASTA} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "python ${${JUICER_PATH}}/misc/generate_site_positions.py ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${SC_HIC_ENZYME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "python ${JUICER_PATH}/misc/generate_site_positions.py ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${SC_HIC_ENZYME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		
 		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
