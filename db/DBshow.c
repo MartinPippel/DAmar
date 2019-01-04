@@ -614,8 +614,8 @@ int main(int argc, char *argv[])
 			{
 				if (next_read(iter))
 					break;
-				e = iter->read;
-				b = e - 1;
+				b = iter->read;
+				e = b + 1;
 				substr = (iter->beg >= 0);
 			}
 			else
