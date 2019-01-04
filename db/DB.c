@@ -1850,7 +1850,7 @@ int DB_Blocks(char* db) // HEIDELBERG_MODIFICATION
 
 char* getDir(int RUN_ID, int subjectID) // HEIDELBERG_MODIFICATION
 {
-	char* out = malloc(11);
+	char* out = malloc(35);
 
 	if (subjectID == 0) // complete DB
 	{
