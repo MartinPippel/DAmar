@@ -436,6 +436,42 @@ then
         	exit 1
    		fi
    		
+   				numR1Files=0
+		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R1.fastq.gz
+		do
+			if [[ -f ${x} ]]
+			then	
+				numR1Files=$((${numR1Files}+1))	
+			fi
+		done
+		
+		if [[ ${numR1Files} -eq 0 ]]
+        then
+        	(>&2 echo "ERROR - cannot read HiC R1 files with following pattern: ${SC_HIC_READS}/${PROJECT_ID}_*_*_R1.fastq.gz")
+        	exit 1
+   		fi
+		
+		numR2Files=0
+		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R2.fastq.gz
+		do
+			if [[ -f ${x} ]]
+			then	
+				numR2Files=$((${numR2Files}+1))	
+			fi
+		done
+		
+		if [[ ${numR2Files} -eq 0 ]]
+        then
+        	(>&2 echo "ERROR - cannot read HiC R2 files with following pattern: ${SC_HIC_READS}/${PROJECT_ID}_*_*_R2.fastq.gz")
+        	exit 1
+   		fi
+   		
+   		if [[ ${numR1Files} -ne ${numR2Files} ]]
+        then
+        	(>&2 echo "ERROR - HiC R1 files ${numR1Files} does not match R2 files ${numR2Files}")
+        	exit 1
+   		fi   		
+   		
    		if [[ -z ${SC_HIC_ENZYME} ]]
    		then
         	(>&2 echo "ERROR - set variable SC_HIC_ENZYME!")
@@ -443,13 +479,27 @@ then
    		fi
    		
    		echo "if [[ -d ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} ]]; then mv ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -f -r ${JUICER_PATH}/SLURM ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -f -r ${JUICER_TOOLS_PATH} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cp -r ${JUICER_PATH}/SLURM/scripts ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -f -r ${JUICER_TOOLS_PATH} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer_tools.jar" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		# create reference subdir + link and do indexing 
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "ln -s -r ${SC_HIC_REFFASTA} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "python ${JUICER_PATH}/misc/generate_site_positions.py ${SC_HIC_ENZYME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		# create resctriction site subdir + generate sites
+		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "python ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA}) ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		# create fastq subdir + link zipped HIC reads  
+		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/fastq" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R[12].fastq.gz
+		do
+			if [[ -f ${x} ]]
+			then	
+				echo "ln -s -r -f ${x} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/fastq" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan 
+			fi
+		done		
+		
+		# create config subdir + copy current config file with time stamp
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		
