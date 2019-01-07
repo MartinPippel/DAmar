@@ -3751,6 +3751,11 @@ int main(int argc, char* argv[])
 
 		for (i = 0; i < nvalues; i++)
 		{
+			if(values[i] < 0 || values[i] >= DB_NREADS(&db))
+			{
+				fprintf(stderr, "[WARNING] LAfilter: excluding read %d not possible! Must be in range: [0, %d]", values[i], DB_NREADS(&db)-1);
+				continue;
+			}
 			db.reads[values[i]].flags = READ_DISCARD;
 		}
 
@@ -3776,6 +3781,11 @@ int main(int argc, char* argv[])
 
 		for (i = 0; i < nvalues; i++)
 		{
+			if(values[i] < 0 || values[i] >= DB_NREADS(&db))
+			{
+				fprintf(stderr, "[WARNING] LAfilter: including read %d not possible! Must be in range: [0, %d]", values[i], DB_NREADS(&db)-1);
+				continue;
+			}
 			db.reads[values[i]].flags = READ_KEEP;
 		}
 
