@@ -235,7 +235,7 @@ then
         done
         
         setScaff10xOptions
-                  	
+		setBreak10xOptions
     	# add reference 
     	infiles="ref/$(basename ${SC_SCAFF10X_REF})"
     	# add BCR1 and BCR2 files
@@ -251,14 +251,20 @@ then
     		then 
     			SC_SCAFF10X_SCAFF10X_READSBC2=$(pwd)/${SC_SCAFF10X_SCAFF10X_READSBC2}
     		fi
-    		infiles="${infiles} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2}"
     	else
-    		infiles="${infiles} scaff10x_BC_1.fastq scaff10x_BC_2.fastq"
+    		SC_SCAFF10X_SCAFF10X_READSBC1=scaff10x_BC_1.fastq
+    		SC_SCAFF10X_SCAFF10X_READSBC2=scaff10x_BC_2.fastq
     	fi
+    	
+    	prevExt=$(basename ${SC_SCAFF10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
                 
         options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${infiles} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p.fasta" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${infiles} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}x.p.fasta" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${infiles} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.fasta ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.breaks" >> scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bx.p.fasta" >> scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
+        
 		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.version
+		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" >> scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.version
 	### 03_scaff10Xbreak10x		
 	elif [[ ${currentStep} -eq 3 ]]
     then
@@ -269,9 +275,13 @@ then
         done
         
         setBreak10xOptions
-        # add reference 
-    	inputAssembly="ref/$(basename ${SC_SCAFF10X_REF})"
-    	inputScaffold="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p.fasta"
+        setScaff10xOptions
+        
+        prevExt=$(basename ${SC_SCAFF10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+        # add reference
+        inputScaffold1="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}x.p.fasta" 
+    	inputScaffold2="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bx.p.fasta"    	
+    	
     	# add BCR1 and BCR2 files
     	if [[ -n ${SC_SCAFF10X_SCAFF10X_READSBC1} && -f ${SC_SCAFF10X_SCAFF10X_READSBC1} && -n ${SC_SCAFF10X_SCAFF10X_READSBC2} && -f ${SC_SCAFF10X_SCAFF10X_READSBC2} ]]
     	then
@@ -285,18 +295,26 @@ then
     		then 
     			SC_SCAFF10X_SCAFF10X_READSBC2=$(pwd)/${SC_SCAFF10X_SCAFF10X_READSBC2}
     		fi
-    		inputAssembly="${inputAssembly} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2}"
-    		inputScaffold="${inputScaffold} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2}"
     	else
-    		inputAssembly="${inputAssembly} scaff10x_BC_1.fastq scaff10x_BC_2.fastq"
-    		inputScaffold="${inputScaffold} scaff10x_BC_1.fastq scaff10x_BC_2.fastq"
+    		SC_SCAFF10X_SCAFF10X_READSBC1=scaff10x_BC_1.fastq
+    		SC_SCAFF10X_SCAFF10X_READSBC2=scaff10x_BC_2.fastq
     	fi
                 
-        options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"
+        options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"                
+        # 1. break10x on input scaffolds
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}b.p.fasta ${inputScaffold1%.p.fasta}b.p.breaks" > scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+    	echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}b.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan      	
+        # 3. scaff10x on 0., 1., 2.        
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}x.p.fasta" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bx.p.fasta" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold2%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bx.p.fasta" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+        # 4. break10x on all scaffolds (based on second round 3.)
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}x.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}xb.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bxb.p.fasta ${inputScaffold1%.p.fasta}bxb.p.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bxb.p.fasta ${inputScaffold2%.p.fasta}bxb.p.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
         
-		echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputAssembly} $(basename ${SC_SCAFF10X_REF%.*})_break10x.fasta $(basename ${SC_SCAFF10X_REF%.*})_break10x.breaks" > scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
-		echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p_break10x.fasta ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p_break10x.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
 		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.version
+		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.version
 	### 04_scaff10Xstatistics		
 	elif [[ ${currentStep} -eq 4 ]]
     then

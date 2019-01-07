@@ -331,30 +331,27 @@ then
   			exit 1
 		fi
 		
-		# scaff10x scaffolds
-		cat ${fname} > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta
-		gzip -c ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fa.gz
-		cat ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.stats
-		${QUAST_PATH}/quast.py -o ${scaff10xPath} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta
-		cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
-		# break10x based in scaff10x input
-		if [[ -f ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/$(basename ${SC_SCAFF10X_REF%.*})_break10x.fasta && -f ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/$(basename ${SC_SCAFF10X_REF%.*})_break10x.breaks ]]
-		then
-			cp ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/$(basename ${SC_SCAFF10X_REF%.*})_break10x.fasta ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_b${fext}.p.fasta
-			cp ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/$(basename ${SC_SCAFF10X_REF%.*})_break10x.breaks ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_b${fext}.p.breaks
-			gzip -c ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_b${fext}.p.fasta > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_b${fext}.p.fa.gz
-			cat ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_b${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_b${fext}.p.stats
-			${QUAST_PATH}/quast.py -o ${scaff10xPath} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_b${fext}.p.fasta
-		fi
-		# break10x based on scaff10x output
-		if [[ -f ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p_break10x.fasta && -f ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p_break10x.breaks ]]
-		then
-			cp ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p_break10x.fasta ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_B${fext}.p.fasta
-			cp ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_x.p_break10x.breaks ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_B${fext}.p.breaks
-			gzip -c ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_B${fext}.p.fasta > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_B${fext}.p.fa.gz
-			cat ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_B${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_B${fext}.p.stats
-			${QUAST_PATH}/quast.py -o ${scaff10xPath} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_B${fext}.p.fasta				
-		fi 		
+		prevExt=$(basename ${SC_SCAFF10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+        
+        inputScaffold0="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.fasta"
+        inputScaffold1="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}x.p.fasta" 
+    	inputScaffold2="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bx.p.fasta"
+    	inputScaffold3="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}xbxb.p.fasta"
+    	inputScaffold4="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}xx.p.fasta"
+    	
+    	cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
+    	for x in ${inputScaffold0} ${inputScaffold1} ${inputScaffold2} ${inputScaffold3} ${inputScaffold4}
+    	do 
+    		if [[ -f ${x} ]]
+    		then
+    			cp ${x} ${scaff10xPath}/
+    			gzip -c ${scaff10xPath}/${x} > ${scaff10xPath}/${x%.fasta}.fa.gz
+    			cat ${scaff10xPath}/${x} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${x%.fasta}.stats
+    			${QUAST_PATH}/quast.py -o ${scaff10xPath} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta
+    		else
+    			(>&2 echo "WARNING assemblyStats.sh 12 - File ${x} is missing.")	
+    		fi
+    	done
 	else
 		(>&2 echo "ERROR - directory ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID} not available")
   		exit 1

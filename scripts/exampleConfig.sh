@@ -171,10 +171,10 @@ CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO=8
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 11 - Freebayes polishing on contigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 CT_FREEBAYES_TYPE=0
-#type-0 steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools
+#type-0 steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7-FBstatistics
 #type-1 steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
 CT_FREEBAYES_SUBMIT_SCRIPTS_FROM=1
-CT_FREEBAYES_SUBMIT_SCRIPTS_TO=8
+CT_FREEBAYES_SUBMIT_SCRIPTS_TO=7
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 12 - Whatshap phasing  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
