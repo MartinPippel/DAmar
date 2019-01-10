@@ -87,6 +87,47 @@ function setPicardOptions()
 	CONTIG_PICARD_OPT="-Xmx${SC_HIC_PICARD_XMX}G -Xms${SC_HIC_PICARD_XMS}G -XX:-UseGCOverheadLimit"	
 }
 
+function setJuicerOptions()
+{
+	SC_HIC_JUICER_OPT=""
+	
+	# set juicer stage 
+	if [[ -n ${SC_HIC_JUICER_STAGE} ]]
+	then 
+		SC_HIC_JUICER_OPT="${SC_HIC_JUICER_OPT} -S ${SC_HIC_JUICER_STAGE}"
+	fi
+	
+	# set submission queue - short queue
+	if [[ -n ${SC_HIC_JUICER_SHORTQUEUE} ]]
+	then
+		SC_HIC_JUICER_OPT="${SC_HIC_JUICER_OPT} -q ${SC_HIC_JUICER_SHORTQUEUE}"
+	fi
+	
+	# set submission queue - short queue time limit, definition: time limit for queue, i.e. -W 12:00 is 12 hours, default (1200)
+	if [[ -n ${SC_HIC_JUICER_SHORTQUEUETLIMIIT} ]]
+	then
+		SC_HIC_JUICER_OPT="${SC_HIC_JUICER_OPT} -Q ${SC_HIC_JUICER_SHORTQUEUETLIMIIT}"
+	fi
+	 
+	# set submission queue - long queue
+	if [[ -n ${SC_HIC_JUICER_LONGQUEUE} ]]
+	then
+		SC_HIC_JUICER_OPT="${SC_HIC_JUICER_OPT} -l ${SC_HIC_JUICER_LONGQUEUE}"
+	fi
+	
+	# set submission queue - short queue time limit, definition: time limit for long queue, i.e. -W 168:00 is one week (default 3600)
+	if [[ -n ${SC_HIC_JUICER_LONGQUEUETLIMIIT} ]]
+	then
+		SC_HIC_JUICER_OPT="${SC_HIC_JUICER_OPT} -L ${SC_HIC_JUICER_LONGQUEUETLIMIIT}"
+	fi
+	
+	# chunk size definition: number of lines in split files, must be multiple of 4 (default 90000000, which equals 22.5 million reads)
+	if [[ -n ${SC_HIC_JUICER_CHUNKSIZE} && ${SC_HIC_JUICER_CHUNKSIZE} -gt 0 ]]
+	then
+		SC_HIC_JUICER_OPT="${SC_HIC_JUICER_OPT} -C ${SC_HIC_JUICER_CHUNKSIZE}"
+	fi
+}
+
 if [[ -z ${SALSA_PATH} || ! -f ${SALSA_PATH}/run_pipeline.py ]]
 then
 	(>&2 echo "Variable SALSA_PATH must be set to a proper salsa2 installation directory!!")
@@ -99,7 +140,7 @@ fi
 # Type: 3 - 3d-dna Pipeline (For Scaffolding)
 myTypes=("01_HICsalsaPrepareInput, 02_HICsalsaBwa, 03_HICsalsaFilter, 04_HICsalsaMerge, 05_HICsalsaMarkduplicates, 06_HICsalsaSalsa, 07_HICsalsaStatistics", 
 "01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock", 
-"01_HIC3dnaPrepareInput")
+"01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaAssemblyPipeline")
 if [[ ${SC_HIC_TYPE} -eq 0 ]]
 then 
     ### 01_HICsalsaPrepareInput
@@ -407,8 +448,9 @@ elif [[ ${SC_HIC_TYPE} -eq 1 ]] ### 01_HICphasePrepareInput, 02_HICphaseBwa, 03_
 then     
  	(>&2 echo "Phase qc not implemented yet")
     exit 1
-elif [[ ${SC_HIC_TYPE} -eq 2 ]] ### 01_HIC3dnaPrepareInput
+elif [[ ${SC_HIC_TYPE} -eq 2 ]] 
 then 
+	### 01_HIC3dnaPrepareInput
 	if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
@@ -436,7 +478,7 @@ then
         	exit 1
    		fi
    		
-   				numR1Files=0
+		numR1Files=0
 		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R1.fastq.gz
 		do
 			if [[ -f ${x} ]]
@@ -483,12 +525,13 @@ then
 		echo "ln -s -f -r ${JUICER_TOOLS_PATH} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer_tools.jar" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create reference subdir + link and do indexing 
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -r ${SC_HIC_REFFASTA} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -r ${SC_HIC_REFFASTA} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "awk '{print \$1" "\$2}' ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.sizes" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create resctriction site subdir + generate sites
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "python ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/$(basename ${SC_HIC_REFFASTA}) ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "python ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create fastq subdir + link zipped HIC reads  
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/fastq" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
    		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R[12].fastq.gz
@@ -505,6 +548,7 @@ then
 		
 		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
 		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
+	### 02_HIC3dnaJuicer
 	elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
@@ -512,8 +556,22 @@ then
         do            
             rm $x
         done
+        
+        setJuicerOptions
             	        
-        REF=
+        echo "scripts/juicer.sh ${SC_HIC_JUICER_OPT} -D ${pwd} -g ${PROJECT_ID} -s ${SC_HIC_ENZYME} -z references/${PROJECT_ID}.fasta -y restriction_sites/${PROJECT_ID}_${SC_HIC_ENZYME}.txt -p references/${PROJECT_ID}.sizes" > hic_02_HIC3dnaJuicer_single_${CONT_DB}.${slurmID}.plan
+    ### 03_HIC3dnaAssemblyPipeline
+	elif [[ ${currentStep} -eq 3 ]]
+    then
+        ### clean up plans 
+        for x in $(ls hic_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+            	        
+        echo "run-asm-pipeline.sh references/${PROJECT_ID}.fasta aligned/merged_nodups.txt" > hic_03_HIC3dnaAssemblyPipeline_single_${CONT_DB}.${slurmID}.plan
+        
+            
   	else
     	(>&2 echo "step ${currentStep} in SC_HIC_TYPE ${SC_HIC_TYPE} not supported")
     	(>&2 echo "valid steps are: ${myTypes[${SC_HIC_TYPE}]}")

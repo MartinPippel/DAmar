@@ -302,19 +302,19 @@ then
                 
         options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"                
         # 1. break10x on input scaffolds
-        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}b.p.fasta ${inputScaffold1%.p.fasta}b.p.breaks" > scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
-    	echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}b.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan      	
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}b.p.fasta ${inputScaffold1%.p.fasta}b.p.breaks" > scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
+    	echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}b.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan      	
         # 3. scaff10x on 0., 1., 2.        
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}x.p.fasta" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bx.p.fasta" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold2%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bx.p.fasta" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}x.p.fasta" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bx.p.fasta" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold2%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bx.p.fasta" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
         # 4. break10x on all scaffolds (based on second round 3.)
-        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}x.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}xb.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bxb.p.fasta ${inputScaffold1%.p.fasta}bxb.p.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bxb.p.fasta ${inputScaffold2%.p.fasta}bxb.p.breaks" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}x.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}xb.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bxb.p.fasta ${inputScaffold1%.p.fasta}bxb.p.breaks" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bxb.p.fasta ${inputScaffold2%.p.fasta}bxb.p.breaks" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
         
-		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.version
-		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" >> scaff10x_03_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.version
+		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.version
+		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.version
 	### 04_scaff10Xstatistics		
 	elif [[ ${currentStep} -eq 4 ]]
     then
