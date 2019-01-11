@@ -333,14 +333,23 @@ then
 		
 		prevExt=$(basename ${SC_SCAFF10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
         
+        # scaff10x step 2
         inputScaffold0="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.fasta"
         inputScaffold1="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}x.p.fasta" 
     	inputScaffold2="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bx.p.fasta"
-    	inputScaffold3="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}xbxb.p.fasta"
-    	inputScaffold4="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}xx.p.fasta"
+    	# scaff10x step 3a - break10x
+    	inputScaffold3="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}xb.p.fasta" 
+    	inputScaffold4="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bxb.p.fasta"
+    	# scaff10x step 3b - scaff10x
+    	inputScaffold5="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}xx.p.fasta"
+    	inputScaffold6="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bxbx.p.fasta"
+    	# scaff10x step 3c - break10x
+    	inputScaffold7="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}xxb.p.fasta"
+    	inputScaffold8="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}xbxb.p.fasta"
+    	inputScaffold9="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bxbxb.p.fasta"
     	
     	cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
-    	for x in ${inputScaffold0} ${inputScaffold1} ${inputScaffold2} ${inputScaffold3} ${inputScaffold4}
+    	for x in ${inputScaffold0} ${inputScaffold1} ${inputScaffold2} ${inputScaffold3} ${inputScaffold4} ${inputScaffold5} ${inputScaffold6} ${inputScaffold7} ${inputScaffold8} ${inputScaffold9}
     	do 
     		if [[ -f ${x} ]]
     		then
