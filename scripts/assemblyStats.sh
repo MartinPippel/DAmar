@@ -371,7 +371,9 @@ then
 	then
 		bionanoPath=stats/contigs/${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}
 		
-		fext="b"
+		prevExt=$(basename ${SC_BIONANO_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		cset==$(basename ${SC_BIONANO_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		fext="n" ### bionano scaffolds
 				
 		mkdir -p ${bionanoPath}
 		
@@ -385,15 +387,19 @@ then
 		fi
 		
 		# bionano scaffolds
-		cat ${fname} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fasta
-		gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fa.gz
-		cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.stats
-		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --est-ref-size ${gsize} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_s${fext}.p.fasta
+		cat ${fname} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+		gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
+		cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
+		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 		cp ${config} ${bionanoPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 		cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/hybrid_scaffold_informatics_report.txt ${bionanoPath}
 		cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/hybrid_scaffold_informatics_report.txt ${bionanoPath}
-		cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/$(basename ${SC_BIONANO_REF}).cut.fasta ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_c${fext}.p.fasta
+		
+		# cut bionano conflicts in input assembly
+		fext="C" 
+		cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/$(basename ${SC_BIONANO_REF}).cut.fasta ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 		cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/conflicts.txt ${bionanoPath}
+		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 		
 		# bionano not scaffolded 
 		fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta"
@@ -402,17 +408,19 @@ then
 			(>&2 echo "ERROR - Cannot find file ${fname}")
   			exit 1
 		fi
-		cat ${fname} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fasta
-		gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fa.gz
-		cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.stats
-		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --est-ref-size ${gsize} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_n${fext}.p.fasta
+		fext="u" ### bionano not scaffolded
+		cat ${fname} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+		gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
+		cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
+		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 				
 		# bionano combined (scaffolded + not scaffolded)
-		cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta
-		cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta
-		gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fa.gz
-		cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.stats
-		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --est-ref-size ${gsize} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${fext}.p.fasta
+		fext="N" 
+		cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+		cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+		gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
+		cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
+		${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 	else
 		(>&2 echo "ERROR - directory ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID} not available")
   		exit 1
@@ -423,7 +431,9 @@ then
 	then
 		hicSalsaPath=stats/contigs/${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}
 		
-		fext="sH"
+		prevExt=$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		cset==$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		fext="s"
 				
 		mkdir -p ${hicSalsaPath}
 		
@@ -435,10 +445,10 @@ then
 		fi
 		
 		# HIC SALSA scaffolds
-		cat ${fname} > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta
-		gzip -c ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fa.gz
+		cat ${fname} > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+		gzip -c ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 		cat ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.stats
-		${QUAST_PATH}/quast.py -o ${hicSalsaPath} -t 1 -s -e --est-ref-size ${gsize} ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta
+		${QUAST_PATH}/quast.py -o ${hicSalsaPath} -t 1 -s -e --est-ref-size ${gsize} -o ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset} ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 		cp ${config} ${hicSalsaPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 		cp ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out/input_breaks ${hicSalsaPath}				
 	else

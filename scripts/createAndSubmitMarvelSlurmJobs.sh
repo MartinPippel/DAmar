@@ -43,7 +43,10 @@ source ${configFile}
 
 function getPhaseFilePrefix()
 {
-	if [[ ${currentPhase} -eq -1 ]]
+	if [[ ${currentPhase} -eq -2 ]]
+    then
+        echo "mash"
+	elif [[ ${currentPhase} -eq -1 ]]
     then
         echo "mito"
 	elif [[ ${currentPhase} -eq 0 ]]
@@ -117,7 +120,7 @@ function getPhaseFilePrefix()
 
 function getCurrentDB()
 {	
-	if [[ ${currentPhase} -eq -1 ]]
+	if [[ ${currentPhase} -lt 0 ]]
     then 
         echo "${RAW_DB%.db}"
 	elif [[ ${currentPhase} -eq 0 ]]
@@ -516,6 +519,163 @@ then
 		sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s${currentStep+1} -o ${prefix}_step${currentStep}_${RAW_DB%.db}.out -e ${prefix}_step${currentStep}_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} ${currentStep} $slurmID $((${resumeIdx}+1))"
 		foundNext=1
 	fi	
+fi
+
+if [[ ${currentPhase} -eq -2 ]]
+then
+	if [[ $((${currentStep}+1)) -le ${RAW_MASH_SUBMIT_SCRIPTS_TO} ]]
+    then
+    	sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${db}.out -e ${prefix}_step$((${currentStep}+1))_${db%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
+        foundNext=1
+	else
+		### we have to create the coverage directory and change into that dir 
+		if [[ $(echo "$(pwd)" | awk -F \/ '{print $NF}') -eq ${MASH_DIR} ]]
+		then
+			if [[ ${RAW_MITO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_MITO_SUBMIT_SCRIPTS_FROM} -le ${RAW_MITO_SUBMIT_SCRIPTS_TO} ]]
+			then
+				cd ../
+				mkdir -p ${MITO_DIR}
+				cd ${MITO_DIR}
+				currentPhase=-1
+				prefix=$(getPhaseFilePrefix)
+				db=$(getCurrentDB)
+        		currentStep=$((${RAW_MITO_SUBMIT_SCRIPTS_FROM}-1))
+			elif [[ ${RAW_DASCOVER_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_DASCOVER_SUBMIT_SCRIPTS_FROM} -le ${RAW_DASCOVER_SUBMIT_SCRIPTS_TO} ]]
+			then
+				cd ../
+				mkdir -p ${DASCOVER_DIR}
+				cd ${DASCOVER_DIR}
+				currentPhase=0
+				prefix=$(getPhaseFilePrefix)
+				db=$(getCurrentDB)
+        		currentStep=$((${RAW_DASCOVER_SUBMIT_SCRIPTS_FROM}-1))				
+			elif [[ ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${RAW_REPMASK_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${RAW_PATCH_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_PATCH_SUBMIT_SCRIPTS_FROM} -le ${RAW_PATCH_SUBMIT_SCRIPTS_TO} ]]
+			then
+				cd ../
+				mkdir -p ${PATCHING_DIR}
+				cd ${PATCHING_DIR}
+				
+				if [[ ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${RAW_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${RAW_REPMASK_SUBMIT_SCRIPTS_TO} ]]
+				then
+					currentPhase=1
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${RAW_REPMASK_SUBMIT_SCRIPTS_FROM}-1))
+        		else
+        			currentPhase=2
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${RAW_PATCH_SUBMIT_SCRIPTS_FROM}-1))
+        		fi												
+			elif [[ ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]] ||
+		  	 	[[ ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -le ${FIX_SCRUB_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${FIX_FILT_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_FILT_SUBMIT_SCRIPTS_FROM} -le ${FIX_FILT_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -le ${FIX_TOUR_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -le ${FIX_CORR_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -gt 0 && ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -le ${COR_CONTIG_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]] ||		   		
+		   		[[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
+			then
+				cd ../	
+			
+		        if [[ -z "${FIX_REPMASK_USELAFIX_PATH}" ]]
+				then 
+					(>&2 echo "WARNING - Variable FIX_REPMASK_USELAFIX_PATH is not set.Try to use default path: patchedReads_dalign")
+					FIX_REPMASK_USELAFIX_PATH="patchedReads_dalign"
+				fi
+				mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
+				cd ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
+				
+				if [[ ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]]
+				then
+					currentPhase=3
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${FIX_REPMASK_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_SCRUB_SUBMIT_SCRIPTS_FROM} -le ${FIX_SCRUB_SUBMIT_SCRIPTS_TO} ]]
+        		then
+        			currentPhase=4
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${FIX_SCRUB_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${FIX_FILT_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_FILT_SUBMIT_SCRIPTS_FROM} -le ${FIX_FILT_SUBMIT_SCRIPTS_TO} ]]
+        		then
+        			currentPhase=5
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${FIX_FILT_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_TOUR_SUBMIT_SCRIPTS_FROM} -le ${FIX_TOUR_SUBMIT_SCRIPTS_TO} ]]  
+        		then
+        			currentPhase=6
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${FIX_TOUR_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_CORR_SUBMIT_SCRIPTS_FROM} -le ${FIX_CORR_SUBMIT_SCRIPTS_TO} ]] 
+        		then 
+        			currentPhase=7
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${FIX_CORR_SUBMIT_SCRIPTS_FROM}-1))
+        		elif ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -gt 0 && ${COR_CONTIG_SUBMIT_SCRIPTS_FROM} -le ${COR_CONTIG_SUBMIT_SCRIPTS_TO} ]]
+        		then 
+        			currentPhase=8
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${COR_CONTIG_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -gt 0 && ${PB_ARROW_SUBMIT_SCRIPTS_FROM} -le ${PB_ARROW_SUBMIT_SCRIPTS_TO} ]]
+        		then
+        			currentPhase=9
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${PB_ARROW_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]]
+        		then 
+        			currentPhase=10
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]]
+        		then 
+        			currentPhase=11
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]]
+        		then
+        			currentPhase=12
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]]
+        		then
+        			currentPhase=13
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]]
+        		then
+        			currentPhase=14
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${SC_BIONANO_SUBMIT_SCRIPTS_FROM}-1))
+        		elif [[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]
+        		then
+        			currentPhase=15
+					prefix=$(getPhaseFilePrefix)
+					db=$(getCurrentDB)
+        			currentStep=$((${SC_HIC_SUBMIT_SCRIPTS_FROM}-1))			
+        		else
+        			currentPhase=100 ## nothing to do, set phase to invalid value
+				fi				
+			fi 
+		fi
+	fi
 fi
 
 if [[ ${currentPhase} -eq -1 ]]
@@ -1023,6 +1183,9 @@ then
     then 
         sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${RAW_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
+	else 
+        currentPhase=10
+        currentStep=$((${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM}-1))                
     fi
 fi
 
@@ -1032,6 +1195,9 @@ then
     then 
         sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
+	else 
+        currentPhase=11
+        currentStep=$((${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM}-1))                        
     fi
 fi
 
@@ -1041,6 +1207,9 @@ then
     then 
         sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
+	else 
+        currentPhase=12
+        currentStep=$((${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}-1))        
     fi
 fi
 
@@ -1050,6 +1219,9 @@ then
     then 
         sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
+    else 
+        currentPhase=13
+        currentStep=$((${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}-1))    
     fi
 fi                        
 
@@ -1059,6 +1231,9 @@ then
     then 
         sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
+    else 
+        currentPhase=14
+        currentStep=$((${SC_BIONANO_SUBMIT_SCRIPTS_FROM}-1))    
     fi
 fi
 
@@ -1068,6 +1243,9 @@ then
     then 
         sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1
+    else 
+        currentPhase=15
+        currentStep=$((${SC_HIC_SUBMIT_SCRIPTS_FROM}-1))    
     fi
 fi   
 

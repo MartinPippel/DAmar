@@ -37,6 +37,7 @@ export SALSA_PATH="/projects/dazzler/pippel/prog/scaffolding/SALSA"
 export QUAST_PATH="/projects/dazzler/pippel/prog/quast/"
 export JUICER_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer"
 export JUICER_TOOLS_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer_tools.1.9.8_jcuda.0.8.jar"
+export THREEDDNA_PATH="/projects/dazzler/pippel/prog/scaffolding/3d-dna/"
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -724,7 +725,7 @@ SC_SCAFF10X_SCAFF10X_MINREADS=12				### VGP: round1: 12, round2: 8 (default: 10)
 SC_SCAFF10X_SCAFF10X_LONGREAD=1
 SC_SCAFF10X_SCAFF10X_GAPSIZE=100				### should be the same as used in scaff_reads
 SC_SCAFF10X_SCAFF10X_EDGELEN=50000
-SC_SCAFF10X_SCAFF10X_MINSHAREDBARCODES=8		### VGP: round1: 10, round2: 10
+SC_SCAFF10X_SCAFF10X_MINSHAREDBARCODES=10		### VGP: round1: 10, round2: 10
 SC_SCAFF10X_SCAFF10X_BLOCK=50000				### VGP: round1: 50000, round2: 50000
 #SC_SCAFF10X_SCAFF10X_SAM="path to previously created sam file"
 #SC_SCAFF10X_SCAFF10X_BAM="path to previously created bam file"
@@ -781,6 +782,19 @@ SC_HIC_SAMTOOLS_THREADS=10
 SC_HIC_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
 ### arima qv min mapping quality
 SC_HIC_MINMAPQV=10
+### juicer and 3d-dna HiC options 
+#SC_HIC_JUICER_STAGE=		# Can be: [merge, dedup, final, postproc, early]
+SC_HIC_JUICER_SHORTQUEUE=batch
+SC_HIC_JUICER_SHORTQUEUETLIMIIT=1200
+SC_HIC_JUICER_LONGQUEUE=long
+SC_HIC_JUICER_LONGQUEUETLIMIIT=3600
+SC_HIC_JUICER_CHUNKSIZE=60000000		#number of lines in split files, must be multiple of 4 (default 90000000, which equals 22.5 million reads
+SC_HIC_3DDNA_MODE=haploid 				#Can be: [haploid, diploid]
+SC_HIC_3DDNA_MINCONTIGLEN=15000			#Specifies threshold input contig/scaffold size (default is 15000). Contigs/scaffolds smaller than input_size are going to be ignored.
+SC_HIC_3DDNA_ROUNDS=2					#Specifies number of iterative rounds for misjoin correction (default is 2).
+#SC_HIC_3DDNA_STAGE=					#can be: [polish, split, seal, merge, finalize
+#SC_HIC_3DDNA_MAPQV=1					#Mapq threshold for scaffolding and visualization (default is 1).
+}
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
@@ -982,3 +996,21 @@ then
 fi
 MEM_BNscaffold=96000
 TIME_BNscaffold=24:00:00
+
+#### Juicer/3d-dna pipeline
+THREADS_juicer=24
+if [[ "${SLURM_PARTITION}" == "gpu" ]]
+then 
+	THREADS_juicer=40
+elif [[ "${SLURM_PARTITION}" == "bigmem" ]]
+then 
+	THREADS_juicer=48
+fi
+
+THREADS_HIC3dnaJuicer=${THREADS_juicer}
+MEM_HIC3dnaJuicer=$((${THREADS_juicer}*4096))
+TIME_HIC3dnaJuicer=24:00:00
+
+THREADS_HIC3dnaAssemblyPipeline=${THREADS_juicer}
+MEM_HIC3dnaAssemblyPipeline=$((${THREADS_juicer}*4096))
+TIME_HIC3dnaAssemblyPipeline=24:00:00

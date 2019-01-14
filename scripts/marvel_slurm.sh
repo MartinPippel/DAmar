@@ -61,7 +61,11 @@ function realpath()
 
 ## find entry point to create first plan and submit that stuff 
 
-if [[ ${RAW_MITO_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+if [[ ${RAW_MASH_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+then 
+    currentPhase=-2
+    currentStep=${RAW_MASH_SUBMIT_SCRIPTS_FROM}     
+elif [[ ${RAW_MITO_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=-1
     currentStep=${RAW_MITO_SUBMIT_SCRIPTS_FROM}    
@@ -139,7 +143,13 @@ realPathConfigFile=$(realpath "${configFile}")
 
 cwd=$(pwd)
 
-if [[ ${currentPhase} -eq -1 ]]
+if [[ ${currentPhase} -eq -2 ]]
+then 
+	mkdir -p ${MASH_DIR}
+	cd ${MASH_DIR}
+	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
+	cd ${cwd}
+elif [[ ${currentPhase} -eq -1 ]]
 then 
 	mkdir -p ${MITO_DIR}
 	cd ${MITO_DIR}

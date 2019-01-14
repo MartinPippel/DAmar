@@ -94,6 +94,13 @@ function setJuicerOptions()
 	# set juicer stage 
 	if [[ -n ${SC_HIC_JUICER_STAGE} ]]
 	then 
+		
+	if [[ ! "x${SC_HIC_JUICER_STAGE}" == "xmerge" && ! "x${SC_HIC_JUICER_STAGE}" == "xdedup" && ! "x${SC_HIC_JUICER_STAGE}" == "xfinal" && ! "x${SC_HIC_JUICER_STAGE}" == "xpostproc" && ! "x${SC_HIC_JUICER_STAGE}" == "early" ]]
+		then
+			(>&2 echo "[ERRROR] Unsupported juicer stage ${SC_HIC_JUICER_STAGE}. Can be: [merge, dedup, final, postproc, early]")
+			exit 1	
+		fi	
+			
 		SC_HIC_JUICER_OPT="${SC_HIC_JUICER_OPT} -S ${SC_HIC_JUICER_STAGE}"
 	fi
 	
@@ -128,9 +135,57 @@ function setJuicerOptions()
 	fi
 }
 
+function setThreeDDNAOptions()
+{
+	THREEDDNA_OPT=""
+	
+	if [[ -n ${SC_HIC_3DDNA_MODE} ]]
+	then 
+		
+		if [[ ! "x${SC_HIC_3DDNA_MODE}" == "xhaploid" && ! "x${SC_HIC_3DDNA_MODE}" == "xdiploid" ]]
+		then
+			(>&2 echo "[ERRROR] Unsupported 3d-dna mode ${SC_HIC_3DDNA_MODE}. Can be: [haploid, diploid]")
+			exit 1	
+		fi
+		
+		THREEDDNA_OPT="${THREEDDNA_OPT} -m ${SC_HIC_3DDNA_MODE}"
+	fi	
+	
+	if [[ -n ${SC_HIC_3DDNA_MINCONTIGLEN} ]]
+	then
+		THREEDDNA_OPT="${THREEDDNA_OPT} -i ${SC_HIC_3DDNA_MINCONTIGLEN}"
+	fi
+	
+	if [[ -n ${SC_HIC_3DDNA_ROUNDS} && ${SC_HIC_3DDNA_ROUNDS} -gt 0 ]]
+	then
+		THREEDDNA_OPT="${THREEDDNA_OPT} -r ${SC_HIC_3DDNA_ROUNDS}"
+	fi
+	
+	if [[ -n ${SC_HIC_3DDNA_STAGE} ]]
+	then
+	if [[ ! "x${SC_HIC_3DDNA_STAGE}" == "xpolish" && ! "x${SC_HIC_3DDNA_STAGE}" == "xsplit" && ! "x${SC_HIC_3DDNA_STAGE}" == "xseal" && ! "x${SC_HIC_3DDNA_STAGE}" == "xmerge" && ! "x${SC_HIC_3DDNA_STAGE}" == "xfinalize" ]]
+		then
+			(>&2 echo "[ERRROR] Unsupported 3d-dna stage ${SC_HIC_3DDNA_STAGE}. can be: [polish, split, seal, merge, finalize]")
+			exit 1	
+		fi
+		THREEDDNA_OPT="${THREEDDNA_OPT} -s ${SC_HIC_3DDNA_STAGE}"
+	fi
+	
+	if [[ -n ${SC_HIC_3DDNA_MAPQV} ]]
+	then
+		THREEDDNA_OPT="${THREEDDNA_OPT} -q ${SC_HIC_3DDNA_MAPQV}"
+	fi
+}
+
 if [[ -z ${SALSA_PATH} || ! -f ${SALSA_PATH}/run_pipeline.py ]]
 then
 	(>&2 echo "Variable SALSA_PATH must be set to a proper salsa2 installation directory!!")
+    exit 1
+fi
+
+if [[ -z ${THREEDDNA_PATH} || ! -f ${THREEDDNA_PATH}/run-asm-pipeline.sh ]]
+then 
+	(>&2 echo "Variable THREEDDNA_PATH must be set to a proper 3d-dna installation directory!!")
     exit 1
 fi
  
@@ -138,6 +193,7 @@ fi
 # Type: 1 - Phase Genomics Mapping Pipeline (For QC)
 # Type: 2 - Aiden Lab Juicer Pipeline (For QC)
 # Type: 3 - 3d-dna Pipeline (For Scaffolding)
+
 myTypes=("01_HICsalsaPrepareInput, 02_HICsalsaBwa, 03_HICsalsaFilter, 04_HICsalsaMerge, 05_HICsalsaMarkduplicates, 06_HICsalsaSalsa, 07_HICsalsaStatistics", 
 "01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock", 
 "01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaAssemblyPipeline")
@@ -568,10 +624,12 @@ then
         do            
             rm $x
         done
-            	        
-        echo "run-asm-pipeline.sh references/${PROJECT_ID}.fasta aligned/merged_nodups.txt" > hic_03_HIC3dnaAssemblyPipeline_single_${CONT_DB}.${slurmID}.plan
         
-            
+        setThreeDDNAOptions()
+            	        
+    	echo "${THREEDDNA_PATH}/run-asm-pipeline.sh${THREEDDNA_OPT} references/${PROJECT_ID}.fasta aligned/merged_nodups.txt" > hic_03_HIC3dnaAssemblyPipeline_single_${CONT_DB}.${slurmID}.plan
+        
+        echo "3d-dna $(git --git-dir=${THREEDDNA_PATH}/.git rev-parse --short HEAD)" > hic_03_HIC3dnaAssemblyPipeline_single_${CONT_DB}.${slurmID}.version
   	else
     	(>&2 echo "step ${currentStep} in SC_HIC_TYPE ${SC_HIC_TYPE} not supported")
     	(>&2 echo "valid steps are: ${myTypes[${SC_HIC_TYPE}]}")

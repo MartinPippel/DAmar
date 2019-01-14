@@ -20,8 +20,15 @@ source ${configFile}
 ## todo sanity checks 
 ## phases 0-DAScover, 1-repmask, 2-patching, 3-repmask, 4-scrubbing, 5-filtering, 6-touring, 7-correction, 8-contigAnalysis, 9-arrow 
 
-
-if [[ ${currentPhase} -eq -1 ]]
+if [[ ${currentPhase} -eq -2 ]]
+then	 
+	${SUBMIT_SCRIPTS_PATH}/createMashPlans.sh ${configFile} ${currentStep} ${slurmID}
+    if [ $? -ne 0 ]
+    then 
+        (>&2 echo "createMashPlans.sh failed some how. Stop here.")
+        exit 1      
+    fi
+elif [[ ${currentPhase} -eq -1 ]]
 then	 
 	if [[ ! -f ${RAW_DB%db}.db ]]
 	then 
