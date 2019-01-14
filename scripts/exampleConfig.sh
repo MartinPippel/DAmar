@@ -185,10 +185,10 @@ CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-SC_BIONANO_TYPE=0
-# Type: 0 steps: 01_scaff10Xprepare, 02_scaff10Xscaff10x, 03_scaff10Xstatistics
+SC_SCAFF10X_TYPE=0
+# Type: 0 steps: 01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics
 SC_SCAFF10X_SUBMIT_SCRIPTS_FROM=1
-SC_SCAFF10X_SUBMIT_SCRIPTS_TO=2
+SC_SCAFF10X_SUBMIT_SCRIPTS_TO=7
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - bionano scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -966,3 +966,19 @@ TIME_mitodaligner=04:00:00
 THREADS_scaff10Xscaff10x=${SC_SCAFF10X_SCAFF10X_THREADS}
 MEM_scaff10Xscaff10x=$((${SC_SCAFF10X_SCAFF10X_THREADS}*4096))
 TIME_scaff10Xscaff10x=24:00:00
+
+THREADS_scaff10Xbreak10x=${SC_SCAFF10X_BREAK10X_THREADS}
+MEM_scaff10Xbreak10x=$((${SC_SCAFF10X_BREAK10X_THREADS}*4096))
+TIME_scaff10Xbreak10x=24:00:00
+
+##### Bionano pipeline
+THREADS_BNscaffold=24
+if [[ "${SLURM_PARTITION}" == "gpu" ]]
+then 
+	THREADS_BNscaffold=40
+elif [[ "${SLURM_PARTITION}" == "bigmem" ]]
+then 
+	THREADS_BNscaffold=48
+fi
+MEM_BNscaffold=96000
+TIME_BNscaffold=24:00:00

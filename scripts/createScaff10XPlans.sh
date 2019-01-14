@@ -138,7 +138,7 @@ function setBreak10xOptions()
 	fi
 }
 
-myTypes=("01_scaff10Xprepare, 02_scaff10Xscaff10x, 03_scaff10Xbreak10x, 04_scaff10Xstatistics")
+myTypes=("01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics")
 if [[ ${SC_SCAFF10X_TYPE} -eq 0 ]]
 then 
     ### 01_scaff10Xprepare
@@ -225,7 +225,7 @@ then
 			echo "${SCAFF10X_PATH}/scaff_reads ${options} ${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/scaff10x_inputReads.txt scaff10x_BC_1.fastq scaff10x_BC_2.fastq" >> scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
 			echo "scaff_reads $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.version
 		fi
-    ### 02_scaff10Xscaff10x		
+	### 02_scaff10Xbreak10x	
 	elif [[ ${currentStep} -eq 2 ]]
     then
     	### clean up plans 
@@ -259,17 +259,130 @@ then
     	prevExt=$(basename ${SC_SCAFF10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
                 
         options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${infiles} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}x.p.fasta" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${infiles} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.fasta ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.breaks" >> scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bx.p.fasta" >> scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan
-        
-		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.version
-		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" >> scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.version
-	### 03_scaff10Xbreak10x		
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${infiles} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.fasta ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.breaks" > scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.plan        
+		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" >> scaff10x_02_scaff10Xscaff10x_single_${CONT_DB}.${slurmID}.version	
+    ### 03_scaff10Xscaff10x		
 	elif [[ ${currentStep} -eq 3 ]]
     then
-		### clean up plans 
+    	### clean up plans 
         for x in $(ls scaff10x_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        setScaff10xOptions
+		setBreak10xOptions
+    	# add reference 
+    	infiles="ref/$(basename ${SC_SCAFF10X_REF})"
+    	# add BCR1 and BCR2 files
+    	if [[ -n ${SC_SCAFF10X_SCAFF10X_READSBC1} && -f ${SC_SCAFF10X_SCAFF10X_READSBC1} && -n ${SC_SCAFF10X_SCAFF10X_READSBC2} && -f ${SC_SCAFF10X_SCAFF10X_READSBC2} ]]
+    	then
+    		### we need an absolute path if --tmp flag is used in scaff10x 
+    		if [[ ! "${SC_SCAFF10X_SCAFF10X_READSBC1:0:1}" = "/" ]]
+    		then 
+    			SC_SCAFF10X_SCAFF10X_READSBC1=$(pwd)/${SC_SCAFF10X_SCAFF10X_READSBC1}
+    		fi
+    		
+    		if [[ ! "${SC_SCAFF10X_SCAFF10X_READSBC2:0:1}" = "/" ]]
+    		then 
+    			SC_SCAFF10X_SCAFF10X_READSBC2=$(pwd)/${SC_SCAFF10X_SCAFF10X_READSBC2}
+    		fi
+    	else
+    		SC_SCAFF10X_SCAFF10X_READSBC1=scaff10x_BC_1.fastq
+    		SC_SCAFF10X_SCAFF10X_READSBC2=scaff10x_BC_2.fastq
+    	fi
+    	
+    	prevExt=$(basename ${SC_SCAFF10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+                
+        options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${infiles} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}x.p.fasta" > scaff10x_03_scaff10Xscaff10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bx.p.fasta" >> scaff10x_03_scaff10Xscaff10x_block_${CONT_DB}.${slurmID}.plan
+        
+		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_03_scaff10Xscaff10x_block_${CONT_DB}.${slurmID}.version
+	### 04_scaff10Xbreak10x		
+	elif [[ ${currentStep} -eq 4 ]]
+    then
+		### clean up plans 
+        for x in $(ls scaff10x_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        setBreak10xOptions
+        
+        prevExt=$(basename ${SC_SCAFF10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+        # add reference
+        inputScaffold1="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}x.p.fasta" 
+    	inputScaffold2="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bx.p.fasta"    	
+    	
+    	# add BCR1 and BCR2 files
+    	if [[ -n ${SC_SCAFF10X_SCAFF10X_READSBC1} && -f ${SC_SCAFF10X_SCAFF10X_READSBC1} && -n ${SC_SCAFF10X_SCAFF10X_READSBC2} && -f ${SC_SCAFF10X_SCAFF10X_READSBC2} ]]
+    	then
+    		### we need an absolute path if --tmp flag is used in scaff10x 
+    		if [[ ! "${SC_SCAFF10X_SCAFF10X_READSBC1:0:1}" = "/" ]]
+    		then 
+    			SC_SCAFF10X_SCAFF10X_READSBC1=$(pwd)/${SC_SCAFF10X_SCAFF10X_READSBC1}
+    		fi
+    		
+    		if [[ ! "${SC_SCAFF10X_SCAFF10X_READSBC2:0:1}" = "/" ]]
+    		then 
+    			SC_SCAFF10X_SCAFF10X_READSBC2=$(pwd)/${SC_SCAFF10X_SCAFF10X_READSBC2}
+    		fi
+    	else
+    		SC_SCAFF10X_SCAFF10X_READSBC1=scaff10x_BC_1.fastq
+    		SC_SCAFF10X_SCAFF10X_READSBC2=scaff10x_BC_2.fastq
+    	fi
+                
+        options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"                
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}b.p.fasta ${inputScaffold1%.p.fasta}b.p.breaks" > scaff10x_04_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+    	echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}b.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" >> scaff10x_04_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan      	
+        
+		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_04_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.version		
+	### 05_scaff10Xscaff10x		
+	elif [[ ${currentStep} -eq 5 ]]
+    then
+		### clean up plans 
+        for x in $(ls scaff10x_05_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        setScaff10xOptions
+        
+        prevExt=$(basename ${SC_SCAFF10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+        # add reference
+        inputScaffold1="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}x.p.fasta" 
+    	inputScaffold2="${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${prevExt}bx.p.fasta"    	
+    	
+    	# add BCR1 and BCR2 files
+    	if [[ -n ${SC_SCAFF10X_SCAFF10X_READSBC1} && -f ${SC_SCAFF10X_SCAFF10X_READSBC1} && -n ${SC_SCAFF10X_SCAFF10X_READSBC2} && -f ${SC_SCAFF10X_SCAFF10X_READSBC2} ]]
+    	then
+    		### we need an absolute path if --tmp flag is used in scaff10x 
+    		if [[ ! "${SC_SCAFF10X_SCAFF10X_READSBC1:0:1}" = "/" ]]
+    		then 
+    			SC_SCAFF10X_SCAFF10X_READSBC1=$(pwd)/${SC_SCAFF10X_SCAFF10X_READSBC1}
+    		fi
+    		
+    		if [[ ! "${SC_SCAFF10X_SCAFF10X_READSBC2:0:1}" = "/" ]]
+    		then 
+    			SC_SCAFF10X_SCAFF10X_READSBC2=$(pwd)/${SC_SCAFF10X_SCAFF10X_READSBC2}
+    		fi
+    	else
+    		SC_SCAFF10X_SCAFF10X_READSBC1=scaff10x_BC_1.fastq
+    		SC_SCAFF10X_SCAFF10X_READSBC2=scaff10x_BC_2.fastq
+    	fi
+          
+        options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"      
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}x.p.fasta" > scaff10x_05_scaff10Xscaff10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bx.p.fasta" >> scaff10x_05_scaff10Xscaff10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold2%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bx.p.fasta" >> scaff10x_05_scaff10Xscaff10x_block_${CONT_DB}.${slurmID}.plan
+        
+		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_05_scaff10Xscaff10x_block_${CONT_DB}.${slurmID}.version
+	### 06_scaff10Xbreak10x	
+	elif [[ ${currentStep} -eq 6 ]]
+    then
+		### clean up plans 
+        for x in $(ls scaff10x_06_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -301,25 +414,16 @@ then
     	fi
                 
         options="-debug 1 -tmp $(pwd)/${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/"                
-        # 1. break10x on input scaffolds
-        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}b.p.fasta ${inputScaffold1%.p.fasta}b.p.breaks" > scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
-    	echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}b.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan      	
-        # 3. scaff10x on 0., 1., 2.        
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1} ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}x.p.fasta" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold1%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bx.p.fasta" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${inputScaffold2%.p.fasta}b.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bx.p.fasta" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
-        # 4. break10x on all scaffolds (based on second round 3.)
-        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}x.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}xb.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bxb.p.fasta ${inputScaffold1%.p.fasta}bxb.p.breaks" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
-        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bxb.p.fasta ${inputScaffold2%.p.fasta}bxb.p.breaks" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}x.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}xb.p.fasta ${inputScaffold2%.p.fasta}b.p.breaks" > scaff10x_06_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold1%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold1%.p.fasta}bxb.p.fasta ${inputScaffold1%.p.fasta}bxb.p.breaks" >> scaff10x_06_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
+        echo "${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${inputScaffold2%.p.fasta}bx.p.fasta ${SC_SCAFF10X_SCAFF10X_READSBC1} ${SC_SCAFF10X_SCAFF10X_READSBC2} ${inputScaffold2%.p.fasta}bxb.p.fasta ${inputScaffold2%.p.fasta}bxb.p.breaks" >> scaff10x_06_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.plan
         
-		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.version
-		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" >> scaff10x_03_scaff10Xbreak10x_single_${CONT_DB}.${slurmID}.version
-	### 04_scaff10Xstatistics		
-	elif [[ ${currentStep} -eq 4 ]]
+		echo "break10x $(cat ${SCAFF10X_PATH}/version.txt)" > scaff10x_06_scaff10Xbreak10x_block_${CONT_DB}.${slurmID}.version
+	### 07_scaff10Xstatistics		
+	elif [[ ${currentStep} -eq 7 ]]
     then
 		### clean up plans 
-        for x in $(ls scaff10x_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        for x in $(ls scaff10x_07_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -333,9 +437,9 @@ then
         	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
     	fi
     	### create assemblyStats plan 
-    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 12" > scaff10x_04_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.plan
-    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scaff10x_04_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version	
-		echo "$(quast.py --version)" >> scaff10x_04_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version
+    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 12" > scaff10x_07_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scaff10x_07_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version	
+		echo "$(quast.py --version)" >> scaff10x_07_scaff10Xstatistics_single_${CONT_DB}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in SC_SCAFF10X_TYPE ${SC_SCAFF10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_SCAFF10X_TYPE}]}")
