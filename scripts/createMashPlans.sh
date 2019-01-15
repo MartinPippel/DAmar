@@ -227,9 +227,22 @@ then
             rm $x
         done
         
-    	files="$(ls pacbio/*.msh 10x/*.msh hic/*msh 2>/dev/null)"
-        
-        echo "mash paste ${PROJECT_ID}.msh ${files}" > mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
+        if [[ -d pacbio ]]
+        then 
+        	ls pacbio/*.msh > ${PROJECT_ID}_mash.files
+    	fi
+    	
+    	if [[ -d 10x ]]
+        then 
+        	ls 10x/*.msh >> ${PROJECT_ID}_mash.files
+    	fi 
+    	
+    	if [[ -d hic ]]
+        then 
+        	ls hic/*.msh >> ${PROJECT_ID}_mash.files
+    	fi
+    	        
+        echo "mash paste -l ${PROJECT_ID}.msh ${PROJECT_ID}_mash.files" > mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
         echo "mash dist -t ${PROJECT_ID}.msh ${PROJECT_ID}.msh > ${PROJECT_ID}.tbl" >> mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
         echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.version
 	### 04_mashPlot
