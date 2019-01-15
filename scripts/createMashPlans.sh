@@ -227,7 +227,9 @@ then
             rm $x
         done
         
-        echo "mash paste ${PROJECT_ID}.msh pacbio/*.msh 10x/*.msh hic/*mash" > mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
+    	files="$(ls pacbio/*.msh 10x/*.msh hic/*msh 2>/dev/null)"
+        
+        echo "mash paste ${PROJECT_ID}.msh ${files}" > mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
         echo "mash dist -t ${PROJECT_ID}.msh ${PROJECT_ID}.msh > ${PROJECT_ID}.tbl" >> mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
         echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.version
 	### 04_mashPlot
