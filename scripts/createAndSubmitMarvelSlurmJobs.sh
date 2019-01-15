@@ -113,7 +113,7 @@ function getPhaseFilePrefix()
     then
         echo "hic"                     
     else
-        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs, 11-freebayes, 12-whatshap, 13-scaff10x, 14-bionano, 15-hic)")
+        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (-2-mash, -1-mito, 1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs, 11-freebayes, 12-whatshap, 13-scaff10x, 14-bionano, 15-hic)")
         exit 1
     fi
 }
@@ -243,15 +243,12 @@ then
                 then
                     echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
                 fi
-				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" ]]
+				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" ]]
 				then
 					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 				elif [[ ${prefix} == "purgeHaplotigs" ]]
 				then	
 					echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
-				elif [[ ${prefix} == "whatshap" ]]
-				then	
-					echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm				
 				fi
 				
 	            echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -301,15 +298,12 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
 
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
 				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
-			elif [[ ${prefix} == "whatshap" ]]
-			then	
-				echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm			
 			fi
 
 			echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -374,15 +368,12 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi	        
 	        
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
 				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
-			elif [[ ${prefix} == "whatshap" ]]
-			then	
-				echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm										
 			fi
 	
 	        echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -432,15 +423,12 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
             then
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
 				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
-			elif [[ ${prefix} == "whatshap" ]]
-			then	
-				echo -e "\n${WHATSHAP_ENV}" >> ${file}.slurm				
 			fi
 
 			echo "export PATH=${MARVEL_PATH}/bin:\$PATH

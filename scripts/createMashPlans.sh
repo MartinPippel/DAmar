@@ -216,6 +216,8 @@ then
 				echo "cat ${x} ${x%_R1.fastq.gz}_R2.fastq.gz | mash sketch -k 21 -s 10000 -r -m 2 -o ${x%_R1.fastq.gz}.msh -"
 			done    		
     	fi >> mash_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.plan
+    	
+    	echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > mash_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.version
     ### 03_mashCombine
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -227,6 +229,7 @@ then
         
         echo "mash paste ${PROJECT_ID}.msh pacbio/*.msh 10x/*.msh hic/*mash" > mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
         echo "mash dist -t ${PROJECT_ID}.msh ${PROJECT_ID}.msh > ${PROJECT_ID}.tbl" >> mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > mash_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.version
 	### 04_mashPlot
     elif [[ ${currentStep} -eq 4 ]]
     then
@@ -238,6 +241,7 @@ then
     
     	echo "head -n 1 ${PROJECT_ID}.tbl |awk '{for (i=2; i <=NF; i++) print $i}' |awk -F "/" '{print $NF}' |sed s/.subreads.fast[aq].gz//g |sed s/.fast[aq].gz//g |sed s/.fast[aq]//g > key" > mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "Rscript ${MARVEL_PATH}/scripts/mashPlot.R ${PROJECT_ID}" >> mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.version
     ### 05_mashScreen
     elif [[ ${currentStep} -eq 5 ]]
     then
@@ -258,7 +262,8 @@ then
         do
         	out=contamination/${x%.fast[aq].gz}
         	echo "mash screen -w ${MASH_REF_GENOMES}/refseq.genomes.k21s1000.msh ${x} > ${out}"
-		done > mash_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.plan        
+		done > mash_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.plan   
+		echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > mash_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.version     
     else
         (>&2 echo "step ${currentStep} in RAW_MASH_TYPE ${RAW_MASH_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_MASH_TYPE}]}")
