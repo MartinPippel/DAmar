@@ -287,8 +287,8 @@ then
         do
         	if [[ -f ${x} ]]
         	then
-        		out=screen/$(basename ${x%.fast[aq].gz})
-        		echo "mash screen -p ${threads} -w ${MASH_REF_GENOMES}/refseq.genomes.k21s1000.msh ${x} > ${out}"
+        		out=screen/$(basename ${x%.fast[aq].gz}).conta
+        		echo "mash screen -p ${threads} -w ${MASH_REF_GENOMES} ${x} > ${out}"
         	fi
 		done > mash_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.plan   
 		echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > mash_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.version     
