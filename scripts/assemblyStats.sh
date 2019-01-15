@@ -323,14 +323,7 @@ then
 		fext="x"
 		
 		mkdir -p ${scaff10xPath}
-		
-		fname="${SC_SCAFF10X_OUTDIR}/scaff10x_${SC_SCAFF10X_RUNID}/${PROJECT_ID}_${SC_SCAFF10X_OUTDIR}_${fext}.p.fasta"
-		if [[ ! -f ${fname} ]]
-		then
-			(>&2 echo "ERROR - Cannot find file ${fname}")
-  			exit 1
-		fi
-		
+				
 		prevExt=$(basename ${SC_SCAFF10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
         
         # scaff10x step 2
