@@ -194,7 +194,7 @@ then
     		do
     			if [[ -f ${x} ]]
     			then 
-    				echo "mash sketch -k 21 -s 10000 -r -m 1 -o ${x%.fasta}.msh ${x}"
+    				echo "mash sketch -k 21 -s 10000 -r -m 1 -o ${x%.fasta.gz}.msh ${x}"
     			fi	
     		done	
 		fi > mash_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.plan
