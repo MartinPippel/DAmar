@@ -254,7 +254,7 @@ then
             rm $x
         done
     
-    	echo "head -n 1 ${PROJECT_ID}.tbl |awk '{for (i=2; i <=NF; i++) print $i}' |awk -F "/" '{print $NF}' |sed s/.subreads.fast[aq].gz//g |sed s/.fast[aq].gz//g |sed s/.fast[aq]//g > key" > mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "head -n 1 ${PROJECT_ID}.tbl |awk '{for (i=2; i <=NF; i++) print \$i}' |awk -F "/" '{print \$NF}' |sed s/.subreads.fast[aq].gz//g |sed s/.fast[aq].gz//g |sed s/.fast[aq]//g > key" > mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "Rscript ${MARVEL_PATH}/scripts/mashPlot.R ${PROJECT_ID}" >> mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.version
     ### 05_mashScreen
