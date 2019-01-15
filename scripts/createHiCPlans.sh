@@ -792,7 +792,7 @@ then
         
         setJuicerOptions 1
             	        
-        echo "scripts/juicer.sh ${SC_HIC_JUICER_OPT} -S early -D ${pwd} -g ${PROJECT_ID} -s ${SC_HIC_ENZYME} -z references/${PROJECT_ID}.fasta -y restriction_sites/${PROJECT_ID}_${SC_HIC_ENZYME}.txt -p references/${PROJECT_ID}.sizes" > hic_02_HIC3dnaJuicer_single_${CONT_DB}.${slurmID}.plan
+        echo "scripts/juicer.sh ${SC_HIC_JUICER_OPT} -S early -D ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -g ${PROJECT_ID} -s ${SC_HIC_ENZYME} -z references/${PROJECT_ID}.fasta -y restriction_sites/${PROJECT_ID}_${SC_HIC_ENZYME}.txt -p references/${PROJECT_ID}.sizes" > hic_02_HIC3dnaJuicer_single_${CONT_DB}.${slurmID}.plan
     ### 03_HIC3dnaVisualize
 	elif [[ ${currentStep} -eq 3 ]]
     then
