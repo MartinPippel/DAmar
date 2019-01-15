@@ -816,7 +816,6 @@ SC_HIC_3DDNAVISUALIZE_MAPQV=1			#Build map for a specific mapq threshold (defaul
 #SC_HIC_3DDNAVISUALIZE_RESOLUTION= 		#Build for specific resolutions (default is -r 2500000,1000000,500000,250000,100000,50000,25000,10000,5000,1000)
 SC_HIC_3DDNAVISUALIZE_CLEANUP=1			#Clean up when done (default: no cleanup.)
 SC_HIC_3DDNAVISUALIZE_IGNOREMAPQV=0		#Ignore mapq suffix.
-}
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
