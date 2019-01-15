@@ -254,7 +254,7 @@ then
             rm $x
         done
     
-    	echo "head -n 1 ${PROJECT_ID}.tbl |awk '{for (i=2; i <=NF; i++) print \$i}' |awk -F "/" '{print \$NF}' |sed s/.subreads.fast[aq].gz//g |sed s/.fast[aq].gz//g |sed s/.fast[aq]//g > key" > mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "head -n 1 ${PROJECT_ID}.tbl |awk '{for (i=2; i <=NF; i++) print \$i}' |awk -F "/" '{print \$NF}' |sed s/.subreads.fast[aq].gz//g |sed s/.fast[aq].gz//g |sed s/.fast[aq]//g > ${PROJECT_ID}.key" > mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "Rscript ${MARVEL_PATH}/scripts/mashPlot.R ${PROJECT_ID}" >> mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mash_04_mashPlot_single_${RAW_DB%.db}.${slurmID}.version
     ### 05_mashScreen
@@ -272,10 +272,10 @@ then
         	exit 1	
     	fi
         	
-        mkdir -p contamination 
+        mkdir -p screen 
         for x in pacbio/*.fasta.gz 10x/*.fastq.gz hic/*.fastq.gz
         do
-        	out=contamination/${x%.fast[aq].gz}
+        	out=screen/${x%.fast[aq].gz}
         	echo "mash screen -w ${MASH_REF_GENOMES}/refseq.genomes.k21s1000.msh ${x} > ${out}"
 		done > mash_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.plan   
 		echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > mash_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.version     

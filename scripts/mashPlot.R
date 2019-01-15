@@ -6,18 +6,18 @@ par(mar=c(3.2,3.2,0,0))
 par(mgp=c(2.2,1,0))
 
 # get names
-key=read.table("key")
+key=read.table(paste(args[[1]], ".key", sep=""))
 labels=key[,1]
 
 # make dendrogram
-x = read.table("combined.tbl")
+x = read.table(paste(args[[1]], ".tbl", sep=""))
 y=x[,2:dim(x)[2]]
 z = data.matrix(y)
 z[is.infinite(z)]=0
 rc = hclust(as.dist(z), method="ward.D2")
 
 # make coloring
-x = read.table("combined.tbl");
+x = read.table(paste(args[[1]], ".tbl", sep=""));
 y=x[,2:dim(x)[2]]
 cr3 = data.matrix(y)
 cr3=100-(cr3*100)
