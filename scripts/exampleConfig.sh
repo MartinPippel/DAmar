@@ -70,6 +70,15 @@ PATCHING_DIR="patching"
 ASSMEBLY_DIR="assembly"
 COVERAGE_DIR="coverage"
 MITO_DIR="mitochondrion"
+MASH_DIR="contamination"
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -2 - mash contamination screening <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+#type-0 steps [1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen 
+RAW_MASH_TYPE=0
+
+RAW_MASH_SUBMIT_SCRIPTS_FROM=1
+RAW_MASH_SUBMIT_SCRIPTS_TO=5
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -1 - mitochondrium assembly <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -201,10 +210,10 @@ SC_BIONANO_SUBMIT_SCRIPTS_TO=1
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 15 - HiC QC and scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 SC_HIC_TYPE=0
-# Type: 0 Arima Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7_HICrunSalsa
-# Type: 1 Phase Genomics Mapping Pipeline (For QC) steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
-# Type: 2 - Aiden Lab Juicer Pipeline (For QC)
-# Type: 3 - 3d-dna Pipeline (For Scaffolding)
+# Type: 0 Arima Mapping Pipeline (For QC) 				 steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7_HICrunSalsa
+# Type: 1 Phase Genomics Mapping Pipeline (For QC) 		 steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
+# Type: 2 Aiden Lab Juicer/3d-dna Scaffolding Pipeline   steps: 01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaAssemblyPipeline
+# Type: 3 Aiden Lab Juicer/3d-dna visualization Pipeline steps: 01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaVisualize
 SC_HIC_SUBMIT_SCRIPTS_FROM=1
 SC_HIC_SUBMIT_SCRIPTS_TO=7
 # ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
@@ -256,6 +265,12 @@ RAW_MITO_FORCEALIGN_THREADS=1
 #RAW_MITO_FORCEALIGN_MAXDIST=250
 #RAW_MITO_FORCEALIGN_BORDER=25
 #RAW_MITO_FORCEALIGN_CORRELATION=0.65
+
+
+# ----------------------------------------------------------------- RAW MASH CONTAMINATION SCREENING ---------------------------------------------------------------------------
+
+MASH_REF_GENOMES=/projects/dazzler/pippel/prog/data/refseq.genomes.k21s1000.msh
+RAW_MASH_FASTP_THREADS=1
 
 # ----------------------------------------------------------------- RAW DASCOVER OPTIONS - always on RAW_DAZZ_DB ---------------------------------------------------------------------------
 
@@ -794,6 +809,13 @@ SC_HIC_3DDNA_MINCONTIGLEN=15000			#Specifies threshold input contig/scaffold siz
 SC_HIC_3DDNA_ROUNDS=2					#Specifies number of iterative rounds for misjoin correction (default is 2).
 #SC_HIC_3DDNA_STAGE=					#can be: [polish, split, seal, merge, finalize
 #SC_HIC_3DDNA_MAPQV=1					#Mapq threshold for scaffolding and visualization (default is 1).
+### 3d-dna visualize pipeline
+SC_HIC_3DDNAVISUALIZE_MAPQV=1			#Build map for a specific mapq threshold (default is 1).
+#SC_HIC_3DDNAVISUALIZE_MNDPATH=""		#Path to mnd already lifted from input to assembly chromosome: used to skip the remapping step.	
+#SC_HIC_3DDNAVISUALIZE_SKIPNORM=1		#Skip normalization.
+#SC_HIC_3DDNAVISUALIZE_RESOLUTION= 		#Build for specific resolutions (default is -r 2500000,1000000,500000,250000,100000,50000,25000,10000,5000,1000)
+SC_HIC_3DDNAVISUALIZE_CLEANUP=1			#Clean up when done (default: no cleanup.)
+SC_HIC_3DDNAVISUALIZE_IGNOREMAPQV=0		#Ignore mapq suffix.
 }
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
@@ -1014,3 +1036,7 @@ TIME_HIC3dnaJuicer=24:00:00
 THREADS_HIC3dnaAssemblyPipeline=${THREADS_juicer}
 MEM_HIC3dnaAssemblyPipeline=$((${THREADS_juicer}*4096))
 TIME_HIC3dnaAssemblyPipeline=24:00:00
+
+THREADS_HIC3dnaVisualizePipeline=${THREADS_juicer}
+MEM_HIC3dnaVisualizePipeline=$((${THREADS_juicer}*4096))
+TIME_HIC3dnaVisualizePipeline=24:00:00

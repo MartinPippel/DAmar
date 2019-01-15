@@ -91,8 +91,15 @@ function setJuicerOptions()
 {
 	SC_HIC_JUICER_OPT=""
 	
+	if [[ $# -eq 0 ]]
+	then 
+		ignoreStage=0	
+	else
+		ignoreStage=1
+	fi
+	
 	# set juicer stage 
-	if [[ -n ${SC_HIC_JUICER_STAGE} ]]
+	if [[ -n ${SC_HIC_JUICER_STAGE} && ${ignoreStage} -eq 0 ]]
 	then 
 		
 	if [[ ! "x${SC_HIC_JUICER_STAGE}" == "xmerge" && ! "x${SC_HIC_JUICER_STAGE}" == "xdedup" && ! "x${SC_HIC_JUICER_STAGE}" == "xfinal" && ! "x${SC_HIC_JUICER_STAGE}" == "xpostproc" && ! "x${SC_HIC_JUICER_STAGE}" == "early" ]]
@@ -177,6 +184,41 @@ function setThreeDDNAOptions()
 	fi
 }
 
+function set3DDNAVisualizeOptions  
+{
+	THREEDDNA_VISUALIZE_OPT=""
+
+	if [[ -n ${SC_HIC_3DDNAVISUALIZE_MAPQV} && ${SC_HIC_3DDNAVISUALIZE_MAPQV} -ge 0 && ${SC_HIC_3DDNAVISUALIZE_MAPQV} -le 100 ]]
+	then 
+		THREEDDNA_VISUALIZE_OPT="${THREEDDNA_VISUALIZE_OPT} -q ${SC_HIC_3DDNAVISUALIZE_MAPQV}"
+	fi
+	
+	if [[ -n ${SC_HIC_3DDNAVISUALIZE_MNDPATH} ]]
+	then 
+		THREEDDNA_VISUALIZE_OPT="${THREEDDNA_VISUALIZE_OPT} -m ${SC_HIC_3DDNAVISUALIZE_MNDPATH}"
+	fi
+	
+	if [[ -n ${SC_HIC_3DDNAVISUALIZE_SKIPNORM} && ${SC_HIC_3DDNAVISUALIZE_SKIPNORM} -gt 0 ]]
+	then 
+		THREEDDNA_VISUALIZE_OPT="${THREEDDNA_VISUALIZE_OPT} -n"
+	fi
+	
+	if [[ -n ${SC_HIC_3DDNAVISUALIZE_RESOLUTION} ]]
+	then 
+		THREEDDNA_VISUALIZE_OPT="${THREEDDNA_VISUALIZE_OPT} -r ${SC_HIC_3DDNAVISUALIZE_RESOLUTION}"
+	fi
+	
+	if [[ -n ${SC_HIC_3DDNAVISUALIZE_CLEANUP} && ${SC_HIC_3DDNAVISUALIZE_CLEANUP} -gt 0 ]]
+	then 
+		THREEDDNA_VISUALIZE_OPT="${THREEDDNA_VISUALIZE_OPT} -c"
+	fi
+	
+	if [[ -n ${SC_HIC_3DDNAVISUALIZE_IGNOREMAPQV} && ${SC_HIC_3DDNAVISUALIZE_IGNOREMAPQV} -gt 0 ]]
+	then 
+		THREEDDNA_VISUALIZE_OPT="${THREEDDNA_VISUALIZE_OPT} -i"
+	fi	
+}    	
+
 if [[ -z ${SALSA_PATH} || ! -f ${SALSA_PATH}/run_pipeline.py ]]
 then
 	(>&2 echo "Variable SALSA_PATH must be set to a proper salsa2 installation directory!!")
@@ -191,12 +233,13 @@ fi
  
 # Type: 0 - Arima Mapping Pipeline (For QC) + SALSA SCAFFOLDING 
 # Type: 1 - Phase Genomics Mapping Pipeline (For QC)
-# Type: 2 - Aiden Lab Juicer Pipeline (For QC)
-# Type: 3 - 3d-dna Pipeline (For Scaffolding)
+# Type: 2 - Aiden Lab Juicer/3d-dna Pipeline (For QC) - full scaffolding pipeline
+# Type: 3 - Aiden Lab fast Juicer + visualize any input assembly 
 
 myTypes=("01_HICsalsaPrepareInput, 02_HICsalsaBwa, 03_HICsalsaFilter, 04_HICsalsaMerge, 05_HICsalsaMarkduplicates, 06_HICsalsaSalsa, 07_HICsalsaStatistics", 
 "01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock", 
-"01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaAssemblyPipeline")
+"01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaAssemblyPipeline",
+"01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaVisualize")
 if [[ ${SC_HIC_TYPE} -eq 0 ]]
 then 
     ### 01_HICsalsaPrepareInput
@@ -635,6 +678,140 @@ then
     	(>&2 echo "valid steps are: ${myTypes[${SC_HIC_TYPE}]}")
     	exit 1
 	fi
+elif [[ ${SC_HIC_TYPE} -eq 3 ]] 
+then 
+	### 01_HIC3dnaPrepareInput
+	if [[ ${currentStep} -eq 1 ]]
+    then
+        ### clean up plans 
+        for x in $(ls hic_01_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        if [[ -z ${JUICER_PATH} || ! -f ${JUICER_PATH}/SLURM/scripts/juicer.sh || -z ${JUICER_TOOLS_PATH} || ! -f ${JUICER_TOOLS_PATH} ]]
+        then 
+    		(>&2 echo "[ERROR] Set variable JUICER_PATH to juicer install directory and JUICER_TOOLS_PATH to a valid jar file (e.g. juicer_tools.1.9.8_jcuda.0.8.jar)")
+    		exit 1
+    	fi
+    	
+    	
+    	if [[ ! -f "${SC_HIC_REFFASTA}" ]]
+        then
+        	(>&2 echo "ERROR - set SC_HIC_REFFASTA to reference fasta file")
+        	exit 1
+   		fi
+   		
+   		if [[ ! -d "${SC_HIC_READS}" ]]
+        then
+        	(>&2 echo "ERROR - set SC_HIC_READS to HiC read directory")
+        	exit 1
+   		fi
+   		
+		numR1Files=0
+		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R1.fastq.gz
+		do
+			if [[ -f ${x} ]]
+			then	
+				numR1Files=$((${numR1Files}+1))	
+			fi
+		done
+		
+		if [[ ${numR1Files} -eq 0 ]]
+        then
+        	(>&2 echo "ERROR - cannot read HiC R1 files with following pattern: ${SC_HIC_READS}/${PROJECT_ID}_*_*_R1.fastq.gz")
+        	exit 1
+   		fi
+		
+		numR2Files=0
+		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R2.fastq.gz
+		do
+			if [[ -f ${x} ]]
+			then	
+				numR2Files=$((${numR2Files}+1))	
+			fi
+		done
+		
+		if [[ ${numR2Files} -eq 0 ]]
+        then
+        	(>&2 echo "ERROR - cannot read HiC R2 files with following pattern: ${SC_HIC_READS}/${PROJECT_ID}_*_*_R2.fastq.gz")
+        	exit 1
+   		fi
+   		
+   		if [[ ${numR1Files} -ne ${numR2Files} ]]
+        then
+        	(>&2 echo "ERROR - HiC R1 files ${numR1Files} does not match R2 files ${numR2Files}")
+        	exit 1
+   		fi   		
+   		
+   		if [[ -z ${SC_HIC_ENZYME} ]]
+   		then
+        	(>&2 echo "ERROR - set variable SC_HIC_ENZYME!")
+        	exit 1   			
+   		fi
+   		
+   		echo "if [[ -d ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} ]]; then mv ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cp -r ${JUICER_PATH}/SLURM/scripts ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -f -r ${JUICER_TOOLS_PATH} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer_tools.jar" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		# create reference subdir + link and do indexing 
+		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -r ${SC_HIC_REFFASTA} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "awk '{print \$1" "\$2}' ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.sizes" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "awk -f ${THREEDDNA_PATH}/utils/generate-assembly-file-from-fasta.awk ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.assembly" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		# create resctriction site subdir + generate sites
+		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "python ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		# create fastq subdir + link zipped HIC reads  
+		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/fastq" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R[12].fastq.gz
+		do
+			if [[ -f ${x} ]]
+			then	
+				echo "ln -s -r -f ${x} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/fastq" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan 
+			fi
+		done
+		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/visualize" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan		
+		
+		# create config subdir + copy current config file with time stamp
+		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "3d-dna $(git --git-dir=${THREEDDNA_PATH}/.git rev-parse --short HEAD)" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
+	### 02_HIC3dnaJuicer
+	elif [[ ${currentStep} -eq 2 ]]
+    then
+        ### clean up plans 
+        for x in $(ls hic_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        setJuicerOptions 1
+            	        
+        echo "scripts/juicer.sh ${SC_HIC_JUICER_OPT} -S early -D ${pwd} -g ${PROJECT_ID} -s ${SC_HIC_ENZYME} -z references/${PROJECT_ID}.fasta -y restriction_sites/${PROJECT_ID}_${SC_HIC_ENZYME}.txt -p references/${PROJECT_ID}.sizes" > hic_02_HIC3dnaJuicer_single_${CONT_DB}.${slurmID}.plan
+    ### 03_HIC3dnaVisualize
+	elif [[ ${currentStep} -eq 3 ]]
+    then
+        ### clean up plans 
+        for x in $(ls hic_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+            
+        set3DDNAVisualizeOptions  
+            	        
+    	echo "${THREEDDNA_PATH}/visualize/run-assembly-visualizer.sh ${THREEDDNA_VISUALIZE_OPT} references/${PROJECT_ID}.assembly aligned/merged_nodups.txt" > hic_03_HIC3dnaVisualizePipeline_single_${CONT_DB}.${slurmID}.plan
+        
+        echo "3d-dna $(git --git-dir=${THREEDDNA_PATH}/.git rev-parse --short HEAD)" > hic_03_HIC3dnaVisualizePipeline_single_${CONT_DB}.${slurmID}.version
+  	else
+    	(>&2 echo "step ${currentStep} in SC_HIC_TYPE ${SC_HIC_TYPE} not supported")
+    	(>&2 echo "valid steps are: ${myTypes[${SC_HIC_TYPE}]}")
+    	exit 1
+	fi	
 else
     (>&2 echo "unknown SC_HIC_TYPE ${SC_HIC_TYPE}")
     (>&2 echo "supported types")
