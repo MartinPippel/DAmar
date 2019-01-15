@@ -1040,3 +1040,11 @@ TIME_HIC3dnaAssemblyPipeline=24:00:00
 THREADS_HIC3dnaVisualizePipeline=${THREADS_juicer}
 MEM_HIC3dnaVisualizePipeline=$((${THREADS_juicer}*4096))
 TIME_HIC3dnaVisualizePipeline=24:00:00
+
+THREADS_mashPlot=1
+MEM_mashPlot=64000
+TIME_mashPlot=24:00:00
+
+THREADS_mashScreen=${THREADS_juicer}
+MEM_mashScreen=64000
+TIME_mashScreen=24:00:00

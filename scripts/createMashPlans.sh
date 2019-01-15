@@ -273,10 +273,20 @@ then
     	fi
         	
         mkdir -p screen 
+        
+        threads=24
+		if [[ "${SLURM_PARTITION}" == "gpu" ]]
+		then 
+			threads=40
+		elif [[ "${SLURM_PARTITION}" == "bigmem" ]]
+		then 
+			threads=48
+		fi
+        
         for x in pacbio/*.fasta.gz 10x/*.fastq.gz hic/*.fastq.gz
         do
         	out=screen/${x%.fast[aq].gz}
-        	echo "mash screen -w ${MASH_REF_GENOMES}/refseq.genomes.k21s1000.msh ${x} > ${out}"
+        	echo "mash screen -p ${threads} -w ${MASH_REF_GENOMES}/refseq.genomes.k21s1000.msh ${x} > ${out}"
 		done > mash_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.plan   
 		echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > mash_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.version     
     else
