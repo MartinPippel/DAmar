@@ -190,7 +190,7 @@ then
     	# pacbio
     	if [[ -n ${DB_PATH} && -d "${DB_PATH}" && -d pacbio ]]
     	then 
-    		for x in pacbio/*_mash.fasta
+    		for x in pacbio/*_mash.fasta.gz
     		do
     			if [[ -f ${x} ]]
     			then 
