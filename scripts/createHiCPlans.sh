@@ -790,6 +790,11 @@ then
         done
         
         setJuicerOptions 1
+        
+        if [[ -d ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/aligned ]]
+        then
+        	mv ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/aligned ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/aligned_old_$(date '+%Y-%m-%d_%H-%M-%S')
+    	fi    	        
             	        
         echo "${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer.sh ${SC_HIC_JUICER_OPT} -S early -d ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -D ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -g ${PROJECT_ID} -s ${SC_HIC_ENZYME} -z ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta -y ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites/${PROJECT_ID}_${SC_HIC_ENZYME}.txt -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.sizes" > hic_02_HIC3dnaJuicer_single_${CONT_DB}.${slurmID}.plan
     ### 03_HIC3dnaVisualize
