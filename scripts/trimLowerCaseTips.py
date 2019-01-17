@@ -68,7 +68,7 @@ for (name, args, seq) in fasta_iter(f):
         trimEnd = slen
     
     if trimBeg == slen:
-        fout_garbage.write(">{} trimBeg={} trimEnd={}\n".format(name, trimBeg, trimEnd))
+        fout_garbage.write(">{} trimBeg={} trimEnd={}".format(name, trimBeg, trimEnd))
         fout_garbage.write("\n{}\n".format(wrap_seq(seq, 100)))
     else:
         fout.write(">{} trimBeg={} trimEnd={}".format(name, trimBeg, slen - abs(trimEnd)))
