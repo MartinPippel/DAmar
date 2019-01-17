@@ -808,7 +808,7 @@ then
             
         set3DDNAVisualizeOptions  
             	        
-    	echo "${THREEDDNA_PATH}/visualize/run-assembly-visualizer.sh ${THREEDDNA_VISUALIZE_OPT} references/${PROJECT_ID}.assembly aligned/merged_nodups.txt" > hic_03_HIC3dnaVisualizePipeline_single_${CONT_DB}.${slurmID}.plan
+    	echo "cd ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/visualize && ${THREEDDNA_PATH}/visualize/run-assembly-visualizer.sh ${THREEDDNA_VISUALIZE_OPT} ../references/${PROJECT_ID}.assembly ../aligned/merged_nodups.txt" > hic_03_HIC3dnaVisualizePipeline_single_${CONT_DB}.${slurmID}.plan
         
         echo "3d-dna $(git --git-dir=${THREEDDNA_PATH}/.git rev-parse --short HEAD)" > hic_03_HIC3dnaVisualizePipeline_single_${CONT_DB}.${slurmID}.version
   	else
