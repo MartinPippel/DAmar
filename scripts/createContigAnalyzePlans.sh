@@ -902,18 +902,7 @@ then
                 
             if [[ -f ${inFile} ]]
                 then 
-                    if [[ -n ${COR_CONTIG_FORCEALIGN_NUMACTL} && ${COR_CONTIG_FORCEALIGN_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
-                    then
-                        if [[ $((${cmdLine} % 2)) -eq  0 ]]
-                        then
-                            NUMACTL="numactl -m0 -N0 "
-                        else
-                            NUMACTL="numactl -m1 -N1 "    
-                        fi
-                    else
-                        NUMACTL=""
-                    fi
-                    echo -n "${NUMACTL}${DACCORD_PATH}/bin/forcealign${CONTIG_FORCEALIGN_OPT} -T/tmp/${CONT_DB%.db}.forcealign.${x}.${y} ${desDir}/${CONT_DB%.db}.forcealign.${x}.${y} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB%.db} ${inFile}"
+                    echo -n "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/forcealign${CONTIG_FORCEALIGN_OPT} -T/tmp/${CONT_DB%.db}.forcealign.${x}.${y} ${desDir}/${CONT_DB%.db}.forcealign.${x}.${y} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB%.db} ${inFile}"
                     cmdLine=$((${cmdLine}+1))
                     if [[ $x -eq $y ]]
                     then

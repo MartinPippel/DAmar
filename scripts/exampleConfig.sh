@@ -38,6 +38,7 @@ export QUAST_PATH="/projects/dazzler/pippel/prog/quast/"
 export JUICER_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer"
 export JUICER_TOOLS_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer_tools.1.9.8_jcuda.0.8.jar"
 export THREEDDNA_PATH="/projects/dazzler/pippel/prog/scaffolding/3d-dna/"
+export LONGRANGER_PATH="/projects/dazzler/pippel/prog/longranger-2.2.0"
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -196,7 +197,8 @@ CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 SC_10X_TYPE=0
-# Type: 0 steps: 01_10Xprepare, 02_10Xbreak10, 03_10Xscaff10x, 04_10Xbreak10x, 05_10Xscaff10x, 06_10Xbreak10x, 07_10Xstatistics
+# Type: 0 scaff10x/break10x pipeline 	steps: 01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics
+# Type: 1 tigmint arks pipeline 		steps: 01_arksPrepare, 02_arksLonranger
 SC_10X_SUBMIT_SCRIPTS_FROM=1
 SC_10X_SUBMIT_SCRIPTS_TO=7
 
@@ -727,32 +729,32 @@ CT_WHATSHAP_SAMTOOLSMEM=1
 # ----------------------------------------------------------------- SCAFFOLDING - SCAFF10X OPTIONS ----------------------------------------------------------------------------------------------------
 
 ### general scaff10x options
-SC_10X_RUNID=1
-SC_10X_OUTDIR="${FIX_FILT_OUTDIR}"
-SC_10X_REF="stats/contigs/m1/freebayes_1/mMyoMyo_m1_f.p.fasta"
-SC_10X_READS=${TENX_PATH}
+SC_SCAFF10X_RUNID=1
+SC_SCAFF10X_OUTDIR="${FIX_FILT_OUTDIR}"
+SC_SCAFF10X_REF="stats/contigs/m1/freebayes_1/mMyoMyo_m1_f.p.fasta"
+SC_SCAFF10X_READS=${TENX_PATH}
 ### scaff10x options
-SC_10X_SCAFF10X_THREADS=48
-#SC_10X_SCAFF10X_ALIGNER=bwa		### bwa or smalt
-#SC_10X_SCAFF10X_SCORE=20
-SC_10X_SCAFF10X_MATRIX=2000
-SC_10X_SCAFF10X_MINREADS=12				### VGP: round1: 12, round2: 8 (default: 10)
-SC_10X_SCAFF10X_LONGREAD=1
-SC_10X_SCAFF10X_GAPSIZE=100				### should be the same as used in scaff_reads
-SC_10X_SCAFF10X_EDGELEN=50000
-SC_10X_SCAFF10X_MINSHAREDBARCODES=10		### VGP: round1: 10, round2: 10
-SC_10X_SCAFF10X_BLOCK=50000				### VGP: round1: 50000, round2: 50000
-#SC_10X_SCAFF10X_SAM="path to previously created sam file"
-#SC_10X_SCAFF10X_BAM="path to previously created bam file"
-#SC_10X_SCAFF10X_READSBC1="m1/scaff10x_1/scaff10x_BC_1.fastq" 		## produced in step1 of scaff10x pipeleine
-#SC_10X_SCAFF10X_READSBC2="m1/scaff10x_1/scaff10x_BC_2.fastq"		## produced in step1 of scaff10x pipeleine
+SC_SCAFF10X_SCAFF10X_THREADS=48
+#SC_SCAFF10X_SCAFF10X_ALIGNER=bwa		### bwa or smalt
+#SC_SCAFF10X_SCAFF10X_SCORE=20
+SC_SCAFF10X_SCAFF10X_MATRIX=2000
+SC_SCAFF10X_SCAFF10X_MINREADS=12				### VGP: round1: 12, round2: 8 (default: 10)
+SC_SCAFF10X_SCAFF10X_LONGREAD=1
+SC_SCAFF10X_SCAFF10X_GAPSIZE=100				### should be the same as used in scaff_reads
+SC_SCAFF10X_SCAFF10X_EDGELEN=50000
+SC_SCAFF10X_SCAFF10X_MINSHAREDBARCODES=10		### VGP: round1: 10, round2: 10
+SC_SCAFF10X_SCAFF10X_BLOCK=50000				### VGP: round1: 50000, round2: 50000
+#SC_SCAFF10X_SCAFF10X_SAM="path to previously created sam file"
+#SC_SCAFF10X_SCAFF10X_BAM="path to previously created bam file"
+#SC_SCAFF10X_SCAFF10X_READSBC1="m1/scaff10x_1/scaff10x_BC_1.fastq" 		## produced in step1 of scaff10x pipeleine
+#SC_SCAFF10X_SCAFF10X_READSBC2="m1/scaff10x_1/scaff10x_BC_2.fastq"		## produced in step1 of scaff10x pipeleine
 ### break10x options
-SC_10X_BREAK10X_THREADS=48			# nodes  (30)  - number of CPUs requested
-SC_10X_BREAK10X_READS=5		       	# reads  (5)   - minimum number of reads per barcode
-SC_10X_BREAK10X_SCORE=20      		# score  (20)  - minimum average mapping score on an area covered by reads with the same barcode
-SC_10X_BREAK10X_COVER=50       		# cover  (50)  - minimum barcode coverage at the breakpoint
-SC_10X_BREAK10X_GAP=100       		# gap    (100) - gap size in building scaffold
-SC_10X_BREAK10X_RATIO=15
+SC_SCAFF10X_BREAK10X_THREADS=48			# nodes  (30)  - number of CPUs requested
+SC_SCAFF10X_BREAK10X_READS=5		       	# reads  (5)   - minimum number of reads per barcode
+SC_SCAFF10X_BREAK10X_SCORE=20      		# score  (20)  - minimum average mapping score on an area covered by reads with the same barcode
+SC_SCAFF10X_BREAK10X_COVER=50       		# cover  (50)  - minimum barcode coverage at the breakpoint
+SC_SCAFF10X_BREAK10X_GAP=100       		# gap    (100) - gap size in building scaffold
+SC_SCAFF10X_BREAK10X_RATIO=15
 
 # ----------------------------------------------------------------- SCAFFOLDING - BIONANO OPTIONS ----------------------------------------------------------------------------------------------------
 
@@ -998,13 +1000,13 @@ MEM_mitodaligner=$((24*1024))
 TIME_mitodaligner=04:00:00
 
 ##### SCAFF10X pipeline
-THREADS_10Xscaff10x=${SC_10X_SCAFF10X_THREADS}
-MEM_10Xscaff10x=$((${SC_10X_SCAFF10X_THREADS}*4096))
-TIME_10Xscaff10x=24:00:00
+THREADS_scaff10Xscaff10x=${SC_SCAFF10X_SCAFF10X_THREADS}
+MEM_scaff10Xscaff10x=$((${SC_SCAFF10X_SCAFF10X_THREADS}*4096))
+TIME_scaff10Xscaff10x=24:00:00
 
-THREADS_10Xbreak10x=${SC_10X_BREAK10X_THREADS}
-MEM_10Xbreak10x=$((${SC_10X_BREAK10X_THREADS}*4096))
-TIME_10Xbreak10x=24:00:00
+THREADS_scaff10Xbreak10x=${SC_SCAFF10X_BREAK10X_THREADS}
+MEM_scaff10Xbreak10x=$((${SC_SCAFF10X_BREAK10X_THREADS}*4096))
+TIME_scaff10Xbreak10x=24:00:00
 
 ##### Bionano pipeline
 THREADS_BNscaffold=24

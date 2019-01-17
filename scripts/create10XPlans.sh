@@ -27,6 +27,12 @@ then
  gsize=$((${GSIZE:0:$i}*1000))
 fi
 
+if [[ -z ${TIGMINT_PATH} || ! -f ${TIGMINT_PATH}/tigmint-cut ]]
+then
+	(>&2 echo "Variable TIGMINT_PATH must be set to a proper tigmint installation directory!!")
+    exit 1
+fi
+
 if [[ -z ${SCAFF10X_PATH} || ! -f ${SCAFF10X_PATH}/scaff_reads ]]
 then
 	(>&2 echo "Variable SCAFF10X_PATH must be set to a proper scaff10x installation directory!!")
@@ -143,6 +149,49 @@ function setBreak10xOptions()
 	then
 		SCAFF10X_BREAK10X_OPT="${SCAFF10X_BREAK10X_OPT} -gap ${SC_10X_BREAK10X_GAP}"		
 	fi
+}
+
+function setbwaOptions()
+{
+	# by default use -p smart pairing, i.e. only one input file and -C append FASTA/FASTQ comment to SAM output, i.e. append 10x barcode
+	SCAFFOLD_BWA_OPT=" -p -C"
+	
+	if [[ -z "${SC_10X_BWA_THREADS}" ]]
+	then 
+		SC_10X_BWA_THREADS=4	
+	fi
+	
+	SCAFFOLD_BWA_OPT="${SCAFFOLD_BWA_OPT} -t ${SC_10X_BWA_THREADS}"
+	
+	if [[ -n ${SC_10X_BWA_VERBOSITY} ]]
+	then 
+		SCAFFOLD_BWA_OPT="${SCAFFOLD_BWA_OPT} -v ${SC_10X_BWA_VERBOSITY}"
+	fi
+	
+	if [[ -n ${SC_10X_BWA_MISMATCHPENALTY} && ${SC_10X_BWA_MISMATCHPENALTY} -gt 0 ]]
+	then 
+		SCAFFOLD_BWA_OPT="${SCAFFOLD_BWA_OPT} -B ${SC_10X_BWA_MISMATCHPENALTY}"
+	fi
+}
+
+function setSamtoolsOptions()
+{
+	SCAFFOLD_SAMTOOLS_OPT=" -tBX"
+	
+	if [[ -z "${SC_10X_SAMTOOLS_THREADS}" ]]
+	then 
+		SC_10X_SAMTOOLS_THREADS=4	
+	fi
+	
+	SCAFFOLD_SAMTOOLS_OPT="${SCAFFOLD_SAMTOOLS_OPT} -@ ${SC_10X_SAMTOOLS_THREADS}"
+	
+	if [[ -n ${SC_10X_SAMTOOLS_MEM} ]]
+	then 
+		SCAFFOLD_SAMTOOLS_OPT="${SCAFFOLD_SAMTOOLS_OPT} -m ${SC_10X_SAMTOOLS_MEM}G"
+	else
+		SC_10X_SAMTOOLS_MEM=2
+		SCAFFOLD_SAMTOOLS_OPT="${SCAFFOLD_SAMTOOLS_OPT} -m ${SC_10X_SAMTOOLS_MEM}G"
+	fi		
 }
 
 #### type 0: scaff10x - break10x pipeline
@@ -519,7 +568,9 @@ then
    		echo "mkdir -p ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/reads" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
    		
-   		echo "ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "samtools faidx ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+		echo "bwa index ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
    		
 		for r1 in ${SC_10X_READS}/${PROJECT_ID}_S[0-9]_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
 		do
@@ -530,6 +581,10 @@ then
 			echo "ln -s -f ${id}/${f1} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/reads"
 			echo "ln -s -f ${id}/${f2} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/reads"										
 		done >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+		
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.version
+   		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.version
+		
 	### 02_arksLongranger
 	elif [[ ${currentStep} -eq 2 ]]
     then
@@ -541,6 +596,54 @@ then
         
         echo "cd ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID} && ${LONGRANGER_PATH}/longranger basic --id=${PROJECT_ID} --fastqs=reads/" > 10x_02_arksLongranger_single_${CONT_DB}.${slurmID}.plan
         echo "${LONGRANGER_PATH}/longranger basic --version | head -n1 | tr -d \"()\"" > 10x_02_arksLongranger_single_${CONT_DB}.${slurmID}.version
+    ### 03_arksTigmint
+	elif [[ ${currentStep} -eq 3 ]]
+    then
+        ### clean up plans 
+        for x in $(ls 10x_03_arks*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        setbwaOptions
+        setSamtoolsOptions        
+        
+        prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		cset==$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		fext="t" ### tigmint
+        tigmintOFile=${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+        
+        
+        echo "bwa mem${SCAFFOLD_BWA_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz | samtools sort${SCAFFOLD_SAMTOOLS_OPT} -o ${PROJECT_ID}_reads_sortbx.bam" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+    	echo "${TIGMINT_PATH}/tigmint-molecule ${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        echo "${TIGMINT_PATH}/tigmint-cut -p ${SC_10X_BWA_THREADS} -o ${tigmintOFile} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}.fasta ${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        
+        # tigmint Parameters ##todo check those default values in arks-timint makefile and incroprate to this pipeline    
+		# tigmint-molecule
+		minsize=2000		# Minimum molecule size [2000]
+		as=0.65				#Minimum ratio of alignment score (AS) over read length [0.65]
+		nm=5				#Maximum number of mismatches (NM) [5]
+		dist=50000			#Maximum distance between reads in the same molecule [50000]
+		mapq=0				#Minimum mapping quality [0]
+		#-m N, --reads N       Minimum number of reads per molecule (duplicates are filtered out) [4]
+		
+		
+		
+		#tigmint-cut:
+		trim=0				#Number of base pairs to trim at contig cuts (bp) [0]
+        span=20				Spanning molecules threshold (no misassembly in window if num. spanning molecules >= n [2])
+        window=1000			#Window size used to check for spanning molecules (bp)  [1000]
+        
+	### 04_arks
+	elif [[ ${currentStep} -eq 4 ]]
+    then
+        ### clean up plans 
+        for x in $(ls 10x_04_arks*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+
+    
    	else
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
