@@ -105,7 +105,7 @@ function getPhaseFilePrefix()
         echo "whatshap"                     
     elif [[ ${currentPhase} -eq 13 ]]
     then
-        echo "scaff10x"                     
+        echo "10x"                     
     elif [[ ${currentPhase} -eq 14 ]]
     then
         echo "bionano"
@@ -113,7 +113,7 @@ function getPhaseFilePrefix()
     then
         echo "hic"                     
     else
-        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (-2-mash, -1-mito, 1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs, 11-freebayes, 12-whatshap, 13-scaff10x, 14-bionano, 15-hic)")
+        (>&2 echo "unknown MARVEL phase ${currentPhase}! Supported values (-2-mash, -1-mito, 1-mask, 2-fix, 3-mask, 4-scrub, 5-filt, 6-tour, 7-corr, 8-cont, 9-arrow, 10-purgeHaplotigs, 11-freebayes, 12-whatshap, 13-10x, 14-bionano, 15-hic)")
         exit 1
     fi
 }

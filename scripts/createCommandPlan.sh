@@ -198,7 +198,7 @@ then
     fi
 elif [[ ${currentPhase} -eq 13 ]]
 then 
-    ${SUBMIT_SCRIPTS_PATH}/createScaff10XPlans.sh ${configFile} ${currentStep} ${slurmID}
+    ${SUBMIT_SCRIPTS_PATH}/create10XPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createScaff10XPlans.sh failed some how. Stop here.")
