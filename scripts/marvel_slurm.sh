@@ -122,10 +122,10 @@ elif [[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 ]]
 then 
     currentPhase=12
     currentStep=${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}
-elif [[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+elif [[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=13
-    currentStep=${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}
+    currentStep=${SC_10X_SUBMIT_SCRIPTS_FROM}
 elif [[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=14

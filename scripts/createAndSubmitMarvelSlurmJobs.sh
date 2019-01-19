@@ -566,7 +566,7 @@ then
 		   		[[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]] ||		   		
 		   		[[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]] ||
-		   		[[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_10X_SUBMIT_SCRIPTS_FROM} -le ${SC_10X_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
 			then
@@ -640,12 +640,12 @@ then
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
         			currentStep=$((${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}-1))
-        		elif [[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]]
+        		elif [[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_10X_SUBMIT_SCRIPTS_FROM} -le ${SC_10X_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=13
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
-        			currentStep=$((${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}-1))
+        			currentStep=$((${SC_10X_SUBMIT_SCRIPTS_FROM}-1))
         		elif [[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=14
@@ -714,7 +714,7 @@ then
 		   		[[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]] ||		   		
 		   		[[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]] ||
-		   		[[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_10X_SUBMIT_SCRIPTS_FROM} -le ${SC_10X_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
 			then
@@ -788,12 +788,12 @@ then
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
         			currentStep=$((${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}-1))
-        		elif [[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]]
+        		elif [[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_10X_SUBMIT_SCRIPTS_FROM} -le ${SC_10X_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=13
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
-        			currentStep=$((${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}-1))
+        			currentStep=$((${SC_10X_SUBMIT_SCRIPTS_FROM}-1))
         		elif [[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=14
@@ -855,7 +855,7 @@ then
 		   		[[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]] ||		   		
 		   		[[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]] ||
-		   		[[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_10X_SUBMIT_SCRIPTS_FROM} -le ${SC_10X_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
 			then
@@ -929,12 +929,12 @@ then
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
         			currentStep=$((${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}-1))
-				elif [[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]]
+				elif [[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_10X_SUBMIT_SCRIPTS_FROM} -le ${SC_10X_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=13
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
-        			currentStep=$((${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}-1))  
+        			currentStep=$((${SC_10X_SUBMIT_SCRIPTS_FROM}-1))  
         		elif [[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=14
@@ -989,7 +989,7 @@ then
 		   		[[ ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM} -le ${CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -le ${CT_FREEBAYES_SUBMIT_SCRIPTS_TO} ]] ||		   		
 		   		[[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 && ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -le ${CT_WHATSHAP_SUBMIT_SCRIPTS_TO} ]] ||
-		   		[[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]] ||
+		   		[[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_10X_SUBMIT_SCRIPTS_FROM} -le ${SC_10X_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]] ||
 		   		[[ ${SC_HIC_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_HIC_SUBMIT_SCRIPTS_FROM} -le ${SC_HIC_SUBMIT_SCRIPTS_TO} ]]		   		
 			then
@@ -1063,12 +1063,12 @@ then
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
         			currentStep=$((${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}-1))
-        		elif [[ ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM} -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]]
+        		elif [[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_10X_SUBMIT_SCRIPTS_FROM} -le ${SC_10X_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=13
 					prefix=$(getPhaseFilePrefix)
 					db=$(getCurrentDB)
-        			currentStep=$((${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}-1))
+        			currentStep=$((${SC_10X_SUBMIT_SCRIPTS_FROM}-1))
         		elif [[ ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -gt 0 && ${SC_BIONANO_SUBMIT_SCRIPTS_FROM} -le ${SC_BIONANO_SUBMIT_SCRIPTS_TO} ]]
         		then
         			currentPhase=14
@@ -1209,13 +1209,13 @@ then
         foundNext=1
     else 
         currentPhase=13
-        currentStep=$((${SC_SCAFF10X_SUBMIT_SCRIPTS_FROM}-1))    
+        currentStep=$((${SC_10X_SUBMIT_SCRIPTS_FROM}-1))    
     fi
 fi                        
 
 if [[ ${currentPhase} -eq 13 && ${foundNext} -eq 0 ]]
 then 
-    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${SC_SCAFF10X_SUBMIT_SCRIPTS_TO} ]]
+    if [[ $((${currentStep}+1)) -gt 0 && $((${currentStep}+1)) -le ${SC_10X_SUBMIT_SCRIPTS_TO} ]]
     then 
         sbatch${appAccount} --job-name=${PROJECT_ID}_p${currentPhase}s$((${currentStep+1})) -o ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.out -e ${prefix}_step$((${currentStep}+1))_${FIX_DB%.db}.err -n1 -c1 -p ${SLURM_PARTITION} --time=01:00:00 --mem-per-cpu=6g --dependency=afterok:${RET##* } --wrap="bash ${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${configFile} ${currentPhase} $((${currentStep}+1)) $slurmID"
         foundNext=1

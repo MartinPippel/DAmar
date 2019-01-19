@@ -51,6 +51,11 @@ then
     exit 1
 fi
 
+if [[ -z ${ARKS_PATH} || ! -f ${ARKS_PATH}/arks ]]
+then
+	(>&2 echo "Variable ARKS_PATH must be set to a proper ARKS installation directory!!")
+    exit 1
+fi
 
 function setScaff10xOptions()
 {
@@ -192,6 +197,183 @@ function setSamtoolsOptions()
 		SC_10X_SAMTOOLS_MEM=2
 		SCAFFOLD_SAMTOOLS_OPT="${SCAFFOLD_SAMTOOLS_OPT} -m ${SC_10X_SAMTOOLS_MEM}G"
 	fi		
+}
+
+function setTigmintOptions()
+{
+	TIGMINT_MOLECULE_OPT=""
+	TIGMINT_CUT_OPT=""
+	
+	# ensure that bwa threads are set
+	if [[ -z "${SC_10X_BWA_THREADS}" ]]
+	then 
+		setbwaOptions
+	fi
+	
+	### set tigmint-cut options
+	TIGMINT_CUT_OPT="${TIGMINT_CUT_OPT} --processes ${SC_10X_BWA_THREADS}"
+	#Number of base pairs to trim at contig cuts (bp) [0]
+	if [[ -n ${SC_10X_TIGMINT_CUT_TRIM} && ${SC_10X_TIGMINT_CUT_TRIM} -gt 0 ]]
+	then
+		TIGMINT_CUT_OPT="${TIGMINT_CUT_OPT} --trim ${SC_10X_TIGMINT_CUT_TRIM}"	
+	fi
+	#Spanning molecules threshold (no misassembly in window if num. spanning molecules >= n [2]), but arks uses 20 as default value why??? 
+	if [[ -n ${SC_10X_TIGMINT_CUT_SPAN} && ${SC_10X_TIGMINT_CUT_SPAN} -gt 0 ]]
+	then
+		TIGMINT_CUT_OPT="${TIGMINT_CUT_OPT} --spanning ${SC_10X_TIGMINT_CUT_SPAN}"	
+	fi
+	#Window size used to check for spanning molecules (bp)  [1000]
+	if [[ -n ${SC_10X_TIGMINT_CUT_WINDOW} && ${SC_10X_TIGMINT_CUT_WINDOW} -gt 0 ]]
+	then
+		TIGMINT_CUT_OPT="${TIGMINT_CUT_OPT} --window ${SC_10X_TIGMINT_CUT_WINDOW}"	
+	fi
+		
+	
+	### set tigmint-molecule options
+	# Minimum molecule size [2000]
+	if [[ -n ${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE} && ${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE} -gt 0 ]]
+	then
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --size ${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}"	
+	fi
+	#Minimum ratio of alignment score (AS) over read length [0.65]
+	if [[ -n ${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO} ]]
+	then
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --as-ratio ${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}"	
+	fi
+	#Maximum number of mismatches (NM) [5]
+	if [[ -n ${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH} && ${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH} -gt 0 ]]
+	then
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --nm ${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}"	
+	fi    
+	#Maximum distance between reads in the same molecule [50000]
+	if [[ -n ${SC_10X_TIGMINT_MOLECULE_MAXDIST} && ${SC_10X_TIGMINT_MOLECULE_MAXDIST} -gt 0 ]]
+	then
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --dist ${SC_10X_TIGMINT_MOLECULE_MAXDIST}"	
+	fi   
+	#Minimum mapping quality [0]
+    if [[ -n ${SC_10X_TIGMINT_MOLECULE_MINMAPQ} && ${SC_10X_TIGMINT_MOLECULE_MINMAPQ} -gt 0 ]]
+	then
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --mapq ${SC_10X_TIGMINT_MOLECULE_MINMAPQ}"	
+	fi
+	#Minimum number of reads per molecule (duplicates are filtered out) [4]  		
+	if [[ -n ${SC_10X_TIGMINT_MOLECULE_NUMREADS} && ${SC_10X_TIGMINT_MOLECULE_NUMREADS} -gt 0 ]]
+	then
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --reads ${SC_10X_TIGMINT_MOLECULE_NUMREADS}"	
+	fi											
+}
+
+function setArksOptions()
+{
+	
+	ARKS_OPT=""
+	
+	
+	## run type
+	# -p can be one of:
+    #                    1) full    uses the full ARKS process (kmerize draft, kmerize and align chromium reads, scaffold).
+    #                    2) align   skips kmerizing of draft and starts with kmerizing and aligning chromium reads.
+    #                    3) graph   skips kmerizing draft and kmerizing/aligning chromium reads and only scaffolds.
+	if [[ -n ${SC_10X_ARKS_RUNTYPE} ]]
+	then
+		if [[ "x${SC_10X_ARKS_RUNTYPE}" != "xfull" && "x${SC_10X_ARKS_RUNTYPE}" != "xalign" && "x${SC_10X_ARKS_RUNTYPE}" != "xgraph" ]]
+		then 
+			SC_10X_ARKS_RUNTYPE="full"
+		fi	
+		ARKS_OPT="${ARKS_OPT} -p ${SC_10X_ARKS_RUNTYPE}"
+	fi
+	
+	if [[ "${SC_10X_ARKS_RUNTYPE}" == full ]]
+	then 
+		ARKS_OPT="${ARKS_OPT} -a longrangerReads_multiplicities.csv"
+		ARKS_OPT="${ARKS_OPT} -a longrangerReads_multiplicities.csv"
+			
+	fi
+	
+	
+	#Minimum number of mapping read pairs/Index required before creating edge in graph. (default: 5)
+	if [[ -n ${SC_10X_ARKS_MINREADPAIRS} && ${SC_10X_ARKS_MINREADPAIRS} -gt 0 ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -c ${SC_10X_ARKS_MINREADPAIRS}"
+	fi
+	
+	#Range (in the format min-max) of index multiplicity (only reads with indices in this multiplicity range will be included in graph) (default: 50-10000)
+	if [[ -n ${SC_10X_ARKS_MULTIPLICITY} ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -m ${SC_10X_ARKS_MULTIPLICITY}"
+	fi
+
+	#Minimum contig length to consider for scaffolding (default: 500)
+	if [[ -n ${SC_10X_ARKS_MINCONTIGLEN} && ${SC_10X_ARKS_MINCONTIGLEN} -gt 0 ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -z ${SC_10X_ARKS_MINCONTIGLEN}"
+	fi
+	
+	#Minimum fraction of read kmers matching a contigId for a read to be associated with the contigId. (default: 0.55)
+	if [[ -n ${SC_10X_ARKS_MINFRACTION} ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -j ${SC_10X_ARKS_MINFRACTION}"
+	fi
+	
+	# k-value for the size of a k-mer. (default: 30) (required)
+	if [[ -n ${SC_10X_ARKS_KMER} && ${SC_10X_ARKS_KMER} -gt 0 ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -k ${SC_10X_ARKS_KMER}"
+	else
+		SC_10X_ARKS_KMER=30
+		ARKS_OPT="${ARKS_OPT} -k ${SC_10X_ARKS_KMER}"		
+	fi
+
+	#Maximum p-value for H/T assignment and link orientation determination. Lower is more stringent (default: 0.05)
+	if [[ -n ${SC_10X_ARKS_PVALUE} ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -r ${SC_10X_ARKS_PVALUE}"
+	fi	
+	
+	# End length (bp) of sequences to consider (default: 30000)
+	if [[ -n ${SC_10X_ARKS_ENDLEN} && ${SC_10X_ARKS_ENDLEN} -gt 0 ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -e ${SC_10X_ARKS_ENDLEN}"
+	fi
+	
+	# DISTANCE ESTIMATION OPTIONS
+	if [[ -n ${SC_10X_ARKS_DISTESTIMATE} && ${SC_10X_ARKS_DISTESTIMATE} -gt 0 ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -D"
+		# num neighbouring samples to estimate distance upper bound [20]
+		if [[ -n ${SC_10X_ARKS_NUMNEIGHBOUR} && ${SC_10X_ARKS_NUMNEIGHBOUR} -gt 0 ]]
+		then
+			ARKS_OPT="${ARKS_OPT} -B ${SC_10X_ARKS_NUMNEIGHBOUR}"
+		else 	
+			ARKS_OPT="${ARKS_OPT} -B 20"
+		fi
+		# -s=FILE output TSV of intra-contig distance/barcode data [disabled]
+		if [[ -n ${SC_10X_ARKS_INTRACONTIGTSV} ]]
+		then
+			ARKS_OPT="${ARKS_OPT} -s ${SC_10X_ARKS_INTRACONTIGTSV}"
+		fi
+		#-S=FILE output TSV of inter-contig distance/barcode data [disabled]
+		if [[ -n ${SC_10X_ARKS_INTERCONTIGTSV} ]]
+		then
+			ARKS_OPT="${ARKS_OPT} -S ${SC_10X_ARKS_INTERCONTIGTSV}"
+		fi
+	fi
+	# EXTRA OUTPUT OPTIONS	
+	if [[ -n ${SC_10X_ARKS_CHECKPOINTS} && ${SC_10X_ARKS_CHECKPOINTS} -ge 0 && ${SC_10X_ARKS_CHECKPOINTS} -le 3 ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -o ${SC_10X_ARKS_CHECKPOINTS}"
+	fi
+	# Maximum degree of nodes in graph. All nodes with degree greater than this number will be removed from the graph prior to printing final graph. For no node removal, set to 0 (default: 0)		
+	if [[ -n ${SC_10X_ARKS_VERBOSE} && ${SC_10X_ARKS_MAXNODEDEGREE} -ge 0  ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -d ${SC_10X_ARKS_MAXNODEDEGREE}"
+	fi
+	
+	if [[ -n ${SC_10X_ARKS_THREADS} && ${SC_10X_ARKS_THREADS} -gt 0 ]]
+	then
+		ARKS_OPT="${ARKS_OPT} -t ${SC_10X_ARKS_THREADS}"
+	else
+		ARKS_OPT="${ARKS_OPT} -t $(sinfo -p ${SLURM_PARTITION} -o \"%c\" --noheader)"			 
+	fi
 }
 
 #### type 0: scaff10x - break10x pipeline
@@ -580,7 +762,7 @@ then
 			
 			echo "ln -s -f ${id}/${f1} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/reads"
 			echo "ln -s -f ${id}/${f2} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/reads"										
-		done >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+		done >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan		
 		
 		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.version
    		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.version
@@ -613,28 +795,13 @@ then
 		fext="t" ### tigmint
         tigmintOFile=${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.fasta
         
+        setTigmintOptions
         
         echo "bwa mem${SCAFFOLD_BWA_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz | samtools sort${SCAFFOLD_SAMTOOLS_OPT} -o ${PROJECT_ID}_reads_sortbx.bam" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
-    	echo "${TIGMINT_PATH}/tigmint-molecule ${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
-        echo "${TIGMINT_PATH}/tigmint-cut -p ${SC_10X_BWA_THREADS} -o ${tigmintOFile} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}.fasta ${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
-        
-        # tigmint Parameters ##todo check those default values in arks-timint makefile and incroprate to this pipeline    
-		# tigmint-molecule
-		minsize=2000		# Minimum molecule size [2000]
-		as=0.65				#Minimum ratio of alignment score (AS) over read length [0.65]
-		nm=5				#Maximum number of mismatches (NM) [5]
-		dist=50000			#Maximum distance between reads in the same molecule [50000]
-		mapq=0				#Minimum mapping quality [0]
-		#-m N, --reads N       Minimum number of reads per molecule (duplicates are filtered out) [4]
-		
-		
-		
-		#tigmint-cut:
-		trim=0				#Number of base pairs to trim at contig cuts (bp) [0]
-        span=20				Spanning molecules threshold (no misassembly in window if num. spanning molecules >= n [2])
-        window=1000			#Window size used to check for spanning molecules (bp)  [1000]
-        
-	### 04_arks
+    	echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} ${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        echo "${TIGMINT_PATH}/tigmint-cut${TIGMINT_CUT_OPT} -o ${tigmintOFile} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}.fasta ${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+                
+	### 04_arksArks
 	elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
@@ -643,7 +810,11 @@ then
             rm $x
         done
 
-    
+
+		setArksOptions
+		echo "${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads.fof" > 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan
+    	echo "${ARKS_PATH}/calcBarcodeMultiplicities.pl ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads.fof > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads_multiplicities.csv" >> 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan
+    	
    	else
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
