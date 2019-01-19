@@ -6,7 +6,7 @@ ALL = LAcartoons LAshow LAcheck LAcount LAmerge \
       LAstats LAextract LAZtest \
       TKshow TKcombine TKtrim \
       gff2track kmers CTanalyze \
-      LAfilterMito
+      LAfilterMito LAfilterCTchains
 
 have_gtk = @have_gtk@
 have_hdf5 = @have_hdf5@
@@ -98,4 +98,7 @@ CTanalyze: CTanalyze.c $(PATH_LIB)/utils.h $(PATH_LIB)/utils.c $(PATH_LIBE)/bita
 	$(CC) $(CFLAGS) -o CTanalyze CTanalyze.c $(PATH_LIB)/oflags.c $(PATH_LIB)/utils.c $(PATH_LIBE)/bitarr.c  $(PATH_LIB)/tracks.c $(PATH_LIB)/pass.c $(PATH_DB)/QV.c $(PATH_DALIGN)/align.c $(PATH_DB)/DB.c $(PATH_LIB)/compression.c $(CLIBS)
 	
 LAfilterMito: LAfilterMito.c $(PATH_LIB)/utils.h $(PATH_LIB)/utils.c $(PATH_LIBE)/bitarr.h $(PATH_LIBE)/bitarr.c $(PATH_LIB)/pass.c $(PATH_LIB)/pass.h $(PATH_LIB)/oflags.h $(PATH_LIB)/oflags.c $(PATH_LIB)/tracks.h $(PATH_LIB)/tracks.c $(PATH_DALIGN)/align.c $(PATH_DALIGN)/align.h $(PATH_DB)/DB.c $(PATH_DB)/DB.h $(PATH_LIB)/compression.c
-	$(CC) $(CFLAGS) -o LAfilterMito LAfilterMito.c $(PATH_LIB)/oflags.c $(PATH_LIB)/utils.c $(PATH_LIBE)/bitarr.c  $(PATH_LIB)/tracks.c $(PATH_LIB)/pass.c $(PATH_DB)/QV.c $(PATH_DALIGN)/align.c $(PATH_DB)/DB.c $(PATH_LIB)/compression.c $(CLIBS)	
+	$(CC) $(CFLAGS) -o LAfilterMito LAfilterMito.c $(PATH_LIB)/oflags.c $(PATH_LIB)/utils.c $(PATH_LIBE)/bitarr.c  $(PATH_LIB)/tracks.c $(PATH_LIB)/pass.c $(PATH_DB)/QV.c $(PATH_DALIGN)/align.c $(PATH_DB)/DB.c $(PATH_LIB)/compression.c $(CLIBS)
+	
+LAfilterCTchains: LAfilterCTchains.c $(PATH_LIB)/utils.h $(PATH_LIB)/utils.c $(PATH_LIBE)/bitarr.h $(PATH_LIBE)/bitarr.c $(PATH_LIB)/pass.c $(PATH_LIB)/pass.h $(PATH_LIB)/oflags.h $(PATH_LIB)/oflags.c $(PATH_LIB)/tracks.h $(PATH_LIB)/tracks.c $(PATH_DALIGN)/align.c $(PATH_DALIGN)/align.h $(PATH_DB)/DB.c $(PATH_DB)/DB.h $(PATH_LIB)/compression.c
+	$(CC) $(CFLAGS) -o LAfilterCTchains LAfilterCTchains.c $(PATH_LIB)/oflags.c $(PATH_LIB)/utils.c $(PATH_LIBE)/bitarr.c  $(PATH_LIB)/tracks.c $(PATH_LIB)/pass.c $(PATH_DB)/QV.c $(PATH_DALIGN)/align.c $(PATH_DB)/DB.c $(PATH_LIB)/compression.c $(CLIBS)	
