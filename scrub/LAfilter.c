@@ -46,8 +46,6 @@
 #define OVL_STRAND( ovl ) ( ( ( ovl )->flags & OVL_COMP ) ? 'c' : 'n' )
 #endif
 
-#undef DEBUG_REPEAT_EXTENSION
-
 #define REMOVE_STITCH_OVL ( 1 << 0 )
 #define REMOVE_MOD_OVL ( 1 << 1 )
 #define REMOVE_TP ( 1 << 2 )

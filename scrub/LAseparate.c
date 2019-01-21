@@ -925,15 +925,16 @@ static void chain(SeparateContext*ctx, Overlap *ovls, int n)
 				if (ovl->path.abpos > chain->ovls[chainLastIdx]->path.abpos)
 					break;
 
+				int ovhBases = 100;
 				for (j = chainIdx; j < chainLastIdx; j++)
 				{
-					if (chain->ovls[j]->path.aepos <= ovl->path.abpos && chain->ovls[j + 1]->path.abpos >= ovl->path.aepos
-							&& chain->ovls[j]->path.bepos <= ovl->path.bbpos && chain->ovls[j + 1]->path.bbpos >= ovl->path.bepos)
+					if (chain->ovls[j]->path.aepos - ovhBases < ovl->path.abpos && chain->ovls[j + 1]->path.abpos + ovhBases > ovl->path.aepos
+							&& chain->ovls[j]->path.bepos - ovhBases < ovl->path.bbpos && chain->ovls[j + 1]->path.bbpos + ovhBases > ovl->path.bepos)
 					{
 						Overlap *lastAddedOvl = chain->ovls[chain->novl - 1];
 
-						if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos) > 100
-								|| intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos) > 100)
+						if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos) > ovhBases
+								|| intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos) > ovhBases)
 							break;
 
 						if (chain->novl == chain->maxOvl)

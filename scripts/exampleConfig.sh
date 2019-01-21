@@ -163,9 +163,9 @@ FIX_CORR_SUBMIT_SCRIPTS_TO=5
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 8 - contig analyze stats  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 COR_CONTIG_TYPE=0
-#type-0 steps: 1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAfilter, 9-LAseparate, 10-forcealign, 11-LAmerge, 12-LArepeat, 13-TKmerge, 14-TKcombine, 15-LAfilter, 16-LAmerge, 17-CTanalyze
+#type-0 steps: 01_createCorrectedContigDB, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilter, 13_LAmerge, 14_CTanalyze
 COR_CONTIG_SUBMIT_SCRIPTS_FROM=0
-COR_CONTIG_SUBMIT_SCRIPTS_TO=17
+COR_CONTIG_SUBMIT_SCRIPTS_TO=14
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 9 - pacbio arrow correction  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -600,25 +600,19 @@ COR_CONTIG_DALIGNER_MASK="dust ${COR_CONTIG_DATANDER_FOLDER}"
 COR_CONTIG_DALIGNER_TRACESPACE=0
 ### LAmerge
 COR_CONTIG_LAMERGE_NFILES=255
-### LAseparate
-COR_CONTIG_LASEPARATE_OLEN=0
-COR_CONTIG_LASEPARATE_RLEN=0
-COR_CONTIG_LASEPARATE_REPEAT="${COR_CONTIG_TANMASK_TRACK}"
-### forcealign 
-COR_CONTIG_FORCEALIGN_THREADS=1
-COR_CONTIG_FORCEALIGN_RUNID=$((${COR_CONTIG_DALIGNER_RUNID}+1))
-COR_CONTIG_FORCEALIGN_PARTIAL=1
-COR_CONTIG_FORCEALIGN_NUMACTL=1
-COR_CONTIG_FORCEALIGN_MAXDIST=250
-COR_CONTIG_FORCEALIGN_BORDER=25
-COR_CONTIG_FORCEALIGN_CORRELATION=0.65
 ### LArepeat 
 COR_CONTIG_LAREPEAT_COV=(2 3 4 5 50 100 1000)
 COR_CONTIG_LAREPEAT_ENTER_COV=(1.01 1.01 1.01 1.01 1.01 1.01 1.01)
 COR_CONTIG_LAREPEAT_LEAVE_COV=(0.99 0.99 0.99 0.99 0.99 0.99 0.99)
 COR_CONTIG_LAREPEAT_OLEN=0
 COR_CONTIG_LAREPEAT_IDENTITYOVLS=1
-### TKmerge
+### LAfilterCTchains
+COR_CONTIG_LAFILTERCTCHAINS_NREP=500
+COR_CONTIG_LAFILTERCTCHAINS_PURGE=1
+COR_CONTIG_LAFILTERCTCHAINS_KEEP=0		## keep only best chain
+COR_CONTIG_LAFILTERCTCHAINS_FUZZ=15000
+COR_CONTIG_LAFILTERCTCHAINS_PERCENTCONTAINED=50
+    ### TKmerge
 COR_CONTIG_TKMERGE_DELETE=1
 ### TKcombine
 COR_CONTIG_TKCOMBINE_DELETE=1
@@ -629,7 +623,7 @@ COR_CONTIG_CTANALYZE_MINCLEN=1000
 COR_CONTIG_CTANALYZE_EXPRAWREADCOV=${RAW_COV}
 COR_CONTIG_CTANALYZE_MAXSPURLEN=100000
 COR_CONTIG_CTANALYZE_MAXTIPLEN=200000
-COR_CONTIG_CTANALYZE_REPEATTRACK="repeats_c${COR_CONTIG_LAREPEAT_COV[3]}_l${COR_CONTIG_LAREPEAT_LEAVE_COV[3]}h${COR_CONTIG_LAREPEAT_ENTER_COV[3]}_forcealign_${COR_CONTIG_DATANDER_FOLDER}_dust"
+COR_CONTIG_CTANALYZE_REPEATTRACK="repeats_c${COR_CONTIG_LAREPEAT_COV[3]}_l${COR_CONTIG_LAREPEAT_LEAVE_COV[3]}h${COR_CONTIG_LAREPEAT_ENTER_COV[3]}_${COR_CONTIG_DATANDER_FOLDER}_dust"
 ptype="dalign"
 if [[ -n ${FIX_FILT_SCRUB_TYPE} && ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
 then 
@@ -639,7 +633,7 @@ then
     ptype="forcealign"
 fi
 COR_CONTIG_CTANALYZE_TRIMTRACK_PATCHEDREADS="trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_${ptype}"
-COR_CONTIG_CTANALYZE_DIR="analyze01"
+COR_CONTIG_CTANALYZE_DIR="analyze_1"
 
 # ----------------------------------------------------------------- PACBIO ARROW OPTIONS ----------------------------------------------------------------------------------------------------
 

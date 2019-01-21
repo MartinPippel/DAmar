@@ -112,94 +112,35 @@ function getSubDirName()
     echo ${dname}_${bname}                 
 }
 
-function setLAfilterOptions()
+function setLAfilterCTchainsOptions()
 {
-    CONTIG_LAFILTER_OPT=""
+    CONTIG_LAFILTERCTCHAINS_OPT=""
 
-    if [[ -n ${COR_CONTIG_LAFILTER_NREP} && ${COR_CONTIG_LAFILTER_NREP} -ne 0 ]]
+    if [[ -n ${COR_CONTIG_LAFILTERCTCHAINS_NREP} && ${COR_CONTIG_LAFILTERCTCHAINS_NREP} -ne 0 ]]
     then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -n ${COR_CONTIG_LAFILTER_NREP}"
-    fi
-    if [[ -n ${COR_CONTIG_LAFILTER_VERBOSE} && ${COR_CONTIG_LAFILTER_VERBOSE} -ne 0 ]]
-    then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -v"
-    fi
-    if [[ -n ${COR_CONTIG_LAFILTER_PURGE} && ${COR_CONTIG_LAFILTER_PURGE} -ne 0 ]]
-    then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -p"
-    fi
-    if [[ -n ${COR_CONTIG_LAFILTER_OLEN} && ${COR_CONTIG_LAFILTER_OLEN} -ne 0 ]]
-    then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -o ${COR_CONTIG_LAFILTER_OLEN}"
-    fi    
-    if [[ -n ${COR_CONTIG_LAFILTER_RLEN} && ${COR_CONTIG_LAFILTER_RLEN} -ne 0 ]]
-    then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -l ${COR_CONTIG_LAFILTER_RLEN}"
-    fi   
-
-    if [[ -n ${COR_CONTIG_LAFILTER_DIF} && ${COR_CONTIG_LAFILTER_DIF} -ne 0 ]]
-    then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -d ${COR_CONTIG_LAFILTER_DIF}"
+        CONTIG_LAFILTERCTCHAINS_OPT="${CONTIG_LAFILTERCTCHAINS_OPT} -n ${COR_CONTIG_LAFILTERCTCHAINS_NREP}"
+	else
+		 CONTIG_LAFILTERCTCHAINS_OPT="${CONTIG_LAFILTERCTCHAINS_OPT} -n 500" 
     fi
 
-    if [[ -n ${COR_CONTIG_LAFILTER_UBAS} ]]
+    if [[ -n ${COR_CONTIG_LAFILTERCTCHAINS_PURGE} && ${COR_CONTIG_LAFILTERCTCHAINS_PURGE} -ne 0 ]]
     then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -u ${COR_CONTIG_LAFILTER_UBAS}"
+        CONTIG_LAFILTERCTCHAINS_OPT="${CONTIG_LAFILTERCTCHAINS_OPT} -p"
     fi
-    if [[ -n ${COR_CONTIG_LAFILTER_PRELOAD} && ${COR_CONTIG_LAFILTER_PRELOAD} -ne 0 ]]
-    then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -L"
-    fi    
-    if [[ -n ${COR_CONTIG_LAFILTER_MERGEREPEATS} && ${COR_CONTIG_LAFILTER_MERGEREPEATS} -ne 0 ]]
-    then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -y ${COR_CONTIG_LAFILTER_MERGEREPEATS}"
-    fi    
-    if [[ -n ${COR_CONTIG_LAFILTER_MERGEREPEATTIPS} && ${COR_CONTIG_LAFILTER_MERGEREPEATTIPS} -ne 0 ]]
-    then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -Y ${COR_CONTIG_LAFILTER_MERGEREPEATTIPS}"
-    fi    
-    if [[ -n ${COR_CONTIG_LAFILTER_MINTIPCOV} && ${COR_CONTIG_LAFILTER_MINTIPCOV} -gt 0 ]]
-    then
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -z ${COR_CONTIG_LAFILTER_MINTIPCOV}"
-    fi            
-    if [[ -n ${COR_CONTIG_LAFILTER_MULTIMAPPER} && ${COR_CONTIG_LAFILTER_MULTIMAPPER} -gt 0 ]]
-    then
-        if [[ ${COR_CONTIG_LAFILTER_MULTIMAPPER} -eq 1 ]]
-        then
-            CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -w"
-        else
-            CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -W"
-        fi
-    fi            
 
-    if [[ -n ${COR_CONTIG_LAFILTER_RESOLVE_REPEATS} && ${COR_CONTIG_LAFILTER_RESOLVE_REPEATS} -gt 0 && ${COR_CONTIG_LAFILTER_RESOLVE_REPEATS} -lt 4 ]]
+    if [[ -n ${COR_CONTIG_LAFILTERCTCHAINS_KEEP} ]]
     then
-        tmp=""
-        mode="m"
-        if [[ -n ${COR_CONTIG_LAFILTER_RESOLVE_REPEATS_AGG} && ${COR_CONTIG_LAFILTER_RESOLVE_REPEATS_AGG} -ne 0 ]]
-        then
-            mode="M"
-        fi
-        for x in $(seq 1 ${COR_CONTIG_LAFILTER_RESOLVE_REPEATS})
-        do
-            tmp="${tmp}${mode}"
-        done
+        CONTIG_LAFILTERCTCHAINS_OPT="${CONTIG_LAFILTERCTCHAINS_OPT} -k ${COR_CONTIG_LAFILTERCTCHAINS_KEEP}"
+    fi
 
-        if [[ -z ${FIX_COV} ]]
-        then 
-            (>&2 echo "If COR_CONTIG_LAFILTER_RESOLVE_REPEATS is set, then the FIX_COV variable has to be set with the apropriate coverage of the patched database ${FIX_DB%.db}.db!")
-            exit 1
-        fi 
-        CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -${tmp} ${FIX_COV}"
-    fi    
-    if [[ -n ${COR_CONTIG_LAFILTER_STITCH} && ${COR_CONTIG_LAFILTER_STITCH} -gt 0 ]]
+    if [[ -n ${COR_CONTIG_LAFILTERCTCHAINS_FUZZ} && ${COR_CONTIG_LAFILTERCTCHAINS_FUZZ} -gt 0 ]]
     then
-        if [[ -n ${COR_CONTIG_LAFILTER_STITCH_AGG} && ${COR_CONTIG_LAFILTER_STITCH_AGG} -gt 0 ]]
-        then
-            CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -S ${COR_CONTIG_LAFILTER_STITCH}"
-        else
-            CONTIG_LAFILTER_OPT="${CONTIG_LAFILTER_OPT} -s ${COR_CONTIG_LAFILTER_STITCH}"
-        fi
+        CONTIG_LAFILTERCTCHAINS_OPT="${CONTIG_LAFILTERCTCHAINS_OPT} -f ${COR_CONTIG_LAFILTERCTCHAINS_FUZZ}"
+    fi
+    
+    if [[ -n ${COR_CONTIG_LAFILTERCTCHAINS_PERCENTCONTAINED} && ${COR_CONTIG_LAFILTERCTCHAINS_PERCENTCONTAINED} -gt 0 && ${COR_CONTIG_LAFILTERCTCHAINS_PERCENTCONTAINED} -le 100 ]]
+    then
+        CONTIG_LAFILTERCTCHAINS_OPT="${CONTIG_LAFILTERCTCHAINS_OPT} -c ${COR_CONTIG_LAFILTERCTCHAINS_PERCENTCONTAINED}"
     fi
 }
 
@@ -356,63 +297,6 @@ function setLAmergeOptions()
     fi
 }    
 
-function setLAseparateOptions()
-{
-    CONTIG_LASEPARATE_OPT=""
-    if [[ -n ${COR_CONTIG_LASEPARATE_OLEN} && ${COR_CONTIG_LASEPARATE_OLEN} -gt 0 ]]
-    then 
-        CONTIG_LASEPARATE_OPT="${CONTIG_LASEPARATE_OPT} -o${COR_CONTIG_LASEPARATE_OLEN}"
-    fi
-    if [[ -n ${COR_CONTIG_LASEPARATE_RLEN} && ${COR_CONTIG_LASEPARATE_RLEN} -gt 0 ]]
-    then 
-        CONTIG_LASEPARATE_OPT="${CONTIG_LASEPARATE_OPT} -l${COR_CONTIG_LASEPARATE_RLEN}"
-    fi 
-    if [[ -n ${COR_CONTIG_LASEPARATE_REPEAT} ]]
-    then 
-        CONTIG_LASEPARATE_OPT="${CONTIG_LASEPARATE_OPT} -r${COR_CONTIG_LASEPARATE_REPEAT}"
-    fi 
-
-    # type is passed as argument
-    CONTIG_LASEPARATE_OPT="${CONTIG_LASEPARATE_OPT} -T$1"
-}
-
-function setForcealignOptions()
-{
-    CONTIG_FORCEALIGN_OPT=""
-    if [[ -n ${COR_CONTIG_FORCEALIGN_PARTIAL} && ${COR_CONTIG_FORCEALIGN_PARTIAL} -ne 0 ]]
-    then
-        CONTIG_FORCEALIGN_OPT="${CONTIG_FORCEALIGN_OPT} --partial"
-    fi
-    if [[ -n ${COR_CONTIG_FORCEALIGN_THREADS} && ${COR_CONTIG_FORCEALIGN_THREADS} -gt 0 ]]
-    then 
-        CONTIG_FORCEALIGN_OPT="${CONTIG_FORCEALIGN_OPT} -t${COR_CONTIG_FORCEALIGN_THREADS}"
-    fi 
-
-    if [[ -n ${COR_CONTIG_FORCEALIGN_MAXDIST} && ${COR_CONTIG_FORCEALIGN_MAXDIST} -gt 0 ]]
-    then 
-        CONTIG_FORCEALIGN_OPT="${CONTIG_FORCEALIGN_OPT} --maxdist${COR_CONTIG_FORCEALIGN_MAXDIST}"
-    fi 
-    if [[ -n ${COR_CONTIG_FORCEALIGN_BORDER} && ${COR_CONTIG_FORCEALIGN_BORDER} -gt 0 ]]
-    then 
-        CONTIG_FORCEALIGN_OPT="${CONTIG_FORCEALIGN_OPT} --border${COR_CONTIG_FORCEALIGN_BORDER}"
-    fi 
-    if [[ -n ${COR_CONTIG_FORCEALIGN_CORRELATION} ]]
-    then 
-        CONTIG_FORCEALIGN_OPT="${CONTIG_FORCEALIGN_OPT} --correlation${COR_CONTIG_FORCEALIGN_CORRELATION}"
-    fi 
-
-
-    if [[ -z ${COR_CONTIG_FORCEALIGN_RUNID} || ${COR_CONTIG_FORCEALIGN_RUNID} -eq ${COR_CONTIG_DALIGNER_RUNID} ]]
-    then
-        if [[ -z ${COR_CONTIG_DALIGNER_RUNID} ]]
-        then
-            COR_CONTIG_FORCEALIGN_RUNID=2
-        else 
-            COR_CONTIG_FORCEALIGN_RUNID=$((${COR_CONTIG_DALIGNER_RUNID}+1))
-        fi
-    fi
-}
-
 function setLArepeatOptions()
 {
 	if [[ ${#COR_CONTIG_LAREPEAT_LEAVE_COV[*]} -ne ${#COR_CONTIG_LAREPEAT_ENTER_COV[*]} || ${#COR_CONTIG_LAREPEAT_ENTER_COV[*]} -ne ${#COR_CONTIG_LAREPEAT_COV[*]} ]]
@@ -428,8 +312,6 @@ function setLArepeatOptions()
     unset CONTIG_LAREPEAT_OPT
     ### find and set LArepeat options     
     
-    ptype="_forcealign"
-
     for x in $(seq 0 $((${numRepeatTracks}-1)))
     do 
         tmp=""
@@ -447,7 +329,7 @@ function setLArepeatOptions()
         fi                
 
         tmp="${tmp} -c ${COR_CONTIG_LAREPEAT_COV[$x]}"
-        tmp="${tmp} -t repeats_c${COR_CONTIG_LAREPEAT_COV[$x]}_l${COR_CONTIG_LAREPEAT_LEAVE_COV[$x]}h${COR_CONTIG_LAREPEAT_ENTER_COV[$x]}${ptype}"
+        tmp="${tmp} -t repeats_c${COR_CONTIG_LAREPEAT_COV[$x]}_l${COR_CONTIG_LAREPEAT_LEAVE_COV[$x]}h${COR_CONTIG_LAREPEAT_ENTER_COV[$x]}"
         CONTIG_LAREPEAT_OPT[$x]=${tmp}
     done 
 }
@@ -619,8 +501,8 @@ then
     exit 1
 fi
 
-myTypes=("1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAfilter, 9-LAseparate, 10-forcealign, 11-LAmerge, 12-LArepeat, 13-TKmerge, 14-TKcombine, 15-LAfilter, 16-LAmerge, 17-CTanalyze")
-#type-0 steps: 1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAfilter, 9-LAseparate, 10-forcealign, 11-LAmerge, 12-LArepeat, 13-TKmerge, 14-TKcombine, 15-LAfilter, 16-LAmerge, 17-CTanalyze
+myTypes=("1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilter, 13_LAmerge, 14_CTanalyze")
+#type-0 steps: 01_createCorrectedContigDB, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilter, 13_LAmerge, 14_CTanalyze
 if [[ ${COR_CONTIG_TYPE} -eq 0 ]]
 then 
     ### createCorrectedContigDB
@@ -828,7 +710,7 @@ then
             echo "${cmd} && cd ${d}"
 		done > cont_07_daligner_block_${CONT_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_07_daligner_block_${CONT_DB%.db}.${slurmID}.version
-	### LAfilter - identity overlaps   
+    #### LAmerge
     elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
@@ -836,110 +718,20 @@ then
         do            
             rm $x
         done 
-
-        mkdir -p ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/identity
-    	### create LAfilter commands - filter out identity overlaps - has to be done because repcomp and forcealign will loose those
-    	for x in $(seq 1 ${contigblocks})
+        
+        ### find and set LAmerge options 
+        setLAmergeOptions
+        ### create LAmerge commands
+        for x in $(seq 1 ${contigblocks}); 
         do  
-            echo "${MARVEL_PATH}/bin/LAfilter -p -R 3 ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_DALIGNER_RUNID} ${x})/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${x}.las ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/identity/${CONT_DB%.db}.${x}.identity.las"
-		done > cont_08_LAfilter_block_${CONT_DB%.db}.${slurmID}.plan
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_08_LAfilter_block_${CONT_DB%.db}.${slurmID}.version
-	#### LAseparate 
+            echo "${MARVEL_PATH}/bin/LAmerge${CONTIG_LAMERGE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}.las ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_DALIGNER_RUNID} ${x})"
+		done > cont_08_LAmerge_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_08_LAmerge_block_${CONT_DB%.db}.${slurmID}.version   
+    #### LArepeat
     elif [[ ${currentStep} -eq 9 ]]
     then
         ### clean up plans 
         for x in $(ls cont_09_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
-
-        ### find and set forcealign options         
-        setDalignerOptions
-        setLAseparateOptions 1
-        for x in $(seq 1 ${contigblocks}); 
-        do 
-            sdir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_DALIGNER_RUNID} ${x})
-            mkdir -p ${sdir}_ForForceAlign
-            mkdir -p ${sdir}_NoForceAlign
-            for y in $(seq 1 ${contigblocks}); 
-            do 
-                if [[ ! -f ${sdir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ]]
-                then
-                    (>&2 echo "step ${currentStep} in COR_CONTIG_TYPE ${COR_CONTIG_TYPE}: File missing ${sdir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las!!")
-                    exit 1                    
-                fi
-                echo "${MARVEL_PATH}/bin/LAseparate${CONTIG_LASEPARATE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${sdir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ${sdir}_ForForceAlign/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las ${sdir}_NoForceAlign/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las"                
-            done 
-		done > cont_09_LAseparate_block_${CONT_DB%.db}.${slurmID}.plan
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_09_LAseparate_block_${CONT_DB%.db}.${slurmID}.version
-    #### forcealign 
-    elif [[ ${currentStep} -eq 10 ]]
-    then
-        ### clean up plans 
-        for x in $(ls cont_10_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
-        
-        ### find and set forcealign options 
-        setForcealignOptions
-        cmdLine=1
-        for x in $(seq 1 ${contigblocks}); 
-        do 
-            srcDir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_DALIGNER_RUNID} ${x})_ForForceAlign
-            desDir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_FORCEALIGN_RUNID} ${x})
-
-            if [[ ! -d ${desDir} ]]
-            then
-                mkdir -p ${desDir}
-            fi
-            start=${x}
-
-            for y in $(seq ${start} ${contigblocks}); 
-            do 
-                movDir=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_FORCEALIGN_RUNID} ${y})
-                inFile=${srcDir}/${CONT_DB%.db}.${x}.${CONT_DB%.db}.${y}.las
-                
-            if [[ -f ${inFile} ]]
-                then 
-                    echo -n "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/forcealign${CONTIG_FORCEALIGN_OPT} -T/tmp/${CONT_DB%.db}.forcealign.${x}.${y} ${desDir}/${CONT_DB%.db}.forcealign.${x}.${y} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB%.db} ${inFile}"
-                    cmdLine=$((${cmdLine}+1))
-                    if [[ $x -eq $y ]]
-                    then
-                        echo ""
-                    else    
-                    echo " && mv ${desDir}/${CONT_DB%.db}.forcealign.${x}.${y}_r.las ${movDir}/"
-                    fi
-                else
-                    (>&2 echo "step ${currentStep} in COR_CONTIG_TYPE ${COR_CONTIG_TYPE}: File missing ${inFile}!!")
-                    exit 1
-                fi
-            done 
-		done > cont_10_forcealign_block_${CONT_DB%.db}.${slurmID}.plan
-		echo "forcealign $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_10_forcealign_block_${CONT_DB%.db}.${slurmID}.version
-    #### LAmerge
-    elif [[ ${currentStep} -eq 11 ]]
-    then
-        ### clean up plans 
-        for x in $(ls cont_11_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
-        
-        ### find and set LAmerge options 
-        setLAmergeOptions
-        setForcealignOptions
-        ### create LAmerge commands
-        for x in $(seq 1 ${contigblocks}); 
-        do  
-            echo "${MARVEL_PATH}/bin/LAmerge${CONTIG_LAMERGE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}.forcealign.las ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_FORCEALIGN_RUNID} ${x}) ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/$(getSubDirName ${COR_CONTIG_DALIGNER_RUNID} ${x})_NoForceAlign ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/identity/${CONT_DB%.db}.${x}.identity.las"
-		done > cont_11_LAmerge_block_${CONT_DB%.db}.${slurmID}.plan
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_11_LAmerge_block_${CONT_DB%.db}.${slurmID}.version   
-    #### LArepeat
-    elif [[ ${currentStep} -eq 12 ]]
-    then
-        ### clean up plans 
-        for x in $(ls cont_12_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -956,15 +748,15 @@ then
             ### create LArepeat commands
             for y in $(seq 1 ${contigblocks})
             do 
-                echo "${MARVEL_PATH}/bin/LArepeat${CONTIG_LAREPEAT_OPT[$x]} -b ${y} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${y}.forcealign.las"
+                echo "${MARVEL_PATH}/bin/LArepeat${CONTIG_LAREPEAT_OPT[$x]} -b ${y} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${y}.las"
             done
-		done > cont_12_LArepeat_block_${CONT_DB%.db}.${slurmID}.plan
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_12_LArepeat_block_${CONT_DB%.db}.${slurmID}.version      
+		done > cont_09_LArepeat_block_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_09_LArepeat_block_${CONT_DB%.db}.${slurmID}.version      
     #### TKmerge 
-    elif [[ ${currentStep} -eq 13 ]]
+    elif [[ ${currentStep} -eq 10 ]]
     then
         ### clean up plans 
-        for x in $(ls cont_13_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls cont_10_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done         
@@ -987,13 +779,13 @@ then
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
             echo "${MARVEL_PATH}/bin/TKmerge${CONTIG_TKMERGE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} $(echo ${CONTIG_LAREPEAT_OPT[${x}]} | awk '{print $NF}')" 
-		done > cont_13_TKmerge_single_${CONT_DB%.db}.${slurmID}.plan  
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_13_TKmerge_single_${CONT_DB%.db}.${slurmID}.version     
+		done > cont_10_TKmerge_single_${CONT_DB%.db}.${slurmID}.plan  
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_10_TKmerge_single_${CONT_DB%.db}.${slurmID}.version     
     #### TKcombine 
-    elif [[ ${currentStep} -eq 14 ]]
+    elif [[ ${currentStep} -eq 11 ]]
     then
         ### clean up plans 
-        for x in $(ls cont_14_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls cont_11_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done             
@@ -1015,18 +807,18 @@ then
             tmp=$(echo ${CONTIG_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
             echo "${MARVEL_PATH}/bin/TKcombine${CONTIG_TKCOMBINE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${tmp}_${COR_CONTIG_TANMASK_TRACK} ${tmp} ${COR_CONTIG_TANMASK_TRACK}"
             echo "${MARVEL_PATH}/bin/TKcombine${CONTIG_TKCOMBINE_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${tmp}_${COR_CONTIG_TANMASK_TRACK}_dust ${tmp}_${COR_CONTIG_TANMASK_TRACK} dust" 
-		done > cont_14_TKcombine_single_${CONT_DB%.db}.${slurmID}.plan
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_14_TKcombine_single_${CONT_DB%.db}.${slurmID}.version         
-	### LAfilter
-    elif [[ ${currentStep} -eq 15 ]]
+		done > cont_11_TKcombine_single_${CONT_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_11_TKcombine_single_${CONT_DB%.db}.${slurmID}.version         
+	### LAfilterCTchains
+    elif [[ ${currentStep} -eq 12 ]]
     then
         ### clean up plans 
-        for x in $(ls cont_15_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls cont_12_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
  
-        if [[ -z ${CONTIG_LAFILTER_OPT} ]]
+        if [[ -z ${CONTIG_LAFILTERCTCHAINS_OPT} ]]
         then 
             setLAfilterOptions
         fi
@@ -1035,14 +827,14 @@ then
         contigblocks=$(getNumOfDbBlocks ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.db)       
         for x in $(seq 1 ${contigblocks});
         do 
-            echo "${MARVEL_PATH}/bin/LAfilter${CONTIG_LAFILTER_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}.forcealign.las ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}.filt.las"
-		done > cont_15_LAfilter_block_${CONT_DB%.db}.${slurmID}.plan 
-		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_15_LAfilter_block_${CONT_DB%.db}.${slurmID}.version
+            echo "${MARVEL_PATH}/bin/LAfilterCTchains${CONTIG_LAFILTERCTCHAINS_OPT} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}.las ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.${x}.filt.las"
+		done > cont_12_LAfilter_block_${CONT_DB%.db}.${slurmID}.plan 
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_12_LAfilter_block_${CONT_DB%.db}.${slurmID}.version
 	### LAmerge
-    elif [[ ${currentStep} -eq 16 ]]
+    elif [[ ${currentStep} -eq 13 ]]
     then
         ### clean up plans 
-        for x in $(ls cont_16_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls cont_13_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1050,21 +842,21 @@ then
         ### find and set LAmerge options 
         setLAmergeOptions
         
-        echo "${MARVEL_PATH}/bin/LAmerge${CONTIG_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las" > cont_16_LAmerge_single_${CONT_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_16_LAmerge_single_${CONT_DB%.db}.${slurmID}.version
+        echo "${MARVEL_PATH}/bin/LAmerge${CONTIG_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las" > cont_13_LAmerge_single_${CONT_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_13_LAmerge_single_${CONT_DB%.db}.${slurmID}.version
 	### CTanalyze
-	elif [[ ${currentStep} -eq 17 ]]
+	elif [[ ${currentStep} -eq 14 ]]
     then
 		### clean up plans 
-        for x in $(ls cont_17_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls cont_14_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
         
         ### find and set CTanalyze options 
         setCTanalyzeOptions
-		echo "${MARVEL_PATH}/bin/CTanalyze${CONTIG_CTANALYZE_OPT} -C ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las -F ${FIX_FILT_OUTDIR}/${FIX_DB%.DB} ${FIX_FILT_OUTDIR}/${FIX_DB%.DB}.filt.las -D ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}" > cont_17_CTanalyze_single_${CONT_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_17_CTanalyze_single_${CONT_DB%.db}.${slurmID}.version
+		echo "${MARVEL_PATH}/bin/CTanalyze${CONTIG_CTANALYZE_OPT} -C ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las -F ${FIX_FILT_OUTDIR}/${FIX_DB%.DB} ${FIX_FILT_OUTDIR}/${FIX_DB%.DB}.filt.las -D ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}" > cont_14_CTanalyze_single_${CONT_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_14_CTanalyze_single_${CONT_DB%.db}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in COR_CONTIG_TYPE ${COR_CONTIG_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_REPMASK_TYPE}]}")
