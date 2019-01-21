@@ -357,7 +357,7 @@ then
 	    			(>&2 echo "WARNING assemblyStats.sh 12 - File ${x} is missing.")	
 	    		fi
 	    	done
-	    if [[ ${SC_10X_TYPE} -eq 1 ]]
+	    elif [[ ${SC_10X_TYPE} -eq 1 ]]
 		then
 			(>&2 echo "ERROR - 10x scaffolding type: ${SC_10X_TYPE}. Not implemented yet!")			
 		else
@@ -372,7 +372,7 @@ elif [[ ${phase} -eq 13 ]] ## bionano scaffolding
 then
 	if [[ -d ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID} ]]
 	then
-		bionanoPath=stats/contigs/${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}
+		bionanoPath="stats/contigs/${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}"
 		
 		prevExt=$(basename ${SC_BIONANO_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
 		cset=$(basename ${SC_BIONANO_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
@@ -462,5 +462,3 @@ else
 	(>&2 echo "Unknow Phase: ${phase}")
 	exit 1	
 fi
-			
-	
