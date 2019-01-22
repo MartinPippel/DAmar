@@ -380,7 +380,8 @@ function setArksOptions()
 #### type 1: tigmint - arks - links pipeline	steps: 01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks
 myTypes=("01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics",
 
-myTypes=("01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks") 
+myTypes=("01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics", 
+"01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks") 
 if [[ ${SC_10X_TYPE} -eq 0 ]]
 then 
     ### 01_scaff10Xprepare
