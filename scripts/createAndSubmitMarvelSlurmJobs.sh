@@ -243,7 +243,7 @@ then
                 then
                     echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
                 fi
-				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" ]]
+				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" || ${prefix} == "10x" ]]
 				then
 					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 				elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -298,7 +298,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
 
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" || ${prefix} == "10x" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -368,7 +368,7 @@ echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi	        
 	        
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" || ${prefix} == "10x" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -423,7 +423,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
             then
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "whatshap" || ${prefix} == "mash" || ${prefix} == "10x" ]]
 			then
 				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
