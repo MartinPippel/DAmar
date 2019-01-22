@@ -376,10 +376,11 @@ function setArksOptions()
 	fi
 }
 
-#### type 0: scaff10x - break10x pipeline
-#### type 1: tigmint - arks - links pipeline
+#### type 0: scaff10x - break10x pipeline		steps: 01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics
+#### type 1: tigmint - arks - links pipeline	steps: 01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks
 myTypes=("01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics",
-"01_arksPrepare") 
+
+myTypes=("01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks") 
 if [[ ${SC_10X_TYPE} -eq 0 ]]
 then 
     ### 01_scaff10Xprepare
@@ -778,7 +779,7 @@ then
         
         echo "cd ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID} && ${LONGRANGER_PATH}/longranger basic --id=${PROJECT_ID} --fastqs=reads/" > 10x_02_arksLongranger_single_${CONT_DB}.${slurmID}.plan
         echo "${LONGRANGER_PATH}/longranger basic --version | head -n1 | tr -d \"()\"" > 10x_02_arksLongranger_single_${CONT_DB}.${slurmID}.version
-    ### 03_arksTigmint
+    ### 03_arksTigmint 
 	elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
