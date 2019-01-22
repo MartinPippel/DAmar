@@ -820,7 +820,7 @@ then
  
         if [[ -z ${CONTIG_LAFILTERCTCHAINS_OPT} ]]
         then 
-            setLAfilterOptions
+            setLAfilterCTchainsOptions
         fi
 
         ### create LAfilter commands
