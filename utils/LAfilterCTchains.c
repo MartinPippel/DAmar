@@ -975,13 +975,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 {
 	int ret = 0;
 
-	int trim_ab, trim_ae;
-
-	int ovlALen = DB_READ_LEN(ctx->db, ovl->aread);
 	int ovlBLen = DB_READ_LEN(ctx->db, ovl->bread);
-
-	trim_ab = 0;
-	trim_ae = ovlALen;
 
 	if (ctx->nMinNonRepeatBases != -1 && ovl->aread != ovl->bread)
 	{
