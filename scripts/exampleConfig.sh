@@ -612,7 +612,7 @@ COR_CONTIG_LAFILTERCTCHAINS_PURGE=1
 COR_CONTIG_LAFILTERCTCHAINS_KEEP=0		## keep only best chain
 COR_CONTIG_LAFILTERCTCHAINS_FUZZ=15000
 COR_CONTIG_LAFILTERCTCHAINS_PERCENTCONTAINED=50
-    ### TKmerge
+### TKmerge
 COR_CONTIG_TKMERGE_DELETE=1
 ### TKcombine
 COR_CONTIG_TKCOMBINE_DELETE=1
@@ -794,7 +794,8 @@ SC_HIC_RUNID=1												# used for output directory purgeHaplotigs_run${PB_ARR
 SC_HIC_READS="${HIC_PATH}"   								# directory with pacbio fasta files
 SC_HIC_OUTDIR="${FIX_FILT_OUTDIR}"
 SC_HIC_REFFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
-SC_HIC_ENZYME="Sau3AI"		
+SC_HIC_ENZYME_NAME="Sau3AI"
+SC_HIC_ENZYME_SEQ="GATC"		
 ### fastp
 SC_HIC_FASTP_THREADS=4
 ### bwa

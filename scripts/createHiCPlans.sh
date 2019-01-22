@@ -496,16 +496,16 @@ then
         	exit 1
 		fi
 		
-		if [[ -z ${SC_HIC_ENZYME} ]]
+		if [[ -z ${SC_HIC_ENZYME_SEQ} ]]
        	then 
-       		(>&2 echo "ERROR - Enzyme is required, set variable SC_HIC_ENZYME!")
+       		(>&2 echo "ERROR - Enzyme is required, set variable SC_HIC_ENZYME_SEQ!")
         	exit 1	
        	fi
 		
 		echo "bedtools bamtobed -i ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed" > hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
 		echo "sort -k 4 ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC_sortByName.bed" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
        	bed=${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC_sortByName.bed
-       	echo "export PATH=${SALSA_PATH}:\$PATH && run_pipeline.py -a ${ref} -l ${ref}.fai -b ${bed} -e ${SC_HIC_ENZYME} -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out -m yes" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
+       	echo "export PATH=${SALSA_PATH}:\$PATH && run_pipeline.py -a ${ref} -l ${ref}.fai -b ${bed} -e ${SC_HIC_ENZYME_SEQ} -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out -m yes" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
        	
        	echo "SALSA $(git --git-dir=${SALSA_PATH}/.git rev-parse --short HEAD)" > hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
        	echo "${PACBIO_BASE_ENV} && bedtools --version && ${PACBIO_BASE_ENV_DEACT}" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
@@ -613,9 +613,9 @@ then
         	exit 1
    		fi   		
    		
-   		if [[ -z ${SC_HIC_ENZYME} ]]
+   		if [[ -z ${SC_HIC_ENZYME_NAME} ]]
    		then
-        	(>&2 echo "ERROR - set variable SC_HIC_ENZYME!")
+        	(>&2 echo "ERROR - set variable SC_HIC_ENZYME_NAME!")
         	exit 1   			
    		fi
    		
@@ -630,7 +630,7 @@ then
 		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create resctriction site subdir + generate sites
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "python ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "python ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME_NAME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create fastq subdir + link zipped HIC reads  
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/fastq" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
    		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R[12].fastq.gz
@@ -657,7 +657,7 @@ then
         done
         
         setJuicerOptions
-        echo "${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer.sh ${SC_HIC_JUICER_OPT} -d ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -D ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -g ${PROJECT_ID} -s ${SC_HIC_ENZYME} -z ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta -y ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites/${PROJECT_ID}_${SC_HIC_ENZYME}.txt -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.sizes" > hic_02_HIC3dnaJuicer_single_${CONT_DB}.${slurmID}.plan    	        
+        echo "${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer.sh ${SC_HIC_JUICER_OPT} -d ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -D ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -g ${PROJECT_ID} -s ${SC_HIC_ENZYME_NAME} -z ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta -y ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites/${PROJECT_ID}_${SC_HIC_ENZYME_NAME}.txt -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.sizes" > hic_02_HIC3dnaJuicer_single_${CONT_DB}.${slurmID}.plan    	        
     ### 03_HIC3dnaAssemblyPipeline
 	elif [[ ${currentStep} -eq 3 ]]
     then
@@ -743,9 +743,9 @@ then
         	exit 1
    		fi   		
    		
-   		if [[ -z ${SC_HIC_ENZYME} ]]
+   		if [[ -z ${SC_HIC_ENZYME_NAME} ]]
    		then
-        	(>&2 echo "ERROR - set variable SC_HIC_ENZYME!")
+        	(>&2 echo "ERROR - set variable SC_HIC_ENZYME_NAME!")
         	exit 1   			
    		fi
    		
@@ -761,7 +761,7 @@ then
 		echo "awk -f ${THREEDDNA_PATH}/utils/generate-assembly-file-from-fasta.awk ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.assembly" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create resctriction site subdir + generate sites
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "python ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "python ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME_NAME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create fastq subdir + link zipped HIC reads  
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/fastq" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
    		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R[12].fastq.gz
@@ -796,7 +796,7 @@ then
         	mv ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/aligned ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/aligned_old_$(date '+%Y-%m-%d_%H-%M-%S')
     	fi    	        
             	        
-        echo "${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer.sh ${SC_HIC_JUICER_OPT} -S early -d ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -D ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -g ${PROJECT_ID} -s ${SC_HIC_ENZYME} -z ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta -y ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites/${PROJECT_ID}_${SC_HIC_ENZYME}.txt -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.sizes" > hic_02_HIC3dnaJuicer_single_${CONT_DB}.${slurmID}.plan
+        echo "${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer.sh ${SC_HIC_JUICER_OPT} -S early -d ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -D ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} -g ${PROJECT_ID} -s ${SC_HIC_ENZYME_NAME} -z ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta -y ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites/${PROJECT_ID}_${SC_HIC_ENZYME_NAME}.txt -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.sizes" > hic_02_HIC3dnaJuicer_single_${CONT_DB}.${slurmID}.plan
     ### 03_HIC3dnaVisualize
 	elif [[ ${currentStep} -eq 3 ]]
     then
