@@ -184,7 +184,7 @@ then
 
    			setBionanoOptions 2
    			
-   			echo "Rscript ${HYBSCAF} -n ${REF} -b1 ${CMAP1} -b2 ${CMAP2} -e1 ${ENZ1} -e2 ${ENZ2} -O ${OUT} -R ${REFALN} ${BIONANO_OPT} ${HYB_CONF}" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   			echo "Rscript ${HYBSCAF} -N ${REF} -b1 ${CMAP1} -b2 ${CMAP2} -e1 ${ENZ1} -e2 ${ENZ2} -O ${OUT} -R ${REFALN} ${BIONANO_OPT} ${HYB_CONF}" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    			echo "${REFALN}" > bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.version
    		else
    			# set path hybrid scaffolder 
