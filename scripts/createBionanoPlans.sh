@@ -140,11 +140,11 @@ then
    		echo "mkdir -p ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    		echo "ln -s -r ${SC_BIONANO_REF} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
-   		echo "ln -s -r ${SC_BIONANO_ASSEMBLY_1} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   		echo "ln -s -r ${SC_BIONANO_ASSEMBLY_1} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/${PROJECT_ID}_${SC_BIONANO_ENZYME_1}.cmap" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    	
    		if [[ ${TWO_ENZYME_WORKFLOW} ]]
 		then
-			echo "ln -s -r ${SC_BIONANO_ASSEMBLY_2} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+			echo "ln -s -r ${SC_BIONANO_ASSEMBLY_2} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/${PROJECT_ID}_${SC_BIONANO_ENZYME_2}.cmap" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    			
    			# set path runTGH R script 
    			HYBSCAF=$(ls ${BIONANO_PATH}/HybridScaffold/????????/runTGH.R)
@@ -158,8 +158,8 @@ then
    			REF="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/$(basename ${SC_BIONANO_REF})"
    			
    			# set cmap variables
-   			CMAP1=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/$(basename ${SC_BIONANO_ASSEMBLY_1})
-   			CMAP2=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/$(basename ${SC_BIONANO_ASSEMBLY_2})
+   			CMAP1=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/${PROJECT_ID}_${SC_BIONANO_ENZYME_1}.cmap
+   			CMAP2=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/${PROJECT_ID}_${SC_BIONANO_ENZYME_2}.cmap
    			# set enzymes 
    			ENZ1=${SC_BIONANO_ENZYME_1}
    			ENZ2=${SC_BIONANO_ENZYME_2}
@@ -198,7 +198,7 @@ then
    			# set reference variable
    			REF="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/$(basename ${SC_BIONANO_REF})"
    			# set cmap variable
-   			CMAP=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/$(basename ${SC_BIONANO_ASSEMBLY_1})
+   			CMAP=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/${PROJECT_ID}_${SC_BIONANO_ENZYME_1}.cmap
    			# set hybrid config file
    			if [[ ${SC_BIONANO_ENZYME_1} == "DLE1" ]] 
    			then 
