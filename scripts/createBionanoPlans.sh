@@ -179,7 +179,7 @@ then
    				(>&2 echo "ERROR - Cannot find hybridScaffold_two_enzymes.xml. Should be here: ${BIONANO_PATH}/HybridScaffold/????????/TGH/hybridScaffold_two_enzymes.xml")
         		exit 1
    			fi 
-   			echo "sed -e \"s:flag attr=\"enzyme\" val0=\"BSPQI:flag attr=\"enzyme\" val0=\"${ENZ1}:\" -e \"s:flag attr=\"enzyme\" val0=\"CTTAAG:flag attr=\"enzyme\" val0=\"${ENZ2}:\" ${HYB_CONF} > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config/hybridScaffold_two_enzymes.xml" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   			echo "sed -e \"s:flag attr=\\\"enzyme\\\" val0=\\\"BSPQI:flag attr=\\\"enzyme\\\" val0=\\\"${ENZ1}:\" -e \"s:flag attr=\\\"enzyme\\\" val0=\\\"CTTAAG:flag attr=\\\"enzyme\\\" val0=\\\"${ENZ2}:\" ${HYB_CONF} > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config/hybridScaffold_two_enzymes.xml" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    			HYB_CONF=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config/hybridScaffold_two_enzymes.xml
 
    			setBionanoOptions 2
