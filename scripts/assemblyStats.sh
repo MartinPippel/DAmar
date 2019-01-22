@@ -435,7 +435,7 @@ then
 		hicSalsaPath=stats/contigs/${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}
 		
 		prevExt=$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
-		cset==$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		cset=$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF)}')
 		fext="s"
 				
 		mkdir -p ${hicSalsaPath}
@@ -450,7 +450,7 @@ then
 		# HIC SALSA scaffolds
 		cat ${fname} > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 		gzip -c ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
-		cat ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${fext}.p.stats
+		cat ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.stats
 		${QUAST_PATH}/quast.py -o ${hicSalsaPath} -t 1 -s -e --est-ref-size ${gsize} -o ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset} ${hicSalsaPath}/${PROJECT_ID}_${SC_HIC_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 		cp ${config} ${hicSalsaPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 		cp ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out/input_breaks ${hicSalsaPath}				
