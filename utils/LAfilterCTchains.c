@@ -957,18 +957,6 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 #endif
 		qsort(ctx->ovlChains, ctx->curChains, sizeof(Chain), cmp_chain_len);
 	}
-	printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
-	for (i = 0; i < ctx->curChains; i++)
-	{
-		printf(" CHAIN %d/%d: #novl %d\n", i + 1, ctx->curChains, ctx->ovlChains[i].novl);
-		int j;
-		for (j = 0; j < ctx->ovlChains[i].novl; j++)
-		{
-			printf("  OVL %d/%d: a[%7d, %7d] b[%7d, %7d] %s\n", j + 1, ctx->ovlChains[i].novl, ctx->ovlChains[i].ovls[j]->path.abpos,
-					ctx->ovlChains[i].ovls[j]->path.aepos, ctx->ovlChains[i].ovls[j]->path.bbpos, ctx->ovlChains[i].ovls[j]->path.bepos,
-					(ctx->ovlChains[i].ovls[j]->flags & OVL_COMP) ? "COMP" : "NORM");
-		}
-	}
 }
 
 static int filter(FilterContext* ctx, Overlap* ovl)
@@ -1154,6 +1142,19 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			fflush(stdout);
 			chain(ctx, ovl + j, k - j + 1);
 
+			printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
+			for (i = 0; i < ctx->curChains; i++)
+			{
+				printf(" CHAIN %d/%d: #novl %d\n", i + 1, ctx->curChains, ctx->ovlChains[i].novl);
+				int j;
+				for (j = 0; j < ctx->ovlChains[i].novl; j++)
+				{
+					printf("  OVL %d/%d: a[%7d, %7d] b[%7d, %7d] %s\n", j + 1, ctx->ovlChains[i].novl, ctx->ovlChains[i].ovls[j]->path.abpos,
+							ctx->ovlChains[i].ovls[j]->path.aepos, ctx->ovlChains[i].ovls[j]->path.bbpos, ctx->ovlChains[i].ovls[j]->path.bepos,
+							(ctx->ovlChains[i].ovls[j]->flags & OVL_COMP) ? "COMP" : "NORM");
+				}
+			}
+
 			int a, b;
 
 			// discard all overlaps, that are not part of a valid chain
@@ -1192,9 +1193,11 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						|| chain->ovls[chain->novl - 1]->path.bepos + ctx->nFuzzBases > DB_READ_LEN(ctx->db, ovl[j].bread))
 					properEnd = 1;
 
-				if(chain->ovls[0]->aread == 1 && chain->ovls[0]->bread == 3)
-						printf("check properend %d > %d || %d > %d\n", chain->ovls[chain->novl - 1]->path.aepos + ctx->nFuzzBases, DB_READ_LEN(ctx->db, ovl->aread),
-								chain->ovls[chain->novl - 1]->path.bepos + ctx->nFuzzBases, DB_READ_LEN(ctx->db, ovl->bread));
+//				if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
+//					printf("check properbeg MIN (%d ,%d) < %d\n", chain->ovls[0]->path.abpos, chain->ovls[0]->path.bbpos, ctx->nFuzzBases);
+//				if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
+//						printf("check properend %d > %d || %d > %d\n", chain->ovls[chain->novl - 1]->path.aepos + ctx->nFuzzBases, DB_READ_LEN(ctx->db, ovl[j].aread),
+//								chain->ovls[chain->novl - 1]->path.bepos + ctx->nFuzzBases, DB_READ_LEN(ctx->db, ovl[j].bread));
 
 				if (properBeg && properEnd)
 				{
@@ -1202,14 +1205,14 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 					overlapBases = MAX(chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos, chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos);
 
-					if(chain->ovls[0]->aread == 1 && chain->ovls[0]->bread == 3)
-						printf("%d, ovlbases %d\n",1 , overlapBases);
+//					if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
+//						printf("%d, ovlbases %d\n",1 , overlapBases);
 					for (b = 1; b < chain->novl; b++)
 					{
 						its_a = its_b = 0;
 						overlapBases += MAX(chain->ovls[b]->path.aepos - chain->ovls[b]->path.abpos, chain->ovls[b]->path.bepos - chain->ovls[b]->path.bbpos);
-						if(chain->ovls[0]->aread == 1 && chain->ovls[0]->bread == 3)
-							printf("%d, ovlbases %d\n",b , overlapBases);
+//						if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
+//							printf("%d, ovlbases %d\n",b , overlapBases);
 						// check for intersection in A
 						if (chain->ovls[b]->path.abpos < chain->ovls[b - 1]->path.aepos)
 							its_a = chain->ovls[b - 1]->path.aepos - chain->ovls[b]->path.abpos;
@@ -1234,22 +1237,22 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 								break;
 							}
 						}
-						if(chain->ovls[0]->aread == 1 && chain->ovls[0]->bread == 3)
-								printf("its_a %d, its_b %d\n", its_a , its_b);
+//						if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
+//								printf("its_a %d, its_b %d\n", its_a , its_b);
 						overlapBases -= MAX(its_a, its_b);
 
-						if(chain->ovls[0]->aread == 1 && chain->ovls[0]->bread == 3)
-													printf("%d, ovlbases %d\n",b , overlapBases);
+//						if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
+//													printf("%d, ovlbases %d\n",b , overlapBases);
 					}
 				}
 
-				if(chain->ovls[0]->aread == 1 && chain->ovls[0]->bread == 3)
-				{
-					printf("chain->novl: %d\n", chain->novl);
-					printf("Check chain %d vs %d : properBeg ? %d, properEnd ? %d, properGapLen ? %d, contP (%d, %d ,%d)\n", chain->ovls[0]->aread, chain->ovls[0]->bread, properBeg, properEnd, properGapLen,
-							(int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))),
-									ctx->nFuzzBases, ctx->nContPerc);
-				}
+//				if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
+//				{
+//					printf("chain->novl: %d\n", chain->novl);
+//					printf("Check chain %d vs %d : properBeg ? %d, properEnd ? %d, properGapLen ? %d, contP (%d, %d ,%d)\n", chain->ovls[0]->aread, chain->ovls[0]->bread, properBeg, properEnd, properGapLen,
+//							(int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))),
+//									ctx->nFuzzBases, ctx->nContPerc);
+//				}
 				if (!properBeg || !properEnd || !properGapLen
 						|| overlapBases < (int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))))
 				{
