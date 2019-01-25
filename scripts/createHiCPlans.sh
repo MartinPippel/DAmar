@@ -268,7 +268,7 @@ then
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -r ${SC_HIC_REFFASTA} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "sed -e \"s/:/-/g\" ${SC_HIC_REFFASTA} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
