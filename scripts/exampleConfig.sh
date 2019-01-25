@@ -207,15 +207,15 @@ SC_10X_SUBMIT_SCRIPTS_TO=7
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - bionano scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 SC_BIONANO_TYPE=0
-# Type: 0 steps: 01_BNscaffold 
+# Type: 0 steps: 01_BNscaffold, 02_BNstatistics 
 SC_BIONANO_SUBMIT_SCRIPTS_FROM=1
-SC_BIONANO_SUBMIT_SCRIPTS_TO=1
+SC_BIONANO_SUBMIT_SCRIPTS_TO=2
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 15 - HiC QC and scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 SC_HIC_TYPE=0
-# Type: 0 Arima Mapping Pipeline (For QC) 				 steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7_HICrunSalsa
-# Type: 1 Phase Genomics Mapping Pipeline (For QC) 		 steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
+# Type: 0 Arima Mapping Pipeline (For QC) 				 steps: 01_HICsalsaPrepareInput, 02_HICsalsaBwa, 03_HICsalsaFilter, 04_HICsalsaMerge, 05_HICsalsaMarkduplicates, 06_HICsalsaSalsa, 07_HICsalsaStatistics 
+# Type: 1 Phase Genomics Mapping Pipeline (For QC) 		 steps: 01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock
 # Type: 2 Aiden Lab Juicer/3d-dna Scaffolding Pipeline   steps: 01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaAssemblyPipeline
 # Type: 3 Aiden Lab Juicer/3d-dna visualization Pipeline steps: 01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaVisualize
 SC_HIC_SUBMIT_SCRIPTS_FROM=1
@@ -986,15 +986,15 @@ THREADS_FBmarkDuplicates=${CT_FREEBAYES_SAMTOOLS_THREADS}
 MEM_FBmarkDuplicates=$((${CT_FREEBAYES_SAMTOOLS_THREADS}*${CT_FREEBAYES_SAMTOOLS_MEM}*1024+${CT_FREEBAYES_PICARD_XMS}*1024))     
 TIME_FBmarkDuplicates=24:00:00
 
-########### HIC bwa 
-THREADS_HICbwa=${SC_HIC_BWA_THREADS}
-MEM_HICbwa=$((${SC_HIC_BWA_THREADS}*1024+${SC_HIC_SAMTOOLS_THREADS}*${SC_HIC_SAMTOOLS_MEM}*1024))     
-TIME_HICbwa=24:00:00
+########### HIC salsa bwa 
+THREADS_HICsalsaBwa=${SC_HIC_BWA_THREADS}
+MEM_HICsalsaBwa=$((${SC_HIC_BWA_THREADS}*1024+${SC_HIC_SAMTOOLS_THREADS}*${SC_HIC_SAMTOOLS_MEM}*1024))
+TIME_HICsalsaBwa=24:00:00
 
 ########### HIC picard markduplicates - run indexing parallel  
-THREADS_HICmarkduplicates=${SC_HIC_SAMTOOLS_THREADS}
-MEM_HICmarkduplicates=$((${SC_HIC_SAMTOOLS_THREADS}*${SC_HIC_SAMTOOLS_MEM}*1024+${SC_HIC_PICARD_XMS}*1024))     
-TIME_HICmarkduplicates=24:00:00
+THREADS_HICsalsaMarkduplicates=${SC_HIC_SAMTOOLS_THREADS}
+MEM_HICsalsaMarkduplicates=$((${SC_HIC_SAMTOOLS_THREADS}*${SC_HIC_SAMTOOLS_MEM}*1024+${SC_HIC_PICARD_XMS}*1024))
+TIME_HICsalsaMarkduplicates=24:00:00
 
 ########### WHATSHAP pipeline
 THREADS_WHprepareInput=1
@@ -1060,3 +1060,7 @@ TIME_mashPlot=24:00:00
 THREADS_mashScreen=${THREADS_juicer}
 MEM_mashScreen=64000
 TIME_mashScreen=24:00:00
+
+THREADS_arksTigmint=${SC_10X_BWA_THREADS}
+MEM_arksTigmint=$((${SC_10X_BWA_THREADS}*4096))
+TIME_arksTigmint=24:00:00
