@@ -800,7 +800,7 @@ then
         
         echo "bwa mem${SCAFFOLD_BWA_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz | samtools sort${SCAFFOLD_SAMTOOLS_OPT} -o ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bam" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
     	echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
-        echo "${TIGMINT_PATH}/tigmint-cut${TIGMINT_CUT_OPT} -o ${tigmintOFile} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        echo "${TIGMINT_PATH}/tigmint-cut${TIGMINT_CUT_OPT} -o ${tigmintOFile} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
                 
 	### 04_arksArks
 	elif [[ ${currentStep} -eq 4 ]]
