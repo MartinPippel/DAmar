@@ -817,10 +817,8 @@ then
 		else 
 			(>&2 echo "SC_10X_ARKS_RUNTYPE: ${SC_10X_ARKS_RUNTYPE} not supported yet")
 	    	exit 1
-		fi
-    	
-    	
-    	
+		fi >> 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan    	    	
+    	echo "${ARKS_PATH}/arks --version | grep VERSION | awk '{print \$3}'" > 10x_04_arksArks_single_${CONT_DB}.${slurmID}.version 
    	else
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")

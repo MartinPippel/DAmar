@@ -764,8 +764,28 @@ SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO=0.65	#Minimum ratio of alignment score (AS
 SC_10X_TIGMINT_MOLECULE_MAXMISMATCH=5		#Maximum number of mismatches (NM) [5]
 SC_10X_TIGMINT_MOLECULE_MAXDIST=50000		#Maximum distance between reads in the same molecule [50000]
 SC_10X_TIGMINT_MOLECULE_MINMAPQ=0			#Minimum mapping quality [0]
-SC_10X_TIGMINT_MOLECULE_NUMREADS=4		#Minimum number of reads per molecule (duplicates are filtered out) [4]  		
-	
+SC_10X_TIGMINT_MOLECULE_NUMREADS=4		#Minimum number of reads per molecule (duplicates are filtered out) [4]  	
+### arks
+SC_10X_ARKS_RUNTYPE=full				# full, align, graph
+SC_10X_ARKS_MINREADPAIRS=5			# Minimum number of mapping read pairs/Index required before creating edge in graph. (default: 5)
+SC_10X_ARKS_MULTIPLICITY=50-10000	# Range (in the format min-max) of index multiplicity (only reads with indices in this multiplicity range will be included in graph) (default: 50-10000)
+SC_10X_ARKS_MINCONTIGLEN=500		# Minimum contig length to consider for scaffolding (default: 500) 
+SC_10X_ARKS_MINFRACTION=0.55		# Minimum fraction of read kmers matching a contigId for a read to be associated with the contigId. (default: 0.55)
+SC_10X_ARKS_KMER=30					# k-value for the size of a k-mer. (default: 30) (required)	
+SC_10X_ARKS_PVALUE=0.05				# Maximum p-value for H/T assignment and link orientation determination. Lower is more stringent (default: 0.05)	
+SC_10X_ARKS_ENDLEN=30000			# End length (bp) of sequences to consider (default: 30000)				
+SC_10X_ARKS_DISTESTIMATE=1			# DISTANCE ESTIMATION OPTIONS
+SC_10X_ARKS_NUMNEIGHBOUR=20			# num neighbouring samples to estimate distance upper bound [20]			
+SC_10X_ARKS_INTRACONTIGTSV=			# -s=FILE output TSV of intra-contig distance/barcode data [disabled]
+SC_10X_ARKS_INTERCONTIGTSV=			# -S=FILE output TSV of inter-contig distance/barcode data [disabled]
+SC_10X_ARKS_CHECKPOINTS=0			# EXTRA OUTPUT OPTIONS	
+									# 0    no checkpoint files (default), 
+									# 1    outputs of kmerizing the draft (ContigRecord + ContigKmerMap only)
+                        			# 2    output of aligning chromium to draft (IndexMap only)
+                        			# 3    all checkpoint files (ContigRecord, ContigKmerMap, and IndexMap)
+SC_10X_ARKS_MAXNODEDEGREE=0			# Maximum degree of nodes in graph. All nodes with degree greater than this number will be removed from the graph prior to printing final graph. For no node removal, set to 0 (default: 0)	
+SC_10X_ARKS_THREADS=24	
+			
 # ----------------------------------------------------------------- SCAFFOLDING - BIONANO OPTIONS ----------------------------------------------------------------------------------------------------
 
 ### general bionano options
