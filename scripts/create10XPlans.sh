@@ -267,29 +267,6 @@ function setArksOptions()
 	
 	ARKS_OPT=""
 	
-	
-	## run type
-	# -p can be one of:
-    #                    1) full    uses the full ARKS process (kmerize draft, kmerize and align chromium reads, scaffold).
-    #                    2) align   skips kmerizing of draft and starts with kmerizing and aligning chromium reads.
-    #                    3) graph   skips kmerizing draft and kmerizing/aligning chromium reads and only scaffolds.
-	if [[ -n ${SC_10X_ARKS_RUNTYPE} ]]
-	then
-		if [[ "x${SC_10X_ARKS_RUNTYPE}" != "xfull" && "x${SC_10X_ARKS_RUNTYPE}" != "xalign" && "x${SC_10X_ARKS_RUNTYPE}" != "xgraph" ]]
-		then 
-			SC_10X_ARKS_RUNTYPE="full"
-		fi	
-		ARKS_OPT="${ARKS_OPT} -p ${SC_10X_ARKS_RUNTYPE}"
-	fi
-	
-	if [[ "${SC_10X_ARKS_RUNTYPE}" == full ]]
-	then 
-		ARKS_OPT="${ARKS_OPT} -a longrangerReads_multiplicities.csv"
-		ARKS_OPT="${ARKS_OPT} -a longrangerReads_multiplicities.csv"
-			
-	fi
-	
-	
 	#Minimum number of mapping read pairs/Index required before creating edge in graph. (default: 5)
 	if [[ -n ${SC_10X_ARKS_MINREADPAIRS} && ${SC_10X_ARKS_MINREADPAIRS} -gt 0 ]]
 	then
@@ -811,10 +788,38 @@ then
             rm $x
         done
 
-
 		setArksOptions
 		echo "${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads.fof" > 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan
     	echo "${ARKS_PATH}/calcBarcodeMultiplicities.pl ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads.fof > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads_multiplicities.csv" >> 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan
+    	
+    	## run type
+		# -p can be one of:
+	    #                    1) full    uses the full ARKS process (kmerize draft, kmerize and align chromium reads, scaffold).
+	    #                    2) align   skips kmerizing of draft and starts with kmerizing and aligning chromium reads.
+	    #                    3) graph   skips kmerizing draft and kmerizing/aligning chromium reads and only scaffolds.
+		if [[ -n ${SC_10X_ARKS_RUNTYPE} ]]
+		then
+			if [[ "x${SC_10X_ARKS_RUNTYPE}" != "xfull" && "x${SC_10X_ARKS_RUNTYPE}" != "xalign" && "x${SC_10X_ARKS_RUNTYPE}" != "xgraph" ]]
+			then 
+				SC_10X_ARKS_RUNTYPE="full"
+			fi	
+			ARKS_OPT="${ARKS_OPT} -p ${SC_10X_ARKS_RUNTYPE}"
+		fi
+		
+		prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		cset=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		fext="t" ### tigmint
+        tigmintOFile=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+		
+		if [[ "${SC_10X_ARKS_RUNTYPE}" == full ]]
+		then 
+			echo "${ARKS_PATH}/arks ${ARKS_OPT} -a ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads_multiplicities.csv -f ${tigmintOFile} -b ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz"		
+		else 
+			(>&2 echo "SC_10X_ARKS_RUNTYPE: ${SC_10X_ARKS_RUNTYPE} not supported yet")
+	    	exit 1
+		fi
+    	
+    	
     	
    	else
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
