@@ -789,7 +789,7 @@ then
         done
 
 		setArksOptions
-		echo "${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads.fof" > 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan
+		echo "echo ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads.fof" > 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan
     	echo "${ARKS_PATH}/calcBarcodeMultiplicities.pl ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads.fof > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads_multiplicities.csv" >> 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan
     	
     	## run type
