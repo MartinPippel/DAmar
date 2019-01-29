@@ -233,17 +233,26 @@ function setTigmintOptions()
 	# Minimum molecule size [2000]
 	if [[ -n ${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE} && ${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE} -gt 0 ]]
 	then
-		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --size ${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}"	
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --size ${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}"
+	else
+		SC_10X_TIGMINT_MOLECULE_MINMOLSIZE=2000 	
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --size ${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}"
 	fi
 	#Minimum ratio of alignment score (AS) over read length [0.65]
 	if [[ -n ${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO} ]]
 	then
-		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --as-ratio ${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}"	
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --as-ratio ${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}"
+	else
+		SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO=0.65	
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --as-ratio ${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}"
 	fi
 	#Maximum number of mismatches (NM) [5]
 	if [[ -n ${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH} && ${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH} -gt 0 ]]
 	then
-		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --nm ${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}"	
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --nm ${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}"
+	else
+		SC_10X_TIGMINT_MOLECULE_MAXMISMATCH=5
+		TIGMINT_MOLECULE_OPT="${TIGMINT_MOLECULE_OPT} --nm ${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}"
 	fi    
 	#Maximum distance between reads in the same molecule [50000]
 	if [[ -n ${SC_10X_TIGMINT_MOLECULE_MAXDIST} && ${SC_10X_TIGMINT_MOLECULE_MAXDIST} -gt 0 ]]
@@ -775,10 +784,26 @@ then
         
         setTigmintOptions
         
+        # Align paired-end reads to the draft genome and sort by BX tag.
         echo "bwa mem${SCAFFOLD_BWA_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz | samtools sort${SCAFFOLD_SAMTOOLS_OPT} -o ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bam" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
-    	echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
-        echo "${TIGMINT_PATH}/tigmint-cut${TIGMINT_CUT_OPT} -o ${tigmintOFile} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+    	# Create molecule extents BED
+    	flp="${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}.as${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}.nm${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}.molecule.size${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}"    	
+    	echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${flp}.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        # Create molecule extents TSV
+        echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} --tsv -o ${flp}.tsv ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        # Report summary statistics of a Chromium library
+        echo "Rscript -e 'rmarkdown::render(\"${TIGMINT_PATH}/../summary.rmd\", \"html_document\", \"${flp}.summary.html\", params= list(input_tsv=\"${flp}.tsv\", output_tsv=\"${flp}.summary.tsv\"))'" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        # Compute statistics on the depth of coverage of a BED file.
+    	echo "(printf \"Rname\tDepth\tCount\tRsize\tFraction\n\"; awk '\$2 != \$3' ${flp}.bed | bedtools genomecov -g ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta -i -) > ${flp}.bed.genomecov.tsv" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+    	# Calculate depth of coverage statistics from bedtools genomecov.
+		echo "mlr --tsvlite then filter '\$Rname == \"genome\" && \$Depth > 0' then step -a rsum -f Fraction then put -q '@Depth_count += \$Count; if (is_null(@p25) && \$Fraction_rsum >= 0.25) { @p25 = \$Depth }; if (is_null(@p50) && \$Fraction_rsum >= 0.50) { @p50 = \$Depth }; if (is_null(@p75) && \$Fraction_rsum >= 0.75) { @p75 = \$Depth } end { emitf @Depth_count, @p25, @p50, @p75 }' then rename p25,Depth_p25,p50,Depth_p50,p75,Depth_p75 then put '\$Depth_IQR = \$Depth_p75 - \$Depth_p25' ${flp}.bed.genomecov.tsv > ${flp}.bed.genomecov.stats.tsv" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        # Identify breakpoints
+		# Make breakpoints BED file
+        
+        
+        echo "${TIGMINT_PATH}/tigmint-cut${TIGMINT_CUT_OPT} -o ${tigmintOFile} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}.as${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}.nm${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}.molecule.size${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
                 
+	                
 	### 04_arksArks
 	elif [[ ${currentStep} -eq 4 ]]
     then
