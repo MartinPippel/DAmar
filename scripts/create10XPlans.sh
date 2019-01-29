@@ -758,7 +758,7 @@ then
    		echo "ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
    		echo "samtools faidx ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
-		echo "perl -ne 'chomp; if(/>/){$ct+=1; print \">$ct\n\";}else{print \"$_\n\";} ' < ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.renamed.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan		
+		echo "perl -ne 'chomp; if(/>/){\$ct+=1; print \">\$ct\n\";}else{print \"\$_\n\";} ' < ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.renamed.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan		
    		
 		for r1 in ${SC_10X_READS}/${PROJECT_ID}_S[0-9]_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
 		do
@@ -818,7 +818,7 @@ then
 		fext="t" ### tigmint
         tigmintOFile=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.trim${SC_10X_TIGMINT_CUT_TRIM}.window${SC_10X_TIGMINT_CUT_WINDOW}.span${SC_10X_TIGMINT_CUT_SPAN}.breaktigs.fasta
         echo "${TIGMINT_PATH}/tigmint-cut${TIGMINT_CUT_OPT} -o ${tigmintOFile} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}.as${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}.nm${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}.molecule.size${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
-		echo "perl -ne 'chomp; if(/>/){$ct+=1; print \">$ct\n\";}else{print \"$_\n\";} ' < ${tigmintOFile} > ${tigmintOFile%.fasta}.renamed.fasta" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+		echo "perl -ne 'chomp; if(/>/){\$ct+=1; print \">\$ct\n\";}else{print \"\$_\n\";} ' < ${tigmintOFile} > ${tigmintOFile%.fasta}.renamed.fasta" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
         
         echo "$(${TIGMINT_PATH}/tigmint-molecule --version)" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.version
 		echo "$(${TIGMINT_PATH}/tigmint-cut --version)" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.version
