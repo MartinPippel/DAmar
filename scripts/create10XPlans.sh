@@ -280,17 +280,26 @@ function setArksOptions()
 	if [[ -n ${SC_10X_ARKS_MINREADPAIRS} && ${SC_10X_ARKS_MINREADPAIRS} -gt 0 ]]
 	then
 		ARKS_OPT="${ARKS_OPT} -c ${SC_10X_ARKS_MINREADPAIRS}"
+	else
+		SC_10X_ARKS_MINREADPAIRS=5
+		ARKS_OPT="${ARKS_OPT} -c ${SC_10X_ARKS_MINREADPAIRS}" 
 	fi
 	
 	#Range (in the format min-max) of index multiplicity (only reads with indices in this multiplicity range will be included in graph) (default: 50-10000)
 	if [[ -n ${SC_10X_ARKS_MULTIPLICITY} ]]
 	then
 		ARKS_OPT="${ARKS_OPT} -m ${SC_10X_ARKS_MULTIPLICITY}"
+	else
+		SC_10X_ARKS_MULTIPLICITY="50-10000"
+		ARKS_OPT="${ARKS_OPT} -m ${SC_10X_ARKS_MULTIPLICITY}"
 	fi
 
 	#Minimum contig length to consider for scaffolding (default: 500)
 	if [[ -n ${SC_10X_ARKS_MINCONTIGLEN} && ${SC_10X_ARKS_MINCONTIGLEN} -gt 0 ]]
 	then
+		ARKS_OPT="${ARKS_OPT} -z ${SC_10X_ARKS_MINCONTIGLEN}"
+	else
+		SC_10X_ARKS_MINCONTIGLEN=500
 		ARKS_OPT="${ARKS_OPT} -z ${SC_10X_ARKS_MINCONTIGLEN}"
 	fi
 	
@@ -313,11 +322,17 @@ function setArksOptions()
 	if [[ -n ${SC_10X_ARKS_PVALUE} ]]
 	then
 		ARKS_OPT="${ARKS_OPT} -r ${SC_10X_ARKS_PVALUE}"
+	else
+		SC_10X_ARKS_PVALUE=0.05
+		ARKS_OPT="${ARKS_OPT} -r ${SC_10X_ARKS_PVALUE}"
 	fi	
 	
 	# End length (bp) of sequences to consider (default: 30000)
 	if [[ -n ${SC_10X_ARKS_ENDLEN} && ${SC_10X_ARKS_ENDLEN} -gt 0 ]]
 	then
+		ARKS_OPT="${ARKS_OPT} -e ${SC_10X_ARKS_ENDLEN}"
+	else
+		SC_10X_ARKS_ENDLEN=30000
 		ARKS_OPT="${ARKS_OPT} -e ${SC_10X_ARKS_ENDLEN}"
 	fi
 	
@@ -736,10 +751,14 @@ then
    		echo "if [[ -d ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID} ]]; then mv ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}" > 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/reads" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "mkdir -p ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "mkdir -p ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/arks" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "mkdir -p ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
    		
    		echo "ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
    		echo "samtools faidx ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+		echo "perl -ne 'chomp; if(/>/){$ct+=1; print \">$ct\n\";}else{print \"$_\n\";} ' < ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.renamed.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan		
    		
 		for r1 in ${SC_10X_READS}/${PROJECT_ID}_S[0-9]_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
 		do
@@ -764,7 +783,7 @@ then
         done
         
         echo "cd ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID} && ${LONGRANGER_PATH}/longranger basic --id=${PROJECT_ID} --fastqs=reads/" > 10x_02_arksLongranger_single_${CONT_DB}.${slurmID}.plan
-        echo "${LONGRANGER_PATH}/longranger basic --version | head -n1 | tr -d \"()\"" > 10x_02_arksLongranger_single_${CONT_DB}.${slurmID}.version
+        echo "$(${LONGRANGER_PATH}/longranger basic --version | head -n1 | tr -d \"()\")" > 10x_02_arksLongranger_single_${CONT_DB}.${slurmID}.version
     ### 03_arksTigmint 
 	elif [[ ${currentStep} -eq 3 ]]
     then
@@ -776,19 +795,13 @@ then
         
         setbwaOptions
         setSamtoolsOptions        
-        
-        prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
-		cset=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
-		fext="t" ### tigmint
-        tigmintOFile=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.fasta
-        
         setTigmintOptions
         
         # Align paired-end reads to the draft genome and sort by BX tag.
-        echo "bwa mem${SCAFFOLD_BWA_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz | samtools sort${SCAFFOLD_SAMTOOLS_OPT} -o ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bam" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        echo "bwa mem${SCAFFOLD_BWA_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz | samtools sort${SCAFFOLD_SAMTOOLS_OPT} -o ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_reads_sortbx.bam" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
     	# Create molecule extents BED
-    	flp="${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}.as${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}.nm${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}.molecule.size${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}"    	
-    	echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${flp}.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+    	flp="${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/arks_${SC_10X_RUNID}/${PROJECT_ID}.as${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}.nm${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}.molecule.size${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}"    	
+    	echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${flp}.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
         # Create molecule extents TSV
         echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} --tsv -o ${flp}.tsv ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
         # Report summary statistics of a Chromium library
@@ -800,10 +813,16 @@ then
         # Identify breakpoints
 		# Make breakpoints BED file
         
-        
+        prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		cset=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		fext="t" ### tigmint
+        tigmintOFile=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.trim${SC_10X_TIGMINT_CUT_TRIM}.window${SC_10X_TIGMINT_CUT_WINDOW}.span${SC_10X_TIGMINT_CUT_SPAN}.breaktigs.fasta
         echo "${TIGMINT_PATH}/tigmint-cut${TIGMINT_CUT_OPT} -o ${tigmintOFile} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}.as${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}.nm${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}.molecule.size${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
-                
-	                
+		echo "perl -ne 'chomp; if(/>/){$ct+=1; print \">$ct\n\";}else{print \"$_\n\";} ' < ${tigmintOFile} > ${tigmintOFile%.fasta}.renamed.fasta" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        
+        echo "$(${TIGMINT_PATH}/tigmint-molecule --version)" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.version
+		echo "$(${TIGMINT_PATH}/tigmint-cut --version)" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.version
+		echo "mlr $(mlr --version | awk '{print $2}') ">> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.version
 	### 04_arksArks
 	elif [[ ${currentStep} -eq 4 ]]
     then
@@ -834,16 +853,24 @@ then
 		prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
 		cset=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
 		fext="t" ### tigmint
-        tigmintOFile=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+		tigmintOFile=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.trim${SC_10X_TIGMINT_CUT_TRIM}.window${SC_10X_TIGMINT_CUT_WINDOW}.span${SC_10X_TIGMINT_CUT_SPAN}.breaktigs.renamed.fasta
+        bopt=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}_c${SC_10X_ARKS_MINREADPAIRS}_m${SC_10X_ARKS_MULTIPLICITY}_k${SC_10X_ARKS_KMER}_r${SC_10X_ARKS_PVALUE}_e${SC_10X_ARKS_ENDLEN}_z${SC_10X_ARKS_MINCONTIGLEN}_original.gv
+        
+		# ARCS
+		# Create a graph of linked contigs using ARCS.
 		
 		if [[ "${SC_10X_ARKS_RUNTYPE}" == full ]]
 		then 
-			echo "${ARKS_PATH}/arks ${ARKS_OPT} -a ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads_multiplicities.csv -f ${tigmintOFile} -b ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz"		
+			echo "${ARKS_PATH}/arks ${ARKS_OPT} -a ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads_multiplicities.csv -f ${tigmintOFile} -b ${bopt} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz"
+			# Generate TSV from ARKS
+			echo "python $(bin)../Examples/makeTSVfile.py ${bopt} ${bopt%_original.gv}.tigpair_checkpoint.tsv"		
 		else 
 			(>&2 echo "SC_10X_ARKS_RUNTYPE: ${SC_10X_ARKS_RUNTYPE} not supported yet")
 	    	exit 1
-		fi >> 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan    	    	
-    	echo "${ARKS_PATH}/arks --version | grep VERSION | awk '{print \$3}'" > 10x_04_arksArks_single_${CONT_DB}.${slurmID}.version 
+		fi >> 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan   
+		
+		 	    	
+    	echo "$(${ARKS_PATH}/arks --version | grep VERSION | awk '{print $3}')" > 10x_04_arksArks_single_${CONT_DB}.${slurmID}.version 
    	else
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
