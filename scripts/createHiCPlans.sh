@@ -102,7 +102,7 @@ function setJuicerOptions()
 	if [[ -n ${SC_HIC_JUICER_STAGE} && ${ignoreStage} -eq 0 ]]
 	then 
 		
-		if [[ ! "x${SC_HIC_JUICER_STAGE}" == "xmerge" && ! "x${SC_HIC_JUICER_STAGE}" == "xdedup" && ! "x${SC_HIC_JUICER_STAGE}" == "xfinal" && ! "x${SC_HIC_JUICER_STAGE}" == "xpostproc" && ! "x${SC_HIC_JUICER_STAGE}" == "early" ]]
+		if [[ ! "x${SC_HIC_JUICER_STAGE}" == "xmerge" && ! "x${SC_HIC_JUICER_STAGE}" == "xdedup" && ! "x${SC_HIC_JUICER_STAGE}" == "xfinal" && ! "x${SC_HIC_JUICER_STAGE}" == "xpostproc" && ! "x${SC_HIC_JUICER_STAGE}" == "xearly" ]]
 		then
 			(>&2 echo "[ERRROR] Unsupported juicer stage ${SC_HIC_JUICER_STAGE}. Can be: [merge, dedup, final, postproc, early]")
 			exit 1	
