@@ -51,6 +51,7 @@
 
 #define	DEF_SPUR_LEN 50000
 #define DEF_TIP_LEN 100000
+#define DEF_ARG_F 10000
 
 /// defines for contig vs contig alignments
 #define ConVsConMinAlign 5000
@@ -169,6 +170,9 @@ void initAnalyzeContext(AnalyzeContext *actx)
 	bzero(actx->readSeq, DB_READ_MAXLEN(actx->corContigDB));
 
 	// parse Contig File Names and Offset, must be done before getFileID is called the first time
+	actx->contigFileNamesAndOffsets = malloc(sizeof(FileNamesAndOffsets));
+	bzero(actx->contigFileNamesAndOffsets, sizeof(FileNamesAndOffsets));
+
 	parseDBFileNames(actx->corContigDBName, actx->contigFileNamesAndOffsets);
 
 	printf(" init contigs - START\n");
@@ -259,6 +263,12 @@ void initAnalyzeContext(AnalyzeContext *actx)
 
 			cread->maxOvlReads = cov;
 
+			// add repeat bases from patched-reads repeat track to cread
+			if (patchedRead_data[k + 1] < patchedRead_data[k + 2])
+				cread->repeatBases = getRepeatBasesFromInterval(actx, 0, cread->patchedID, patchedRead_data[k + 1], patchedRead_data[k + 2]);
+			else
+				cread->repeatBases = getRepeatBasesFromInterval(actx, 0, cread->patchedID, patchedRead_data[k + 2], patchedRead_data[k + 1]);
+
 			// insert cRead into ovlReads, cBeg and cEnd will be later translated into absolute contig positions!
 			cread->ovlReads->patchedID = -patchedRead_data[k];
 			cread->ovlReads->beg = patchedRead_data[k + 1];
@@ -289,14 +299,17 @@ void initAnalyzeContext(AnalyzeContext *actx)
 
 		if (actx->VERBOSE)
 		{
-			printf("Contig_%d, reads (%d): [ unCorRead bpos epos len cBpos cEpos | corRead bpos epos len cBpos cEpos| corCumLen unCorCumLen]\n", i,
-					contig->numcReads);
+			printf(
+					"Contig_%d, reads (%d): [ unCorRead bpos epos len cBpos cEpos | corRead bpos epos len cBpos cEpos| corCumLen unCorCumLen | NReadRep PReadRep CumPReadRep ]\n",
+					i, contig->numcReads);
 			int corCumLen = 0;
 			int unCorCumLen = 0;
+			int unCorCumRepBases = 0;
 			for (j = 0; j < contig->numcReads; j++)
 			{
-				corCumLen += contig->cReads[j].patchedContigPosEnd - contig->cReads[j].patchedContigPosBeg;
-				unCorCumLen += contig->cReads[j].correctedContigPosEnd - contig->cReads[j].correctedContigPosBeg;
+				unCorCumLen += contig->cReads[j].patchedContigPosEnd - contig->cReads[j].patchedContigPosBeg;
+				corCumLen += contig->cReads[j].correctedContigPosEnd - contig->cReads[j].correctedContigPosBeg;
+				unCorCumRepBases += contig->cReads[j].repeatBases;
 				// uncorrected (patched) coordinates
 				printf("%8d", contig->cReads[j].patchedID);
 				printf(" %8d", contig->cReads[j].ovlReads[0].beg);
@@ -314,35 +327,50 @@ void initAnalyzeContext(AnalyzeContext *actx)
 
 				printf(" | %8d", corCumLen);
 				printf(" %8d", unCorCumLen);
-				printf(" %5.3f%%\n", unCorCumLen * 100.0 / corCumLen);
+				printf(" %5.3f%%", unCorCumLen * 100.0 / corCumLen);
+
+				printf(" | %5d %2.f%% %.2f%%\n", contig->cReads[j].repeatBases,
+						contig->cReads[j].repeatBases * 100.0 / (contig->cReads[j].patchedContigPosEnd - contig->cReads[j].patchedContigPosBeg),
+						unCorCumRepBases * 100.0 / unCorCumLen);
 			}
-			printf(" --> len: %10d\n", contig->property.len);
+			printf(" --> len: %10d | fileID %4d | path %3d \n", contig->property.len, contig->property.fileID, contig->property.pathID);
 		}
 
 		//todo reduce this to actual number of relations
-		int numContigsOfCurSubgraph = actx->contigFileNamesAndOffsets[contig->property.fileID].toDbIdx - actx->contigFileNamesAndOffsets[contig->property.fileID].fromDbIdx + 1;
-		contig->tourRelations = (TourRelation*)malloc(sizeof(TourRelation)*numContigsOfCurSubgraph);
-		bzero(contig->tourRelations, sizeof(TourRelation)*numContigsOfCurSubgraph);
+		int numContigsOfCurSubgraph = getNumberOfSubgraphContigs(actx->contigFileNamesAndOffsets, i);
+		printf("numContigsOfCurSubgraph: %d\n", numContigsOfCurSubgraph);
+
+		contig->tourRelations = (TourRelation*) malloc(sizeof(TourRelation) * numContigsOfCurSubgraph);
+		bzero(contig->tourRelations, sizeof(TourRelation) * numContigsOfCurSubgraph);
 	}
 
+	printf("create touring relations\n");
 	// create Touring relations
 	for (i = 0; i < numOfContigs; i++)
 	{
-		Contig *contig = actx->contigs + i;
+		Contig *contig = contigs + i;
 
+		printf("contig id %d, len %d\n", contig->property.contigID, contig->property.len);
 		int contigEndPathIdx1, contigEndPathIdx2;
 		getContigsEndIDs(actx, i, &contigEndPathIdx1, &contigEndPathIdx2);
+		printf("contigEndPathIdx1: %d, contigEndPathIdx2 %d \n", contigEndPathIdx1, contigEndPathIdx2);
 
-		int numContigsOfCurSubgraph = actx->contigFileNamesAndOffsets[contig->property.fileID].toDbIdx - actx->contigFileNamesAndOffsets[contig->property.fileID].fromDbIdx + 1;
+		printf("contig->property.fileID: %d\n", contig->property.fileID);
+		printf("actx->contigFileNamesAndOffsets->toDbIdx[contig->property.fileID] %d\n", actx->contigFileNamesAndOffsets->toDbIdx[contig->property.fileID]);
+		printf("actx->contigFileNamesAndOffsets->fromDbIdx[contig->property.fileID]: %d\n", actx->contigFileNamesAndOffsets->fromDbIdx[contig->property.fileID]);
 
+		fflush(stdout);
+		int numContigsOfCurSubgraph = actx->contigFileNamesAndOffsets->toDbIdx[contig->property.fileID]
+				- actx->contigFileNamesAndOffsets->fromDbIdx[contig->property.fileID] + 1;
+		printf("numContigsOfCurSubgraph: %d\n", numContigsOfCurSubgraph);
 		assert(MAX(contigEndPathIdx1, contigEndPathIdx2) <= numContigsOfCurSubgraph - 1);
 
 		// 1. bubble
-		if(contigEndPathIdx1 != -1 && contigEndPathIdx1 == contigEndPathIdx2)
+		if (contigEndPathIdx1 != -1 && contigEndPathIdx1 == contigEndPathIdx2)
 		{
 			int curPathID = contig->property.pathID;
 
-			Contig *relatedContig = actx->contigs  + i - (curPathID - contigEndPathIdx1);
+			Contig *relatedContig = contigs + i - (curPathID - contigEndPathIdx1);
 
 			assert(relatedContig != NULL);
 
@@ -358,11 +386,11 @@ void initAnalyzeContext(AnalyzeContext *actx)
 		}
 
 		// 2. spur
-		else if((contigEndPathIdx1 == -1 && contigEndPathIdx2 != -1) || (contigEndPathIdx1 != -1 && contigEndPathIdx2 == -1))
+		else if ((contigEndPathIdx1 == -1 && contigEndPathIdx2 != -1) || (contigEndPathIdx1 != -1 && contigEndPathIdx2 == -1))
 		{
 			int curPathID = contig->property.pathID;
 			int curPathRelID = MAX(contigEndPathIdx1, contigEndPathIdx2);
-			Contig *relatedContig = actx->contigs  + i - (curPathID - curPathRelID);
+			Contig *relatedContig = contigs + i - (curPathID - curPathRelID);
 			assert(relatedContig != NULL);
 			assert(curPathRelID == relatedContig->property.pathID);
 
@@ -376,18 +404,17 @@ void initAnalyzeContext(AnalyzeContext *actx)
 		}
 
 		// 3. link between two different contigs
-		else if(contigEndPathIdx1 != -1 && contigEndPathIdx2 != -1)
+		else if (contigEndPathIdx1 != -1 && contigEndPathIdx2 != -1)
 		{
 			int curPathID = contig->property.pathID;
 
-			Contig *relatedContig1 = actx->contigs  + i - (curPathID - contigEndPathIdx1);
+			Contig *relatedContig1 = contigs + i - (curPathID - contigEndPathIdx1);
 			assert(relatedContig1 != NULL);
 			assert(contigEndPathIdx1 == relatedContig1->property.pathID);
 
-			Contig *relatedContig2 = actx->contigs  + i - (curPathID - contigEndPathIdx2);
+			Contig *relatedContig2 = contigs + i - (curPathID - contigEndPathIdx2);
 			assert(relatedContig2 != NULL);
 			assert(contigEndPathIdx2 == relatedContig2->property.pathID);
-
 
 			contig->tourRelations[contig->numTourRelations].contigID1 = relatedContig1->property.contigID;
 			contig->tourRelations[contig->numTourRelations].contigID2 = relatedContig2->property.contigID;
@@ -425,9 +452,9 @@ char* getContigFastaFileName(AnalyzeContext *actx, Contig *contig)
 {
 	int i;
 
-	for(i=0; i<actx->contigFileNamesAndOffsets->numFileNames; i++)
+	for (i = 0; i < actx->contigFileNamesAndOffsets->numFileNames; i++)
 	{
-		if(contig->property.contigID >= actx->contigFileNamesAndOffsets->fromDbIdx[i] && contig->property.contigID < actx->contigFileNamesAndOffsets->fromDbIdx[i])
+		if (contig->property.contigID >= actx->contigFileNamesAndOffsets->fromDbIdx[i] && contig->property.contigID < actx->contigFileNamesAndOffsets->fromDbIdx[i])
 		{
 			return actx->contigFileNamesAndOffsets->fileNames[i];
 		}
@@ -475,7 +502,7 @@ void parseDBFileNames(char *dbName, FileNamesAndOffsets *fileNamesAndOffsets)
 	memset(fileNamesAndOffsets->toDbIdx, 0, numFiles);
 
 	fileNamesAndOffsets->fileNames = (char **) malloc(sizeof(char*) * (numFiles));
-	fileNamesAndOffsets->fastaNames= (char **) malloc(sizeof(char*) * (numFiles));
+	fileNamesAndOffsets->fastaNames = (char **) malloc(sizeof(char*) * (numFiles));
 
 	int i;
 	for (i = 0; i < numFiles; i++)
@@ -499,7 +526,7 @@ void parseDBFileNames(char *dbName, FileNamesAndOffsets *fileNamesAndOffsets)
 		assert(curOffset > prevOffset);
 		fileNamesAndOffsets->fromDbIdx[i] = prevOffset;
 		fileNamesAndOffsets->toDbIdx[i] = curOffset - 1;
-
+		printf("fileNamesAndOffsets[%d]: %d %d\n", i, fileNamesAndOffsets->fromDbIdx[i], fileNamesAndOffsets->toDbIdx[i]);
 		prevOffset = curOffset;
 	}
 }
@@ -773,8 +800,10 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 		contig_k = actx->contigs + abs(actx->vreadMask[2][read]) - 1;
 
 		// all 3 contigs are haploid | or none of them is haploid
-		if (((contig_i->property.flag & CONTIG_CLASS_HAPLOID) && (contig_j->property.flag & CONTIG_CLASS_HAPLOID) && (contig_k->property.flag & CONTIG_CLASS_HAPLOID))
-				|| (!(contig_i->property.flag & CONTIG_CLASS_HAPLOID) && !(contig_j->property.flag & CONTIG_CLASS_HAPLOID) && !(contig_k->property.flag & CONTIG_CLASS_HAPLOID)))
+		if (((contig_i->property.flag & CONTIG_CLASS_HAPLOID) && (contig_j->property.flag & CONTIG_CLASS_HAPLOID)
+				&& (contig_k->property.flag & CONTIG_CLASS_HAPLOID))
+				|| (!(contig_i->property.flag & CONTIG_CLASS_HAPLOID) && !(contig_j->property.flag & CONTIG_CLASS_HAPLOID)
+						&& !(contig_k->property.flag & CONTIG_CLASS_HAPLOID)))
 		{
 			cutOut = 1;
 		}
@@ -842,7 +871,8 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 						|| ((contig_alt1->property.flag & CONTIG_CLASS_ALT_HUGEDIFF) && a1End1 == contig_hap1->property.contigID && a1End2 == contig_hap1->property.contigID))
 						&& ((((contig_alt2->property.flag & CONTIG_CLASS_ALT_BUBBLE) || (contig_alt2->property.flag & CONTIG_CLASS_ALT_SPUR))
 								&& (a1End1 == contig_hap1->property.contigID || a1End2 == contig_hap1->property.contigID))
-								|| ((contig_alt2->property.flag & CONTIG_CLASS_ALT_HUGEDIFF) && a1End1 == contig_hap1->property.contigID && a1End2 == contig_hap1->property.contigID))
+								|| ((contig_alt2->property.flag & CONTIG_CLASS_ALT_HUGEDIFF) && a1End1 == contig_hap1->property.contigID
+										&& a1End2 == contig_hap1->property.contigID))
 						//&& checkJunctionCoverage(actx, read, numContigs) // returns true if everything is ok, false otherwise
 						)
 				{
@@ -909,9 +939,11 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 
 				if (deadEnd
 						&& ((((contig_alt1->property.flag & CONTIG_CLASS_ALT_BUBBLE) || (contig_alt1->property.flag & CONTIG_CLASS_ALT_SPUR))
-								&& (end1 == contig_hap1->property.contigID || end2 == contig_hap1->property.contigID || end1 == contig_hap2->property.contigID || end2 == contig_hap2->property.contigID))
+								&& (end1 == contig_hap1->property.contigID || end2 == contig_hap1->property.contigID || end1 == contig_hap2->property.contigID
+										|| end2 == contig_hap2->property.contigID))
 								|| ((contig_alt1->property.flag & CONTIG_CLASS_ALT_HUGEDIFF)
-										&& (((end1 == contig_hap1->property.contigID && end2 == contig_hap1->property.contigID) || (end1 == contig_hap2->property.contigID && end2 == contig_hap2->property.contigID)))))
+										&& (((end1 == contig_hap1->property.contigID && end2 == contig_hap1->property.contigID)
+												|| (end1 == contig_hap2->property.contigID && end2 == contig_hap2->property.contigID)))))
 						//&& checkJunctionCoverage(actx, read, numContigs) // returns true if everything is ok, false otherwise
 						)
 				{
@@ -1104,8 +1136,8 @@ void analyzeJunction(AnalyzeContext* actx, int read, int numContigs)
 			assert(contigJCutPos1 != -1 && contigJCutPos2 != -1);
 			assert(contigKCutPos1 != -1 && contigKCutPos2 != -1);
 
-			printf("contig %d read %d at [%d, %d] contig %d read %d at [%d, %d]\n", contig_j->property.contigID, read, contigJCutPos1, contigJCutPos2, contig_k->property.contigID, read,
-					contigKCutPos1, contigKCutPos2);
+			printf("contig %d read %d at [%d, %d] contig %d read %d at [%d, %d]\n", contig_j->property.contigID, read, contigJCutPos1, contigJCutPos2,
+					contig_k->property.contigID, read, contigKCutPos1, contigKCutPos2);
 			//int type = 0;
 
 			//int junctionCov = checkJunctionCoverage(actx, read, numContigs); // returns true if everything is ok, false otherwise
@@ -1698,8 +1730,8 @@ void finalContigValidation(AnalyzeContext *actx)
 		for (j = 0; j < curSecondaryContigs; j++)
 		{
 			Contig *secondaryContig = secondaryContigs[j];
-			printf("Secondary Contig: %d LEN %d start at: %d class %d\n", secondaryContig->property.contigID, secondaryContig->property.len, secondaryContig->property.tmp,
-					secondaryContig->property.flag);
+			printf("Secondary Contig: %d LEN %d start at: %d class %d\n", secondaryContig->property.contigID, secondaryContig->property.len,
+					secondaryContig->property.tmp, secondaryContig->property.flag);
 		}
 
 		primaryContig->property.flag |= CONTIG_VISITED;
@@ -2495,8 +2527,8 @@ int processReadOverlapsAndMapThemToContigs(void* _ctx, Overlap* ovls, int novl)
 
 					if (cread->ovlReads == NULL)
 					{
-						fprintf(stderr, "[ERROR]: Unable to increase OvlRead buffer of contig %d at read: %d, from %d to %d!\n", contig->property.contigID, bread, cread->numOvlReads,
-								cread->maxOvlReads);
+						fprintf(stderr, "[ERROR]: Unable to increase OvlRead buffer of contig %d at read: %d, from %d to %d!\n", contig->property.contigID, bread,
+								cread->numOvlReads, cread->maxOvlReads);
 						exit(1);
 					}
 				}
@@ -2597,22 +2629,40 @@ int cmpOVLreadById(const void *a, const void *b)
 	return ((const OvlRead*) a)->patchedID - ((const OvlRead*) b)->patchedID;
 }
 
-int getRepeatBasesFromInterval(AnalyzeContext* actx, int readID, int beg, int end)
+int getRepeatBasesFromInterval(AnalyzeContext* actx, int contigDB, int readID, int beg, int end)
 {
-	track_anno* rep_anno = actx->corContigRepeats_track->anno;
-	track_data* rep_data = actx->corContigRepeats_track->data;
+	track_anno* rep_anno;
+	track_data* rep_data;
+
+	if (contigDB)
+	{
+		rep_anno = actx->corContigRepeats_track->anno;
+		rep_data = actx->corContigRepeats_track->data;
+
+		if (readID < 0 || readID >= DB_NREADS(actx->corContigDB))
+		{
+			fprintf(stderr, "[ERROR] - getRepeatBasesFromInterval readID: %d out of bounds [0, %d]\n", readID, DB_NREADS(actx->corContigDB) - 1);
+			fflush(stderr);
+			exit(1);
+		}
+	}
+	else // patched reads db
+	{
+		rep_anno = actx->patchedReadRepeat_track->anno;
+		rep_data = actx->patchedReadRepeat_track->data;
+
+		if (readID < 0 || readID >= DB_NREADS(actx->patchedReadDB))
+		{
+			fprintf(stderr, "[ERROR] - getRepeatBasesFromInterval readID: %d out of bounds [0, %d]\n", readID, DB_NREADS(actx->patchedReadDB) - 1);
+			fflush(stderr);
+			exit(1);
+		}
+	}
 
 	track_anno rb, re;
 
 	int repBases = 0;
 	int rBeg, rEnd;
-
-	if (readID < 0 || readID >= DB_NREADS(actx->corContigDB))
-	{
-		fprintf(stderr, "[ERROR] - getRepeatBasesFromInterval readID: %d out of bounds [0, %d]\n", readID, DB_NREADS(actx->corContigDB) - 1);
-		fflush(stderr);
-		exit(1);
-	}
 
 	// repeat bases in a-read
 	rb = rep_anno[readID] / sizeof(track_data);
@@ -2629,203 +2679,6 @@ int getRepeatBasesFromInterval(AnalyzeContext* actx, int readID, int beg, int en
 	}
 
 	return repBases;
-}
-
-void updateOverlapGroup(AnalyzeContext *actx, OverlapGroup *ovlgrp, Overlap *pOvls, int *ovlIdx, int numOvlIdx)
-{
-	int i;
-	int gap_1, gap_2;
-	int its_1, its_2;
-	int aread, bread;
-
-#ifdef DEBUG_STEP2A
-	int a = 30, b = 32;
-#endif
-
-	if (numOvlIdx == 0)
-	{
-#ifdef DEBUG_STEP2A
-		printf("updateOverlapGroup: numOvlIdx == 0\n");
-#endif
-		return;
-	}
-
-	Overlap *ovl_1, *ovl_2;
-	ovl_1 = pOvls + ovlIdx[0];
-
-	if (ovl_1->flags & OVL_COMP)
-		ovlgrp->flag |= OVLGRP_COMP;
-
-	ovlgrp->coveredBasesInA = ovl_1->path.aepos - ovl_1->path.abpos;
-	ovlgrp->coveredBasesInB = ovl_1->path.bepos - ovl_1->path.bbpos;
-
-#ifdef DEBUG_STEP2A
-	printf("ovlgrp->coveredBasesInA: %d\n", ovlgrp->coveredBasesInA);
-	printf("ovlgrp->coveredBasesInB: %d\n", ovlgrp->coveredBasesInB);
-#endif
-
-	int ab1, ae1, bb1, be1;
-	int ab2, ae2, bb2, be2;
-
-	aread = ovl_1->aread;
-	bread = ovl_1->bread;
-	int brlen = DB_READ_LEN(actx->corContigDB, bread);
-
-	ovlgrp->repeatBasesInA = getRepeatBasesFromInterval(actx, aread, ovl_1->path.abpos, ovl_1->path.aepos);
-	if (ovl_1->flags & OVL_COMP)
-		ovlgrp->repeatBasesInB = getRepeatBasesFromInterval(actx, bread, brlen - ovl_1->path.bepos, brlen - ovl_1->path.bbpos);
-	else
-		ovlgrp->repeatBasesInB = getRepeatBasesFromInterval(actx, bread, ovl_1->path.bbpos, ovl_1->path.bepos);
-
-	for (i = 1; i < numOvlIdx; i++)
-	{
-		ovl_1 = pOvls + ovlIdx[i - 1];
-		ovl_2 = pOvls + ovlIdx[i];
-
-		assert((ovl_1->flags & OVL_COMP) == (ovl_2->flags & OVL_COMP));
-		assert(ovl_1->aread == ovl_2->aread);
-		assert(ovl_1->bread == ovl_2->bread);
-
-		assert((ovlgrp->flag & OVLGRP_COMP) == (ovl_1->flags & OVL_COMP));
-
-		ab1 = ovl_1->path.abpos;
-		ae1 = ovl_1->path.aepos;
-		bb1 = ovl_1->path.bbpos;
-		be1 = ovl_1->path.bepos;
-
-		ab2 = ovl_2->path.abpos;
-		ae2 = ovl_2->path.aepos;
-		bb2 = ovl_2->path.bbpos;
-		be2 = ovl_2->path.bepos;
-
-#ifdef DEBUG_STEP2A
-		printf("ab1: %d, ae1: %d, bb1: %d, be1: %d\n", ab1, ae1, bb1, be1);
-		printf("ab2: %d, ae2: %d, bb2: %d, be2: %d\n", ab2, ae2, bb2, be2);
-#endif
-
-		// update covered bases
-		ovlgrp->coveredBasesInA += ae2 - ab2;
-		ovlgrp->coveredBasesInB += be2 - bb2;
-
-#ifdef DEBUG_STEP2A
-		printf("ovlgrp->coveredBasesInA: %d\n", ovlgrp->coveredBasesInA);
-		printf("ovlgrp->coveredBasesInB: %d\n", ovlgrp->coveredBasesInB);
-#endif
-
-		// determine overhang/gap bases between overlaps
-		its_1 = intersect(ab1, ae1, ab2, ae2);
-		its_2 = intersect(bb1, be1, bb2, be2);
-
-#ifdef DEBUG_STEP2A
-		printf("its_1: %d\n", its_1);
-		printf("its_2: %d\n", its_2);
-#endif
-
-		// update repeat bases
-		ovlgrp->repeatBasesInA += getRepeatBasesFromInterval(actx, ovl_2->aread, ae1, ae2);
-		if ((ovl_2->flags & OVL_COMP))
-		{
-			ovlgrp->repeatBasesInB += getRepeatBasesFromInterval(actx, ovl_2->bread, brlen - be2, brlen - bb2);
-		}
-		else
-		{
-			ovlgrp->repeatBasesInB += getRepeatBasesFromInterval(actx, ovl_2->bread, bb2, be2);
-		}
-
-#ifdef DEBUG_STEP2A
-		printf("ovlgrp->repeatBasesInA: %d\n", ovlgrp->repeatBasesInA);
-		printf("ovlgrp->repeatBasesInB: %d\n", ovlgrp->repeatBasesInB);
-#endif
-
-		gap_1 = gap_2 = 0;
-		if (its_1 == 0)
-		{
-			gap_1 = ab2 - ae1;
-			ovlgrp->gapBasesInA += gap_1;
-#ifdef DEBUG_STEP2A
-			printf("ovlgrp->gapBasesInA: %d\n", ovlgrp->gapBasesInA);
-#endif
-		}
-		else // overlap of neighboring alignments --> i.e. to avoid that overlap accounts twice remove its_1 bases and repeats from its_1 range
-		{
-			ovlgrp->coveredBasesInA -= its_1;
-#ifdef DEBUG_STEP2A
-			printf("ovlgrp->coveredBasesInA: %d (removed its1 %d)\n", ovlgrp->coveredBasesInA, its_1);
-#endif
-
-			ovlgrp->repeatBasesInA -= getRepeatBasesFromInterval(actx, ovl_2->aread, ab2, ae1);
-
-#ifdef DEBUG_STEP2A
-			printf("ovlgrp->repeatBasesInA: %d (removed its1 repeat bases %d)\n", ovlgrp->coveredBasesInA, getRepeatBasesFromInterval(actx, ovl_2->aread, ab2, ae1));
-#endif
-		}
-
-		if (its_2 == 0)
-		{
-			gap_2 = bb2 - be1;
-			ovlgrp->gapBasesInB += gap_2;
-
-#ifdef DEBUG_STEP2A
-			printf("ovlgrp->gapBasesInB: %d\n", ovlgrp->gapBasesInB);
-#endif
-
-		}
-		else // overlap of neighboring alignments --> i.e. to avoid that overlap accounts twice remove its_2 bases and repeats from its_2 range
-		{
-			ovlgrp->coveredBasesInB -= its_2;
-#ifdef DEBUG_STEP2A
-			printf("ovlgrp->coveredBasesInB: %d (removed its2 %d)\n", ovlgrp->coveredBasesInB, its_2);
-#endif
-
-			if (ovl_2->flags & OVL_COMP)
-			{
-				ovlgrp->repeatBasesInB -= getRepeatBasesFromInterval(actx, ovl_2->bread, brlen - be1, brlen - bb2);
-#ifdef DEBUG_STEP2A
-				printf("ovlgrp->repeatBasesInB: %d (removed its2 repeat bases %d)\n", ovlgrp->repeatBasesInB,
-						getRepeatBasesFromInterval(actx, ovl_2->bread, brlen - be1, brlen - bb2));
-#endif
-			}
-			else
-			{
-				ovlgrp->repeatBasesInB -= getRepeatBasesFromInterval(actx, ovl_2->bread, bb2, be1);
-#ifdef DEBUG_STEP2A
-				printf("ovlgrp->repeatBasesInB: %d (removed its2 repeat bases %d)\n", ovlgrp->repeatBasesInB, getRepeatBasesFromInterval(actx, ovl_2->bread, bb2, be1));
-#endif
-			}
-		}
-
-#ifdef DEBUG_STEP2A
-		printf("%d x %d [%d, %d, %d, %d] [%d, %d, %d, %d], gap1 %d, gap_2 %d --> gapBasesInA %d, gapBasesInB %d\n", ovl_1->aread, ovl_1->bread, ovl_1->path.abpos,
-				ovl_1->path.aepos, ovl_1->path.bbpos, ovl_1->path.bepos, ovl_2->path.abpos, ovl_2->path.aepos, ovl_2->path.bbpos, ovl_2->path.bepos, gap_1, gap_2,
-				ovlgrp->gapBasesInA, ovlgrp->gapBasesInB);
-#endif
-	}
-
-	// set positions of first and last overlaps
-	ovlgrp->first_abpos = pOvls[ovlIdx[0]].path.abpos;
-	ovlgrp->first_aepos = pOvls[ovlIdx[0]].path.aepos;
-
-	ovlgrp->last_abpos = pOvls[ovlIdx[numOvlIdx - 1]].path.abpos;
-	ovlgrp->last_aepos = pOvls[ovlIdx[numOvlIdx - 1]].path.aepos;
-
-	if (ovlgrp->flag & OVLGRP_COMP)
-	{
-		ovlgrp->first_bbpos = brlen - pOvls[ovlIdx[0]].path.bepos;
-		ovlgrp->first_bepos = brlen - pOvls[ovlIdx[0]].path.bbpos;
-
-		ovlgrp->last_bbpos = brlen - pOvls[ovlIdx[numOvlIdx - 1]].path.bepos;
-		ovlgrp->last_bepos = brlen - pOvls[ovlIdx[numOvlIdx - 1]].path.bbpos;
-
-	}
-	else
-	{
-		ovlgrp->first_bbpos = pOvls[ovlIdx[0]].path.bbpos;
-		ovlgrp->first_bepos = pOvls[ovlIdx[0]].path.bepos;
-
-		ovlgrp->last_bbpos = pOvls[ovlIdx[numOvlIdx - 1]].path.bbpos;
-		ovlgrp->last_bepos = pOvls[ovlIdx[numOvlIdx - 1]].path.bepos;
-
-	}
 }
 
 void analyzeContigCoverageOfMappedReads(AnalyzeContext *actx)
@@ -2846,7 +2699,7 @@ void analyzeContigCoverageOfMappedReads(AnalyzeContext *actx)
 		}
 	}
 
-	// todo pass variable, set by user ?
+	// TODO pass variable, set by user ?
 	int COV_BIN_SIZE = 500;
 	int MIN_COV = 3;
 
@@ -3038,21 +2891,35 @@ int getPathID(AnalyzeContext *actx, int contigID)
 int getFileID(FileNamesAndOffsets *fileAndNameOffset, int contigID)
 {
 	assert(fileAndNameOffset != NULL);
-
-	assert(contigID >= 0 && contigID <= fileAndNameOffset->toDbIdx[fileAndNameOffset->numFileNames]);
+	assert(contigID >= 0 && contigID <= fileAndNameOffset->toDbIdx[fileAndNameOffset->numFileNames - 1]);
 
 	int i;
-	for (i=0; i<fileAndNameOffset->numFileNames; i++)
+	for (i = 0; i < fileAndNameOffset->numFileNames; i++)
 	{
-		if(contigID >= fileAndNameOffset->fromDbIdx[i]  && contigID <=fileAndNameOffset->toDbIdx[i])
+		if (contigID >= fileAndNameOffset->fromDbIdx[i] && contigID <= fileAndNameOffset->toDbIdx[i])
+		{
+			break;
+		}
+	}
+	return i;
+}
+
+int getNumberOfSubgraphContigs(FileNamesAndOffsets *fileAndNameOffset, int contigID)
+{
+	assert(fileAndNameOffset != NULL);
+	assert(contigID >= 0 && contigID <= fileAndNameOffset->toDbIdx[fileAndNameOffset->numFileNames - 1]);
+
+	int i;
+	for (i = 0; i < fileAndNameOffset->numFileNames; i++)
+	{
+		if (contigID >= fileAndNameOffset->fromDbIdx[i] && contigID <= fileAndNameOffset->toDbIdx[i])
 		{
 			break;
 		}
 	}
 
-	return i;
+	return (fileAndNameOffset->toDbIdx[i] - fileAndNameOffset->fromDbIdx[i]) + 1;
 }
-
 
 void getContigsEndIDs(AnalyzeContext *actx, int contigID, int* beg, int *end)
 {
@@ -3114,7 +2981,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 	int faId;
 
-	for(faId=0; faId<actx->contigFileNamesAndOffsets->numFileNames; faId++)
+	for (faId = 0; faId < actx->contigFileNamesAndOffsets->numFileNames; faId++)
 	{
 #ifdef DEBUG_STEP1C
 		printf("i %d, %d %d\n", faId, actx->contigFileNamesAndOffsets->fromDbIdx[faId], actx->contigFileNamesAndOffsets->toDbIdx[faId]);
@@ -3315,8 +3182,8 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 						}
 #ifdef DEBUG_STEP1C
 						printf("analyze contigs: %d p%d (cov %.2f) %d p%d (cov %.2f) len %d %d --> numOfcommonReads: %d of %d: %.3f\n", contig_j->property.contigID,
-								getPathID(actx, contig_j->property.contigID), contig_j->avgCov, contig_k->property.contigID, getPathID(actx, contig_k->property.contigID), contig_k->avgCov, contig_j->property.len, contig_k->property.len,
-								numComReads, numkReads, numComReads * 100.0 / numkReads);
+								getPathID(actx, contig_j->property.contigID), contig_j->avgCov, contig_k->property.contigID, getPathID(actx, contig_k->property.contigID),
+								contig_k->avgCov, contig_j->property.len, contig_k->property.len, numComReads, numkReads, numComReads * 100.0 / numkReads);
 						printf("contigKCovHist:\n");
 #endif
 						int firstKbin, lastKbin, firstJbin, lastJbin;
@@ -3397,8 +3264,8 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 						{
 							if (ba_value(contigIntersectionJKReads, l))
 							{
-								printf("%4d: c %7d vs c %7d read: %7d [%7d, %7d] --> [%7d, %7d]\n", m++, contig_j->property.contigID, contig_k->property.contigID, l, contigJBegRange[l],
-										contigJEndRange[l], contigKBegRange[l], contigKEndRange[l]);
+								printf("%4d: c %7d vs c %7d read: %7d [%7d, %7d] --> [%7d, %7d]\n", m++, contig_j->property.contigID, contig_k->property.contigID, l,
+										contigJBegRange[l], contigJEndRange[l], contigKBegRange[l], contigKEndRange[l]);
 							}
 						}
 #endif
@@ -3454,12 +3321,12 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 #ifdef DEBUG_STEP1C
 						printContigClassification(stdout, preClassFlagK, ' ');
-						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_k->property.contigID, contig_j->property.contigID, covIvlK[0], covIvlK[numCovIvlK * 3 - 2], covIvlJ[0],
-								covIvlJ[numCovIvlJ * 3 - 2]);
+						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_k->property.contigID, contig_j->property.contigID, covIvlK[0],
+								covIvlK[numCovIvlK * 3 - 2], covIvlJ[0], covIvlJ[numCovIvlJ * 3 - 2]);
 
 						printContigClassification(stdout, preClassFlagJ, ' ');
-						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_j->property.contigID, contig_k->property.contigID, covIvlJ[0], covIvlJ[numCovIvlJ * 3 - 2], covIvlK[0],
-								covIvlK[numCovIvlK * 3 - 2]);
+						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_j->property.contigID, contig_k->property.contigID, covIvlJ[0],
+								covIvlJ[numCovIvlJ * 3 - 2], covIvlK[0], covIvlK[numCovIvlK * 3 - 2]);
 #endif
 
 						if (contig_k->numReadRelations == contig_k->maxReadRelations)
@@ -3483,7 +3350,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 						if (contig_j->numReadRelations == contig_j->maxReadRelations)
 						{
-							contig_j->maxReadRelations = (int) (contig_j->maxReadRelations* 1.2) + 5;
+							contig_j->maxReadRelations = (int) (contig_j->maxReadRelations * 1.2) + 5;
 							contig_j->readRelations = (ReadRelation*) realloc(contig_j->readRelations, sizeof(ReadRelation) * contig_j->maxReadRelations);
 						}
 
@@ -3649,524 +3516,6 @@ OverlapGroup* copySymmetricOverlapGroup(OverlapGroup *ovlgrp)
 
 	return symOvlgrp;
 }
-/*
- int findOverlapGroups(AnalyzeContext* actx, Overlap* pOvls, int n)
- {
- static int maxOverlapIdx = 0;
- static int* overlapIdx = NULL;
- int numOverlapIdx = 0;
-
- int aread, bread;
- int i;
-
- aread = pOvls->aread;
- bread = pOvls->bread;
-
- // mark contained overlaps
- {
- int j;
- for (i = 0; i < n; i++)
- {
- Overlap *ovl_i = pOvls + i;
-
- if (ovl_i->flags & OVL_CONT)
- continue;
-
- for (j = i + 1; j < n; j++)
- {
- Overlap *ovl_j = pOvls + j;
-
- if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos)
- && contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
- {
- ovl_j->flags |= OVL_CONT;
-
- }
- }
-
- }
- }
-
- // get repeats track
- track_anno* rep_anno = actx->corContigRepeats_track->anno;
- track_data* rep_data = actx->corContigRepeats_track->data;
-
- track_anno rab, rae;
- track_anno rbb, rbe;
-
- int longestUniqBases = -1;
- int longestUniqOVLidx = -1;
- int longestOverlap = -1;
- int longestOverlapIdx = -1;
-
- // find longest overlap based on number of unique bases
- for (i = 0; i < n; i++)
- {
- Overlap *ovl = pOvls + i;
-
- if ((ovl->flags & OVL_CONT) || (ovl->flags & OVL_DISCARD) || (actx->contigs[ovl->bread].flag & CONTIG_DISCARD))
- {
- continue;
- }
-
- int aLen = ovl->path.aepos - ovl->path.abpos;
- int bLen = ovl->path.bepos - ovl->path.bbpos;
-
- int aRep = 0;
- int bRep = 0;
-
- rab = rep_anno[aread] / sizeof(track_data);
- rae = rep_anno[aread + 1] / sizeof(track_data);
-
- // loop through all repeats in a
- int rBeg, rEnd;
- while (rab < rae)
- {
- rBeg = rep_data[rab];
- rEnd = rep_data[rab + 1];
-
- aRep += intersect(ovl->path.abpos, ovl->path.aepos, rBeg, rEnd);
- rab += 2;
- }
-
- rbb = rep_anno[bread] / sizeof(track_data);
- rbe = rep_anno[bread + 1] / sizeof(track_data);
-
- // loop through all repeats in b
- while (rbb < rbe)
- {
- rBeg = rep_data[rbb];
- rEnd = rep_data[rbb + 1];
-
- if (ovl->flags & OVL_COMP)
- {
- bRep += intersect(DB_READ_LEN(actx->corContigDB, bread) - ovl->path.bepos, DB_READ_LEN(actx->corContigDB, bread) - ovl->path.bbpos, rBeg, rEnd);
- }
- else
- {
- bRep += intersect(ovl->path.bbpos, ovl->path.bepos, rBeg, rEnd);
- }
- rbb += 2;
- }
- #ifdef DEBUG_STEP2A
- //        printf("%d - %d [%d, %d] [%d, %d], aR %d/%d, bR %d/%d\n", aread, bread, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, aLen, aRep, bLen, bRep);
- #endif
- int tmpBases = MAX(aLen - aRep, bLen - bRep);
- if (tmpBases > longestUniqBases)
- {
- longestUniqBases = tmpBases;
- longestUniqOVLidx = i;
- }
-
- tmpBases = MAX(aLen, bLen);
- if (tmpBases > longestOverlap)
- {
- longestOverlap = tmpBases;
- longestOverlapIdx = i;
- }
- }
-
- // TODO min unique bases and min repeat bases hard coded
- if (longestUniqBases < 1000)
- {
- if (longestOverlap > 5000)
- {
- longestUniqBases = longestOverlap;
- longestUniqOVLidx = longestOverlapIdx;
- }
- else
- {
- return 0;
- }
- }
- #ifdef DEBUG_STEP2A
- printf("longest overlap:\n");
- printf("idx: %d --> uB %d, %d - %d [%d, %d] [%d, %d]\n", longestUniqOVLidx, longestUniqBases, pOvls[longestUniqOVLidx].aread, pOvls[longestUniqOVLidx].bread,
- pOvls[longestUniqOVLidx].path.abpos, pOvls[longestUniqOVLidx].path.aepos, pOvls[longestUniqOVLidx].path.bbpos, pOvls[longestUniqOVLidx].path.bepos);
- #endif
- // try to "elongate" longest overlap
- // 1st on the right
- // 2nd on the left side
- OverlapGroup * ovlgrp = (OverlapGroup*) malloc(sizeof(OverlapGroup));
- bzero(ovlgrp, sizeof(OverlapGroup));
-
- ovlgrp->aread = pOvls->aread;
- ovlgrp->bread = pOvls->bread;
-
- if (numOverlapIdx == maxOverlapIdx)
- {
- maxOverlapIdx = maxOverlapIdx * 1.2 + 10;
- overlapIdx = (int *) realloc(overlapIdx, sizeof(int) * maxOverlapIdx);
- }
-
- overlapIdx[0] = longestUniqOVLidx;
- numOverlapIdx = 1;
-
- int ab1, ae1;
- int bb1, be1;
-
- int ab2, ae2;
- int bb2, be2;
-
- ab1 = pOvls[longestUniqOVLidx].path.abpos;
- ae1 = pOvls[longestUniqOVLidx].path.aepos;
-
- bb1 = pOvls[longestUniqOVLidx].path.bbpos;
- be1 = pOvls[longestUniqOVLidx].path.bepos;
-
- #ifdef DEBUG_STEP2A
- printf("extend longest overlap in right direction\n");
- #endif
- // 1st right
- int cont = 1;
- int curBestOffset = 1;
- int curBestUniqBases = -1;
- int aReadLen = DB_READ_LEN(actx->corContigDB, pOvls->aread);
- int bReadLen = DB_READ_LEN(actx->corContigDB, pOvls->bread);
- while (cont && ae1 < aReadLen)
- {
- int stepSize;
- for (stepSize = MIN_OVL_LOOKAHEAD; stepSize <= MAX_OVL_LOOKAHEAD && curBestUniqBases == -1; stepSize += STRIDE_OVL_LOOKAHEAD)
- {
- #ifdef DEBUG_STEP2A
- printf("FOR LOOP stepsize %d\n", stepSize);
- #endif
- for (i = longestUniqOVLidx + curBestOffset; i < n; i++)
- {
- Overlap * ovl = pOvls + i;
-
- if (ovl->flags & OVL_DISCARD)
- continue;
-
- ab2 = pOvls[i].path.abpos;
- ae2 = pOvls[i].path.aepos;
-
- bb2 = pOvls[i].path.bbpos;
- be2 = pOvls[i].path.bepos;
-
- if ((ovl->flags & OVL_COMP) != (pOvls[longestUniqOVLidx].flags & OVL_COMP))
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> different orientations\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- if (ovl->flags & OVL_CONT)
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> really contained repeat\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- if (ae1 >= ae2)
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> contained repeat in A-interval\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- if (ae2 - ab2 < actx->min_olen || be2 - bb2 < actx->min_olen)
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> to short\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- // add some sanity checks
- // 1. overlap must go into right direction
- // 2. if overlaps are contained replace them
- if (ae2 - 100 <= ae1 || be2 - 100 <= be1) // at least 100-bases overhang to the right
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> no overhang on right side\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- if (ab2 - ae1 > stepSize)
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> gap size too large (stepSize %d)\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2,
- stepSize);
- #endif
- continue;
- }
-
- // check if current overlap is better (longer/more unique bases ?) then curBest
-
- int curUniqBasesInAIvl = (ae2 - ab2) - getRepeatBasesFromInterval(actx, ovl->aread, ab2, ae2);
- int curUniqBasesInBIvl;
-
- if (ovl->flags & OVL_COMP)
- {
- curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesFromInterval(actx, ovl->bread, bReadLen - be2, bReadLen - bb2);
- }
- else
- {
- curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesFromInterval(actx, ovl->bread, bb2, be2);
- }
-
- if (curBestUniqBases < curUniqBasesInAIvl + curUniqBasesInBIvl && curUniqBasesInAIvl > 0 && curUniqBasesInBIvl > 0)
- {
- #ifdef DEBUG_STEP2A
- printf("found right current best overlap %d %d %d: [%d, %d] [%d, %d] right side\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- curBestOffset = i - longestUniqOVLidx;
- curBestUniqBases = curUniqBasesInAIvl + curUniqBasesInBIvl;
- }
- else
- {
- #ifdef DEBUG_STEP2A
- printf("NO right ovl found skip: %d vs %d [%d, %d] [%d, %d] left side curUniqBasesInAIvl %d curUniqBasesInBIvl %d\n", pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2, curUniqBasesInAIvl, curUniqBasesInBIvl);
- #endif
- }
- }
- }
-
- // check if left best overlap can be used to extend overlap group on the right side
- if (curBestUniqBases < 0) // i.e. there was no good overlap at right side
- {
- #ifdef DEBUG_STEP2A
- printf("could not extend ovlgroup on right side with proper overlap (with stepSize %d)\n", stepSize - STRIDE_OVL_LOOKAHEAD);
- #endif
- break;
- }
-
- /// todo further sanity check necessary ???
- ab2 = pOvls[longestUniqOVLidx + curBestOffset].path.abpos;
- ae2 = pOvls[longestUniqOVLidx + curBestOffset].path.aepos;
-
- bb2 = pOvls[longestUniqOVLidx + curBestOffset].path.bbpos;
- be2 = pOvls[longestUniqOVLidx + curBestOffset].path.bepos;
- #ifdef DEBUG_STEP2A
- printf("extend ovlgroup with (right): %d %d %d: [%d, %d] [%d, %d] stepSize %d\n", longestUniqOVLidx + curBestOffset,
- pOvls[longestUniqOVLidx + curBestOffset].aread, pOvls[longestUniqOVLidx + curBestOffset].bread, ab1, ae1, ab2, ae2, stepSize - STRIDE_OVL_LOOKAHEAD);
- #endif
- if (numOverlapIdx == maxOverlapIdx)
- {
- maxOverlapIdx = maxOverlapIdx * 1.2 + 10;
- overlapIdx = (int *) realloc(overlapIdx, sizeof(int) * maxOverlapIdx);
- }
-
- // append left side overlaps at the end of overlap group, i.e. overlap group must be sorted afterwards by overlap index
- overlapIdx[numOverlapIdx] = longestUniqOVLidx + curBestOffset;
- numOverlapIdx++;
-
- ab1 = ab2;
- ae1 = ae2;
- bb1 = bb2;
- be1 = be2;
-
- curBestOffset++;
- curBestUniqBases = -1;
- if (longestUniqOVLidx + curBestOffset >= n)
- {
- cont = 0;
- }
- }
-
- ab1 = pOvls[longestUniqOVLidx].path.abpos;
- ae1 = pOvls[longestUniqOVLidx].path.aepos;
-
- bb1 = pOvls[longestUniqOVLidx].path.bbpos;
- be1 = pOvls[longestUniqOVLidx].path.bepos;
-
- #ifdef DEBUG_STEP2A
- printf("extend longest overlap in left direction\n");
- #endif
- // 2nd left side
- cont = 1;
- curBestOffset = 1;
- curBestUniqBases = -1;
- while (cont && ab1 > 0)
- {
- int stepSize;
- for (stepSize = MIN_OVL_LOOKAHEAD; stepSize <= MAX_OVL_LOOKAHEAD && curBestUniqBases == -1; stepSize += STRIDE_OVL_LOOKAHEAD)
- {
- #ifdef DEBUG_STEP2A
- printf("FOR LOOP stepsize %d\n", stepSize);
- #endif
-
- // try to find next best overlap with lookahead of stepSize bases
- for (i = longestUniqOVLidx - curBestOffset; i >= 0; --i)
- {
- Overlap * ovl = pOvls + i;
-
- if (ovl->flags & OVL_DISCARD)
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> DISCARD flag set! flag %d\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2, pOvls[i].flags);
- #endif
- continue;
- }
-
- ab2 = pOvls[i].path.abpos;
- ae2 = pOvls[i].path.aepos;
-
- bb2 = pOvls[i].path.bbpos;
- be2 = pOvls[i].path.bepos;
-
- if ((ovl->flags & OVL_COMP) != (pOvls[longestUniqOVLidx].flags & OVL_COMP))
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> different orientations\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- if (ovl->flags & OVL_CONT)
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> really contained repeat\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- if ((ab2 >= ab1 && ae2 <= ae1) || (bb2 >= bb1 && be2 <= be1))
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> contained repeat in A-interval\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- if (ae2 - ab2 < actx->min_olen || be2 - bb2 < actx->min_olen)
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> to short\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- // add some sanity checks
- // 1. overlap must go into left direction
- // 2. if overlaps are contained replace them
- if ((ab2 + 100 >= ab1 || bb2 + 100 >= bb1))
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> no overhang on left side\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- continue;
- }
-
- if (ab1 - ae2 > stepSize)
- {
- #ifdef DEBUG_STEP2A
- printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> gap size too large (stepSize %d)\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2,
- stepSize);
- #endif
- continue;
- }
-
- // check if current overlap is better (longer/more unique bases ?) then curLeftBest
-
- int curUniqBasesInAIvl = (ae2 - ab2) - getRepeatBasesFromInterval(actx, ovl->aread, ab2, ae2);
- int curUniqBasesInBIvl;
-
- if (ovl->flags & OVL_COMP)
- {
- curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesFromInterval(actx, ovl->bread, bReadLen - be2, bReadLen - bb2);
- }
- else
- {
- curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesFromInterval(actx, ovl->bread, bb2, be2);
- }
-
- if (curBestUniqBases < curUniqBasesInAIvl + curUniqBasesInBIvl && curUniqBasesInAIvl > 0 && curUniqBasesInBIvl > 0)
- {
- #ifdef DEBUG_STEP2A
- printf("found left current best overlap %d %d %d: [%d, %d] [%d, %d] left side\n", i, pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2);
- #endif
- curBestOffset = longestUniqOVLidx - i;
- curBestUniqBases = curUniqBasesInAIvl + curUniqBasesInBIvl;
- }
- else
- {
- #ifdef DEBUG_STEP2A
- printf("NO left ovl found skip: %d vs %d [%d, %d] [%d, %d] left side curUniqBasesInAIvl %d curUniqBasesInBIvl %d\n", pOvls[i].aread, pOvls[i].bread, ab2, ae2, bb2, be2, curUniqBasesInAIvl, curUniqBasesInBIvl);
- #endif
- }
- }
- }
-
- // check if left best overlap can be used to extend overlap group on the left side
- if (curBestUniqBases < 0) // i.e. there was no good overlap at left side
- {
- #ifdef DEBUG_STEP2A
- printf("could not extend ovlgroup on left side with proper overlap (stepSize %d)\n", stepSize - STRIDE_OVL_LOOKAHEAD);
- #endif
- break;
- }
-
- /// todo further sanity check necessary ???
- ab2 = pOvls[longestUniqOVLidx - curBestOffset].path.abpos;
- ae2 = pOvls[longestUniqOVLidx - curBestOffset].path.aepos;
-
- bb2 = pOvls[longestUniqOVLidx - curBestOffset].path.bbpos;
- be2 = pOvls[longestUniqOVLidx - curBestOffset].path.bepos;
-
- #ifdef DEBUG_STEP2A
- printf("extend ovlgroup with (left): %d %d %d: [%d, %d] [%d, %d] with stepSize %d\n", longestUniqOVLidx - curBestOffset,
- pOvls[longestUniqOVLidx - curBestOffset].aread, pOvls[longestUniqOVLidx - curBestOffset].bread, ab1, ae1, ab2, ae2, stepSize - STRIDE_OVL_LOOKAHEAD);
- #endif
-
- if (numOverlapIdx == maxOverlapIdx)
- {
- maxOverlapIdx = maxOverlapIdx * 1.2 + 10;
- overlapIdx = (int *) realloc(overlapIdx, sizeof(int) * maxOverlapIdx);
- }
-
- // append left side overlaps at the end of overlap group, i.e. overlap group must be sorted afterwards by overlap index
- overlapIdx[numOverlapIdx] = longestUniqOVLidx - curBestOffset;
- numOverlapIdx++;
-
- ab1 = ab2;
- ae1 = ae2;
- bb1 = bb2;
- be1 = be2;
-
- curBestOffset++;
- curBestUniqBases = -1;
- if (longestUniqOVLidx - curBestOffset < 0)
- {
- cont = 0;
- }
- }
-
- // sort overlaps according overlap indexes
- qsort(overlapIdx, numOverlapIdx, sizeof(int), compareInt);
-
- // update number of: covered bases, gap bases, unique bases,
- updateOverlapGroup(actx, ovlgrp, pOvls, overlapIdx, numOverlapIdx);
-
- #ifdef DEBUG_STEP2A
- printf("final overlap group:\n");
- printOverlapGroup(stdout, actx, ovlgrp);
- printf("%% of a: %4.1f\n", ovlgrp->coveredBasesInA * 100.0 / DB_READ_LEN(actx->corContigDB, aread));
- printf("%% of b: %4.1f\n", ovlgrp->coveredBasesInB * 100.0 / DB_READ_LEN(actx->corContigDB, bread));
-
- printf("%% gaps in a: %4.1f\n", ovlgrp->gapBasesInA * 100.0 / DB_READ_LEN(actx->corContigDB, aread));
- printf("%% gaps in b: %4.1f\n", ovlgrp->gapBasesInB * 100.0 / DB_READ_LEN(actx->corContigDB, bread));
-
- printf("%% spanning a: %4.1f\n", (ovlgrp->coveredBasesInA + ovlgrp->gapBasesInA) * 100.0 / DB_READ_LEN(actx->corContigDB, aread));
- printf("%% spanning b: %4.1f\n", (ovlgrp->coveredBasesInB + ovlgrp->gapBasesInB) * 100.0 / DB_READ_LEN(actx->corContigDB, bread));
- #endif
- if (isOverlapGroupValid(actx, ovlgrp))
- {
- #ifdef DEBUG_STEP2A
- printOverlapGroup(stdout, actx, ovlgrp);
- #endif
- //		addOverlapGroupToContig(actx, ovlgrp, 1);
- }
- else
- free(ovlgrp);
- return 1;
- }
- */
 
 static int getRepeatBasesOfContigRange(AnalyzeContext *ctx, Overlap *ovl, int read)
 {
@@ -4237,1054 +3586,6 @@ static int cmp_ovls_abeg(const void* a, const void* b)
 	return cmp;
 }
 
-static int cmp_chain_len(const void *a, const void *b)
-{
-	Chain* c1 = (Chain *) a;
-	Chain* c2 = (Chain *) b;
-
-	int i;
-
-	int olen1 = c1->ovls[0]->path.aepos - c1->ovls[0]->path.abpos;
-
-	for (i = 1; i < c1->novl; i++)
-	{
-		olen1 += c1->ovls[i]->path.aepos - c1->ovls[i]->path.abpos;
-
-		if (c1->ovls[i - 1]->path.aepos > c1->ovls[i]->path.abpos)
-			olen1 -= c1->ovls[i - 1]->path.aepos > c1->ovls[i]->path.abpos;
-	}
-
-	int olen2 = c2->ovls[0]->path.aepos - c2->ovls[0]->path.abpos;
-
-	for (i = 1; i < c2->novl; i++)
-	{
-		olen2 += c2->ovls[i]->path.aepos - c2->ovls[i]->path.abpos;
-
-		if (c2->ovls[i - 1]->path.aepos > c2->ovls[i]->path.abpos)
-			olen2 -= c2->ovls[i - 1]->path.aepos > c2->ovls[i]->path.abpos;
-	}
-
-	return (olen2 - olen1);
-}
-
-void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n)
-{
-	int conAId = ovls->aread;
-	int conBId = ovls->bread;
-
-	assert(conAId != conBId);
-
-	Contig *conA = ctx->contigs + conAId;
-	Contig *conB = ctx->contigs + conBId;
-
-	assert(ctx->curChains == 0);
-
-	if (conA->property.contigID == 131 && conB->property.contigID == 132)
-		printf("conA 1 conB 10: a[%d ,%d] b[%d ,%d]\n", ovls->path.abpos, ovls->path.aepos, ovls->path.bbpos, ovls->path.bepos);
-
-	if (n < 2)
-	{
-		// add a single overlap into chain if its somehow long enough
-		if ((ovls->path.aepos - ovls->path.abpos) >= 0.5 * conA->property.len || (ovls->path.bepos - ovls->path.bbpos) >= 0.5 * conB->property.len
-				|| (((ovls->path.abpos == 0) || (ovls->path.aepos == conA->property.len)) && ((ovls->path.bbpos == 0) || (ovls->path.bepos == conB->property.len))
-						&& (ovls->path.aepos - ovls->path.abpos > 15000)) // putative join
-				)
-		{
-			if (ctx->curChains == ctx->maxChains)
-			{
-				ctx->maxChains = ctx->maxChains * 1.2 + 5;
-				ctx->ovlChains = (Chain*) realloc(ctx->ovlChains, sizeof(Chain) * ctx->maxChains);
-				bzero(ctx->ovlChains + ctx->curChains, sizeof(Chain) * (ctx->maxChains - ctx->curChains));
-			}
-
-			Chain *chain = ctx->ovlChains + ctx->curChains;
-
-			if (chain->novl == chain->maxOvl)
-			{
-				chain->maxOvl = chain->novl * 1.2 + n;
-				chain->ovls = (Overlap**) realloc(chain->ovls, sizeof(Overlap *) * chain->maxOvl);
-				bzero(chain->ovls + chain->novl, sizeof(Overlap*) * (chain->maxOvl - chain->novl));
-			}
-			if (conA->property.contigID == 131 && conB->property.contigID == 132)
-				printf(" 1 vs 10 --> is a chain? %d || %d || %d || ((%d || %d) && (%d && %d) && %d\n", (ovls->path.aepos - ovls->path.abpos) >= 0.5 * conA->property.len,
-						(ovls->path.bepos - ovls->path.bbpos) >= 0.5 * conB->property.len, (ovls->path.abpos == 0), (ovls->path.aepos == conA->property.len), (ovls->path.bbpos == 0),
-						(ovls->path.bepos == conB->property.len), (ovls->path.aepos - ovls->path.abpos > 15000));
-			chain->ovls[0] = ovls;
-			chain->novl = 1;
-			ovls->flags |= OVL_TEMP;
-		}
-		else
-		{
-			ovls->flags |= OVL_DISCARD;
-		}
-	}
-	else
-	{
-		int i;
-
-		// try to detect all possible chains
-		int nremain = n;
-
-		// mark contained overlaps
-//		#ifdef DEBUG_CHAIN
-		if (ovls->aread == 131 && ovls->bread == 132)
-			printf("mark contained overlaps\n");
-//		#endif
-		{
-			int j;
-			for (i = 0; i < n; i++)
-			{
-				Overlap *ovl_i = ovls + i;
-
-				if (ovl_i->flags & (OVL_CONT))
-					continue;
-
-				for (j = i + 1; j < n; j++)
-				{
-					Overlap *ovl_j = ovls + j;
-
-					if (ovl_j->flags & (OVL_CONT))
-						continue;
-
-					if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos)
-							&& contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
-					{
-						ovl_j->flags |= (OVL_CONT);
-					}
-				}
-
-			}
-		}
-
-		//		#ifdef DEBUG_CHAIN
-		if (ovls->aread == 131 && ovls->bread == 132)
-			printf("check initial overlaps flags\n");
-//		#endif
-		{
-			for (i = 0; i < n; i++)
-			{
-				Overlap *ovl_i = ovls + i;
-
-				if (ovl_i->flags & (OVL_CONT | OVL_DISCARD))
-				{
-					ovl_i->flags |= OVL_DISCARD;
-					nremain--;
-				}
-			}
-		}
-
-//		#ifdef DEBUG_CHAIN
-		if (ovls->aread == 131 && ovls->bread == 132)
-			printf("nremain %d\n", nremain);
-//		#endif
-		assert(nremain >= 1);
-
-		int whileIdx = 0;
-		while (nremain > 0)
-		{
-			whileIdx++;
-			int longestUniqOvlBases = -1;
-			int longestUniqOvlIdx = -1;
-			int longestOvlBases = -1;
-			int longestOvlIdx = -1;
-
-			// find longest overlap based on number of unique bases
-			for (i = 0; i < n; i++)
-			{
-				Overlap *ovl = ovls + i;
-
-				if (ovl->flags & (OVL_CONT | OVL_DISCARD | OVL_TEMP))
-				{
-					continue;
-				}
-
-				int aLen = ovl->path.aepos - ovl->path.abpos;
-				int bLen = ovl->path.bepos - ovl->path.bbpos;
-
-				int aRep = getRepeatBasesOfContigRange(ctx, ovl, ovl->aread);
-				int bRep = getRepeatBasesOfContigRange(ctx, ovl, ovl->bread);
-
-//#ifdef DEBUG_CHAIN
-				if (ovls->aread == 131 && ovls->bread == 132)
-					printf("%d - %d [%d, %d] [%d, %d], aR %d/%d, bR %d/%d\n", conAId, conBId, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, aLen,
-							aRep, bLen, bRep);
-//#endif
-				int tmpBases = MAX(aLen - aRep, bLen - bRep);
-				if (tmpBases > longestUniqOvlBases)
-				{
-					longestUniqOvlBases = tmpBases;
-					longestUniqOvlIdx = i;
-				}
-
-				tmpBases = MAX(aLen, bLen);
-				if (tmpBases > longestOvlBases)
-				{
-					longestOvlBases = tmpBases;
-					longestOvlIdx = i;
-				}
-			}
-
-			if (longestUniqOvlBases < ctx->twidth && longestOvlBases > longestUniqOvlBases)
-			{
-//#ifdef DEBUG_CHAIN
-				if (ovls->aread == 131 && ovls->bread == 132)
-					printf("Number of unique bases to low. Use longest overlap. uniq %d %d -> longest %d %d\n", longestUniqOvlIdx, longestUniqOvlBases, longestOvlIdx,
-							longestOvlBases);
-//#endif
-				longestUniqOvlBases = longestOvlBases;
-				longestUniqOvlIdx = longestOvlIdx;
-			}
-
-			if (ovls->aread == 131 && ovls->bread == 132)
-				printf("checkBreakOut %d && %d && !(%d || %d)\n", ctx->curChains, longestOvlBases < 5000, longestOvlBases * 1.0 / conB->property.len > 0.5,
-						longestOvlBases * 1.0 / conA->property.len > 0.5);
-
-			// break out
-			if ((ctx->curChains || whileIdx > 2)
-					&& (longestOvlBases < 10000 && !((longestOvlBases * 1.0 / conB->property.len > 0.5) || (longestOvlBases * 1.0 / conA->property.len > 0.5))))
-			{
-				for (i = 0; i < n; i++)
-				{
-					Overlap *ovl = ovls + i;
-
-					if (ovl->flags & (OVL_CONT | OVL_DISCARD | OVL_TEMP))
-					{
-						continue;
-					}
-
-					ovl->flags |= (OVL_DISCARD | OVL_OLEN);
-				}
-				nremain = 0;
-
-				assert(ctx->ovlChains[ctx->curChains].novl == 0);
-				break;
-			}
-
-//#ifdef DEBUG_CHAIN
-			if (ovls->aread == 131 && ovls->bread == 132)
-			{
-				printf("longest overlap:\n");
-				printf("idx: %d --> uB %d, %d - %d [%d, %d] [%d, %d] nonUnB: %d nonUnBIdx %d\n", longestUniqOvlIdx, longestUniqOvlBases, ovls[longestUniqOvlIdx].aread,
-						ovls[longestUniqOvlIdx].bread, ovls[longestUniqOvlIdx].path.abpos, ovls[longestUniqOvlIdx].path.aepos, ovls[longestUniqOvlIdx].path.bbpos,
-						ovls[longestUniqOvlIdx].path.bepos, longestOvlBases, longestOvlIdx);
-			}
-//#endif
-
-			// try to "elongate" longest overlap
-			// 1st on the right
-			// 2nd on the left side
-
-			if (ctx->curChains == ctx->maxChains)
-			{
-				ctx->maxChains = ctx->maxChains * 1.2 + 5;
-				ctx->ovlChains = (Chain*) realloc(ctx->ovlChains, sizeof(Chain) * ctx->maxChains);
-
-				bzero(ctx->ovlChains + ctx->curChains, sizeof(Chain) * (ctx->maxChains - ctx->curChains));
-			}
-
-			Chain *chain = ctx->ovlChains + ctx->curChains;
-
-//#ifdef DEBUG_CHAIN
-			if (ovls->aread == 131 && ovls->bread == 132)
-				printf("chain: nOvl: %d, maxOvl %d, nremain: %d\n", chain->novl, chain->maxOvl, nremain);
-//#endif
-			if (chain->novl == chain->maxOvl)
-			{
-				chain->maxOvl = chain->novl * 1.2 + n;
-				chain->ovls = (Overlap**) realloc(chain->ovls, sizeof(Overlap *) * chain->maxOvl);
-				bzero(chain->ovls + chain->novl, sizeof(Overlap*) * (chain->maxOvl - chain->novl));
-//#ifdef DEBUG_CHAIN
-				if (ovls->aread == 131 && ovls->bread == 132)
-					printf("realloc > chain: nOvl: %d, maxOvl %d\n", chain->novl, chain->maxOvl);
-//#endif
-			}
-
-			if (longestUniqOvlIdx < 0 || longestUniqOvlIdx >= n)
-			{
-				printf("TERROR: longest index out of bounds!!! longestUniqOvlIdx %d, contigs %d vs %d\n", longestUniqOvlIdx, ovls->aread, ovls->bread);
-				fflush(stdout);
-			}
-
-			assert(longestUniqOvlIdx >= 0 && longestUniqOvlIdx < n);
-			// first: add longest overlap to chain
-			chain->ovls[0] = ovls + longestUniqOvlIdx;
-			chain->ovls[0]->flags |= OVL_TEMP;
-			chain->novl++;
-			nremain--;
-//	#ifdef DEBUG_CHAIN
-			if (ovls->aread == 131 && ovls->bread == 132)
-				printf("chain: nOvl: %d, maxOvl %d, nremain %d\n", chain->novl, chain->maxOvl, nremain);
-//	#endif
-
-			int ab1, ae1;
-			int bb1, be1;
-
-			int ab2, ae2;
-			int bb2, be2;
-
-			if (nremain && longestUniqOvlIdx + 1 < n)
-			{
-				ab1 = ovls[longestUniqOvlIdx].path.abpos;
-				ae1 = ovls[longestUniqOvlIdx].path.aepos;
-
-				bb1 = ovls[longestUniqOvlIdx].path.bbpos;
-				be1 = ovls[longestUniqOvlIdx].path.bepos;
-
-#ifdef DEBUG_CHAIN
-				printf("extend longest overlap in right direction\n");
-#endif
-				// extend longest overlap into right direction
-				int cont = 1;
-				int curBestUniqOffset = 1;
-				int curBestUniqBases = -1;
-				int curBestBases = -1;
-				int curBestOffset = 1;
-				int curBestIntersection = MAX(conA->property.len, conB->property.len);
-
-				while (cont)
-				{
-					int stepSize;
-					for (stepSize = MIN_OVL_LOOKAHEAD; stepSize <= MAX_OVL_LOOKAHEAD && curBestUniqBases == -1; stepSize +=
-					STRIDE_OVL_LOOKAHEAD)
-					{
-#ifdef DEBUG_CHAIN
-						printf("FOR LOOP stepsize %d\n", stepSize);
-#endif
-
-						for (i = longestUniqOvlIdx + curBestUniqOffset; i < n; i++)
-						{
-							Overlap * ovl = ovls + i;
-
-							ab2 = ovl->path.abpos;
-							ae2 = ovl->path.aepos;
-
-							bb2 = ovl->path.bbpos;
-							be2 = ovl->path.bepos;
-
-							if ((ovl->flags & OVL_COMP) != (ovls[longestUniqOvlIdx].flags & OVL_COMP))
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> different orientations\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							if (ovl->flags & OVL_CONT)
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> really contained repeat\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							if (ovl->flags & OVL_TEMP)
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> is part of another chain\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							if (ovl->flags & OVL_DISCARD)
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> discarded\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							// todo mark those as discard ????
-							if (contained(ab2, ae2, ab1, ae1))
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> contained repeat in A-interval\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							// todo mark those as discard ????
-							if (contained(bb2, be2, bb1, be1))
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> contained repeat in B-interval\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							if (ae2 < ae1 || be2 < be1) // also overlap must follow right direction
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> improper right extension direction (stepSize %d)\n", i, ovl->aread, ovl->bread, ab2, ae2,
-										bb2, be2, stepSize);
-#endif
-								continue;
-							}
-
-							if (MAX(ab2 - ae1, bb2 - be1) > stepSize)
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> gap size too large (stepSize %d)\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2,
-										stepSize);
-#endif
-								continue;
-							}
-
-							if (ae1 - ab2 > ae2 - ae1 || be1 - bb2 > be2 - be1) // at least 50% overhang
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> overhang too short (stepSize %d)\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2,
-										stepSize);
-#endif
-								continue;
-							}
-
-							// check if current overlap is better (longer/more unique bases ?) then curBest
-
-							int curUniqBasesInAIvl = (ae2 - ab2) - getRepeatBasesOfContigRange(ctx, ovl, conAId);
-							int curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesOfContigRange(ctx, ovl, conBId);
-
-							if (curBestIntersection > MAX(intersect(ab1, ae1, ab2, ae2), intersect(bb1, be1, bb2, be2)) && curBestBases < MIN(ae2 - ab2, be2 - bb2))
-							{
-								curBestBases = MIN(ae2 - ab2, be2 - bb2);
-								curBestOffset = i - longestUniqOvlIdx;
-								curBestIntersection = MAX(intersect(ab1, ae1, ab2, ae2), intersect(bb1, be1, bb2, be2));
-							}
-
-							if (curBestUniqBases < MIN(curUniqBasesInAIvl, curUniqBasesInBIvl))
-							{
-#ifdef DEBUG_CHAIN
-								printf("found right current best overlap %d %d %d: [%d, %d] [%d, %d] right side\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								curBestUniqOffset = i - longestUniqOvlIdx;
-								curBestUniqBases = MIN(curUniqBasesInAIvl, curUniqBasesInBIvl);
-							}
-							else if (curBestUniqBases == -1 && stepSize + STRIDE_OVL_LOOKAHEAD > MAX_OVL_LOOKAHEAD) // for repetitive genomes
-							{
-								Overlap *tmpOvl = ovls + (longestUniqOvlIdx + curBestOffset);
-
-								if ((intersect(ab1, ae1, tmpOvl->path.abpos, tmpOvl->path.aepos) < ae1 - tmpOvl->path.abpos)
-										&& (intersect(bb1, be1, tmpOvl->path.bbpos, tmpOvl->path.bepos) < be1 - tmpOvl->path.bbpos))
-								{
-									curBestUniqOffset = curBestOffset;
-									curBestUniqBases = 1;
-								}
-							}
-							else
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> cannot be anchored (stepSize %d)\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2,
-										stepSize);
-#endif
-							}
-						}
-					}
-
-					// check if overlap can be used to extend overlap group on the right side
-					if (curBestUniqBases < 0) // i.e. there was no good overlap at right side
-					{
-#ifdef DEBUG_CHAIN
-						printf("could not extend ovlgroup on right side with proper overlap (with stepSize %d)\n", stepSize - STRIDE_OVL_LOOKAHEAD);
-#endif
-						break;
-					}
-
-					/// todo further sanity check necessary ???
-					ab2 = ovls[longestUniqOvlIdx + curBestUniqOffset].path.abpos;
-					ae2 = ovls[longestUniqOvlIdx + curBestUniqOffset].path.aepos;
-
-					bb2 = ovls[longestUniqOvlIdx + curBestUniqOffset].path.bbpos;
-					be2 = ovls[longestUniqOvlIdx + curBestUniqOffset].path.bepos;
-#ifdef DEBUG_CHAIN
-					printf("extend ovlgroup with (right): %d %d %d: [%d, %d] [%d, %d] stepSize %d\n", longestUniqOvlIdx + curBestUniqOffset,
-							ovls[longestUniqOvlIdx + curBestUniqOffset].aread, ovls[longestUniqOvlIdx + curBestUniqOffset].bread, ab1, ae1, ab2, ae2,
-							stepSize - STRIDE_OVL_LOOKAHEAD);
-#endif
-
-					if (chain->novl == chain->maxOvl)
-					{
-						chain->maxOvl = chain->maxOvl * 1.2 + n;
-						chain->ovls = (Overlap**) realloc(chain->ovls, sizeof(Overlap*) * chain->maxOvl);
-						bzero(chain->ovls + chain->novl, sizeof(Overlap*) * (chain->maxOvl - chain->novl));
-					}
-
-					// append right side overlaps at the end of chain, i.e. chain must be sorted afterwards by abpos
-					chain->ovls[chain->novl] = ovls + (longestUniqOvlIdx + curBestUniqOffset);
-					chain->ovls[chain->novl]->flags |= OVL_TEMP;
-					chain->novl++;
-					nremain--;
-#ifdef DEBUG_CHAIN
-					printf("chain: nOvl: %d, maxOvl %d nremain %d\n", curChain->novl, curChain->maxOvl, nremain);
-#endif
-
-					ab1 = ab2;
-					ae1 = ae2;
-					bb1 = bb2;
-					be1 = be2;
-
-					curBestUniqOffset++;
-					curBestOffset = curBestUniqOffset;
-
-					curBestUniqBases = -1;
-					curBestBases = -1;
-
-					curBestIntersection = MAX(conA->property.len, conB->property.len);
-
-					if (longestUniqOvlIdx + curBestUniqOffset >= n)
-					{
-						cont = 0;
-					}
-				}
-			}
-
-			// try to extend chain into left direction
-			if (nremain && longestUniqOvlIdx > 0)
-			{
-				ab1 = ovls[longestUniqOvlIdx].path.abpos;
-				ae1 = ovls[longestUniqOvlIdx].path.aepos;
-
-				bb1 = ovls[longestUniqOvlIdx].path.bbpos;
-				be1 = ovls[longestUniqOvlIdx].path.bepos;
-
-#ifdef DEBUG_CHAIN
-				printf("extend longest overlap in left direction\n");
-#endif
-				// 2nd left side
-				int cont = 1;
-				int curBestUniqOffset = 1;
-				int curBestUniqBases = -1;
-				int curBestBases = -1;
-				int curBestOffset = 1;
-				int curBestIntersection = MAX(conA->property.len, conB->property.len);
-
-				while (cont)
-				{
-					int stepSize;
-					for (stepSize = MIN_OVL_LOOKAHEAD; stepSize <= MAX_OVL_LOOKAHEAD && curBestUniqBases == -1; stepSize +=
-					STRIDE_OVL_LOOKAHEAD)
-					{
-#ifdef DEBUG_CHAIN
-						printf("FOR LOOP stepsize %d\n", stepSize);
-#endif
-
-						// try to find next best overlap with lookahead of stepSize bases
-						for (i = longestUniqOvlIdx - curBestUniqOffset; i >= 0; --i)
-						{
-							Overlap * ovl = ovls + i;
-#ifdef DEBUG_CHAIN
-							printf("LEFT: Check ovl: a[%d, %d] b[%d,%d]\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos);
-#endif
-
-							ab2 = ovl->path.abpos;
-							ae2 = ovl->path.aepos;
-
-							bb2 = ovl->path.bbpos;
-							be2 = ovl->path.bepos;
-
-							if ((ovl->flags & OVL_COMP) != (ovls[longestUniqOvlIdx].flags & OVL_COMP))
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> different orientations\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							if (ovl->flags & OVL_CONT)
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> really contained repeat\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							if (ovl->flags & OVL_TEMP)
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> is part of another chain\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							if (ovl->flags & OVL_DISCARD)
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> discarded\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							// todo mark those as discard ????
-							if (contained(ab2, ae2, ab1, ae1))
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> contained repeat in A-interval\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							// todo mark those as discard ????
-							if (contained(bb2, be2, bb1, be1))
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> contained repeat in B-interval\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								continue;
-							}
-
-							if (ab2 > ab1 || bb2 > bb1) // also overlap must follow left direction
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> improper left extension direction (stepSize %d)\n", i, ovl->aread, ovl->bread, ab2, ae2,
-										bb2, be2, stepSize);
-#endif
-								continue;
-							}
-
-							if (MAX(ab1 - ae2, bb1 - be2) > stepSize)
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> gap size too large (stepSize %d)\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2,
-										stepSize);
-#endif
-								continue;
-							}
-
-							if (ae2 - ab1 > ab1 - ab2 || be2 - bb1 > bb1 - bb2) // at least 50% overhang
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> overhang too short (stepSize %d)\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2,
-										stepSize);
-#endif
-								continue;
-							}
-
-							// check if current overlap is better (longer/more unique bases ?) then curLeftBest
-
-							int curUniqBasesInAIvl = (ae2 - ab2) - getRepeatBasesOfContigRange(ctx, ovl, conAId);
-							int curUniqBasesInBIvl = (be2 - bb2) - getRepeatBasesOfContigRange(ctx, ovl, conBId);
-
-							if (curBestIntersection > MAX(intersect(ab2, ae2, ab1, ae1), intersect(bb2, be2, bb1, be1)) && curBestBases < MIN(ae2 - ab2, be2 - bb2))
-							{
-								curBestBases = MIN(ae2 - ab2, be2 - bb2);
-								curBestOffset = longestUniqOvlIdx - i;
-								curBestIntersection = MAX(intersect(ab2, ae2, ab1, ae1), intersect(bb2, be2, bb1, be1));
-							}
-
-							if (curBestUniqBases < MIN(curUniqBasesInAIvl, curUniqBasesInBIvl))
-							{
-#ifdef DEBUG_CHAIN
-								printf("found left current best overlap %d %d %d: [ab2 %d, ae2 %d] [bb2 %d, be2 %d] left side\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2);
-#endif
-								curBestUniqOffset = longestUniqOvlIdx - i;
-								curBestUniqBases = curUniqBasesInAIvl + curUniqBasesInBIvl;
-							}
-							else if (curBestUniqBases == -1 && stepSize + STRIDE_OVL_LOOKAHEAD > MAX_OVL_LOOKAHEAD) // for repetitive genomes
-							{
-								Overlap *tmpOvl = ovls + (longestUniqOvlIdx - curBestOffset);
-
-								if ((intersect(tmpOvl->path.abpos, tmpOvl->path.aepos, ab1, ae1) < ae1 - tmpOvl->path.abpos)
-										&& (intersect(tmpOvl->path.bbpos, tmpOvl->path.bepos, bb1, be1) < be1 - tmpOvl->path.bbpos))
-								{
-									curBestUniqOffset = curBestOffset;
-									curBestUniqBases = 1;
-								}
-							}
-							else
-							{
-#ifdef DEBUG_CHAIN
-								printf("ignore overlap %d %d %d: [%d, %d] [%d, %d] --> cannot be anchored (stepSize %d)\n", i, ovl->aread, ovl->bread, ab2, ae2, bb2, be2,
-										stepSize);
-#endif
-							}
-						}
-					}
-
-					// check if overlap can be used to extend overlap group on the left side
-					if (curBestUniqBases < 0) // i.e. there was no good overlap at left side
-					{
-#ifdef DEBUG_CHAIN
-						printf("could not extend ovlgroup on left side with proper overlap (stepSize %d)\n", stepSize - STRIDE_OVL_LOOKAHEAD);
-#endif
-						break;
-					}
-
-					/// todo further sanity check necessary ???
-					ab2 = ovls[longestUniqOvlIdx - curBestUniqOffset].path.abpos;
-					ae2 = ovls[longestUniqOvlIdx - curBestUniqOffset].path.aepos;
-
-					bb2 = ovls[longestUniqOvlIdx - curBestUniqOffset].path.bbpos;
-					be2 = ovls[longestUniqOvlIdx - curBestUniqOffset].path.bepos;
-
-#ifdef DEBUG_CHAIN
-					printf("extend ovlgroup with (left): %d %d %d: [%d, %d] [%d, %d] with stepSize %d\n", longestUniqOvlIdx - curBestUniqOffset,
-							ovls[longestUniqOvlIdx - curBestUniqOffset].aread, ovls[longestUniqOvlIdx - curBestUniqOffset].bread, ab1, ae1, ab2, ae2,
-							stepSize - STRIDE_OVL_LOOKAHEAD);
-#endif
-
-					if (chain->novl == chain->maxOvl)
-					{
-						chain->maxOvl = chain->maxOvl * 1.2 + n;
-						chain->ovls = (Overlap**) realloc(chain->ovls, sizeof(Overlap*) * chain->maxOvl);
-						bzero(chain->ovls + chain->novl, sizeof(Overlap*) * (chain->maxOvl - chain->novl));
-					}
-
-					// append left side overlaps at the end of chain, i.e. chain must be sorted afterwards by abpos
-					chain->ovls[chain->novl] = ovls + (longestUniqOvlIdx - curBestUniqOffset);
-					chain->ovls[chain->novl]->flags |= OVL_TEMP;
-					chain->novl++;
-					nremain--;
-#ifdef DEBUG_CHAIN
-					printf("chain: nOvl: %d, maxOvl %d nremain %d\n", chain->novl, chain->maxOvl, nremain);
-#endif
-
-					ab1 = ab2;
-					ae1 = ae2;
-					bb1 = bb2;
-					be1 = be2;
-
-					curBestUniqOffset++;
-					curBestOffset = curBestUniqOffset;
-
-					curBestUniqBases = -1;
-					curBestBases = -1;
-
-					curBestIntersection = MAX(conA->property.len, conB->property.len);
-
-					if (longestUniqOvlIdx - curBestUniqOffset < 0)
-					{
-						cont = 0;
-					}
-				}
-
-				if (chain->novl > 1)
-				{	// sort chain
-					qsort(chain->ovls, chain->novl, sizeof(Overlap*), cmp_ovls_abeg);
-				}
-			}
-#ifdef DEBUG_CHAIN
-			printf("chain: nOvl: %d, maxOvl %d nremain: %d\n", curChain->novl, curChain->maxOvl, nremain);
-#endif
-
-			// find possible ovls that could be added into chain (i.e. fill gaps)
-
-			if (chain->novl > 1 && nremain > 0)
-			{
-#ifdef DEBUG_CHAIN
-				printf("find possible ovls that could be added to chain (i.e. fill gaps)\n");
-#endif
-				int chainIdx = 0;
-				int chainLastIdx = chain->novl - 1;
-				int j;
-				for (i = 0; i < n; i++)
-				{
-					Overlap *ovl = ovls + i;
-					if ((ovl->flags & (OVL_TEMP | OVL_CONT | OVL_DISCARD)) || ((ovl->flags & OVL_COMP) != (chain->ovls[chainIdx]->flags & OVL_COMP)))
-						continue;
-
-					if (ovl->path.abpos < chain->ovls[chainIdx]->path.abpos)
-						continue;
-
-					if (ovl->path.abpos > chain->ovls[chainLastIdx]->path.abpos)
-						break;
-
-					for (j = chainIdx; j < chainLastIdx; j++)
-					{
-						if (chain->ovls[j]->path.aepos <= ovl->path.abpos && chain->ovls[j + 1]->path.abpos >= ovl->path.aepos
-								&& chain->ovls[j]->path.bepos <= ovl->path.bbpos && chain->ovls[j + 1]->path.bbpos >= ovl->path.bepos)
-						{
-							Overlap *lastAddedOvl = chain->ovls[chain->novl - 1];
-
-							if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos) > 100
-									|| intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos) > 100)
-								break;
-
-							if (chain->novl == chain->maxOvl)
-							{
-								chain->maxOvl = chain->maxOvl * 1.2 + n;
-								chain->ovls = (Overlap**) realloc(chain->ovls, sizeof(Overlap*) * chain->maxOvl);
-								bzero(chain->ovls + chain->novl, sizeof(Overlap*) * (chain->maxOvl - chain->novl));
-							}
-
-							// append left side overlaps at the end of chain, i.e. chain must be sorted afterwards by abpos
-							ovl->flags |= OVL_TEMP;
-							chain->ovls[chain->novl] = ovl;
-							chain->novl++;
-							nremain--;
-#ifdef DEBUG_CHAIN
-							printf("chain: nOvl: %d, maxOvl %d nremain %d\n", chain->novl, chain->maxOvl, nremain);
-#endif
-						}
-
-						if (ovl->path.abpos > chain->ovls[j + 1]->path.abpos)
-							chainIdx++;
-					}
-				}
-
-				if (chainLastIdx < chain->novl - 1)
-				{
-					qsort(chain->ovls, chain->novl, sizeof(Overlap*), cmp_ovls_abeg);
-				}
-			}
-
-			if (nremain)
-			{
-				// mark remaining ovls as DISCARD if they overlap with a chain overlap !!
-#ifdef DEBUG_CHAIN
-				printf("// mark remaining ovls as DISCARD if they overlap with a chain overlap !!\n");
-#endif
-				int chainIdx = 0;
-				int chainLastIdx = chain->novl - 1;
-				int j;
-				for (i = 0; i < n; i++)
-				{
-					Overlap *ovl = ovls + i;
-					if ((ovl->flags & (OVL_TEMP | OVL_CONT | OVL_DISCARD)))
-						continue;
-
-					for (j = chainIdx; j <= chainLastIdx; j++)
-					{
-						if ((intersect(chain->ovls[j]->path.abpos, chain->ovls[j]->path.aepos, ovl->path.abpos, ovl->path.aepos)) /*check A-coordinates*/
-								|| ((chain->ovls[j]->flags & OVL_COMP) && (ovl->flags & OVL_COMP)
-										&& (intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, ovl->path.bbpos, ovl->path.bepos)))
-								|| ((chain->ovls[j]->flags & OVL_COMP) && !(ovl->flags & OVL_COMP)
-										&& (intersect(conB->property.len - chain->ovls[j]->path.bepos, conB->property.len - chain->ovls[j]->path.bbpos, ovl->path.bbpos, ovl->path.bepos)))
-								|| (!(chain->ovls[j]->flags & OVL_COMP) && (ovl->flags & OVL_COMP)
-										&& (intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, conB->property.len - ovl->path.bepos, conB->property.len - ovl->path.bbpos))))
-						{
-							ovl->flags |= OVL_DISCARD;
-							nremain--;
-//	#ifdef DEBUG_CHAIN
-							if (ovls->aread == 131 && ovls->bread == 132)
-								printf("DISCARD [%d, %d] [%d, %d] nremain %d\n", ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, nremain);
-//	#endif
-							break;
-						}
-					}
-				}
-			}
-#ifdef DEBUG_CHAIN
-			printChain(chain);
-#endif
-			// sanity check // there should be no intersection with other chains possible
-			int valid = 1;
-			if (ctx->curChains)
-			{
-#ifdef DEBUG_CHAIN
-				printf("DO SANITY CHECK\n");
-#endif
-
-				for (i = 0; i < ctx->curChains && valid; i++) // loop through all existing chains
-				{
-					Chain *validChain = ctx->ovlChains + i;
-
-					// check contigA coordinates
-					if (intersect(validChain->ovls[0]->path.abpos, validChain->ovls[validChain->novl - 1]->path.aepos, chain->ovls[0]->path.abpos,
-							chain->ovls[chain->novl - 1]->path.aepos))
-					{
-#ifdef DEBUG_CHAIN
-						printf("CHAIN is invalid - DISCARD\n");
-#endif
-						valid = 0;
-						break;
-					}
-					// check contigB coordinates
-					if ((validChain->ovls[0]->flags & OVL_COMP) == (chain->ovls[0]->flags && OVL_COMP))
-					{
-						if (intersect(validChain->ovls[0]->path.bbpos, validChain->ovls[validChain->novl - 1]->path.bepos, chain->ovls[0]->path.bbpos,
-								chain->ovls[chain->novl - 1]->path.bepos))
-						{
-#ifdef DEBUG_CHAIN
-							printf("CHAIN is invalid - DISCARD\n");
-#endif
-							valid = 0;
-							break;
-						}
-					}
-					else if (validChain->ovls[0]->flags & OVL_COMP)
-					{
-						if (intersect(conB->property.len - validChain->ovls[validChain->novl - 1]->path.bepos, conB->property.len - validChain->ovls[0]->path.bbpos,
-								chain->ovls[0]->path.bbpos, chain->ovls[chain->novl - 1]->path.bepos))
-						{
-#ifdef DEBUG_CHAIN
-							printf("CHAIN is invalid - DISCARD\n");
-#endif
-							valid = 0;
-							break;
-						}
-					}
-					else // i.e. (curChain->ovls[0]->flags && OVL_COMP)
-					{
-						if (intersect(validChain->ovls[0]->path.bbpos, validChain->ovls[validChain->novl - 1]->path.bepos,
-								conB->property.len - chain->ovls[chain->novl - 1]->path.bepos, conB->property.len - chain->ovls[0]->path.bbpos))
-						{
-#ifdef DEBUG_CHAIN
-							printf("CHAIN is invalid - DISCARD\n");
-#endif
-							valid = 0;
-							break;
-						}
-					}
-				}
-			}
-
-			int aCoveredBases = 0;
-			int bCoveredBases = 0;
-			for (i = 0; i < chain->novl; i++)
-			{
-				aCoveredBases += (chain->ovls[i]->path.aepos - chain->ovls[i]->path.abpos);
-				bCoveredBases += (chain->ovls[i]->path.aepos - chain->ovls[i]->path.abpos);
-			}
-
-			if (
-					(aCoveredBases < 0.5 * conA->property.len && bCoveredBases < 0.5 * conB->property.len)
-					&& !(
-							 (
-							 	 ((chain->ovls[0]->path.abpos < 10000) && (chain->ovls[chain->novl - 1]->path.bepos + 10000 > conB->property.len))
-								 ||
-								 ((chain->ovls[chain->novl - 1]->path.aepos + 10000 > conA->property.len) && (chain->ovls[0]->path.bbpos < 10000))
-							 )
-							 && MIN(aCoveredBases, bCoveredBases) > 30000)
-							)
-			{
-				valid = 0;
-			}
-
-			if (valid)
-				ctx->curChains++;
-			else
-			{
-				if (ovls->aread == 131 && ovls->bread == 132)
-					printf("INVALID DISCARD CHAIN novl: %d nremain: %d\n", chain->novl, nremain);
-				int j;
-				for (j = 0; j < chain->novl; j++)
-				{
-					chain->ovls[j]->flags |= OVL_DISCARD;
-				}
-				chain->novl = 0;
-			}
-
-//#ifdef DEBUG_CHAIN
-			if (ovls->aread == 131 && ovls->bread == 132)
-				printf("curChain: %d, remain unchained OVls: %d\n", ctx->curChains, nremain);
-//#endif
-		}
-
-#ifdef DEBUG_CHAIN
-		printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
-
-		for (i = 0; i < ctx->curChains; i++)
-		{
-			printf(" CHAIN %d/%d: #novl %d\n", i + 1, ctx->curChains, ctx->ovlChains[0].novl);
-
-			int j;
-			for (j = 0; j < ctx->ovlChains[i].novl; j++)
-			{
-				printf("  OVL %d/%d: a[%7d, %7d] b[%7d, %7d] %s\n", j + 1, ctx->ovlChains[i].novl, ctx->ovlChains[i].ovls[j]->path.abpos,
-						ctx->ovlChains[i].ovls[j]->path.aepos, ctx->ovlChains[i].ovls[j]->path.bbpos, ctx->ovlChains[i].ovls[j]->path.bepos,
-						(ctx->ovlChains[i].ovls[j]->flags & OVL_COMP) ? "COMP" : "NORM");
-			}
-		}
-#endif
-
-		// sort chains according to alignment lengths
-		if (ctx->curChains > 1)
-		{
-#ifdef DEBUG_CHAIN
-			printf("SORT CHAINS (longest first):\n");
-#endif
-			qsort(ctx->ovlChains, ctx->curChains, sizeof(Chain), cmp_chain_len);
-#ifdef DEBUG_CHAIN
-			printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
-			for (i = 0; i < ctx->curChains; i++)
-			{
-				printf(" CHAIN %d/%d: #novl %d\n", i + 1, ctx->curChains, ctx->ovlChains[0].novl);
-				int j;
-				for (j = 0; j < ctx->ovlChains[i].novl; j++)
-				{
-					printf("  OVL %d/%d: a[%7d, %7d] b[%7d, %7d] %s\n", j + 1, ctx->ovlChains[i].novl, ctx->ovlChains[i].ovls[j]->path.abpos,
-							ctx->ovlChains[i].ovls[j]->path.aepos, ctx->ovlChains[i].ovls[j]->path.bbpos, ctx->ovlChains[i].ovls[j]->path.bepos,
-							(ctx->ovlChains[i].ovls[j]->flags & OVL_COMP) ? "COMP" : "NORM");
-				}
-			}
-#endif
-		}
-	}
-}
-
-int analyzeChains(AnalyzeContext *ctx)
-{
-	// keep only best chain of each contig A vs Contig B overlap chain
-	// idea for now: use always first chain, as chains are anyway sorted according length
-	// todo check do multiple chains exists, if so why??
-	// todo sanity check + keep contained contigs + keep contigs that are joinable
-	if (ctx->curChains == 0)
-		return 0;
-
-	printf("[analyzeChains] c%d vs c%d nChains: %d\n", ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread, ctx->curChains);
-	int i, j;
-
-	int nOvlABases;
-	int nOvlBBases;
-
-	int nUniqOvlABases;
-	int nUniqOvlBBases;
-
-	for (i = 0; i < ctx->curChains; i++)
-	{
-		Chain *chain = ctx->ovlChains + i;
-		if (chain->novl == 0)
-			return 0;
-
-		nOvlABases = (chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos);
-		nOvlBBases = (chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos);
-
-		nUniqOvlABases = (chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos) - getRepeatBasesOfContigRange(ctx, chain->ovls[0], chain->ovls[0]->aread);
-		nUniqOvlBBases = (chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos) - getRepeatBasesOfContigRange(ctx, chain->ovls[0], chain->ovls[0]->bread);
-
-		for (j = 1; j < chain->novl; j++)
-		{
-			nOvlABases += (chain->ovls[j]->path.aepos - chain->ovls[j]->path.abpos);
-			nOvlBBases += (chain->ovls[j]->path.bepos - chain->ovls[j]->path.bbpos);
-
-			nUniqOvlABases += (chain->ovls[j]->path.aepos - chain->ovls[j]->path.abpos) - getRepeatBasesOfContigRange(ctx, chain->ovls[j], chain->ovls[j]->aread);
-			nUniqOvlBBases += (chain->ovls[j]->path.bepos - chain->ovls[j]->path.bbpos) - getRepeatBasesOfContigRange(ctx, chain->ovls[j], chain->ovls[j]->bread);
-
-			// remove overhangs between neighboring overlaps
-			if(chain->ovls[j]->path.abpos < chain->ovls[j-1]->path.aepos)
-			{
-				nOvlABases -= (chain->ovls[j-1]->path.aepos - chain->ovls[j]->path.abpos);
-				nUniqOvlABases -= ((chain->ovls[j-1]->path.aepos - chain->ovls[j]->path.abpos) - getRepeatBasesFromInterval(ctx, chain->ovls[j]->aread, chain->ovls[j]->path.abpos, chain->ovls[j-1]->path.aepos));
-			}
-
-			if(chain->ovls[j]->path.bbpos < chain->ovls[j-1]->path.bepos)
-			{
-				nOvlBBases -= (chain->ovls[j-1]->path.bepos - chain->ovls[j]->path.bbpos);
-				if(chain->ovls[j]->flags & OVL_COMP)
-				{
-					nUniqOvlBBases -=	((chain->ovls[j-1]->path.bepos - chain->ovls[j]->path.bbpos) -
-							getRepeatBasesFromInterval(ctx, chain->ovls[j]->bread, DB_READ_LEN(ctx->corContigDB, chain->ovls[j]->bread) - chain->ovls[j-1]->path.bepos,
-									DB_READ_LEN(ctx->corContigDB, chain->ovls[j]->bread) - chain->ovls[j]->path.bbpos));
-				}
-				else
-				{
-					nUniqOvlBBases -=	((chain->ovls[j-1]->path.bepos - chain->ovls[j]->path.bbpos) - getRepeatBasesFromInterval(ctx, chain->ovls[j]->bread, chain->ovls[j]->path.bbpos, chain->ovls[j-1]->path.bepos));
-				}
-			}
-		}
-
-		printf("	Chain_%d_a[%d_%d_%d]_b[%d_%d_%d] [", i, nOvlABases, nUniqOvlABases, nOvlABases*100.0/(chain->ovls[chain->novl-1]->path.aepos - chain->ovls[0]->path.abpos),
-				nOvlBBases, nUniqOvlBBases, nOvlBBases*100.0/(chain->ovls[chain->novl-1]->path.bepos - chain->ovls[0]->path.bbpos));
-		for (j = 0; j < chain->novl; j++)
-		{
-			printf("%d-%d", chain->ovls[j]->path.abpos, chain->ovls[j]->path.aepos);
-			if (j + 1 < chain->novl)
-				printf(",");
-		}
-		printf("]\n");
-	}
-
-	return 1;
-}
-
 int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 {
 	AnalyzeContext* actx = (AnalyzeContext*) _ctx;
@@ -5295,137 +3596,125 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 	if (actx->VERBOSE)
 		printf("BEGIN -- Analyze overlaps for contig: %d numOvls: %d\n", ovls->aread, novl);
 
-	int j;
 	Contig *conA = actx->contigs + ovls->aread;
 
+	int MAX_GAP_LEN = 30000;
 	// speed up things for long contigs
-	int MIN_OLEN = 10000;
-	int MIN_CLEN = 1000000;
-	if (conA->property.len > MIN_CLEN)
-	{
-		int k;
-		j = k = 0;
-		int valid;
-		while (j < novl)
-		{
 
-			if ((ovls[k].path.aepos - ovls[k].path.abpos) > MIN_OLEN)
-			{
-				valid = 1;
-			}
-			else
-			{
-				valid = 0;
-			}
-
-			while (k < novl - 1 && ovls[j].bread == ovls[k + 1].bread)
-			{
-				if ((ovls[k + 1].path.aepos - ovls[k + 1].path.abpos) > MIN_OLEN)
-				{
-					valid = 1;
-				}
-				k++;
-			}
-
-			if (valid)
-				ovls[j].flags |= OVL_MODULE; /// use module overlap to mark overlaps where chain detection should be applied
-
-			if(ovls[j].aread == 131 && ovls[j].bread == 132)
-			{
-				printf("37 vs 38: VALID? %d flags: %d\n", valid, ovls[j].flags);
-				fflush(stdout);
-			}
-
-			j = k + 1;
-		}
-
-	}
-
-	int k;
+	int i, j, k;
 	j = k = 0;
 	while (j < novl)
 	{
 		while (k < novl - 1 && ovls[j].bread == ovls[k + 1].bread)
 			k++;
 
-		if (ovls[j].aread == ovls[j].bread) // ignore overlaps between same contig
-		{
-			// TODO discard overlaps only when writeOutFilteredContigChains is enabled
-			int i;
-			for (i = j; i <= k; i++)
-			{
-				ovls[i].flags |= OVL_DISCARD;
-			}
+		Overlap *o1, *o2;
+		o1 = ovls + j;
+		int fail = 0;
 
-		}
-		else if (conA->property.len > MIN_CLEN && !(ovls[j].flags & OVL_MODULE))
+		if (MIN(o1->path.abpos, o1->path.bbpos) < actx->nFuzzBases)
 		{
-			int i;
-			for (i = j; i <= k; i++)
-			{
-				ovls[i].flags |= OVL_DISCARD;
-			}
+			fail = 1;
+		}
+		else if (ovls[k].path.aepos + actx->nFuzzBases > DB_READ_LEN(actx->corContigDB, ovls[k].aread)
+			|| ovls[k].path.bepos + actx->nFuzzBases > DB_READ_LEN(actx->corContigDB, ovls[k].bread))
+		{
+			fail = 2;
 		}
 		else
 		{
-
-			chainContigOverlaps(actx, ovls + j, k - j + 1);
-
-			if (analyzeChains(actx))
+			for (i = j + 1; i <= k; i++)
 			{
-				// convert valid chains into ContigChain struct
-				Contig *conB = actx->contigs + ovls->bread;
-				int i;
-				for (i = 0; i < actx->curChains; i++)
+				o2 = ovls + i;
+
+				// validate oriantation
+				if ((o1->flags & OVL_COMP) != (o2->flags & OVL_COMP))
 				{
-					Chain *chain = actx->ovlChains;
-					if (chain->novl == 0)
-						continue;
+					fail = 3;
+					break;
+				}
 
-					if (conA->numContigRelations == conA->maxContigRelations)
+				// validate direction
+				if (o1->path.abpos > o2->path.abpos || o1->path.bbpos > o2->path.bbpos || o1->path.aepos > o2->path.aepos || o1->path.bepos > o2->path.bepos)
+				{
+					fail = 4;
+					break;
+				}
+
+				// validate overlap between overlaps - A-coordinates
+				int len = o1->path.aepos - o2->path.abpos;
+				if (len > 0) // there is an overlap of neighboring alignments
+				{
+					if (len > MIN(o1->path.aepos - o1->path.abpos, o2->path.aepos - o2->path.abpos))
 					{
-						conA->maxContigRelations = conA->maxContigRelations * 1.2 + 5;
-						conA->contigRelations = (ContigRelation*) realloc(conA->contigRelations, sizeof(ContigRelation) * conA->maxContigRelations);
-						bzero(conA->contigRelations + conA->numContigRelations, sizeof(ContigRelation) * (conA->maxContigRelations - conA->numContigRelations));
+						fail = 5;
+						break;
 					}
-
-					ContigRelation *cchain = conA->contigRelations + conA->numContigRelations;
-					cchain->corContigIdx = conB->property.contigID;
-					cchain->numPos = chain->novl;
-					cchain->abpos = (int*) malloc(sizeof(int) * chain->novl * 2);
-					cchain->aepos = cchain->abpos + chain->novl;
-					int h;
-					for (h = 0; h < chain->novl; h++)
+				}
+				else // there is a gap between neighboring alignments
+				{
+					if (abs(len) > MAX_GAP_LEN)
 					{
-						cchain->abpos[h] = chain->ovls[h]->path.abpos;
-						cchain->aepos[h] = chain->ovls[h]->path.aepos;
+						fail = 6;
+						break;
+					}
+				}
+				// validate overlap between overlaps - A-coordinates
+				len = o1->path.bepos - o2->path.bbpos;
+				if (len > 0) // there is an overlap of neighboring alignments
+				{
+					if (len > MIN(o1->path.bepos - o1->path.bbpos, o2->path.bepos - o2->path.bbpos))
+					{
+						fail = 7;
+						break;
+					}
+				}
+				else // there is a gap between neighboring alignments
+				{
+					if (abs(len) > MAX_GAP_LEN)
+					{
+						fail = 8;
+						break;
 					}
 				}
 			}
-			// reset chain and ovl counter
-			int i;
-			for (i = 0; i <= actx->curChains; i++)
-			{
-				actx->ovlChains[i].novl = 0;
-			}
-			actx->curChains = 0;
 		}
 
-		j = k + 1;
-	}
-	int numDiscOvls = 0;
-	int i;
-	for (i = 0; i < novl; i++)
-	{
-		if (ovls[i].flags & OVL_DISCARD)
-			numDiscOvls++;
-		else
+		if(!fail)
 		{
-			printf("Keep ovl %d vs %d a[%d, %d] b [%d, %d] %c\n", ovls[i].aread, ovls[i].bread, ovls[i].path.abpos, ovls[i].path.aepos, ovls[i].path.bbpos,
-					ovls[i].path.bepos, (ovls[i].flags & OVL_COMP) ? 'C' : 'N');
+			Contig *conB = actx->contigs + ovls[j].bread;
+
+			if (conA->numContigRelations == conA->maxContigRelations)
+			{
+				conA->maxContigRelations = conA->maxContigRelations * 1.2 + 5;
+				conA->contigRelations = (ContigRelation*) realloc(conA->contigRelations, sizeof(ContigRelation) * conA->maxContigRelations);
+				bzero(conA->contigRelations + conA->numContigRelations, sizeof(ContigRelation) * (conA->maxContigRelations - conA->numContigRelations));
+			}
+
+			ContigRelation *crel = conA->contigRelations + conA->numContigRelations;
+			crel->corContigIdx = conB->property.contigID;
+			crel->numPos = (k - j + 1);
+			crel->abpos = (int*) malloc(sizeof(int) * (crel->numPos) * 2);
+			crel->aepos = crel->abpos + crel->numPos;
+
+			for (i = 0; i < crel->numPos; i++)
+			{
+				crel->abpos[i] = ovls[k+i].path.abpos;
+				crel->aepos[i] = ovls[k+i].path.aepos;
+			}
+
+			if (conB->numContigRelations == conB->maxContigRelations)
+			{
+				conB->maxContigRelations = conB->maxContigRelations * 1.2 + 5;
+				conB->contigRelations = (ContigRelation*) realloc(conB->contigRelations, sizeof(ContigRelation) * conB->maxContigRelations);
+				bzero(conB->contigRelations + conB->numContigRelations, sizeof(ContigRelation) * (conB->maxContigRelations - conB->numContigRelations));
+			}
 		}
+		k++;
+		j = k;
 	}
-	printf("END -- Analyze overlaps for contig: %d numOvls: %d discOvls %d: remaining Ovls %d\n", ovls->aread, novl, numDiscOvls, novl - numDiscOvls);
+
+	printf("END -- Analyze overlaps for contig: %d numOvls: %d\n", ovls->aread, novl);
 
 	return 1;
 }
@@ -5439,7 +3728,7 @@ void preClassifyContigsByContigOverlaps(AnalyzeContext *actx)
 
 	for (i = 0; i < actx->numContigs; i++)
 	{
-		printf("%5d contig: %d, len: %d", i, actx->contigs[i].property.contigID, actx->contigs[i].property.len);
+		printf("%5d contig: %d, len: %d\n", i, actx->contigs[i].property.contigID, actx->contigs[i].property.len);
 
 		Contig *contigA = actx->contigs + i;
 
@@ -5729,7 +4018,7 @@ static void writeContigInfoFile(AnalyzeContext *actx, Contig* contig, FILE* cont
 
 // repeat annotation:
 	fprintf(contigFile, "REPEAT_%s", actx->corContigRepeats_track->name);
-	fprintf(contigFile, " %d", getRepeatBasesFromInterval(actx, contig->property.contigID, cBegPos, cEndPos));
+	fprintf(contigFile, " %d", getRepeatBasesFromInterval(actx, 1, contig->property.contigID, cBegPos, cEndPos));
 	{
 		track_anno* rep_anno = actx->corContigRepeats_track->anno;
 		track_data* rep_data = actx->corContigRepeats_track->data;
@@ -7012,23 +5301,22 @@ int checkJunctionCoverage(AnalyzeContext *actx, Contig *contig, int read) // ret
 
 static void usage()
 {
-	printf(
-			" [-v] [-clxse <int>] [-d <dir>] [-rt <Track>] [-o <file>] -C <contigDB> <ContigOverlaps> -F <fixedReadDB> <fixedReadOverlaps> -D <correctedReadDB> \n");
-	printf("options: -v         ... verbose\n");
-	printf("         -x         ... min read length (default: 0)\n");
-	printf("         -l         ... min alignment length (default: 1000)\n");
-	printf("         -c         ... expected coverage\n");
-	printf("         -s         ... maximum spur/bubble length (default: %d)\n",
-	DEF_SPUR_LEN);
-	printf("         -e         ... maximum contig end length (tips) to consider false joins (default: %d)\n",
-	DEF_TIP_LEN);
-	printf("         -r         ... repeats track for contigs (default: repeats)\n");
-	printf("         -t         ... trim track for fixed reads (default: none)\n");
-	printf("         -C DB OVL  ... contig database and contig overlaps, required to classify contigs\n");
-	printf("         -F DB OVL  ... fixed read database and fixed read overlaps, required to extract all b-reads for blasr mapping\n");
-	printf("         -D DB 		... corrected read database\n");
-	printf("         -d         ... write classified contigs ands stats file into -d directoryName (default: cwd)\n");
-	printf("         -o         ... write out filtered chained overlaps (default: cwd)\n");
+	fprintf(stderr, " [-v] [-clxsfe <int>] [-d <dir>] [-rt <Track>] [-o <file>] -C <contigDB> <ContigOverlaps> -F <fixedReadDB> <fixedReadOverlaps> -D <correctedReadDB> \n");
+	fprintf(stderr, "options: -v         ... verbose\n");
+	fprintf(stderr, "         -x         ... min read length (default: 0)\n");
+	fprintf(stderr, "         -l         ... min alignment length (default: 1000)\n");
+	fprintf(stderr, "         -c         ... expected coverage\n");
+	fprintf(stderr, "         -s         ... maximum spur/bubble length (default: %d)\n",	DEF_SPUR_LEN);
+	fprintf(stderr, "         -e         ... maximum contig end length (tips) to consider false joins (default: %d)\n", DEF_TIP_LEN);
+	fprintf(stderr, "         -r         ... repeats track for contigs (default: repeats)\n");
+	fprintf(stderr, "         -R         ... repeats track for patached reads (default: repeats)\n");
+	fprintf(stderr, "         -t         ... trim track for fixed reads (default: none)\n");
+	fprintf(stderr, "         -C DB OVL  ... contig database and contig overlaps, required to classify contigs\n");
+	fprintf(stderr, "         -F DB OVL  ... fixed read database and fixed read overlaps, required to extract all b-reads for blasr mapping\n");
+	fprintf(stderr, "         -D DB 		 ... corrected read database\n");
+	fprintf(stderr, "         -d         ... write classified contigs ands stats file into -d directoryName (default: cwd)\n");
+	fprintf(stderr, "         -o         ... write out filtered chained overlaps (default: cwd)\n");
+	fprintf(stderr, "         -f         ... allow maximum of -f bases of structural variations between two contig overlaps of a chain, (default %d)\n", DEF_ARG_F);
 }
 
 int main(int argc, char* argv[])
@@ -7045,6 +5333,7 @@ int main(int argc, char* argv[])
 	AnalyzeContext actx;
 
 	char *patchedReadTrimTrack = NULL;
+	char *patchedReadRepeatTrack = NULL;
 	char *corContigRepeatsTrack = DEF_REPEATS_TRACK;
 
 	bzero(&actx, sizeof(AnalyzeContext));
@@ -7058,9 +5347,10 @@ int main(int argc, char* argv[])
 	actx.min_olen = 1000;
 	actx.SPUR_LEN = DEF_SPUR_LEN;
 	actx.TIP_LEN = DEF_TIP_LEN;
+	actx.nFuzzBases = DEF_ARG_F;
 
 	int c;
-	while ((c = getopt(argc, argv, "vx:l:c:d:t:r:C:F:s:e:D:o:")) != -1)
+	while ((c = getopt(argc, argv, "vx:l:c:d:t:r:C:F:s:e:D:o:R:f:")) != -1)
 	{
 		switch (c)
 		{
@@ -7069,6 +5359,9 @@ int main(int argc, char* argv[])
 			break;
 		case 'v':
 			actx.VERBOSE++;
+			break;
+		case 'f':
+			actx.nFuzzBases = atoi(optarg);
 			break;
 		case 'x':
 			actx.min_rlen = atoi(optarg);
@@ -7101,6 +5394,9 @@ int main(int argc, char* argv[])
 			break;
 		case 'r':
 			corContigRepeatsTrack = optarg;
+			break;
+		case 'R':
+			patchedReadRepeatTrack = optarg;
 			break;
 		case 'C':
 		{
@@ -7180,6 +5476,8 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
+	if (actx.VERBOSE)
+		printf("Load track %s for db %s\n", corContigRepeatsTrack, actx.corContigDBName);
 	if ((actx.corContigRepeats_track = track_load(&correctedContigDB, corContigRepeatsTrack)) == NULL)
 	{
 		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'. Create a repeat track with LArepeat first!\n", corContigRepeatsTrack,
@@ -7187,18 +5485,24 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
+	if (actx.VERBOSE)
+		printf("Load track %s for db %s\n", "creads", actx.corReadDBName);
 	if ((actx.corContigCorrectReadsAndPos_track = track_load(&correctedContigDB, "creads")) == NULL)
 	{
 		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "creads", actx.corContigDBName);
 		exit(1);
 	}
 
+	if (actx.VERBOSE)
+		printf("Load track %s for db %s\n", "rreads", actx.corContigDBName);
 	if ((actx.corContigRawReads_track = track_load(&correctedContigDB, "rreads")) == NULL)
 	{
 		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "rreads", actx.corContigDBName);
 		exit(1);
 	}
 
+	if (actx.VERBOSE)
+		printf("Load track %s for db %s\n", "preads", actx.corContigDBName);
 	if ((actx.corContigPatchReadsAndPos_track = track_load(&correctedContigDB, "preads")) == NULL)
 	{
 		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "preads", actx.corContigDBName);
@@ -7238,6 +5542,16 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
+	if (actx.VERBOSE)
+		printf("Load track %s for db %s\n", patchedReadRepeatTrack, actx.patchedReadDBName);
+	if ((actx.patchedReadRepeat_track = track_load(&patchedReadDB, patchedReadRepeatTrack)) == NULL)
+	{
+		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'!\n", patchedReadRepeatTrack, actx.patchedReadDBName);
+		exit(1);
+	}
+
+	if (actx.VERBOSE)
+		printf("Load track %s for db %s\n", "source", actx.patchedReadDBName);
 	if ((actx.patchedReadSource_track = track_load(&patchedReadDB, "source")) == NULL)
 	{
 		fprintf(stderr, "[ERROR] - could not open track '%s' for database '%s'\n", "source", actx.patchedReadDBName);
@@ -7308,9 +5622,9 @@ int main(int argc, char* argv[])
 		pre(patched_pctx, &actx);
 	}
 // initialize contigs
-	printf("STEP0a: initialize AnalyzeContext - START\n");
+	printf("START    ---   STEP0a: initialize AnalyzeContext - START\n");
 	initAnalyzeContext(&actx);
-	printf("STEP0a: initialize AnalyzeContext - DONE\n");
+	printf("START    ---   STEP0a: initialize AnalyzeContext - DONE\n");
 // todo for now do all steps: input format should be a MARVEL assembly run
 // analyze overlaps of fixed reads for each contig ( coverage, containments, duplicate reads used in different contigs )
 // STEP1
@@ -7397,11 +5711,6 @@ int main(int argc, char* argv[])
 		free(actx.rawReadFileNamesAndOffsets);
 	}
 
-	for (i = 0; i < actx.maxChains; i++)
-	{
-		free(actx.ovlChains[i].ovls);
-	}
-	free(actx.ovlChains);
 	for (i = 0; i < actx.maxVReadMask; i++)
 	{
 		free(actx.vreadMask[i]);

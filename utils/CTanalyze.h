@@ -61,6 +61,8 @@ typedef struct
 	int patchedContigPosBeg;			// absolute coordinates in
 	int patchedContigPosEnd;		  // uncorrected (patched only) contig
 
+	int repeatBases;
+	// overlap information from final patched-reads overlap graph, that went into touring
 	int nOutReads;
 	int nInReads;
 
@@ -82,15 +84,6 @@ typedef struct
 #define OVLGRP_AREAD_IS_CONTAINED  (1 << 2)  // a-read is contained in b read
 #define OVLGRP_AREAD_HAS_CONTAINED (1 << 3)  // b-read is contained in a read
 #define OVLGRP_TOO_SHORT     (1 << 4)        // overlap group is shorter than MIN_CONTIG_LENGTH
-
-
-typedef struct
-{
-	Overlap **ovls;
-	int novl;
-	int maxOvl;
-} Chain;
-
 
 typedef struct
 {
@@ -140,8 +133,6 @@ typedef struct
 	int *coveredIntervals; // begPos, endPos, avgCov --> positions according to the contig  where this ContigGraphClassification belongs to
 	int nJointReads;
 } ReadRelation;
-
-
 
 typedef struct
 {
@@ -275,6 +266,7 @@ typedef struct
 	HITS_DB* patchedReadDB;
 	HITS_TRACK *patchedReadSource_track;
 	HITS_TRACK *patchedReadTrim_track;
+	HITS_TRACK *patchedReadRepeat_track;
 
 	// corrected reads DB
 	char *corReadDBName;
@@ -301,14 +293,10 @@ typedef struct
 	int VERBOSE;
 	int SPUR_LEN;
 	int TIP_LEN;
+	int nFuzzBases;
 
 	FileNamesAndOffsets *contigFileNamesAndOffsets;
 	FileNamesAndOffsets *rawReadFileNamesAndOffsets;
-
-	// detect and store temporarily contig chains
-	Chain *ovlChains;
-	int curChains;
-	int maxChains;
 } AnalyzeContext;
 
 void initAnalyzeContext(AnalyzeContext *actx);
@@ -342,18 +330,16 @@ typedef struct
 int cmpContigLength(const void *a, const void *b);
 int getPathID(AnalyzeContext *actx, int contigID);
 int getFileID(FileNamesAndOffsets *fileAndNameOffset, int contigID);
+int getNumberOfSubgraphContigs(FileNamesAndOffsets *fileAndNameOffset, int contigID);
 
 void getContigsEndIDs(AnalyzeContext *actx, int contigID, int* beg, int *end);
 
 //////// analyze contigs on their alignments with each other
-void chainContigOverlaps(AnalyzeContext* ctx, Overlap* ovls, int n);
-int analyzeChains(AnalyzeContext *ctx);
 int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl);
 int compareInt(const void * a, const void * b);
 int isOverlapGroupValid(AnalyzeContext *actx, OverlapGroup *ovlgrp);
 void addOverlapGroupToContig(AnalyzeContext *actx, OverlapGroup *ovlgrp, int symmetricAdd);
 int contained(int ab, int ae, int bb, int be);
-void updateOverlapGroup(AnalyzeContext *actx, OverlapGroup *ovlgrp, Overlap *pOvls, int *ovlIdx, int numOvlIdx);
 void classifyContigsByOverlaps(AnalyzeContext *actx);
 OverlapGroup* copySymmetricOverlapGroup(OverlapGroup *ovlgrp);
 
@@ -370,5 +356,5 @@ void createSplitEvent(AnalyzeContext * actx, Contig *contig, int read, int sType
 
 int checkJunctionCoverage(AnalyzeContext *actx, Contig *contig, int read); // returns true if everything is ok, false otherwise
 
-int getRepeatBasesFromInterval(AnalyzeContext* actx, int readID, int beg, int end);
+int getRepeatBasesFromInterval(AnalyzeContext* actx, int contigDB, int readID, int beg, int end);
 #endif /* UTILS_LAANALYZE_H_ */
