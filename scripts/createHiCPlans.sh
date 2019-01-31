@@ -669,7 +669,7 @@ then
         
         setThreeDDNAOptions
             	        
-    	echo "${THREEDDNA_PATH}/run-asm-pipeline.sh${THREEDDNA_OPT} references/${PROJECT_ID}.fasta aligned/merged_nodups.txt" > hic_03_HIC3dnaAssemblyPipeline_single_${CONT_DB}.${slurmID}.plan
+    	echo "cd ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} && ${THREEDDNA_PATH}/run-asm-pipeline.sh${THREEDDNA_OPT} references/${PROJECT_ID}.fasta aligned/merged_nodups.txt" > hic_03_HIC3dnaAssemblyPipeline_single_${CONT_DB}.${slurmID}.plan
         
         echo "3d-dna $(git --git-dir=${THREEDDNA_PATH}/.git rev-parse --short HEAD)" > hic_03_HIC3dnaAssemblyPipeline_single_${CONT_DB}.${slurmID}.version
   	else
