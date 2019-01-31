@@ -803,7 +803,7 @@ then
     	flp="${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}.as${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}.nm${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}.molecule.size${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}"    	
     	echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${flp}.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
         # Create molecule extents TSV
-        echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} --tsv -o ${flp}.tsv ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} --tsv -o ${flp}.tsv ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_reads_sortbx.bam" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
         # Report summary statistics of a Chromium library
         echo "Rscript -e 'rmarkdown::render(\"${TIGMINT_PATH}/../summary.rmd\", \"html_document\", \"${flp}.summary.html\", params= list(input_tsv=\"${flp}.tsv\", output_tsv=\"${flp}.summary.tsv\"))'" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
         # Compute statistics on the depth of coverage of a BED file.
