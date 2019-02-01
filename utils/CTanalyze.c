@@ -3143,45 +3143,35 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 							{
 								int from = contigJBegRange[l] / binSize;
 								int to = contigJEndRange[l] / binSize;
-								if (from < 0)
-								{
-									printf("contigIntersectionJKReads Jrange failed for read %d: from %d to %d\n", l, from, to);
-								}
+//								if (from < 0)
+//								{
+//									printf("contigIntersectionJKReads Jrange failed for read %d: from %d to %d\n", l, from, to);
+//								}
 
-								if (to >= nBins)
-								{
-									printf("contigIntersectionJKReads Jrange failed for read %d: from %d to %d\n", l, from, to);
-								}
+//								if (to >= nBins)
+//								{
+//									printf("contigIntersectionJKReads Jrange failed for read %d: from %d to %d\n", l, from, to);
+//								}
 
 								while (from <= to)
 								{
-									if (contig_k->property.contigID == 263)
-									{
-										printf("from = %d, to = %d Jcount %d nBins %d\n", from, to, contigJCovHist[from], nBins);
-										fflush(stdout);
-									}
 									contigJCovHist[from]++;
 									from++;
 								}
 								from = contigKBegRange[l] / binSize;
 								to = contigKEndRange[l] / binSize;
 
-								if (from < 0)
-								{
-									printf("contigIntersectionJKReads Krange failed for read %d: from %d to %d\n", l, from, to);
-								}
-
-								if (to >= nBins)
-								{
-									printf("contigIntersectionJKReads Krange failed for read %d: from %d to %d\n", l, from, to);
-								}
+//								if (from < 0)
+//								{
+//									printf("contigIntersectionJKReads Krange failed for read %d: from %d to %d\n", l, from, to);
+//								}
+//
+//								if (to >= nBins)
+//								{
+//									printf("contigIntersectionJKReads Krange failed for read %d: from %d to %d\n", l, from, to);
+//								}
 								while (from <= to)
 								{
-									if (contig_k->property.contigID == 263)
-									{
-										printf("from = %d, to = %d Kcount %d nBins %d\n", from, to, contigKCovHist[from], nBins);
-										fflush(stdout);
-									}
 									contigKCovHist[from]++;
 									from++;
 								}
@@ -3206,9 +3196,9 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 								lastKbin = l;
 								cumHistKreads += contigKCovHist[l];
-#ifdef DEBUG_STEP1C
-								printf("%10d-%10d: %4d\n", l * binSize, (l * binSize) + binSize - 1, contigKCovHist[l]);
-#endif
+//#ifdef DEBUG_STEP1C
+//								printf("%10d-%10d: %4d\n", l * binSize, (l * binSize) + binSize - 1, contigKCovHist[l]);
+//#endif
 							}
 							else if (firstKbin != -1)
 							{
@@ -3229,9 +3219,9 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 							numCovIvlK++;
 						}
 
-#ifdef DEBUG_STEP1C
-						printf("contigJCovHist:\n");
-#endif
+//#ifdef DEBUG_STEP1C
+//						printf("contigJCovHist:\n");
+//#endif
 						for (l = 0; l < nBins; l++)
 						{
 							if (contigJCovHist[l] > 0)
@@ -3240,9 +3230,9 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 									firstJbin = l;
 								cumHistJreads += contigJCovHist[l];
 								lastJbin = l;
-#ifdef DEBUG_STEP1C
-								printf("%10d-%10d: %4d\n", l * binSize, (l * binSize) + binSize - 1, contigJCovHist[l]);
-#endif
+//#ifdef DEBUG_STEP1C
+//								printf("%10d-%10d: %4d\n", l * binSize, (l * binSize) + binSize - 1, contigJCovHist[l]);
+//#endif
 							}
 							else if (firstJbin != -1)
 							{
