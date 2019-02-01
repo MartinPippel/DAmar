@@ -41,6 +41,7 @@ export THREEDDNA_PATH="/projects/dazzler/pippel/prog/scaffolding/3d-dna/"
 export LONGRANGER_PATH="/projects/dazzler/pippel/prog/longranger-2.2.0"
 export ARKS_PATH="/projects/dazzler/pippel/prog/scaffolding/arks-build/bin"
 export TIGMINT_PATH="/projects/dazzler/pippel/prog/scaffolding/tigmint/bin"
+export LINKS_PATH="/projects/dazzler/pippel/prog/scaffolding/links_v1.8.6/"
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -200,7 +201,7 @@ CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
 
 SC_10X_TYPE=0
 # Type: 0 scaff10x/break10x pipeline 	steps: 01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics
-# Type: 1 tigmint arks pipeline 		steps: 01_arksPrepare, 02_arksLonranger
+# Type: 1 tigmint arks pipeline 		steps: 01_arksPrepare, 02_arksLonranger, 03_arksTigmint, 04_arksArks, 05_arksLINKS
 SC_10X_SUBMIT_SCRIPTS_FROM=1
 SC_10X_SUBMIT_SCRIPTS_TO=7
 
@@ -785,6 +786,11 @@ SC_10X_ARKS_CHECKPOINTS=0			# EXTRA OUTPUT OPTIONS
                         			# 3    all checkpoint files (ContigRecord, ContigKmerMap, and IndexMap)
 SC_10X_ARKS_MAXNODEDEGREE=0			# Maximum degree of nodes in graph. All nodes with degree greater than this number will be removed from the graph prior to printing final graph. For no node removal, set to 0 (default: 0)	
 SC_10X_ARKS_THREADS=24	
+### LINKS
+SC_10X_LINKS_VERBOSE=1
+SC_10X_LINKS_NUMLINKS=5 			#minimum number of links (k-mer pairs) to compute scaffold (default -l 5, optional)
+SC_10X_LINKS_MAXLINKRATIO=0.3		#maximum link ratio between two best contig pairs (default -a 0.3, optional)
+SC_10X_LINKS_MINCONTIGLEN=15000		# minimum contig length to consider for scaffolding (default -z 500, optional)
 			
 # ----------------------------------------------------------------- SCAFFOLDING - BIONANO OPTIONS ----------------------------------------------------------------------------------------------------
 

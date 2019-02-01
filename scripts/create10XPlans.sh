@@ -57,6 +57,12 @@ then
     exit 1
 fi
 
+if [[ -z ${LINKS_PATH} || ! -f ${LINKS_PATH}/LINKS ]]
+then
+	(>&2 echo "Variable LINKS_PATH must be set to a proper LINKS installation directory!!")
+    exit 1
+fi
+
 function setScaff10xOptions()
 {
 	SCAFF10X_SCAFF10X_OPT=""
@@ -377,8 +383,45 @@ function setArksOptions()
 	fi
 }
 
+function setLinksOptions()
+{
+	LINKS_OPT=""
+	
+	if [[ -n ${SC_10X_LINKS_VERBOSE} && ${SC_10X_LINKS_VERBOSE} -gt 0 ]]
+	then
+		LINKS_OPT="${LINKS_OPT} -v 1"
+	fi
+	
+	#minimum number of links (k-mer pairs) to compute scaffold (default -l 5, optional)
+	if [[ -n ${SC_10X_LINKS_NUMLINKS} && ${SC_10X_LINKS_NUMLINKS} -gt 0 ]]
+	then
+		LINKS_OPT="${LINKS_OPT} -l ${SC_10X_LINKS_NUMLINKS}"
+	else
+		LINKS_OPT="${LINKS_OPT} -l 5"
+	fi
+	
+	#maximum link ratio between two best contig pairs (default -a 0.3, optional)
+    #     *higher values lead to least accurate scaffolding*
+	if [[ -n ${SC_10X_LINKS_MAXLINKRATIO} ]]
+	then
+		LINKS_OPT="${LINKS_OPT} -a ${SC_10X_LINKS_MAXLINKRATIO}"
+	else
+		SC_10X_LINKS_MAXLINKRATIO=0.3
+		LINKS_OPT="${LINKS_OPT} -a ${SC_10X_LINKS_MAXLINKRATIO}"
+	fi
+	
+	# minimum contig length to consider for scaffolding (default -z 500, optional)
+	if [[ -n ${SC_10X_LINKS_MINCONTIGLEN} && ${SC_10X_LINKS_MINCONTIGLEN} -gt 0 ]]
+	then
+		LINKS_OPT="${LINKS_OPT} -z ${SC_10X_LINKS_MINCONTIGLEN}"
+	else
+		SC_10X_LINKS_MINCONTIGLEN=10000
+		LINKS_OPT="${LINKS_OPT} -z ${SC_10X_LINKS_MINCONTIGLEN}"
+	fi
+}
+
 #type 0: scaff10x - break10x pipeline		steps: 01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics
-#type 1: tigmint - arks - links pipeline	steps: 01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks
+#type 1: tigmint - arks - links pipeline	steps: 01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks, 05_arksLINKS
 
 myTypes=("01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics", 
 "01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks") 
@@ -870,7 +913,34 @@ then
 		fi >> 10x_04_arksArks_single_${CONT_DB}.${slurmID}.plan   
 		
 		 	    	
-    	echo "$(${ARKS_PATH}/arks --version | grep VERSION | awk '{print $3}')" > 10x_04_arksArks_single_${CONT_DB}.${slurmID}.version 
+    	echo "$(${ARKS_PATH}/arks --version | grep VERSION | awk '{print $3}')" > 10x_04_arksArks_single_${CONT_DB}.${slurmID}.version
+   	### 05_arksLinks
+	elif [[ ${currentStep} -eq 5 ]]
+    then
+        ### clean up plans 
+        for x in $(ls 10x_05_arks*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+    
+    	if [[ -f ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/empty.fof ]]; 
+    	then 
+    		echo "mv ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/empty.fof ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/empty_$(date '+%Y-%m-%d_%H-%M-%S').fof"; 
+    		echo "touch ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/empty.fof"
+    	else
+    		echo "touch ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/empty.fof"
+		fi > 10x_05_arksLinks_single_${CONT_DB}.${slurmID}.plan
+		
+		setLinksOptions
+		
+		prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		cset=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		fext="t" ### tigmint
+		tigmintOFile=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.trim${SC_10X_TIGMINT_CUT_TRIM}.window${SC_10X_TIGMINT_CUT_WINDOW}.span${SC_10X_TIGMINT_CUT_SPAN}.breaktigs.renamed.fasta
+		
+		empt=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/empty.fof
+		scaf=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.trim${SC_10X_TIGMINT_CUT_TRIM}.window${SC_10X_TIGMINT_CUT_WINDOW}.span${SC_10X_TIGMINT_CUT_SPAN}_z${SC_10X_LINKS_MINCONTIGLEN}_l${SC_10X_LINKS_MINCONTIGLEN}_a${SC_10X_LINKS_MAXLINKRATIO}.scaffolds.fa
+		echo "${LINKS_PATH}/LINKS -f ${tigmintOFile} -s ${empt} -b ${scaf} ${LINKS_OPT}" >> 10x_05_arksLinks_single_${CONT_DB}.${slurmID}.plan
    	else
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
