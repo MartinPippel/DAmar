@@ -3076,6 +3076,9 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 					if (contig_k->property.flag & CONTIG_DISCARD)
 						continue;
 
+					if ((contig_k->property.readRelationFlags & CONTIG_IS_CONTAINED))
+						continue;
+
 					if (contig_k->property.len > 300000)
 						continue;
 
@@ -3341,8 +3344,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 						int num = contig_k->numReadRelations;
 
-//						contig_k->gClassificFlag = preClassFlagK;
-
+						contig_k->property.readRelationFlags |= preClassFlagK;
 						contig_k->readRelations[num].flag = preClassFlagK;
 						contig_k->readRelations[num].numCoveredIntervals = numCovIvlK;
 						contig_k->readRelations[num].coveredIntervals = covIvlK;
@@ -3360,8 +3362,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 						num = contig_j->numReadRelations;
 
-//						contig_j->gClassificFlag = preClassFlagJ;
-
+						contig_j->property.readRelationFlags |= preClassFlagJ;
 						contig_j->readRelations[num].flag = preClassFlagJ;
 						contig_j->readRelations[num].numCoveredIntervals = numCovIvlJ;
 						contig_j->readRelations[num].coveredIntervals = covIvlJ;
