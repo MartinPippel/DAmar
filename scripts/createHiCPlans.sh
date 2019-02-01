@@ -808,7 +808,7 @@ then
             
         set3DDNAVisualizeOptions  
         echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/visualize" > hic_03_HIC3dnaVisualizePipeline_single_${CONT_DB}.${slurmID}.plan    	        
-        if [[ -f ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.assembly ]]
+        if [[ ! -f ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.assembly ]]
         then
         	echo "awk -f ${THREEDDNA_PATH}/utils/generate-assembly-file-from-fasta.awk ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.assembly" >> hic_03_HIC3dnaVisualizePipeline_single_${CONT_DB}.${slurmID}.plan
     	fi
