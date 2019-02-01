@@ -2981,25 +2981,26 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 	int faId;
 
-	for (faId = 0; faId < actx->contigFileNamesAndOffsets->numFileNames; faId++)
+	//for (faId = 0; faId < actx->contigFileNamesAndOffsets->numFileNames; faId++)
 	{
-#ifdef DEBUG_STEP1C
-		printf("i %d, %d %d\n", faId, actx->contigFileNamesAndOffsets->fromDbIdx[faId], actx->contigFileNamesAndOffsets->toDbIdx[faId]);
-#endif
+//#ifdef DEBUG_STEP1C
+//		printf("i %d, %d %d\n", faId, actx->contigFileNamesAndOffsets->fromDbIdx[faId], actx->contigFileNamesAndOffsets->toDbIdx[faId]);
+//#endif
 
-		if (actx->contigFileNamesAndOffsets->fromDbIdx[faId] == actx->contigFileNamesAndOffsets->toDbIdx[faId])
-		{
-#ifdef DEBUG_STEP1C
-			printf("fasta file %d: %s --> has only one contig\n", faId, actx->contigFileNamesAndOffsets->fileNames[faId]);
-#endif
-			actx->contigs[actx->contigFileNamesAndOffsets->fromDbIdx[faId]].property.readRelationFlags |= READ_IS_UNIQUE;
-		}
-		else // at this point, current compound contains at least 2 contigs
+//		if (actx->contigFileNamesAndOffsets->fromDbIdx[faId] == actx->contigFileNamesAndOffsets->toDbIdx[faId])
+//		{
+//#ifdef DEBUG_STEP1C
+//			printf("fasta file %d: %s --> has only one contig\n", faId, actx->contigFileNamesAndOffsets->fileNames[faId]);
+//#endif
+//			actx->contigs[actx->contigFileNamesAndOffsets->fromDbIdx[faId]].property.readRelationFlags |= READ_IS_UNIQUE;
+//		}
+//		else // at this point, current compound contains at least 2 contigs
 		{
 			numCL = 0;
 
 			// add all contigs from current connected compound (same file == subgraph)
-			for (j = actx->contigFileNamesAndOffsets->fromDbIdx[faId]; j <= actx->contigFileNamesAndOffsets->toDbIdx[faId]; j++)
+//			for (j = actx->contigFileNamesAndOffsets->fromDbIdx[faId]; j <= actx->contigFileNamesAndOffsets->toDbIdx[faId]; j++)
+			for (j = 0; j < actx->numContigs; j++)
 			{
 				Contig *contig = actx->contigs + j;
 				if (contig->property.flag & CONTIG_DISCARD)
@@ -3028,12 +3029,12 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 #endif
 
 //				if (contig_j->gClassificFlag & CONTIG_IS_CONTAINED)
-				{
-#ifdef DEBUG_STEP1C
-					printf("Skip contig %d, already contained!\n", contig_j->property.contigID);
-#endif
+//				{
+//#ifdef DEBUG_STEP1C
+//					printf("Skip contig %d, already contained!\n", contig_j->property.contigID);
+//#endif
 //					continue;
-				}
+//				}
 
 				ba_all_assign(contigJReads, numReads, FALSE);
 				memset(contigJBegRange, -1, sizeof(int) * numReads);
@@ -3075,11 +3076,14 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 					if (contig_k->property.flag & CONTIG_DISCARD)
 						continue;
 
+					if (contig_k->property.len > 300000)
+						continue;
+
 //					if (contig_k->gClassificFlag & CONTIG_IS_CONTAINED)
 //					{
-#ifdef DEBUG_STEP1C
-					printf("Skip contig %d, already contained!\n", contig_k->property.contigID);
-#endif
+//#ifdef DEBUG_STEP1C
+//					printf("Skip contig %d, already contained!\n", contig_k->property.contigID);
+//#endif
 //						continue;
 //					}
 
