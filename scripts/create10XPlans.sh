@@ -854,7 +854,7 @@ then
 		cset=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
 		fext="t" ### tigmint
 		tigmintOFile=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.trim${SC_10X_TIGMINT_CUT_TRIM}.window${SC_10X_TIGMINT_CUT_WINDOW}.span${SC_10X_TIGMINT_CUT_SPAN}.breaktigs.renamed.fasta
-        bopt=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}_c${SC_10X_ARKS_MINREADPAIRS}_m${SC_10X_ARKS_MULTIPLICITY}_k${SC_10X_ARKS_KMER}_r${SC_10X_ARKS_PVALUE}_e${SC_10X_ARKS_ENDLEN}_z${SC_10X_ARKS_MINCONTIGLEN}_original.gv
+        bopt=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}_c${SC_10X_ARKS_MINREADPAIRS}_m${SC_10X_ARKS_MULTIPLICITY}_k${SC_10X_ARKS_KMER}_r${SC_10X_ARKS_PVALUE}_e${SC_10X_ARKS_ENDLEN}_z${SC_10X_ARKS_MINCONTIGLEN}
         
 		# ARCS
 		# Create a graph of linked contigs using ARCS.
@@ -863,7 +863,7 @@ then
 		then 
 			echo "${ARKS_PATH}/arks ${ARKS_OPT} -a ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads_multiplicities.csv -f ${tigmintOFile} -b ${bopt} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz"
 			# Generate TSV from ARKS
-			echo "python ${ARKS_PATH}/../Examples/makeTSVfile.py ${bopt} ${bopt%_original.gv}.tigpair_checkpoint.tsv"		
+			echo "python ${ARKS_PATH}/../Examples/makeTSVfile.py ${bopt} ${bopt%_original.gv}.tigpair_checkpoint.tsv ${tigmintOFile}"		
 		else 
 			(>&2 echo "SC_10X_ARKS_RUNTYPE: ${SC_10X_ARKS_RUNTYPE} not supported yet")
 	    	exit 1
