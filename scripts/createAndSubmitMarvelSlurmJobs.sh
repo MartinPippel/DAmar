@@ -1250,5 +1250,5 @@ fi
 if [[ ${foundNext} -eq 0 ]]
 then
 	# submit a dummy job that waits until the last real jobs sucessfully finished
-sbatch${appAccount} --job-name=${PROJECT_ID}_final -o final_step_${slurmID}_${slurmID}_${slurmID}.out -e final_step_${slurmID}_${slurmID}.err -n1 -c1 -p ${SLURM_PARTITION} --time=00:15:00 --mem=1g --dependency=afterok:${RET##* } --wrap="sleep 5 && echo \"finished - all selected jobs created and submitted. Last Step: ${prefix} ${currentPhase} ${currentStep} $slurmID ${configFile}\""     
+sbatch${appAccount} --job-name=${PROJECT_ID}_final -o ${prefix}_final_step_${currentPhase}_${currentStep}_${slurmID}.out -e ${prefix}_final_step_${currentPhase}_${currentStep}_${slurmID}.err -n1 -c1 -p ${SLURM_PARTITION} --time=00:15:00 --mem=1g --dependency=afterok:${RET##* } --wrap="sleep 5 && echo \"finished - all selected jobs created and submitted. Last Step: ${prefix} ${currentPhase} ${currentStep} $slurmID ${configFile}\""     
 fi
