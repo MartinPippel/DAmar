@@ -863,7 +863,7 @@ then
 		then 
 			echo "${ARKS_PATH}/arks ${ARKS_OPT} -a ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/longrangerReads_multiplicities.csv -f ${tigmintOFile} -b ${bopt} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz"
 			# Generate TSV from ARKS
-			echo "python $(bin)../Examples/makeTSVfile.py ${bopt} ${bopt%_original.gv}.tigpair_checkpoint.tsv"		
+			echo "python ${ARKS_PATH}/../Examples/makeTSVfile.py ${bopt} ${bopt%_original.gv}.tigpair_checkpoint.tsv"		
 		else 
 			(>&2 echo "SC_10X_ARKS_RUNTYPE: ${SC_10X_ARKS_RUNTYPE} not supported yet")
 	    	exit 1
