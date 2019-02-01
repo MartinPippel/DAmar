@@ -807,7 +807,7 @@ then
         # Report summary statistics of a Chromium library
         echo "Rscript -e 'rmarkdown::render(\"${TIGMINT_PATH}/../summary.rmd\", \"html_document\", \"${flp}.summary.html\", params= list(input_tsv=\"${flp}.tsv\", output_tsv=\"${flp}.summary.tsv\"))'" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
         # Compute statistics on the depth of coverage of a BED file.
-    	echo "(printf \"Rname\tDepth\tCount\tRsize\tFraction\n\"; awk '\$2 != \$3' ${flp}.bed | bedtools genomecov -g ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta -i -) > ${flp}.bed.genomecov.tsv" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+    	echo "(printf \"Rname\tDepth\tCount\tRsize\tFraction\n\"; awk '\$2 != \$3' ${flp}.bed | bedtools genomecov -g ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta.fai -i -) > ${flp}.bed.genomecov.tsv" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
     	# Calculate depth of coverage statistics from bedtools genomecov.
 		echo "mlr --tsvlite then filter '\$Rname == \"genome\" && \$Depth > 0' then step -a rsum -f Fraction then put -q '@Depth_count += \$Count; if (is_null(@p25) && \$Fraction_rsum >= 0.25) { @p25 = \$Depth }; if (is_null(@p50) && \$Fraction_rsum >= 0.50) { @p50 = \$Depth }; if (is_null(@p75) && \$Fraction_rsum >= 0.75) { @p75 = \$Depth } end { emitf @Depth_count, @p25, @p50, @p75 }' then rename p25,Depth_p25,p50,Depth_p50,p75,Depth_p75 then put '\$Depth_IQR = \$Depth_p75 - \$Depth_p25' ${flp}.bed.genomecov.tsv > ${flp}.bed.genomecov.stats.tsv" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
         # Identify breakpoints
