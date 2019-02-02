@@ -294,6 +294,9 @@ typedef struct
 	int SPUR_LEN;
 	int TIP_LEN;
 	int nFuzzBases;
+	int contByReads_CommonReadFraction; 	// how many raw reads (in percent) must a contained contig have in common with a primary contig
+	int contByReads_CoveredLenPerc;			  // length of a contained contig (in percent) that is covered from a primary contig
+
 
 	FileNamesAndOffsets *contigFileNamesAndOffsets;
 	FileNamesAndOffsets *rawReadFileNamesAndOffsets;

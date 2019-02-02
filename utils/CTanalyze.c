@@ -52,6 +52,8 @@
 #define	DEF_SPUR_LEN 50000
 #define DEF_TIP_LEN 100000
 #define DEF_ARG_F 10000
+#define DEF_ARG_CRF 50
+#define DEF_ARG_CL 50
 
 /// defines for contig vs contig alignments
 #define ConVsConMinAlign 5000
@@ -2970,9 +2972,9 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 	contigKCovHist = (int*) malloc(sizeof(int) * nBins);
 
 	int numReads = DB_NREADS(actx->patchedReadDB);
-	contigJReads = ba_new(numReads);
-	contigKReads = ba_new(numReads);
-	contigIntersectionJKReads = ba_new(numReads);
+	contigJReads = ba_new(numReads); // all raw reads of contig J
+	contigKReads = ba_new(numReads); // all raw reads of contig K
+	contigIntersectionJKReads = ba_new(numReads); // all reads that are common in both contigs K and J
 
 	contigJBegRange = (int*) malloc(sizeof(int) * numReads);
 	contigJEndRange = (int*) malloc(sizeof(int) * numReads);
@@ -3003,6 +3005,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 			for (j = 0; j < actx->numContigs; j++)
 			{
 				Contig *contig = actx->contigs + j;
+
 				if (contig->property.flag & CONTIG_DISCARD)
 					continue;
 				contigIDAndLength[numCL].idx = contig->property.contigID;
@@ -3020,6 +3023,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 			for (j = 0; j < numCL; j++)
 			{
 				Contig * contig_j = actx->contigs + contigIDAndLength[j].idx;
+				int jBins = (contig_j->property.len / binSize) + 1;
 
 				if (contig_j->property.flag & CONTIG_DISCARD)
 					continue;
@@ -3072,6 +3076,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 				for (k = j + 1; k < numCL; k++)
 				{
 					Contig * contig_k = actx->contigs + contigIDAndLength[k].idx;
+					int kBins = (contig_k->property.len / binSize) + 1;
 
 					if (contig_k->property.flag & CONTIG_DISCARD)
 						continue;
@@ -3179,15 +3184,16 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 						}
 #ifdef DEBUG_STEP1C
 						printf("analyze contigs: %d p%d (cov %.2f) %d p%d (cov %.2f) len %d %d --> numOfcommonReads: %d of %d: %.3f\n", contig_j->property.contigID,
-								getPathID(actx, contig_j->property.contigID), contig_j->avgCov, contig_k->property.contigID, getPathID(actx, contig_k->property.contigID),
-								contig_k->avgCov, contig_j->property.len, contig_k->property.len, numComReads, numkReads, numComReads * 100.0 / numkReads);
+								contig_j->property.pathID, contig_j->avgCov, contig_k->property.contigID, contig_k->property.pathID, contig_k->avgCov, contig_j->property.len,
+								contig_k->property.len, numComReads, numkReads, numComReads * 100.0 / numkReads);
 						printf("contigKCovHist:\n");
 #endif
 						int firstKbin, lastKbin, firstJbin, lastJbin;
 						int cumHistKreads, cumHistJreads;
 						cumHistKreads = cumHistJreads = 0;
 						firstKbin = lastKbin = firstJbin = lastJbin = -1;
-						for (l = 0; l < nBins; l++)
+
+						for (l = 0; l < kBins; l++)
 						{
 							if (contigKCovHist[l] > 0)
 							{
@@ -3200,7 +3206,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 //								printf("%10d-%10d: %4d\n", l * binSize, (l * binSize) + binSize - 1, contigKCovHist[l]);
 //#endif
 							}
-							else if (firstKbin != -1)
+							else if (firstKbin != -1)  // add coverage block
 							{
 								covIvlK[numCovIvlK * 3] = firstKbin * binSize;
 								covIvlK[numCovIvlK * 3 + 1] = lastKbin * binSize + (binSize - 1);
@@ -3211,6 +3217,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 								cumHistKreads = 0;
 							}
 						}
+
 						if (firstKbin != -1)
 						{
 							covIvlK[numCovIvlK * 3] = firstKbin * binSize;
@@ -3222,7 +3229,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 //#ifdef DEBUG_STEP1C
 //						printf("contigJCovHist:\n");
 //#endif
-						for (l = 0; l < nBins; l++)
+						for (l = 0; l < jBins; l++)
 						{
 							if (contigJCovHist[l] > 0)
 							{
@@ -3300,66 +3307,57 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 								cumJCoveredBases, cumJCoveredBases * 100.0 / (covIvlJ[3 * numCovIvlJ - 2] - covIvlJ[0]));
 #endif
 						// preliminary classification
-
-						int preClassFlagK = 0;
-						int preClassFlagJ = 0;
-
 						// contig k is contained in J
-						if (numComReads * 100.0 / numkReads > 70.0 || (cumKCoveredBases * 100.0 / contig_k->property.len >= 50))
+						if (numComReads * 100.0 / numkReads > actx->contByReads_CommonReadFraction || (cumKCoveredBases * 100.0 / contig_k->property.len >= actx->contByReads_CoveredLenPerc))
 						{
-							preClassFlagK |= CONTIG_IS_CONTAINED;
-							preClassFlagJ |= CONTIG_HAS_CONTAINED;
-						}
-						else
-						{
-							preClassFlagK |= CONTIG_UNCLASSIFIED;
-							preClassFlagJ |= CONTIG_UNCLASSIFIED;
-						}
+							int preClassFlagK = CONTIG_IS_CONTAINED;
+							int preClassFlagJ = CONTIG_HAS_CONTAINED;
 
 #ifdef DEBUG_STEP1C
-						printContigClassification(stdout, preClassFlagK, ' ');
-						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_k->property.contigID, contig_j->property.contigID, covIvlK[0],
-								covIvlK[numCovIvlK * 3 - 2], covIvlJ[0], covIvlJ[numCovIvlJ * 3 - 2]);
+							printContigClassification(stdout, preClassFlagK, ' ');
+							printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_k->property.contigID, contig_j->property.contigID, covIvlK[0],
+									covIvlK[numCovIvlK * 3 - 2], covIvlJ[0], covIvlJ[numCovIvlJ * 3 - 2]);
 
-						printContigClassification(stdout, preClassFlagJ, ' ');
-						printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_j->property.contigID, contig_k->property.contigID, covIvlJ[0],
-								covIvlJ[numCovIvlJ * 3 - 2], covIvlK[0], covIvlK[numCovIvlK * 3 - 2]);
+							printContigClassification(stdout, preClassFlagJ, ' ');
+							printf("contig %d vs contig %d [%d, %d] [%d,%d]\n", contig_j->property.contigID, contig_k->property.contigID, covIvlJ[0],
+									covIvlJ[numCovIvlJ * 3 - 2], covIvlK[0], covIvlK[numCovIvlK * 3 - 2]);
 #endif
 
-						if (contig_k->numReadRelations == contig_k->maxReadRelations)
-						{
-							contig_k->maxReadRelations = (int) (contig_k->maxReadRelations * 1.2) + 5;
-							contig_k->readRelations = (ReadRelation*) realloc(contig_k->readRelations, sizeof(ReadRelation) * contig_k->maxReadRelations);
+							if (contig_k->numReadRelations == contig_k->maxReadRelations)
+							{
+								contig_k->maxReadRelations = (int) (contig_k->maxReadRelations * 1.2) + 5;
+								contig_k->readRelations = (ReadRelation*) realloc(contig_k->readRelations, sizeof(ReadRelation) * contig_k->maxReadRelations);
+							}
+
+							int num = contig_k->numReadRelations;
+
+							contig_k->property.readRelationFlags |= preClassFlagK;
+							contig_k->readRelations[num].flag = preClassFlagK;
+							contig_k->readRelations[num].numCoveredIntervals = numCovIvlK;
+							contig_k->readRelations[num].coveredIntervals = covIvlK;
+							contig_k->readRelations[num].correspID = contig_j->property.contigID;
+							contig_k->readRelations[num].nJointReads = numComReads;
+							contig_k->numReadRelations++;
+
+							// store corresponding info for contig J
+
+							if (contig_j->numReadRelations == contig_j->maxReadRelations)
+							{
+								contig_j->maxReadRelations = (int) (contig_j->maxReadRelations * 1.2) + 5;
+								contig_j->readRelations = (ReadRelation*) realloc(contig_j->readRelations, sizeof(ReadRelation) * contig_j->maxReadRelations);
+							}
+
+							num = contig_j->numReadRelations;
+
+							contig_j->property.readRelationFlags |= preClassFlagJ;
+							contig_j->readRelations[num].flag = preClassFlagJ;
+							contig_j->readRelations[num].numCoveredIntervals = numCovIvlJ;
+							contig_j->readRelations[num].coveredIntervals = covIvlJ;
+							contig_j->readRelations[num].correspID = contig_k->property.contigID;
+							contig_j->readRelations[num].nJointReads = numComReads;
+
+							contig_j->numReadRelations++;
 						}
-
-						int num = contig_k->numReadRelations;
-
-						contig_k->property.readRelationFlags |= preClassFlagK;
-						contig_k->readRelations[num].flag = preClassFlagK;
-						contig_k->readRelations[num].numCoveredIntervals = numCovIvlK;
-						contig_k->readRelations[num].coveredIntervals = covIvlK;
-						contig_k->readRelations[num].correspID = contig_j->property.contigID;
-						contig_k->readRelations[num].nJointReads = numComReads;
-						contig_k->numReadRelations++;
-
-						// store corresponding info for contig J
-
-						if (contig_j->numReadRelations == contig_j->maxReadRelations)
-						{
-							contig_j->maxReadRelations = (int) (contig_j->maxReadRelations * 1.2) + 5;
-							contig_j->readRelations = (ReadRelation*) realloc(contig_j->readRelations, sizeof(ReadRelation) * contig_j->maxReadRelations);
-						}
-
-						num = contig_j->numReadRelations;
-
-						contig_j->property.readRelationFlags |= preClassFlagJ;
-						contig_j->readRelations[num].flag = preClassFlagJ;
-						contig_j->readRelations[num].numCoveredIntervals = numCovIvlJ;
-						contig_j->readRelations[num].coveredIntervals = covIvlJ;
-						contig_j->readRelations[num].correspID = contig_k->property.contigID;
-						contig_j->readRelations[num].nJointReads = numComReads;
-
-						contig_j->numReadRelations++;
 					}
 				}
 			}
@@ -3612,7 +3610,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			fail = 1;
 		}
 		else if (ovls[k].path.aepos + actx->nFuzzBases > DB_READ_LEN(actx->corContigDB, ovls[k].aread)
-			|| ovls[k].path.bepos + actx->nFuzzBases > DB_READ_LEN(actx->corContigDB, ovls[k].bread))
+				|| ovls[k].path.bepos + actx->nFuzzBases > DB_READ_LEN(actx->corContigDB, ovls[k].bread))
 		{
 			fail = 2;
 		}
@@ -3675,7 +3673,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			}
 		}
 
-		if(!fail)
+		if (!fail)
 		{
 			Contig *conB = actx->contigs + ovls[j].bread;
 
@@ -3694,8 +3692,8 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 
 			for (i = 0; i < crel->numPos; i++)
 			{
-				crel->abpos[i] = ovls[k+i].path.abpos;
-				crel->aepos[i] = ovls[k+i].path.aepos;
+				crel->abpos[i] = ovls[k + i].path.abpos;
+				crel->aepos[i] = ovls[k + i].path.aepos;
 			}
 
 			if (conB->numContigRelations == conB->maxContigRelations)
@@ -3739,6 +3737,11 @@ void preClassifyContigsByContigOverlaps(AnalyzeContext *actx)
 
 		// analyze all overlap groups
 		int overAllNotClassified = 1;
+
+		/// TODO: only analyze containment relation ships for now
+		/// later include overlapping contigs --> trim back !!!
+
+
 //		for (j = 0; j < actx->contigs[i].numOvlGrps; j++)
 //		{
 //			OverlapGroup * olg = contigA->ovlGrps[j];
@@ -5296,12 +5299,13 @@ int checkJunctionCoverage(AnalyzeContext *actx, Contig *contig, int read) // ret
 
 static void usage()
 {
-	fprintf(stderr, " [-v] [-clxsfe <int>] [-d <dir>] [-rt <Track>] [-o <file>] -C <contigDB> <ContigOverlaps> -F <fixedReadDB> <fixedReadOverlaps> -D <correctedReadDB> \n");
+	fprintf(stderr,
+			" [-v] [-clxsfe <int>] [-d <dir>] [-rt <Track>] [-o <file>] -C <contigDB> <ContigOverlaps> -F <fixedReadDB> <fixedReadOverlaps> -D <correctedReadDB> \n");
 	fprintf(stderr, "options: -v         ... verbose\n");
 	fprintf(stderr, "         -x         ... min read length (default: 0)\n");
 	fprintf(stderr, "         -l         ... min alignment length (default: 1000)\n");
 	fprintf(stderr, "         -c         ... expected coverage\n");
-	fprintf(stderr, "         -s         ... maximum spur/bubble length (default: %d)\n",	DEF_SPUR_LEN);
+	fprintf(stderr, "         -s         ... maximum spur/bubble length (default: %d)\n", DEF_SPUR_LEN);
 	fprintf(stderr, "         -e         ... maximum contig end length (tips) to consider false joins (default: %d)\n", DEF_TIP_LEN);
 	fprintf(stderr, "         -r         ... repeats track for contigs (default: repeats)\n");
 	fprintf(stderr, "         -R         ... repeats track for patached reads (default: repeats)\n");
@@ -5311,7 +5315,8 @@ static void usage()
 	fprintf(stderr, "         -D DB 		 ... corrected read database\n");
 	fprintf(stderr, "         -d         ... write classified contigs ands stats file into -d directoryName (default: cwd)\n");
 	fprintf(stderr, "         -o         ... write out filtered chained overlaps (default: cwd)\n");
-	fprintf(stderr, "         -f         ... allow maximum of -f bases of structural variations between two contig overlaps of a chain, (default %d)\n", DEF_ARG_F);
+	fprintf(stderr, "         -f         ... allow maximum of -f bases of structural variations between two contig overlaps of a chain, (default %d)\n",
+			DEF_ARG_F);
 }
 
 int main(int argc, char* argv[])
@@ -5343,6 +5348,8 @@ int main(int argc, char* argv[])
 	actx.SPUR_LEN = DEF_SPUR_LEN;
 	actx.TIP_LEN = DEF_TIP_LEN;
 	actx.nFuzzBases = DEF_ARG_F;
+	actx.contByReads_CommonReadFraction = DEF_ARG_CRF;
+	actx.contByReads_CoveredLenPerc = DEF_ARG_CL;
 
 	int c;
 	while ((c = getopt(argc, argv, "vx:l:c:d:t:r:C:F:s:e:D:o:R:f:")) != -1)
