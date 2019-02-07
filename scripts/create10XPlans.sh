@@ -940,7 +940,7 @@ then
 		
 		empt=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/empty.fof
 		scaf=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.trim${SC_10X_TIGMINT_CUT_TRIM}.window${SC_10X_TIGMINT_CUT_WINDOW}.span${SC_10X_TIGMINT_CUT_SPAN}_z${SC_10X_LINKS_MINCONTIGLEN}_l${SC_10X_LINKS_MINCONTIGLEN}_a${SC_10X_LINKS_MAXLINKRATIO}.scaffolds.fa
-		echo "${LINKS_PATH}/LINKS -f ${tigmintOFile} -s ${empt} -b ${scaf} ${LINKS_OPT}" >> 10x_05_arksLinks_single_${CONT_DB}.${slurmID}.plan
+		echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate base && LINKS -f ${tigmintOFile} -s ${empt} -b ${scaf} ${LINKS_OPT} && source /projects/dazzler/pippel/prog/miniconda3/bin/activate base" >> 10x_05_arksLinks_single_${CONT_DB}.${slurmID}.plan
    	else
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
