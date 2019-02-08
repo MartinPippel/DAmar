@@ -3568,6 +3568,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 						break;
 					}
 				}
+				o1 = o2;
 			}
 		}
 
