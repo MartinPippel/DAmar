@@ -3586,8 +3586,10 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			ContigRelation *crel = conA->contigRelations + conA->numContigRelations;
 			crel->corContigIdx = conB->property.contigID;
 			crel->numPos = (k - j + 1);
-			crel->abpos = (int*) malloc(sizeof(int) * (crel->numPos) * 2);
+			crel->abpos = (int*) malloc(sizeof(int) * (crel->numPos) * 4);
 			crel->aepos = crel->abpos + crel->numPos;
+			crel->bbpos = crel->aepos + crel->numPos;
+			crel->bepos = crel->bbpos + crel->numPos;
 
 			int cumAaln = ovls[k].path.aepos - ovls[k].path.abpos;
 			crel->abpos[0] = ovls[k].path.abpos;
