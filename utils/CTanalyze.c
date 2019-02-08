@@ -4936,19 +4936,33 @@ void rawClassification(AnalyzeContext *actx)
 	 }*/
 }
 
-/// evaluate all three relaion information: TourRelation, ContigAlnRelation, ReadIntersectionRelation
+/// evaluate all three relationship information: TourRelation, ContigAlnRelation, ReadIntersectionRelation
 void classify(AnalyzeContext *actx)
 {
 	int i, j, k;
 	int end1, end2; // ends from touring
 	int path;
 
-	for (i = 0; i < actx->numContigs; i++)
+	int classified = 0;
+	for (i = actx->numContigs - 1; i >= 0; i--)
 	{
-		Contig *contig = actx->contigs + i;
-		path = getPathID(actx, contig->property.contigID);
-		getContigsEndIDs(actx, contig->property.contigID, &end1, &end2);
+		Contig *contig = actx->contigs_sorted[i];
 
+		printf("Classify contig %d l %d nRel (T: %d C: %d R: %d)", contig->property.contigID, contig->property.len, contig->numTourRelations, contig->numContigRelations, contig->numReadRelations);
+
+		// check for containment
+		if ((contig->property.rflag & (REL_TOUR_HAS_ALT | REL_TOUR_UNIQUE)) && (contig->property.rflag & (REL_CONTIG_HAS_ALT | REL_CONTIG_UNIQUE)) && (contig->property.rflag & (REL_READ_HAS_ALT | REL_READ_UNIQE)))
+		{
+			printf(" 3_PRIM");
+			classified++;
+		}
+		else if ((contig->property.rflag & (REL_TOUR_IS_ALT)) && (contig->property.rflag & (REL_CONTIG_IS_ALT)) && (contig->property.rflag & (REL_READ_IS_ALT)))
+		{
+			printf(" 3_ALT");
+			classified++;
+		}
+
+		printf("  -- classified (%d / %d)\n", classified, actx->numContigs);
 	}
 }
 
