@@ -3507,8 +3507,8 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 		{
 			fail = 1;
 		}
-		else if (ovls[k].path.aepos + actx->nFuzzBases > DB_READ_LEN(actx->corContigDB, ovls[k].aread)
-				|| ovls[k].path.bepos + actx->nFuzzBases > DB_READ_LEN(actx->corContigDB, ovls[k].bread))
+		else if (ovls[k].path.aepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[k].aread)
+				|| ovls[k].path.bepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[k].bread))
 		{
 			fail = 2;
 		}
@@ -3641,12 +3641,12 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 				}
 			}
 
-			printf("ADD ContigRelation %d (l %d) vs %d (l %d) nOvls: %d alignedA %d / %d alignedB %d / %d", conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, crel->numPos, cumAaln, conA->property.len, cumBaln, conB->property.len);
+			printf("  ADD ContigRelation %d (l %d) vs %d (l %d) nOvls: %d alignedA %d / %d alignedB %d / %d", conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, crel->numPos, cumAaln, conA->property.len, cumBaln, conB->property.len);
 		}
 		else
 		{
 			Contig *conB = actx->contigs + ovls[j].bread;
-			printf("FAILED [%d] ContigRelation %d (l %d) vs %d (l %d) nOvls: %d\n", fail, conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, (k - j + 1));
+			printf("  FAILED [%d] ContigRelation %d (l %d) vs %d (l %d) nOvls: %d\n", fail, conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, (k - j + 1));
 		}
 		k++;
 		j = k;
