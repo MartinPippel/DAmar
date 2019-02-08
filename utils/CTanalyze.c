@@ -3503,7 +3503,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 		o1 = ovls + j;
 		int fail = 0;
 
-		if (MIN(o1->path.abpos, o1->path.bbpos) < actx->nFuzzBases)
+		if (MIN(o1->path.abpos, o1->path.bbpos) > actx->nFuzzBases)
 		{
 			fail = 1;
 		}
@@ -3646,7 +3646,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 		else
 		{
 			Contig *conB = actx->contigs + ovls[j].bread;
-			printf("FAILED [%d] ContigRelation %d (l %d) vs %d (l %d) nOvls: %d", fail, conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, (k - j + 1));
+			printf("FAILED [%d] ContigRelation %d (l %d) vs %d (l %d) nOvls: %d\n", fail, conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, (k - j + 1));
 		}
 		k++;
 		j = k;
