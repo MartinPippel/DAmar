@@ -169,12 +169,19 @@ typedef struct
 	int cflag;			// contig classification flags
 	int rflag; 			// contig relation flags
 
-	int tmp;
+	int repBasesFromContigLAS;
+	int repBasesFromReadLAS;
 
-	int tourRelationFlags;
-	int contigRelationFlags;
-	int readRelationFlags;
+	int tmp;
 } ContigProperties;
+
+typedef struct
+{
+	TourRelation 		*correspTourRelation;
+	ContigRelation 	*correspContigRelation;
+	ReadRelation 		*correspReadRelation;
+} Classification;
+
 
 typedef struct
 {
@@ -195,6 +202,7 @@ typedef struct
 	TourRelation *tourRelations;
 	int numTourRelations;
 
+	Classification *classif;
 } Contig;
 
 typedef struct
@@ -258,6 +266,9 @@ typedef struct
 	int contByReads_CoveredLenPerc;			  // length of a contained contig (in percent) that is covered from a primary contig
 	int contByContigs_CoveredLenPerc;
 
+	int minPrimContigLen;
+	int minPrimContigReads;
+	int maxPrimContigRepeatPerc;
 
 	FileNamesAndOffsets *contigFileNamesAndOffsets;
 	FileNamesAndOffsets *rawReadFileNamesAndOffsets;

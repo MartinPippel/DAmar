@@ -55,6 +55,10 @@
 #define DEF_ARG_CRF 50
 #define DEF_ARG_CL 50
 
+#define DEF_ARG_L	100000 		// 	... minimum contig length, to be considered as a primary contig
+#define DEF_ARG_N	5					//	... minimum number of contig reads,  to be considered as a primary contig
+#define DEF_ARG_P	100				// 	... maximum repeat percentage, to be considered as a primary contig, not considered
+
 /// defines for contig vs contig alignments
 #define ConVsConMinAlign 5000
 #define ConVsConAnchorBases 2000
@@ -183,6 +187,7 @@ void initAnalyzeContext(AnalyzeContext *actx)
 
 		contig->property.len = DB_READ_LEN(actx->corContigDB, i);
 		contig->property.contigID = i;
+		contig->property.repBasesFromContigLAS = getRepeatBasesFromInterval(actx, 1, i, 0, contig->property.len);
 		contig->property.pathID = getPathID(actx, i);
 		contig->property.fileID = getFileID(actx->contigFileNamesAndOffsets, i);
 
@@ -269,6 +274,8 @@ void initAnalyzeContext(AnalyzeContext *actx)
 			else
 				cread->repeatBases = getRepeatBasesFromInterval(actx, 0, cread->patchedID, patchedRead_data[k + 2], patchedRead_data[k + 1]);
 
+			contig->property.repBasesFromReadLAS += cread->repeatBases;
+
 			// insert cRead into ovlReads, cBeg and cEnd will be later translated into absolute contig positions!
 			cread->ovlReads->patchedID = -patchedRead_data[k];
 			cread->ovlReads->beg = patchedRead_data[k + 1];
@@ -277,6 +284,7 @@ void initAnalyzeContext(AnalyzeContext *actx)
 			cread->ovlReads->cEnd = cread->patchedContigPosEnd;
 
 			cread->numOvlReads = 1;
+
 
 			// set vmaskread
 			l = 0;
@@ -3089,7 +3097,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 					if (contig_k->property.cflag & CLASS_CONTIG_DISCARD)
 						continue;
 
-					if ((contig_k->property.readRelationFlags & REL_CONTIG_IS_ALT))
+					if ((contig_k->property.rflag & REL_CONTIG_IS_ALT))
 						continue;
 
 					if (contig_k->property.len > 300000)
@@ -3339,7 +3347,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 							int num = contig_k->numReadRelations;
 
-							contig_k->property.readRelationFlags |= preClassFlagK;
+							contig_k->property.rflag |= preClassFlagK;
 							contig_k->readRelations[num].flag = preClassFlagK;
 							contig_k->readRelations[num].numCoveredIntervals = numCovIvlK;
 							contig_k->readRelations[num].coveredIntervals = covIvlK;
@@ -3357,7 +3365,7 @@ void preclassifyContigsByBReadsAndPath(AnalyzeContext *actx)
 
 							num = contig_j->numReadRelations;
 
-							contig_j->property.readRelationFlags |= preClassFlagJ;
+							contig_j->property.rflag |= preClassFlagJ;
 							contig_j->readRelations[num].flag = preClassFlagJ;
 							contig_j->readRelations[num].numCoveredIntervals = numCovIvlJ;
 							contig_j->readRelations[num].coveredIntervals = covIvlJ;
@@ -3638,7 +3646,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 		else
 		{
 			Contig *conB = actx->contigs + ovls[j].bread;
-			printf("FAILED ContigRelation %d (l %d) vs %d (l %d) nOvls: %d", conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, (k - j + 1));
+			printf("FAILED [%d] ContigRelation %d (l %d) vs %d (l %d) nOvls: %d", fail, conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, (k - j + 1));
 		}
 		k++;
 		j = k;
@@ -3665,7 +3673,7 @@ void preClassifyContigsByContigOverlaps(AnalyzeContext *actx)
 		// no valid overlap chain found --> its unique
 		if (contigA->numContigRelations == 0)
 		{
-			contigA->property.contigRelationFlags |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_PRIMARY);
+			contigA->property.rflag |= (REL_CONTIG_UNIQUE);
 			continue;
 		}
 
@@ -4944,11 +4952,81 @@ void classify(AnalyzeContext *actx)
 	int path;
 
 	int classified = 0;
-	for (i = actx->numContigs - 1; i >= 0; i--)
+	for (i = 0;  i < actx->numContigs; i++)
 	{
 		Contig *contig = actx->contigs_sorted[i];
 
 		printf("Classify contig %d l %d nRel (T: %d C: %d R: %d)", contig->property.contigID, contig->property.len, contig->numTourRelations, contig->numContigRelations, contig->numReadRelations);
+
+		// check for ALT contigs first
+		if (contig->property.rflag & (REL_TOUR_IS_ALT))
+		{
+			int tourRelIdx = -1;
+			int contRelIdx = -1;
+			int readRelIdx = -1;
+
+			for (j=0; j<contig->numTourRelations; j++)
+			{
+				TourRelation *tRel = contig->tourRelations + j;
+				if (tRel->flag & REL_TOUR_IS_ALT)
+				{
+					assert(tourRelIdx == -1);
+					tourRelIdx = j;
+				}
+			}
+
+			assert(tourRelIdx != -1);
+
+			for (j=0; j<contig->numContigRelations; j++)
+			{
+				ContigRelation *cRel = contig->contigRelations + j;
+				if ((cRel->flag & REL_CONTIG_IS_ALT) && cRel->corContigIdx == contig->tourRelations[tourRelIdx].contigID1)
+				{
+					contRelIdx = j;
+					break;
+				}
+			}
+
+			for (j=0; j<contig->numReadRelations; j++)
+			{
+				ReadRelation *rRel = contig->readRelations + j;
+				if ((rRel->flag & REL_READ_IS_ALT) && rRel->correspID == contig->tourRelations[tourRelIdx].contigID1)
+				{
+					readRelIdx = j;
+					break;
+				}
+			}
+
+			if (contig->tourRelations[tourRelIdx].contigID1 == contig->contigRelations[contRelIdx].corContigIdx)
+			{
+				contig->property.cflag |= (CLASS_CONTIG_ALT | CLASS_CONTIG_CLASSIFIED);
+				contig->classif->correspTourRelation   = contig->tourRelations + tourRelIdx;
+				contig->classif->correspContigRelation = contig->contigRelations + contRelIdx;
+			}
+
+			if (contig->tourRelations[tourRelIdx].contigID1 == contig->readRelations[readRelIdx].correspID)
+			{
+				contig->property.cflag |= CLASS_CONTIG_ALT | CLASS_CONTIG_CLASSIFIED;
+				contig->classif->correspTourRelation = contig->tourRelations + tourRelIdx;
+				contig->classif->correspReadRelation = contig->readRelations + readRelIdx;
+			}
+		}
+		else
+		{
+			int primaryLenValid = contig->property.len > actx->minPrimContigLen;
+			int primaryRepeatsValid = MAX(contig->property.repBasesFromContigLAS, contig->property.repBasesFromReadLAS) * 100.0/ contig->property.len <= actx->maxPrimContigRepeatPerc;
+			int primareNumCreadsValid = contig->numcReads > actx->minPrimContigReads;
+
+
+
+		}
+
+
+
+
+
+
+
 
 		// check for containment
 		if ((contig->property.rflag & (REL_TOUR_HAS_ALT | REL_TOUR_UNIQUE)) && (contig->property.rflag & (REL_CONTIG_HAS_ALT | REL_CONTIG_UNIQUE)) && (contig->property.rflag & (REL_READ_HAS_ALT | REL_READ_UNIQE)))
@@ -5022,7 +5100,7 @@ int checkJunctionCoverage(AnalyzeContext *actx, Contig *contig, int read) // ret
 static void usage()
 {
 	fprintf(stderr,
-			" [-v] [-clxsfe <int>] [-d <dir>] [-rt <Track>] [-o <file>] -C <contigDB> <ContigOverlaps> -F <fixedReadDB> <fixedReadOverlaps> -D <correctedReadDB> \n");
+			" [-v] [-clxsfeLNP <int>] [-d <dir>] [-rt <Track>] [-o <file>] -C <contigDB> <ContigOverlaps> -F <fixedReadDB> <fixedReadOverlaps> -D <correctedReadDB> \n");
 	fprintf(stderr, "options: -v         ... verbose\n");
 	fprintf(stderr, "         -x         ... min read length (default: 0)\n");
 	fprintf(stderr, "         -l         ... min alignment length (default: 1000)\n");
@@ -5037,8 +5115,12 @@ static void usage()
 	fprintf(stderr, "         -D DB 		 ... corrected read database\n");
 	fprintf(stderr, "         -d         ... write classified contigs ands stats file into -d directoryName (default: cwd)\n");
 	fprintf(stderr, "         -o         ... write out filtered chained overlaps (default: cwd)\n");
-	fprintf(stderr, "         -f         ... allow maximum of -f bases of structural variations between two contig overlaps of a chain, (default %d)\n",
-			DEF_ARG_F);
+	fprintf(stderr, "         -f         ... allow maximum of -f bases of structural variations between two contig overlaps of a chain, (default %d)\n", DEF_ARG_F);
+	fprintf(stderr, "\n\n");
+	fprintf(stderr, "EPERIMENTAL - contig filter + classification options:\n");
+	fprintf(stderr, "         -L         ... minimum primary contig length, (default %d)\n", DEF_ARG_L);
+	fprintf(stderr, "         -N         ... minimum number of contig reads for a primary contig (default %d)\n", DEF_ARG_N);
+	fprintf(stderr, "         -P         ... maximum repeat percentage of a primary contig, (default %d)\n", DEF_ARG_P);
 }
 
 int main(int argc, char* argv[])
@@ -5074,8 +5156,12 @@ int main(int argc, char* argv[])
 	actx.contByReads_CoveredLenPerc = DEF_ARG_CL;
 	actx.contByContigs_CoveredLenPerc = DEF_ARG_CL;
 
+	actx.minPrimContigLen = DEF_ARG_L;
+	actx.minPrimContigReads = DEF_ARG_N;
+	actx.maxPrimContigRepeatPerc = DEF_ARG_P;
+
 	int c;
-	while ((c = getopt(argc, argv, "vx:l:c:d:t:r:C:F:s:e:D:o:R:f:")) != -1)
+	while ((c = getopt(argc, argv, "vx:l:c:d:t:r:C:F:s:e:D:o:R:f:L:N:P:")) != -1)
 	{
 		switch (c)
 		{
@@ -5084,6 +5170,15 @@ int main(int argc, char* argv[])
 			break;
 		case 'v':
 			actx.VERBOSE++;
+			break;
+		case 'L':
+			actx.minPrimContigLen = atoi(optarg);
+			break;
+		case 'N':
+			actx.minPrimContigReads = atoi(optarg);
+			break;
+		case 'P':
+			actx.maxPrimContigRepeatPerc = atoi(optarg);
 			break;
 		case 'f':
 			actx.nFuzzBases = atoi(optarg);
