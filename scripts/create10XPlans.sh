@@ -800,7 +800,7 @@ then
    		
    		echo "ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
    		echo "samtools faidx ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
-		echo "bwa index ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
+		echo "${PACBIO_BASE_ENV} && bwa index ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta && ${PACBIO_BASE_ENV_DEACT}" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan
 		echo "perl -ne 'chomp; if(/>/){\$ct+=1; print \">\$ct\n\";}else{print \"\$_\n\";} ' < ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta > ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.renamed.fasta" >> 10x_01_arksPrepare_single_${CONT_DB}.${slurmID}.plan		
    		
 		for r1 in ${SC_10X_READS}/${PROJECT_ID}_S[0-9]_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
@@ -841,7 +841,7 @@ then
         setTigmintOptions
         
         # Align paired-end reads to the draft genome and sort by BX tag.
-        echo "bwa mem${SCAFFOLD_BWA_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz | samtools sort${SCAFFOLD_SAMTOOLS_OPT} -o ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_reads_sortbx.bam" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
+        echo "${PACBIO_BASE_ENV} && bwa mem${SCAFFOLD_BWA_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/ref/${PROJECT_ID}.fasta ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/${PROJECT_ID}/outs/barcoded.fastq.gz | samtools sort${SCAFFOLD_SAMTOOLS_OPT} -o ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_reads_sortbx.bam && ${PACBIO_BASE_ENV_DEACT}" > 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
     	# Create molecule extents BED
     	flp="${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}.as${SC_10X_TIGMINT_MOLECULE_ALNSCORERATIO}.nm${SC_10X_TIGMINT_MOLECULE_MAXMISMATCH}.molecule.size${SC_10X_TIGMINT_MOLECULE_MINMOLSIZE}"    	
     	echo "${TIGMINT_PATH}/tigmint-molecule${TIGMINT_MOLECULE_OPT} ${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint/${PROJECT_ID}_reads_sortbx.bam | sort -k1,1 -k2,2n -k3,3n > ${flp}.bed" >> 10x_03_arksTigmint_single_${CONT_DB}.${slurmID}.plan
@@ -940,7 +940,7 @@ then
 		
 		empt=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/empty.fof
 		scaf=${SC_10X_OUTDIR}/arks_${SC_10X_RUNID}/tigmint_arks/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}${fext}.${cset}.trim${SC_10X_TIGMINT_CUT_TRIM}.window${SC_10X_TIGMINT_CUT_WINDOW}.span${SC_10X_TIGMINT_CUT_SPAN}_z${SC_10X_LINKS_MINCONTIGLEN}_l${SC_10X_LINKS_MINCONTIGLEN}_a${SC_10X_LINKS_MAXLINKRATIO}.scaffolds.fa
-		echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate base && LINKS -f ${tigmintOFile} -s ${empt} -b ${scaf} ${LINKS_OPT} && source /projects/dazzler/pippel/prog/miniconda3/bin/activate base" >> 10x_05_arksLinks_single_${CONT_DB}.${slurmID}.plan
+		echo "${LINKS_PATH}/LINKS -f ${tigmintOFile} -s ${empt} -b ${scaf} ${LINKS_OPT}" >> 10x_05_arksLinks_single_${CONT_DB}.${slurmID}.plan
    	else
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
