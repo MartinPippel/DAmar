@@ -3591,11 +3591,18 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			crel->bbpos = crel->aepos + crel->numPos;
 			crel->bepos = crel->bbpos + crel->numPos;
 
-			int cumAaln = ovls[k].path.aepos - ovls[k].path.abpos;
-			crel->abpos[0] = ovls[k].path.abpos;
-			crel->aepos[0] = ovls[k].path.aepos;
+			int cumAaln = ovls[j].path.aepos - ovls[j].path.abpos;
+
+			// add first coordinates
+			crel->abpos[0] = ovls[j].path.abpos;
+			crel->aepos[0] = ovls[j].path.aepos;
+
+			// add further coordinates, but subtract ovlapping neighboring overlaps
 			for (i = 1; i < crel->numPos; i++)
 			{
+				crel->abpos[i] = ovls[j+i].path.abpos;
+				crel->aepos[i] = ovls[j+i].path.aepos;
+
 				cumAaln += crel->aepos[i] - crel->abpos[i];
 				if (crel->abpos[i] < crel->aepos[i-1])
 				{
@@ -3606,15 +3613,15 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			int cumBaln;
 			if (ovls[k].flags & OVL_COMP)
 			{
-				cumBaln = ovls[k].path.bepos - ovls[k].path.bbpos;
+				cumBaln = ovls[j].path.bepos - ovls[j].path.bbpos;
 
-				crel->bbpos[0] = conB->property.len - ovls[k].path.bbpos;
-				crel->bepos[0] = conB->property.len - ovls[k].path.bepos;
+				crel->bbpos[0] = conB->property.len - ovls[j].path.bbpos;
+				crel->bepos[0] = conB->property.len - ovls[j].path.bepos;
 
 				for (i = 1; i < crel->numPos; i++)
 				{
-					crel->bbpos[i] = conB->property.len - ovls[k + i].path.bbpos;
-					crel->bepos[i] = conB->property.len - ovls[k + i].path.bepos;
+					crel->bbpos[i] = conB->property.len - ovls[j + i].path.bbpos;
+					crel->bepos[i] = conB->property.len - ovls[j + i].path.bepos;
 
 					cumBaln += crel->bbpos[i] - crel->bepos[i];
 
@@ -3626,15 +3633,15 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			}
 			else
 			{
-				cumBaln = ovls[k].path.bepos - ovls[k].path.bbpos;
+				cumBaln = ovls[j].path.bepos - ovls[j].path.bbpos;
 
-				crel->bbpos[0] = ovls[k].path.bbpos;
-				crel->bepos[0] = ovls[k].path.bepos;
+				crel->bbpos[0] = ovls[j].path.bbpos;
+				crel->bepos[0] = ovls[j].path.bepos;
 
 				for (i = 1; i < crel->numPos; i++)
 				{
-					crel->bbpos[i] = ovls[k + i].path.bbpos;
-					crel->bepos[i] = ovls[k + i].path.bepos;
+					crel->bbpos[i] = ovls[j + i].path.bbpos;
+					crel->bepos[i] = ovls[j + i].path.bepos;
 
 					cumBaln += crel->bepos[i] - crel->bbpos[i];
 					if (crel->bbpos[i] < crel->bepos[i-1])
@@ -3644,7 +3651,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 				}
 			}
 
-			printf("  ADD ContigRelation %d (l %d) vs %d (l %d) nOvls: %d alignedA %d / %d alignedB %d / %d", conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, crel->numPos, cumAaln, conA->property.len, cumBaln, conB->property.len);
+			printf("  ADD ContigRelation %d (l %d) vs %d (l %d) nOvls: %d alignedA %d / %d alignedB %d / %d\n", conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, crel->numPos, cumAaln, conA->property.len, cumBaln, conB->property.len);
 		}
 		else
 		{
