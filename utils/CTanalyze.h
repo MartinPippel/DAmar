@@ -29,22 +29,6 @@ typedef struct
 
 } OvlRead;
 
-
-#define CONTIG_READ_VALID     (1 << 0)  // 	1 initially all reads are valid, because they are part of a contig
-#define CONTIG_READ_CHECKED	 (1 << 1)  // 	2
-#define CONTIG_READ_DISCARD   (1 << 2) // 	4 contig read should be completely cut out from contig
-#define CONTIG_READ_NEWEND    (1 << 3)  // 	8c	ontig ends at current read at position contigPosEnd
-#define CONTIG_READ_NEWSTART  (1 << 4)  // 	16	contig starts at current read at position: contigPosBeg
-#define CONTIG_READ_BREAK_UNKNOWN       	(1 << 5)		//	32
-#define CONTIG_READ_BREAK_MULTIREAD 		(1 << 6)		//	64
-#define CONTIG_READ_BREAK_STARTEND 		(1 << 7)		//	128
-#define CONTIG_READ_BREAK_FALSEJOINLEFT 	(1 << 8)		//	256
-#define CONTIG_READ_BREAK_FALSEJOINRIGHT	(1 << 9)		//	512
-#define CONTIG_READ_BREAK_HETEROZYGLEFT	(1 << 10)	//	1024
-#define CONTIG_READ_BREAK_HETEROZYGRIGHT	(1 << 11)	//	2048
-#define CONTIG_READ_BREAK_DEADENDLEFT	(1 << 12)	//	4096
-#define CONTIG_READ_BREAK_DEADENDRIGHT	(1 << 13)	//	8192
-
 typedef struct
 {
 
@@ -76,44 +60,6 @@ typedef struct
 	int maxOvlReads;
 
 } ContigRead;
-
-//// overlap group flags
-#define OVLGRP_COMP          (1 << 0)        // if overlaps are in complement direction
-#define OVLGRP_DISCARD       (1 << 1)        // overlap group tagged for removal (if a contig is tagged invalid, or the ovlgrp is covers only a few bases, etc)
-// all defines are in aread - bread direction
-#define OVLGRP_AREAD_IS_CONTAINED  (1 << 2)  // a-read is contained in b read
-#define OVLGRP_AREAD_HAS_CONTAINED (1 << 3)  // b-read is contained in a read
-#define OVLGRP_TOO_SHORT     (1 << 4)        // overlap group is shorter than MIN_CONTIG_LENGTH
-
-typedef struct
-{
-	int aread;
-	int bread;
-
-	int coveredBasesInA;
-	int coveredBasesInB;
-	int gapBasesInA;
-	int gapBasesInB;
-	int repeatBasesInA;
-	int repeatBasesInB;
-
-	int first_abpos, first_aepos;
-	int first_bbpos, first_bepos;  // corresponding to bread
-
-	int last_abpos, last_aepos;
-	int last_bbpos, last_bepos;  // corresponding to bread
-
-	int flag;
-} OverlapGroup;
-
-//// contig flags
-#define CONTIG_UNIQUE        (1 << 0)        //	1	contigs has no valid overlap group
-//#define CONTIG_DISCARD       (1 << 1)        //	2	 contig tagged for removal
-#define CONTIG_IS_CONTAINED  (1 << 2)        // 	4	contig is contained in another contig
-#define CONTIG_HAS_CONTAINED (1 << 3)        // 	8	contig includes contained
-#define CONTIG_UNCLASSIFIED  (1 << 4)        // 	16
-#define CONTIG_NORELATION    (1 << 5)        // 	32
-#define CONTIG_AL50PCTCOVERED (1 << 6)    	//  64
 
 typedef struct _ContigFlag2Label ContigFlag2Label;
 struct _ContigFlag2Label
@@ -156,6 +102,8 @@ typedef struct
 	int corContigIdx;
 	int *abpos;
 	int *aepos;
+	int *bbpos;
+	int *bepos;
 	int numPos;
 } ContigRelation;
 
@@ -166,39 +114,50 @@ typedef struct
 	int flag;
 } TourRelation;
 
-
-///// contig classification flags
-#define CONTIG_CLASS_UNKNOWN			(1 << 0)			//	1
-#define CONTIG_CLASS_HAPLOID			(1 << 1)     	// 	2	haploid contig
-#define CONTIG_CLASS_ALT   			(1 << 2)     	// 	4	alternative contig (heterozygous difference)
-#define CONTIG_CLASS_ALT_SPUR		(1 << 3)    		// 	8	alternative contig is a Spur
-#define CONTIG_CLASS_ALT_BUBBLE		(1 << 4)    		// 	16	alternative contig is a Bubble
-#define CONTIG_CLASS_ALT_HUGEDIFF	(1 << 5)  		// 	32	alternative contig with hiuge difference
-#define CONTIG_CLASS_REPEAT			(1 << 6)     	// 	64	repeat
-#define CONTIG_CLASS_WEIRD 			(1 << 7)     	// 	128	weird
-#define CONTIG_VISITED 				(1 << 8)     	// 	256	visited flag
-#define CONTIG_DISCARD				(1 << 9)
-
+// CONTIG RELATION FLAGS
 /// TourRelationFlags - based on touring evaluates ends arguments
-#define TOUR_HAS_BUBBLE					(1 << 0)	// contig has some bubbles
-#define TOUR_IS_BUBBLE					(1 << 1) 	// contig is a bubble of another contig
-#define TOUR_IS_SPUR 			 			(1 << 2)	// contig is a spur
-#define TOUR_HAS_SPUR 			 		(1 << 3)	// contig has spurs
-#define TOUR_IS_BRIDGECONTIG  	(1 << 4)	// contig joins different contigs
-#define TOUR_HAS_BRIDGECONTIG  	(1 << 5)	// contig joins different contigs
-
+#define REL_TOUR_PRIMARY						(1 << 0)
+#define REL_TOUR_IS_ALT							(1 << 1) // contig is bubble or spur
+#define REL_TOUR_HAS_ALT						(1 << 2) // contig is bubble or spur
+#define REL_TOUR_UNIQUE							(1 << 3) // contig has no other tour relationship
+#define REL_TOUR_IS_BRIDGE					(1 << 4) // contig bridges two other contigs
+#define REL_TOUR_HAS_BRIDGE					(1 << 5) // contig has another contig that is a bridge contig
 /// ContigRelationFlags - based on Contig vs Contig overlaps
-#define CONT_HAS_CONTAINED		(1 << 0)
-#define CONT_IS_CONTAINED			(1 << 1)
-#define CONT_HAS_LEFTEXIT 		(1 << 2)
-#define CONT_HAS_RIGHTEXIT 		(1 << 3)
-
+#define REL_CONTIG_PRIMARY					(1 << 6)
+#define REL_CONTIG_IS_ALT						(1 << 7)
+#define REL_CONTIG_HAS_ALT 					(1 << 8)
+#define REL_CONTIG_UNIQUE 					(1 << 9)
+#define REL_CONTIG_BRIDGE 					(1 << 10)
 /// ReadRelationFlags - based on Contig vs patched read overlaps
-#define READ_HAS_CONTAINED		(1 << 0)
-#define READ_IS_CONTAINED			(1 << 1)
-#define READ_HAS_LEFTEXIT 		(1 << 2)
-#define READ_HAS_RIGHTEXIT 		(1 << 3)
-#define READ_IS_UNIQUE	 			(1 << 4)
+#define REL_READ_PRIMARY						(1 << 11)
+#define REL_READ_IS_ALT							(1 << 12)
+#define REL_READ_HAS_ALT 						(1 << 13)
+#define REL_READ_BRIDGE 						(1 << 14)
+#define REL_READ_UNIQE	 						(1 << 15)    // 32768
+
+
+// CONTIG CLASSIFICATION FLAGS
+#define CLASS_CONTIG_CLASSIFIED					(1 << 0)
+#define CLASS_CONTIG_PRIMARY						(1 << 1)
+#define CLASS_CONTIG_ALT								(1 << 2)
+#define CLASS_CONTIG_DISCARD						(1 << 3)
+#define CLASS_CONTIG_MODIFIED						(1 << 4)		// TODO split, trimmed, etc... ?
+#define CLASS_CONTIG_VISITED						(1 << 5)  	// temporary flag
+/// READ JUNCTION FLAGS // TODO in development
+#define CLASS_READ_VALID     						(1 << 6)  	// 	128   initially all reads are valid, because they are part of a contig
+#define CLASS_READ_CHECKED	 						(1 << 7)  	// 	256
+#define CLASS_READ_DISCARD   						(1 << 8) 		// 	512   contig read should be completely cut out from contig
+#define CLASS_READ_NEWEND    						(1 << 10)  	// 	1,024	contig ends at current read at position contigPosEnd
+#define CLASS_READ_NEWSTART  						(1 << 11)  	// 	2,048	contig starts at current read at position: contigPosBeg
+#define CLASS_READ_BREAK_UNKNOWN       	(1 << 12)		//	4,096
+#define CLASS_READ_BREAK_MULTIREAD 			(1 << 13)		//	8,192
+#define CLASS_READ_BREAK_STARTEND 			(1 << 14)		//	16,384
+#define CLASS_READ_BREAK_FALSEJOINLEFT 	(1 << 15)		//	32,768
+#define CLASS_READ_BREAK_FALSEJOINRIGHT	(1 << 16)		//	65,536
+#define CLASS_READ_BREAK_HETEROZYGLEFT	(1 << 17)		//	131,072
+#define CLASS_READ_BREAK_HETEROZYGRIGHT	(1 << 18)		//	262,144
+#define CLASS_READ_BREAK_DEADENDLEFT		(1 << 19)		//	524,288
+#define CLASS_READ_BREAK_DEADENDRIGHT		(1 << 20)		//	1,048,576
 
 typedef struct
 {
@@ -207,9 +166,10 @@ typedef struct
 	int fileID; 	  // contigs are usually split into connected compounds and stored different files
 	int pathID;     // pathID represents an individual contig ID within a connected compound
 
-	int tmp;			 // reusable variable
+	int cflag;			// contig classification flags
+	int rflag; 			// contig relation flags
 
-	int flag;
+	int tmp;
 
 	int tourRelationFlags;
 	int contigRelationFlags;
@@ -296,6 +256,7 @@ typedef struct
 	int nFuzzBases;
 	int contByReads_CommonReadFraction; 	// how many raw reads (in percent) must a contained contig have in common with a primary contig
 	int contByReads_CoveredLenPerc;			  // length of a contained contig (in percent) that is covered from a primary contig
+	int contByContigs_CoveredLenPerc;
 
 
 	FileNamesAndOffsets *contigFileNamesAndOffsets;
@@ -340,11 +301,8 @@ void getContigsEndIDs(AnalyzeContext *actx, int contigID, int* beg, int *end);
 //////// analyze contigs on their alignments with each other
 int processContigOverlap_handler(void* _ctx, Overlap* ovls, int novl);
 int compareInt(const void * a, const void * b);
-int isOverlapGroupValid(AnalyzeContext *actx, OverlapGroup *ovlgrp);
-void addOverlapGroupToContig(AnalyzeContext *actx, OverlapGroup *ovlgrp, int symmetricAdd);
 int contained(int ab, int ae, int bb, int be);
 void classifyContigsByOverlaps(AnalyzeContext *actx);
-OverlapGroup* copySymmetricOverlapGroup(OverlapGroup *ovlgrp);
 
 /// use all info from classifyContigsByOverlaps and classifyContigsByBReadsAndPath and tracks
 /// to make final decision about contig class
