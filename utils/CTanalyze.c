@@ -3508,7 +3508,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			fail = 1;
 		}
 		else if (ovls[k].path.aepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[k].aread)
-				|| ovls[k].path.bepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[k].bread))
+				&& ovls[k].path.bepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[k].bread))
 		{
 			fail = 2;
 		}
