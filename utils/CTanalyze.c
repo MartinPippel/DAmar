@@ -5448,7 +5448,7 @@ int main(int argc, char* argv[])
 // todo for now do all steps: input format should be a MARVEL assembly run
 // analyze overlaps of fixed reads for each contig ( coverage, containments, duplicate reads used in different contigs )
 // STEP1
-	if (1)
+	if (0)
 	{
 		printf("START    ---   STEP1A: -- use patched read overlaps (from touring) and assign those to corresponding contigs\n");
 		pass(patched_pctx, processReadOverlapsAndMapThemToContigs);
