@@ -3531,8 +3531,8 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			properEndB = 0;
 		}
 
-		overlapBasesA = o1->path.aepos - o2->path.abpos;
-		overlapBasesB = o1->path.bepos - o2->path.bbpos;
+		overlapBasesA = o1->path.aepos - o1->path.abpos;
+		overlapBasesB = o1->path.bepos - o1->path.bbpos;
 
 		for (i = j + 1; i <= k; i++)
 		{
@@ -3600,7 +3600,6 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 		int validContainment = 0;
 		int validBridge = 0;
 
-
 		if(properGapLen)
 		{
 			if(MAX(overlapBasesA, overlapBasesB) >= (int) (actx->contByContigs_CoveredLenPerc / 100.0 * MIN(DB_READ_LEN(actx->corContigDB, ovls[j].aread), DB_READ_LEN(actx->corContigDB, ovls[j].bread))))
@@ -3611,7 +3610,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			//      contigA         ----------------
 			//      contigB	---------
 			//			min 50Kb overlap, both overhangs min 100Kb
-			else if(properBegA && !properEndA && properEndB && !properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*actx->nFuzzBases) && ovls[k]->path.aepos + 100000 < DB_READ_LEN(actx->corContigDB, ovls[j].aread)
+			else if(properBegA && !properEndA && properEndB && !properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*actx->nFuzzBases) && ovls[k].path.aepos + 100000 < DB_READ_LEN(actx->corContigDB, ovls[j].aread)
 					&& ovls[j].path.bbpos - 100000 > 0)
 			{
 				validBridge = 1;
