@@ -3489,7 +3489,6 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 
 	Contig *conA = actx->contigs + ovls->aread;
 
-	int MAX_GAP_LEN = 30000;
 	// speed up things for long contigs
 
 	int i, j, k;
@@ -3502,77 +3501,131 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 		Overlap *o1, *o2;
 		o1 = ovls + j;
 		int fail = 0;
+		int properBegA = 1;
+		int properEndA = 1;
+		int properBegB = 1;
+		int properEndB = 1;
 
-		if (MIN(o1->path.abpos, o1->path.bbpos) > actx->nFuzzBases)
+		int overlapBasesA = 0;
+		int overlapBasesB = 0;
+		int properGapLen = 1;
+
+
+
+		if (o1->path.abpos > actx->nFuzzBases)
 		{
-			fail = 1;
+			properBegA = 0;
 		}
-		else if (ovls[k].path.aepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[k].aread)
-				&& ovls[k].path.bepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[k].bread))
+		if (o1->path.bbpos > actx->nFuzzBases)
 		{
-			fail = 2;
+			properBegB = 0;
 		}
-		else
+
+		if (ovls[j].path.aepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[j].aread))
 		{
-			for (i = j + 1; i <= k; i++)
+			properEndA = 0;
+		}
+
+		if (ovls[j].path.bepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[j].bread))
+		{
+			properEndB = 0;
+		}
+
+		overlapBasesA = o1->path.aepos - o2->path.abpos;
+		overlapBasesB = o1->path.bepos - o2->path.bbpos;
+
+		for (i = j + 1; i <= k; i++)
+		{
+			o2 = ovls + i;
+
+			overlapBasesA += o2->path.aepos - o2->path.abpos;
+			overlapBasesB += o2->path.bepos - o2->path.bbpos;
+
+			// validate oriantation
+			if ((o1->flags & OVL_COMP) != (o2->flags & OVL_COMP))
 			{
-				o2 = ovls + i;
+				fail = 1;
+				break;
+			}
 
-				// validate oriantation
-				if ((o1->flags & OVL_COMP) != (o2->flags & OVL_COMP))
+			// validate direction
+			if (o1->path.abpos > o2->path.abpos || o1->path.bbpos > o2->path.bbpos || o1->path.aepos > o2->path.aepos || o1->path.bepos > o2->path.bepos)
+			{
+				fail = 2;
+				break;
+			}
+
+			// validate overlap between overlaps - A-coordinates
+			int len = o1->path.aepos - o2->path.abpos;
+			if (len > 0) // there is an overlap of neighboring alignments
+			{
+				if (len > MIN(o1->path.aepos - o1->path.abpos, o2->path.aepos - o2->path.abpos))
 				{
 					fail = 3;
 					break;
 				}
-
-				// validate direction
-				if (o1->path.abpos > o2->path.abpos || o1->path.bbpos > o2->path.bbpos || o1->path.aepos > o2->path.aepos || o1->path.bepos > o2->path.bepos)
+				overlapBasesA -= len;
+			}
+			else // there is a gap between neighboring alignments
+			{
+				if (abs(len) > actx->nFuzzBases)
 				{
 					fail = 4;
 					break;
 				}
+			}
+			// validate overlap between overlaps - A-coordinates
+			len = o1->path.bepos - o2->path.bbpos;
+			if (len > 0) // there is an overlap of neighboring alignments
+			{
+				if (len > MIN(o1->path.bepos - o1->path.bbpos, o2->path.bepos - o2->path.bbpos))
+				{
+					fail = 5;
+					break;
+				}
+				overlapBasesB -= len;
+			}
+			else // there is a gap between neighboring alignments
+			{
+				if (abs(len) > actx->nFuzzBases)
+				{
+					fail = 6;
+					break;
+				}
+			}
 
-				// validate overlap between overlaps - A-coordinates
-				int len = o1->path.aepos - o2->path.abpos;
-				if (len > 0) // there is an overlap of neighboring alignments
-				{
-					if (len > MIN(o1->path.aepos - o1->path.abpos, o2->path.aepos - o2->path.abpos))
-					{
-						fail = 5;
-						break;
-					}
-				}
-				else // there is a gap between neighboring alignments
-				{
-					if (abs(len) > MAX_GAP_LEN)
-					{
-						fail = 6;
-						break;
-					}
-				}
-				// validate overlap between overlaps - A-coordinates
-				len = o1->path.bepos - o2->path.bbpos;
-				if (len > 0) // there is an overlap of neighboring alignments
-				{
-					if (len > MIN(o1->path.bepos - o1->path.bbpos, o2->path.bepos - o2->path.bbpos))
-					{
-						fail = 7;
-						break;
-					}
-				}
-				else // there is a gap between neighboring alignments
-				{
-					if (abs(len) > MAX_GAP_LEN)
-					{
-						fail = 8;
-						break;
-					}
-				}
-				o1 = o2;
+			o1 = o2;
+		}
+
+		int validContainment = 0;
+		int validBridge = 0;
+
+
+		if(properGapLen)
+		{
+			if(MAX(overlapBasesA, overlapBasesB) >= (int) (actx->contByContigs_CoveredLenPerc / 100.0 * MIN(DB_READ_LEN(actx->corContigDB, ovls[j].aread), DB_READ_LEN(actx->corContigDB, ovls[j].bread))))
+			{
+				validContainment = 1;
+			}
+
+			//      contigA         ----------------
+			//      contigB	---------
+			//			min 50Kb overlap, both overhangs min 100Kb
+			else if(properBegA && !properEndA && properEndB && !properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*actx->nFuzzBases) && ovls[k]->path.aepos + 100000 < DB_READ_LEN(actx->corContigDB, ovls[j].aread)
+					&& ovls[j].path.bbpos - 100000 > 0)
+			{
+				validBridge = 1;
+			}
+			//      contigA         ----------------
+			//      								contigB			------------
+			//			min 50Kb overlap, both overhangs min 100Kb
+			else if(!properBegA && properEndA && !properEndB && properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*actx->nFuzzBases) && ovls[j].path.abpos - 100000 > 0 && ovls[k].path.bepos + 100000 < DB_READ_LEN(actx->corContigDB, ovls[j].bread))
+			{
+				validBridge = 1;
 			}
 		}
 
-		if (!fail)
+		if (!fail && (validBridge || validContainment))
 		{
 			Contig *conB = actx->contigs + ovls[j].bread;
 
@@ -3651,7 +3704,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 				}
 			}
 
-			printf("  ADD ContigRelation %d (l %d) vs %d (l %d) nOvls: %d alignedA %d / %d alignedB %d / %d\n", conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, crel->numPos, cumAaln, conA->property.len, cumBaln, conB->property.len);
+			printf("  ADD ContigRelation %d (l %d) vs %d (l %d) nOvls: %d alignedA %d / %d alignedB %d / %d (validBridge %d, validContainment %d)\n", conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, crel->numPos, cumAaln, conA->property.len, cumBaln, conB->property.len, validBridge, validContainment);
 		}
 		else
 		{
