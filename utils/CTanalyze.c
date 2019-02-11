@@ -3706,7 +3706,8 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 		else
 		{
 			Contig *conB = actx->contigs + ovls[j].bread;
-			printf("  FAILED [%d,b%d,c%d,g%d] ContigRelation %d (l %d) vs %d (l %d) nOvls: %d\n", fail, validBridge, validContainment,properGapLen, conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, (k - j + 1));
+			printf("  FAILED [%d,b%d,c%d,g%d] ContigRelation %d (l %d) vs %d (l %d) nOvls: %d pBegA %d , propEndA %d, propBegB %d, propEndB %d, ovlBasA %d, ovlBasB %d\n", fail, validBridge, validContainment,properGapLen, conA->property.contigID, conA->property.len,
+					conB->property.contigID, conB->property.len, (k - j + 1), properBegA, properEndA, properBegB, properEndB, overlapBasesA, overlapBasesB);
 		}
 		k++;
 		j = k;
