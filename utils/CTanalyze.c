@@ -3500,6 +3500,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 
 		Overlap *o1, *o2;
 		o1 = ovls + j;
+
 		int fail = 0;
 		int properBegA = 1;
 		int properEndA = 1;
@@ -3519,12 +3520,12 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			properBegB = 0;
 		}
 
-		if (ovls[j].path.aepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[j].aread))
+		if (ovls[k].path.aepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[j].aread))
 		{
 			properEndA = 0;
 		}
 
-		if (ovls[j].path.bepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[j].bread))
+		if (ovls[k].path.bepos + actx->nFuzzBases < DB_READ_LEN(actx->corContigDB, ovls[j].bread))
 		{
 			properEndB = 0;
 		}
