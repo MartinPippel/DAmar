@@ -1261,7 +1261,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					//      contigA         ----------------
 					//      								contigB			------------
 					//			min 50Kb overlap, both overhangs min 100Kb
-					else if(!properBegA && properEndA && !properEndB && properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*ctx->nFuzzBases) && chain->ovls[0]->path.abpos - 100000 > 0 && chain->ovls[chain->novl]->path.bepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->bread))
+					else if(!properBegA && properEndA && !properEndB && properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*ctx->nFuzzBases) && chain->ovls[0]->path.abpos - 100000 > 0 && chain->ovls[chain->novl - 1]->path.bepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->bread))
 					{
 						validBridge = 1;
 					}
