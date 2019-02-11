@@ -1179,82 +1179,95 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 				Chain *chain = ctx->ovlChains + a;
 
-				int properBeg = 0;
-				int properEnd = 0;
-				int overlapBases = 0;
+				int properBegA = 0;
+				int properEndA = 0;
+				int properBegB = 0;
+				int properEndB = 0;
+				int overlapBasesA = 0;
+				int overlapBasesB = 0;
 				int properGapLen = 1;
 
 
 				// check for proper begin
-				if (MIN(chain->ovls[0]->path.abpos, chain->ovls[0]->path.bbpos) < ctx->nFuzzBases)
-					properBeg = 1;
+				if (chain->ovls[0]->path.abpos < ctx->nFuzzBases)
+					properBegA = 1;
+				if (chain->ovls[0]->path.bbpos < ctx->nFuzzBases)
+					properBegB = 1;
+
 				// check for proper end
-				if (chain->ovls[chain->novl - 1]->path.aepos + ctx->nFuzzBases > DB_READ_LEN(ctx->db, ovl[j].aread)
-						|| chain->ovls[chain->novl - 1]->path.bepos + ctx->nFuzzBases > DB_READ_LEN(ctx->db, ovl[j].bread))
-					properEnd = 1;
+				if (chain->ovls[chain->novl - 1]->path.aepos + ctx->nFuzzBases > DB_READ_LEN(ctx->db, ovl[j].aread))
+					properEndA = 1;
 
-//				if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
-//					printf("check properbeg MIN (%d ,%d) < %d\n", chain->ovls[0]->path.abpos, chain->ovls[0]->path.bbpos, ctx->nFuzzBases);
-//				if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
-//						printf("check properend %d > %d || %d > %d\n", chain->ovls[chain->novl - 1]->path.aepos + ctx->nFuzzBases, DB_READ_LEN(ctx->db, ovl[j].aread),
-//								chain->ovls[chain->novl - 1]->path.bepos + ctx->nFuzzBases, DB_READ_LEN(ctx->db, ovl[j].bread));
+				if (chain->ovls[chain->novl - 1]->path.bepos + ctx->nFuzzBases > DB_READ_LEN(ctx->db, ovl[j].bread))
+					properEndB = 1;
 
-				if (properBeg && properEnd)
+				overlapBasesA = chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos;
+				overlapBasesB = chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos;
+
+				for (b = 1; b < chain->novl; b++)
 				{
-					int its_a, its_b;
+					overlapBasesA += chain->ovls[b]->path.aepos - chain->ovls[b]->path.abpos;
+					overlapBasesB += chain->ovls[b]->path.bepos - chain->ovls[b]->path.bbpos;
 
-					overlapBases = MAX(chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos, chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos);
-
-//					if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
-//						printf("%d, ovlbases %d\n",1 , overlapBases);
-					for (b = 1; b < chain->novl; b++)
+					// check for intersection in A
+					if (chain->ovls[b]->path.abpos < chain->ovls[b - 1]->path.aepos)
 					{
-						its_a = its_b = 0;
-						overlapBases += MAX(chain->ovls[b]->path.aepos - chain->ovls[b]->path.abpos, chain->ovls[b]->path.bepos - chain->ovls[b]->path.bbpos);
-//						if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
-//							printf("%d, ovlbases %d\n",b , overlapBases);
-						// check for intersection in A
-						if (chain->ovls[b]->path.abpos < chain->ovls[b - 1]->path.aepos)
-							its_a = chain->ovls[b - 1]->path.aepos - chain->ovls[b]->path.abpos;
-						// check for gap in A
-						else
+						overlapBasesA -= chain->ovls[b - 1]->path.aepos - chain->ovls[b]->path.abpos;
+					}
+					// check for gap in A
+					else
+					{
+						if (chain->ovls[b]->path.abpos - chain->ovls[b - 1]->path.aepos > ctx->nFuzzBases)
 						{
-							if (chain->ovls[b]->path.abpos - chain->ovls[b - 1]->path.aepos > ctx->nFuzzBases)
-							{
-								properGapLen = 0;
-								break;
-							}
+							properGapLen = 0;
+							break;
 						}
-						// check for intersection in B
-						if (chain->ovls[b]->path.bbpos < chain->ovls[b - 1]->path.bepos)
-							its_b = chain->ovls[b - 1]->path.bepos - chain->ovls[b]->path.bbpos;
-						// check for gap in B
-						else
+					}
+					// check for intersection in B
+					if (chain->ovls[b]->path.bbpos < chain->ovls[b - 1]->path.bepos)
+					{
+						overlapBasesB -= chain->ovls[b - 1]->path.bepos - chain->ovls[b]->path.bbpos;
+					}
+					// check for gap in B
+					else
+					{
+						if( chain->ovls[b]->path.bbpos - chain->ovls[b - 1]->path.bepos > ctx->nFuzzBases)
 						{
-							if( chain->ovls[b]->path.bbpos - chain->ovls[b - 1]->path.bepos > ctx->nFuzzBases)
-							{
-								properGapLen = 0;
-								break;
-							}
+							properGapLen = 0;
+							break;
 						}
-//						if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
-//								printf("its_a %d, its_b %d\n", its_a , its_b);
-						overlapBases -= MAX(its_a, its_b);
-
-//						if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
-//													printf("%d, ovlbases %d\n",b , overlapBases);
 					}
 				}
 
-//				if(chain->ovls[0]->aread == 618 && chain->ovls[0]->bread == 1149)
-//				{
-//					printf("chain->novl: %d\n", chain->novl);
-//					printf("Check chain %d vs %d : properBeg ? %d, properEnd ? %d, properGapLen ? %d, contP (%d, %d ,%d)\n", chain->ovls[0]->aread, chain->ovls[0]->bread, properBeg, properEnd, properGapLen,
-//							(int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))),
-//									ctx->nFuzzBases, ctx->nContPerc);
-//				}
-				if (!properBeg || !properEnd || !properGapLen
-						|| overlapBases < (int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))))
+				int validContainment = 0;
+				int validBridge = 0;
+
+
+				if(properGapLen)
+				{
+					if(MAX(overlapBasesA, overlapBasesB) >= (int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))))
+					{
+						validContainment = 1;
+					}
+
+					//      contigA         ----------------
+					//      contigB	---------
+					//			min 50Kb overlap, both overhangs min 100Kb
+					else if(properBegA && !properEndA && properEndB && !properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*ctx->nFuzzBases) && chain->ovls[chain->novl - 1]->path.aepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->aread)
+							&& chain->ovls[0]->path.bbpos - 100000 > 0)
+					{
+						validBridge = 1;
+					}
+					//      contigA         ----------------
+					//      								contigB			------------
+					//			min 50Kb overlap, both overhangs min 100Kb
+					else if(!properBegA && properEndA && !properEndB && properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*ctx->nFuzzBases) && chain->ovls[0]->path.abpos - 100000 > 0 && chain->ovls[chain->novl]->path.bepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->bread))
+					{
+						validBridge = 1;
+					}
+				}
+
+				if (!validBridge && !validContainment)
 				{
 					for (b = 0; b < chain->novl; b++)
 						chain->ovls[b]->flags |= OVL_DISCARD;
@@ -1291,8 +1304,8 @@ static void usage()
 	fprintf(stderr, "         -p      	purge discarded overlaps\n");
 	fprintf(stderr, "         -r <trc>	repeat track name (%s)\n", DEF_ARG_R);
 	fprintf(stderr, "         -k <int>  keep valid overlap chains: 0 ... best, 1 ... all\n");
-	fprintf(stderr, "         -f <int>  allow maximum of -f bases of structural variations between two contig overlaps of a chain, (default %d)\n", DEF_ARG_F);
-	fprintf(stderr, "         -c <int>  chain alignment must cover at least -p percent of the smaller contig. p=[1,100], (default: %d)\n", DEF_ARG_C);
+	fprintf(stderr, "         -f <int>  Bridge:      allow maximum of -f bases of structural variations between two contig overlaps of a chain, (default %d)\n", DEF_ARG_F);
+	fprintf(stderr, "         -c <int>  Containment: chain alignment must cover at least -p percent of the smaller contig. p=[1,100], (default: %d)\n", DEF_ARG_C);
 }
 
 int main(int argc, char* argv[])
