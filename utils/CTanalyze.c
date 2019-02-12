@@ -1841,6 +1841,9 @@ void analyzeContigCreadIntersection(AnalyzeContext *actx)
 				if (contig_j->property.cflag & CLASS_CONTIG_DISCARD)
 					continue;
 
+				if (contig_j->property.len < 100000)
+					continue;
+
 #ifdef DEBUG_STEP1C
 				printf("Check against contig_j: %d, len %d\n", contig_j->property.contigID, contig_j->property.len);
 #endif
@@ -1894,7 +1897,7 @@ void analyzeContigCreadIntersection(AnalyzeContext *actx)
 					if (contig_k->property.cflag & CLASS_CONTIG_DISCARD)
 						continue;
 
-					if ((contig_k->property.rflag & REL_CONTIG_IS_ALT))
+					if ((contig_k->property.rflag & (REL_READ_IS_ALT)))
 						continue;
 
 					if (contig_k->property.len > 300000)
@@ -2449,7 +2452,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 					}
 				}
 			}
-
+			conA->numContigRelations++;
 			printf("  ADD ContigRelation %d (l %d) vs %d (l %d) nOvls: %d alignedA %d / %d alignedB %d / %d (validBridge %d, validContainment %d)\n", conA->property.contigID, conA->property.len, conB->property.contigID, conB->property.len, crel->numPos, cumAaln, conA->property.len, cumBaln, conB->property.len, validBridge, validContainment);
 		}
 		else
@@ -3067,7 +3070,7 @@ void classify(AnalyzeContext *actx)
 						break;
 				}
 				assert(j<=actx->numContigs);
-				printf("CLASSIFY: %d ALT{ of %d} l%d r(%d %d) v(%d, %d ,%d): ",conA->property.contigID, j, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+				printf("CLASSIFY: %d ALT{ of %d} l%d r(%d %d) v(%d, %d ,%d): ",conA->property.contigID, j-1, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 				if(relTable[i][j] & REL_CONTIG_IS_ALT)
 					printf(" REL_CONTIG_IS_ALT");
 				if(relTable[i][j] & REL_CONTIG_IS_REPEAT_ALT)
@@ -3080,13 +3083,13 @@ void classify(AnalyzeContext *actx)
 		}
 		else
 		{
-			printf("CLASSIFY: %d MULTI l%d r(%d %d) v(%d, %d ,%d): ",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+			printf("CLASSIFY: %d MULTI l%d r(%d %d) v(%d, %d ,%d):\n",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 			int c=1;
 			for(j=1; j<=actx->numContigs; j++)
 			{
 				if(relTable[i][j]!=0)
 				{
-					printf("  %d. REL with c%d: ", c++, j);
+					printf("  %d. REL with c%d: ", c++, j-1);
 					if(relTable[i][j] & REL_CONTIG_IS_ALT)
 						printf(" REL_CONTIG_IS_ALT");
 					if(relTable[i][j] & REL_CONTIG_IS_REPEAT_ALT)
