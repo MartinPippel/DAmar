@@ -3190,7 +3190,7 @@ void classify(AnalyzeContext *actx)
 
 						printf("found putative bridge: %d vs %d\n", conA->property.contigID, conB->property.contigID);
 
-						if(conA->property.rflag & REL_TOUR_IS_ALT)
+						//if(conA->property.rflag & REL_TOUR_IS_ALT)
 					}
 				}
 			}
