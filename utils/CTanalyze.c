@@ -3198,6 +3198,76 @@ void classify(AnalyzeContext *actx)
 	}
 }
 
+void createOutput(AnalyzeContext *actx)
+{
+	// Todo
+	// open file streams:
+	//   1. primary fasta + primary stats (LGX, LX, NX, NGX) + repeat mask bed file + potential issues file + raw read IDs file (for Arrow correction) + coverage file
+	//   2. alt fasta + secondary stats
+	//   3. crap fasta + crap stats
+
+
+	char *primContigName = malloc(strlen(actx->outDir) + 50);
+	sprintf(primContigName, "%s/classified/asm.p.fa", actx->outDir);
+
+	FILE *primContigs = fopen(primContigName, "w");
+	assert(primContigs != NULL);
+
+	char *altContigName = malloc(strlen(actx->outDir) + 50);
+	sprintf(altContigName, "%s/classified/asm.a.fa", actx->outDir);
+
+	FILE *altContigs = fopen(altContigName, "w");
+	assert(altContigs != NULL);
+
+	char *crapContigName = malloc(strlen(actx->outDir) + 50);
+	sprintf(crapContigName, "%s/classified/asm.c.fa", actx->outDir);
+
+	FILE *crapContigs = fopen(crapContigName, "w");
+	assert(crapContigs != NULL);
+
+	int WIDTH = 200;
+	char *read = New_Read_Buffer(actx->corContigDB);
+
+//			sprintf(out, "%s/curatedAndClassified", actx.outDir);
+
+
+	int i,j;
+	for (i=0; i<actx->numContigs; i++)
+	{
+		Contig *con = actx->contigs_sorted[i];
+		FILE *out;
+
+		if(con->property.cflag & CLASS_CONTIG_PRIMARY)
+			out = primContigs;
+		else if(con->property.cflag & CLASS_CONTIG_ALT)
+			out = altContigs;
+		else
+			out = crapContigs;
+
+		Load_Read(actx->corContigDB, con->property.contigID, read, 1);
+
+		// print fa-header
+		fprintf(out, ">%s_%d len=%d rep=%d\n", getContigFastaFileName(actx, con), con->property.pathID, con->property.len,
+				(int)(con->property.repBasesFromReadLAS*100.0/con->property.len));
+		// print fa-body
+		for (j = 0; j + WIDTH < con->property.len; j += WIDTH)
+				fprintf(out, "%.*s\n", WIDTH, read + j);
+		if (j < con->property.len)
+				fprintf(out, "%.*s\n", con->property.len - j, read + j);
+
+					fflush(out);
+	}
+
+	fclose(primContigs);
+	fclose(altContigs);
+	fclose(crapContigs);
+
+	free(primContigName);
+	free(altContigName);
+	free(crapContigName);
+	free(read-1);
+}
+
 static void usage()
 {
 	fprintf(stderr,
@@ -3480,11 +3550,11 @@ int main(int argc, char* argv[])
 			exit(1);
 
 		char *out = malloc(strlen(actx.outDir) + 30);
-		sprintf(out, "%s/raw", actx.outDir);
+		sprintf(out, "%s/classified", actx.outDir);
 		if (createOutDir(out))
 			exit(1);
 
-		sprintf(out, "%s/split", actx.outDir);
+		sprintf(out, "%s/curatedAndClassified", actx.outDir);
 		if (createOutDir(out))
 			exit(1);
 
@@ -3551,6 +3621,8 @@ int main(int argc, char* argv[])
 		classify(&actx);
 		printf("DONE     ---   STEP3: refine contig classification (based on STEP1 and STEP2)");
 	}
+
+	createOutput(&actx);
 
 	// clean up - put everything in a method
 	pass_free(contig_pctx);

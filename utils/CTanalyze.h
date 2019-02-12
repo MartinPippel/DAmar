@@ -311,7 +311,7 @@ void classifyContigsByOverlaps(AnalyzeContext *actx);
 /// use all info from classifyContigsByOverlaps and classifyContigsByBReadsAndPath and tracks
 /// to make final decision about contig class
 void classify(AnalyzeContext *actx);
-void writeFasta(AnalyzeContext *actx, Contig* contig, FILE* contigFile, int splitIdx, int cBegPos, int cEndPos);
+void createOutput(AnalyzeContext *actx);
 
 void analyzeCoveredBases(AnalyzeContext* actx, Overlap* pOvls, int n);
 //char getClassification(FinalContigClass fcc);
