@@ -236,9 +236,6 @@ typedef struct
 	char *corReadDBName;
 	HITS_DB* corReadDB;
 
-	// some filter for patched reads LAS
-	int min_rlen;
-	int min_olen;
 	int exp_cov;
 
 	// save output files in sub dir

@@ -1002,24 +1002,6 @@ int processReadOverlapsAndMapThemToContigs(void* _ctx, Overlap* ovls, int novl)
 			}
 		}
 
-		int oLen = MAX(ovl->path.aepos - ovl->path.abpos, ovl->path.bepos - ovl->path.bbpos);
-
-		if (oLen < actx->min_olen)
-		{
-#ifdef DEBUG_STEP1A
-			printf("skip overlap %d x %d, len: %d\n", aread, bread, oLen);
-#endif
-			continue;
-		}
-
-		if (DB_READ_LEN(actx->patchedReadDB, ovl->bread) < actx->min_rlen)
-		{
-#ifdef DEBUG_STEP1A
-			printf("skip overlap %d x %d, rlen: %d\n", aread, bread, DB_READ_LEN(actx->patchedReadDB, ovl->bread));
-#endif
-			continue;
-		}
-
 		// check if a-read is present in any contig, if yes than add corresponding breads to the contigs
 		int j, k, l;
 		for (j = 0; actx->vreadMask[j][aread] < 0; j++)
@@ -3110,10 +3092,8 @@ void classify(AnalyzeContext *actx)
 static void usage()
 {
 	fprintf(stderr,
-			" [-v] [-clxsfeLNP <int>] [-d <dir>] [-rt <Track>] [-o <file>] -C <contigDB> <ContigOverlaps> -F <fixedReadDB> <fixedReadOverlaps> -D <correctedReadDB> \n");
+			" [-v] [-csfeLNP <int>] [-d <dir>] [-rt <Track>] -C <contigDB> <ContigOverlaps> -F <fixedReadDB> <fixedReadOverlaps> -D <correctedReadDB> \n");
 	fprintf(stderr, "options: -v         ... verbose\n");
-	fprintf(stderr, "         -x         ... min read length (default: 0)\n");
-	fprintf(stderr, "         -l         ... min alignment length (default: 1000)\n");
 	fprintf(stderr, "         -c         ... expected coverage\n");
 	fprintf(stderr, "         -s         ... maximum spur/bubble length (default: %d)\n", DEF_SPUR_LEN);
 	fprintf(stderr, "         -e         ... maximum contig end length (tips) to consider false joins (default: %d)\n", DEF_TIP_LEN);
@@ -3124,7 +3104,6 @@ static void usage()
 	fprintf(stderr, "         -F DB OVL  ... fixed read database and fixed read overlaps, required to extract all b-reads for blasr mapping\n");
 	fprintf(stderr, "         -D DB 		 ... corrected read database\n");
 	fprintf(stderr, "         -d         ... write classified contigs ands stats file into -d directoryName (default: cwd)\n");
-	fprintf(stderr, "         -o         ... write out filtered chained overlaps (default: cwd)\n");
 	fprintf(stderr, "         -f         ... allow maximum of -f bases of structural variations between two contig overlaps of a chain, (default %d)\n", DEF_ARG_F);
 	fprintf(stderr, "\n\n");
 	fprintf(stderr, "EPERIMENTAL - contig filter + classification options:\n");
@@ -3153,12 +3132,7 @@ int main(int argc, char* argv[])
 	bzero(&actx, sizeof(AnalyzeContext));
 	opterr = 0;
 
-	char *filteredContigOvlsName = NULL;
-	FILE *filteredContigOvlsFile = NULL;
-
 	actx.VERBOSE = 0;
-	actx.min_rlen = 0;
-	actx.min_olen = 1000;
 	actx.SPUR_LEN = DEF_SPUR_LEN;
 	actx.TIP_LEN = DEF_TIP_LEN;
 	actx.nFuzzBases = DEF_ARG_F;
@@ -3171,13 +3145,10 @@ int main(int argc, char* argv[])
 	actx.maxPrimContigRepeatPerc = DEF_ARG_P;
 
 	int c;
-	while ((c = getopt(argc, argv, "vx:l:c:d:t:r:C:F:s:e:D:o:R:f:L:N:P:")) != -1)
+	while ((c = getopt(argc, argv, "vc:d:t:r:C:F:s:e:D:R:f:L:N:P:")) != -1)
 	{
 		switch (c)
 		{
-		case 'o':
-			filteredContigOvlsName = optarg;
-			break;
 		case 'v':
 			actx.VERBOSE++;
 			break;
@@ -3192,12 +3163,6 @@ int main(int argc, char* argv[])
 			break;
 		case 'f':
 			actx.nFuzzBases = atoi(optarg);
-			break;
-		case 'x':
-			actx.min_rlen = atoi(optarg);
-			break;
-		case 'l':
-			actx.min_olen = atoi(optarg);
 			break;
 		case 'e':
 			actx.TIP_LEN = atoi(optarg);
@@ -3417,22 +3382,9 @@ int main(int argc, char* argv[])
 		free(out);
 	}
 
-	if (filteredContigOvlsName)
-	{
-		char *out = malloc(strlen(actx.outDir) + strlen(filteredContigOvlsName) + 10);
-		sprintf(out, "%s/%s", actx.outDir, filteredContigOvlsName);
-
-		if ((filteredContigOvlsFile = fopen(out, "w")) == NULL)
-		{
-			fprintf(stderr, "could not open %s\n", out);
-			exit(1);
-		}
-		free(out);
-	}
-
 // contig pass context
 	{
-		contig_pctx = pass_init(correctedContigLAS, filteredContigOvlsFile);
+		contig_pctx = pass_init(correctedContigLAS, NULL);
 
 		contig_pctx->split_b = 0;
 		contig_pctx->load_trace = 0;
