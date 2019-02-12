@@ -145,23 +145,15 @@ typedef struct
 #define CLASS_CONTIG_DISCARD_REPEAT			(1 << 4)
 #define CLASS_CONTIG_DISCARD_LEN				(1 << 5)
 #define CLASS_CONTIG_DISCARD_CREADS			(1 << 6)
-#define CLASS_CONTIG_MODIFIED						(1 << 7)		// TODO split, trimmed, etc... ?
-#define CLASS_CONTIG_VISITED						(1 << 8)  	// temporary flag
+#define CLASS_CONTIG_MODIFIED_FALSEJOIN	(1 << 7)		// i.e. cut out corresponding Cread and keep classification, blacklist C-read!!!!
+#define CLASS_CONTIG_MODIFIED_TRIMLEFT	(1 << 8)		// i.e. trim position: find trim_ab of corresponding Cread -> left contig part becomes ALT right part PRIM
+#define CLASS_CONTIG_MODIFIED_TRIMRIGHT	(1 << 9)		// i.e. trim position: trim_ae of corresponding Cread -> left contig part stays PRIM right part becomes ALT
 /// READ JUNCTION FLAGS // TODO in development
-#define CLASS_READ_VALID     						(1 << 9)  	// 	128   initially all reads are valid, because they are part of a contig
-#define CLASS_READ_CHECKED	 						(1 << 10)  	// 	256
-#define CLASS_READ_DISCARD   						(1 << 11) 		// 	512   contig read should be completely cut out from contig
-#define CLASS_READ_NEWEND    						(1 << 12)  	// 	1,024	contig ends at current read at position contigPosEnd
-#define CLASS_READ_NEWSTART  						(1 << 13)  	// 	2,048	contig starts at current read at position: contigPosBeg
-#define CLASS_READ_BREAK_UNKNOWN       	(1 << 14)		//	4,096
-#define CLASS_READ_BREAK_MULTIREAD 			(1 << 15)		//	8,192
-#define CLASS_READ_BREAK_STARTEND 			(1 << 16)		//	16,384
-#define CLASS_READ_BREAK_FALSEJOINLEFT 	(1 << 17)		//	32,768
-#define CLASS_READ_BREAK_FALSEJOINRIGHT	(1 << 18)		//	65,536
-#define CLASS_READ_BREAK_HETEROZYGLEFT	(1 << 19)		//	131,072
-#define CLASS_READ_BREAK_HETEROZYGRIGHT	(1 << 20)		//	262,144
-#define CLASS_READ_BREAK_DEADENDLEFT		(1 << 21)		//	524,288
-#define CLASS_READ_BREAK_DEADENDRIGHT		(1 << 22)		//	1,048,576
+#define CLASS_READ_VALID     						(1 << 10)  	// 	1024  initially all reads are valid, because they are part of a contig
+#define CLASS_READ_CHECKED	 						(1 << 11)  	// 	2048
+#define CLASS_READ_DISCARD   						(1 << 12) 	// 	4096  contig read should be completely cut out from contig
+#define CLASS_READ_NEWEND    						(1 << 13)  	// 	8192	contig ends at current read at position contigPosEnd
+#define CLASS_READ_NEWSTART  						(1 << 14)  	// 	16384	contig starts at current read at position: contigPosBeg
 
 typedef struct
 {
