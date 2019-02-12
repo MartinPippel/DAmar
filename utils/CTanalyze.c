@@ -3596,12 +3596,15 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			o1 = o2;
 		}
 
+		Contig *conB = actx->contigs + ovls[j].bread;
+
 		int validContainment = 0;
 		int validBridge = 0;
+		int validRepeatContainment = 0;
 
 		if(properGapLen)
 		{
-			if(MAX(overlapBasesA, overlapBasesB) >= (int) (actx->contByContigs_CoveredLenPerc / 100.0 * MIN(DB_READ_LEN(actx->corContigDB, ovls[j].aread), DB_READ_LEN(actx->corContigDB, ovls[j].bread))))
+			if(MAX(overlapBasesA, overlapBasesB) >= (int) (actx->contByContigs_CoveredLenPerc / 100.0 * MIN(conA->property.len, conB->property.len)))
 			{
 				validContainment = 1;
 			}
@@ -3609,23 +3612,30 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			//      contigA         ----------------
 			//      contigB	---------
 			//			min 50Kb overlap, both overhangs min 100Kb
-			else if(properBegA && !properEndA && properEndB && !properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*actx->nFuzzBases) && ovls[k].path.aepos + 100000 < DB_READ_LEN(actx->corContigDB, ovls[j].aread)
-					&& ovls[j].path.bbpos - 100000 > 0)
+			else if(properBegA && !properEndA && properEndB && !properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*actx->nFuzzBases) && ovls[k].path.aepos + 100000 < conA->property.len && ovls[j].path.bbpos - 100000 > 0)
 			{
 				validBridge = 1;
 			}
 			//      contigA         ----------------
 			//      								contigB			------------
 			//			min 50Kb overlap, both overhangs min 100Kb
-			else if(!properBegA && properEndA && !properEndB && properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*actx->nFuzzBases) && ovls[j].path.abpos - 100000 > 0 && ovls[k].path.bepos + 100000 < DB_READ_LEN(actx->corContigDB, ovls[j].bread))
+			else if(!properBegA && properEndA && !properEndB && properBegB && MAX(overlapBasesA, overlapBasesB) >= MIN(50000, 3*actx->nFuzzBases) && ovls[j].path.abpos - 100000 > 0 && ovls[k].path.bepos + 100000 < conB->property.len)
 			{
 				validBridge = 1;
 			}
 		}
-
-		if (!fail && (validBridge || validContainment))
+		if (!validBridge && !validContainment)
 		{
-			Contig *conB = actx->contigs + ovls[j].bread;
+			if ((fail == 0 || fail == 4 || fail == 6) && MAX(overlapBasesA, overlapBasesB) >= (int) (0.4 * MIN(conA->property.len, conB->property.len)) &&
+					(MAX(conA->property.repBasesFromReadLAS,conA->property.repBasesFromContigLAS)/100.0 * conA->property.len > actx->maxPrimContigRepeatPerc ||
+					 MAX(conB->property.repBasesFromReadLAS,conB->property.repBasesFromContigLAS)/100.0 * conB->property.len > actx->maxPrimContigRepeatPerc))
+			{
+				validRepeatContainment = 1;
+			}
+		}
+
+		if ((!fail && (validBridge || validContainment)) || validRepeatContainment)
+		{
 
 			if (conA->numContigRelations == conA->maxContigRelations)
 			{
@@ -3635,6 +3645,26 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			}
 
 			ContigRelation *crel = conA->contigRelations + conA->numContigRelations;
+
+			if (validContainment)
+			{
+				crel->flag |= REL_CONTIG_IS_ALT;
+				conA->property.rflag |= REL_CONTIG_IS_ALT;
+				conB->property.rflag |= REL_CONTIG_HAS_ALT;
+			}
+			else if (validBridge)
+			{
+				crel->flag |= REL_CONTIG_BRIDGE;
+				conA->property.rflag |= REL_CONTIG_BRIDGE;
+				conB->property.rflag |= REL_CONTIG_BRIDGE;
+			}
+			else
+			{
+				crel->flag |= REL_CONTIG_IS_REPEAT_ALT;
+				conA->property.rflag |= REL_CONTIG_IS_REPEAT_ALT;
+				conB->property.rflag |= REL_CONTIG_HAS_ALT;
+			}
+
 			crel->corContigIdx = conB->property.contigID;
 			crel->numPos = (k - j + 1);
 			crel->abpos = (int*) malloc(sizeof(int) * (crel->numPos) * 4);
@@ -3717,114 +3747,6 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 	printf("END -- Analyze overlaps for contig: %d numOvls: %d\n", ovls->aread, novl);
 
 	return 1;
-}
-
-void preClassifyContigsByContigOverlaps(AnalyzeContext *actx)
-{
-	int i, j;
-
-	for (i = 0; i < actx->numContigs; i++)
-	{
-		printf("%5d contig: %d, len: %d\n", i, actx->contigs[i].property.contigID, actx->contigs[i].property.len);
-
-		Contig *contigA = actx->contigs + i;
-
-		if (contigA->property.cflag & CLASS_CONTIG_DISCARD)
-			continue;
-
-		// no valid overlap chain found --> its unique
-		if (contigA->numContigRelations == 0)
-		{
-			contigA->property.rflag |= (REL_CONTIG_UNIQUE);
-			continue;
-		}
-
-		// analyze all overlap groups
-		int overAllNotClassified = 1;
-
-		/// TODO: only analyze containment relationships for now
-		/// later include overlapping contigs --> trim back !!!
-
-		for(j=0; j< contigA->numContigRelations; j++)
-		{
-			ContigRelation *cRel = contigA->contigRelations;
-
-			Contig *contigB = actx->contigs + cRel->corContigIdx;
-
-			printf("check Relationship %d vs %d\n", contigA->property.contigID, contigB->property.contigID);
-
-			int covBasesInA, covBasesInB;
-			covBasesInA = covBasesInB = 0;
-			int k;
-			covBasesInA = cRel->aepos[0] - cRel->abpos[0];
-			covBasesInB = abs(cRel->bepos[0] - cRel->bbpos[0]);
-
-			int comp = (cRel->bbpos[0] > cRel->bepos[0]) ? 1 : 0;
-
-			for (k=1; k < cRel->numPos; k++)
-			{
-				covBasesInA += cRel->aepos[i] - cRel->abpos[i];
-				if (cRel->abpos[i] < cRel->aepos[i-1])
-				{
-					covBasesInA -= (cRel->aepos[i-1] - cRel->abpos[i]);
-				}
-
-				if (comp)
-				{
-					covBasesInB += cRel->bbpos[i] - cRel->bepos[i];
-					if (cRel->bepos[i-1] < cRel->bbpos[i])
-					{
-						covBasesInB -= (cRel->bbpos[i] - cRel->bepos[i-1]);
-					}
-				}
-				else
-				{
-					covBasesInB += cRel->bepos[i] - cRel->bbpos[i];
-					if (cRel->bbpos[i] < cRel->bepos[i-1])
-					{
-						covBasesInB -= (cRel->bepos[i-1] - cRel->bbpos[i]);
-					}
-				}
-			}
-
-			int leftUnalnBasesInA, rightUnalnBasesInA;
-			int leftUnalnBasesInB, rightUnalnBasesInB;
-
-			leftUnalnBasesInA = cRel->abpos[0];
-			rightUnalnBasesInA = contigA->property.len - cRel->aepos[cRel->numPos - 1];
-
-			if(comp)
-			{
-				leftUnalnBasesInB = contigB->property.len - cRel->bbpos[0];
-				rightUnalnBasesInB = cRel->bepos[cRel->numPos - 1];
-			}
-			else
-			{
-				leftUnalnBasesInB = cRel->bbpos[0];
-				rightUnalnBasesInB = contigB->property.len - cRel->bepos[cRel->numPos - 1];
-			}
-
-
-			// check if there is a containment relation
-
-			if(covBasesInA * 100.0 / contigA->property.len >= actx->contByContigs_CoveredLenPerc)
-			{
-				cRel->flag |= REL_CONTIG_IS_ALT;
-				contigA->property.rflag |= REL_CONTIG_IS_ALT;
-				printf("CONTIGA %d IS ALT [covBases %d, leftUnA %d, right Una %d]", contigA->property.contigID, covBasesInA, leftUnalnBasesInA, rightUnalnBasesInA);
-			}
-
-			if(covBasesInB * 100.0 / contigB->property.len >= actx->contByContigs_CoveredLenPerc)
-			{
-				cRel->flag |= REL_CONTIG_HAS_ALT;
-				contigA->property.rflag |= REL_CONTIG_HAS_ALT;
-				contigB->property.rflag |= REL_CONTIG_IS_ALT;
-				printf("CONTIGB %d IS ALT [covBases %d, leftUnA %d, right Una %d]", contigB->property.contigID, covBasesInB, leftUnalnBasesInB, rightUnalnBasesInB);
-			}
-			// TODO check for putative joins
-			// TODO check for putative misjoins
-		}
-	}
 }
 
 int createOutDir(char *out)
@@ -5009,101 +4931,152 @@ void rawClassification(AnalyzeContext *actx)
 /// evaluate all three relationship information: TourRelation, ContigAlnRelation, ReadIntersectionRelation
 void classify(AnalyzeContext *actx)
 {
-	int i, j, k;
-	int end1, end2; // ends from touring
-	int path;
+	int i, j;
 
-	int classified = 0;
-	for (i = 0;  i < actx->numContigs; i++)
+	int ** relTable = (int **)malloc (sizeof(int*)*(actx->numContigs));
+	for(i=0; i<actx->numContigs; i++)
 	{
-		Contig *contig = actx->contigs_sorted[i];
+		relTable[i] = (int*) malloc (sizeof(int)*(actx->numContigs+1));
+		bzero(relTable[i], sizeof(int)*(actx->numContigs+1));
+	}
 
-		printf("Classify contig %d l %d nRel (T: %d C: %d R: %d)", contig->property.contigID, contig->property.len, contig->numTourRelations, contig->numContigRelations, contig->numReadRelations);
+	for (i = actx->numContigs - 1;  i >= 0 ; i--)
+	{
+		Contig *conA = actx->contigs_sorted[i];
 
-		// check for ALT contigs first
-		if (contig->property.rflag & (REL_TOUR_IS_ALT))
+		// add containment touring relations to relation table
+		for (j=0; j<conA->numTourRelations; j++)
 		{
-			int tourRelIdx = -1;
-			int contRelIdx = -1;
-			int readRelIdx = -1;
-
-			for (j=0; j<contig->numTourRelations; j++)
+			TourRelation *tRel = conA->tourRelations + j;
+			if (tRel->flag & REL_TOUR_IS_ALT)
 			{
-				TourRelation *tRel = contig->tourRelations + j;
-				if (tRel->flag & REL_TOUR_IS_ALT)
+				if (relTable[conA->property.contigID][tRel->contigID1+1] == 0)
 				{
-					assert(tourRelIdx == -1);
-					tourRelIdx = j;
+					relTable[conA->property.contigID][0]++;
 				}
+				relTable[conA->property.contigID][tRel->contigID1+1] |= REL_TOUR_IS_ALT;
 			}
-
-			assert(tourRelIdx != -1);
-
-			for (j=0; j<contig->numContigRelations; j++)
+			else if (tRel->flag & REL_TOUR_HAS_ALT)
 			{
-				ContigRelation *cRel = contig->contigRelations + j;
-				if ((cRel->flag & REL_CONTIG_IS_ALT) && cRel->corContigIdx == contig->tourRelations[tourRelIdx].contigID1)
+				if (relTable[tRel->contigID1][conA->property.contigID+1] == 0)
 				{
-					contRelIdx = j;
-					break;
+					relTable[tRel->contigID1][0]++;
 				}
+				relTable[tRel->contigID1][conA->property.contigID+1] |= REL_TOUR_IS_ALT;
 			}
+		}
 
-			for (j=0; j<contig->numReadRelations; j++)
+		// add containment contig relations to relation table
+		for (j=0; j<conA->numContigRelations; j++)
+		{
+			ContigRelation *cRel = conA->contigRelations + j;
+			if (cRel->flag & (REL_CONTIG_IS_ALT | REL_CONTIG_IS_REPEAT_ALT))
 			{
-				ReadRelation *rRel = contig->readRelations + j;
-				if ((rRel->flag & REL_READ_IS_ALT) && rRel->correspID == contig->tourRelations[tourRelIdx].contigID1)
+				if (relTable[conA->property.contigID][cRel->corContigIdx+1] == 0)
 				{
-					readRelIdx = j;
-					break;
+					relTable[conA->property.contigID][0]++;
 				}
+				if (cRel->flag & REL_CONTIG_IS_ALT)
+					relTable[conA->property.contigID][cRel->corContigIdx+1] |= REL_CONTIG_IS_ALT;
+				else
+					relTable[conA->property.contigID][cRel->corContigIdx+1] |= REL_CONTIG_IS_REPEAT_ALT;
+			}
+		}
+
+		// add containment read relations to relation table
+		for (j=0; j<conA->numReadRelations; j++)
+		{
+			ReadRelation *rRel = conA->readRelations + j;
+			if ((rRel->flag & REL_READ_IS_ALT))
+			{
+				if (relTable[conA->property.contigID][rRel->correspID+1] == 0)
+				{
+					relTable[conA->property.contigID][0]++;
+				}
+				relTable[conA->property.contigID][rRel->correspID+1] |= REL_READ_IS_ALT;
+			}
+			else if (rRel->flag & REL_READ_HAS_ALT)
+			{
+				if (relTable[rRel->correspID][conA->property.contigID+1] == 0)
+				{
+					relTable[rRel->correspID][0]++;
+				}
+				relTable[rRel->correspID][conA->property.contigID+1] |= REL_READ_IS_ALT;
 			}
 
-			if (contig->tourRelations[tourRelIdx].contigID1 == contig->contigRelations[contRelIdx].corContigIdx)
-			{
-				contig->property.cflag |= (CLASS_CONTIG_ALT | CLASS_CONTIG_CLASSIFIED);
-				contig->classif->correspTourRelation   = contig->tourRelations + tourRelIdx;
-				contig->classif->correspContigRelation = contig->contigRelations + contRelIdx;
-			}
+		}
+	}
 
-			if (contig->tourRelations[tourRelIdx].contigID1 == contig->readRelations[readRelIdx].correspID)
-			{
-				contig->property.cflag |= CLASS_CONTIG_ALT | CLASS_CONTIG_CLASSIFIED;
-				contig->classif->correspTourRelation = contig->tourRelations + tourRelIdx;
-				contig->classif->correspReadRelation = contig->readRelations + readRelIdx;
-			}
+
+	for(i=0; i<actx->numContigs; i++)
+	{
+		Contig *conA = actx->contigs + i;
+		int validRepeatPerc = (MAX(conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS)*100.0/conA->property.len < actx->maxPrimContigRepeatPerc) ? 1 : 0;
+		int validMinCreads = (conA->numcReads > actx->minPrimContigReads) ? 1 : 0;
+		int validMinLen = (conA->property.len > actx->minPrimContigLen) ? 1 : 0;
+
+		if(relTable[i][0] == 0)
+		{
+				if(validMinCreads && validRepeatPerc && validMinLen)
+				{
+					printf("CLASSIFY: PRIM %d l%d r(%d %d) v(%d, %d ,%d)\n",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_PRIMARY);
+				}
+				else
+				{
+					printf("CLASSIFY: CRAP %d l%d r(%d %d) v(%d, %d ,%d)\n",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_DISCARD);
+					if(!validMinCreads)
+						conA->property.cflag |= CLASS_CONTIG_DISCARD_CREADS;
+					if(!validMinLen)
+						conA->property.cflag |= CLASS_CONTIG_DISCARD_LEN;
+					if(!validRepeatPerc)
+						conA->property.cflag |= CLASS_CONTIG_DISCARD_REPEAT;
+				}
+		}
+		else if(relTable[i][0] == 1) // exactly one to ine relationship
+		{
+				for(j=1; j<=actx->numContigs; j++)
+				{
+					if(relTable[i][j]!=0)
+						break;
+				}
+				assert(j<=actx->numContigs);
+				printf("CLASSIFY: %d ALT{ of %d} l%d r(%d %d) v(%d, %d ,%d): ",conA->property.contigID, j, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+				if(relTable[i][j] & REL_CONTIG_IS_ALT)
+					printf(" REL_CONTIG_IS_ALT");
+				if(relTable[i][j] & REL_CONTIG_IS_REPEAT_ALT)
+					printf(" REL_CONTIG_IS_REPEAT_ALT");
+				if(relTable[i][j] & REL_READ_IS_ALT)
+					printf(" REL_READ_IS_ALT");
+				if(relTable[i][j] & REL_TOUR_IS_ALT)
+					printf(" REL_TOUR_IS_ALT");
+				printf("\n");
 		}
 		else
 		{
-			int primaryLenValid = contig->property.len > actx->minPrimContigLen;
-			int primaryRepeatsValid = MAX(contig->property.repBasesFromContigLAS, contig->property.repBasesFromReadLAS) * 100.0/ contig->property.len <= actx->maxPrimContigRepeatPerc;
-			int primareNumCreadsValid = contig->numcReads > actx->minPrimContigReads;
-
-
-
+			printf("CLASSIFY: %d MULTI l%d r(%d %d) v(%d, %d ,%d): ",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+			int c=1;
+			for(j=1; j<=actx->numContigs; j++)
+			{
+				if(relTable[i][j]!=0)
+				{
+					printf("  %d. REL with c%d: ", c++, j);
+					if(relTable[i][j] & REL_CONTIG_IS_ALT)
+						printf(" REL_CONTIG_IS_ALT");
+					if(relTable[i][j] & REL_CONTIG_IS_REPEAT_ALT)
+						printf(" REL_CONTIG_IS_REPEAT_ALT");
+					if(relTable[i][j] & REL_READ_IS_ALT)
+						printf(" REL_READ_IS_ALT");
+					if(relTable[i][j] & REL_TOUR_IS_ALT)
+						printf(" REL_TOUR_IS_ALT");
+					printf("\n");
+				}
+			}
 		}
 
-
-
-
-
-
-
-
-		// check for containment
-		if ((contig->property.rflag & (REL_TOUR_HAS_ALT | REL_TOUR_UNIQUE)) && (contig->property.rflag & (REL_CONTIG_HAS_ALT | REL_CONTIG_UNIQUE)) && (contig->property.rflag & (REL_READ_HAS_ALT | REL_READ_UNIQE)))
-		{
-			printf(" 3_PRIM");
-			classified++;
-		}
-		else if ((contig->property.rflag & (REL_TOUR_IS_ALT)) && (contig->property.rflag & (REL_CONTIG_IS_ALT)) && (contig->property.rflag & (REL_READ_IS_ALT)))
-		{
-			printf(" 3_ALT");
-			classified++;
-		}
-
-		printf("  -- classified (%d / %d)\n", classified, actx->numContigs);
 	}
+
 }
 
 int checkJunctionCoverage(AnalyzeContext *actx, Contig *contig, int read) // returns true if everything is ok, false otherwise
@@ -5510,7 +5483,7 @@ int main(int argc, char* argv[])
 // todo for now do all steps: input format should be a MARVEL assembly run
 // analyze overlaps of fixed reads for each contig ( coverage, containments, duplicate reads used in different contigs )
 // STEP1
-	if (0)
+	if (1)
 	{
 		printf("START    ---   STEP1A: -- use patched read overlaps (from touring) and assign those to corresponding contigs\n");
 		pass(patched_pctx, processReadOverlapsAndMapThemToContigs);
@@ -5532,10 +5505,6 @@ int main(int argc, char* argv[])
 		printf("START    ---   STEP2a: analyze contig vs contig overlaps\n");
 		pass(contig_pctx, analyzeContigVsContigOverlaps);
 		printf("DONE     ---   STEP2a: analyze contig vs contig overlaps\n");
-
-		printf("START    ---   STEP2b: preclassify contig by contig overlaps\n");
-		preClassifyContigsByContigOverlaps(&actx);
-		printf("DONE     ---   STEP2b: preclassify contig by contig overlaps\n");
 	}
 
 // final classification, based on STEP1 and STEP2

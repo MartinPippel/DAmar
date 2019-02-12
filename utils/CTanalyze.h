@@ -123,13 +123,14 @@ typedef struct
 #define REL_TOUR_IS_BRIDGE					(1 << 4) // contig bridges two other contigs
 #define REL_TOUR_HAS_BRIDGE					(1 << 5) // contig has another contig that is a bridge contig
 /// ContigRelationFlags - based on Contig vs Contig overlaps
-#define REL_CONTIG_PRIMARY					(1 << 6)
-#define REL_CONTIG_IS_ALT						(1 << 7)
+
+#define REL_CONTIG_IS_ALT						(1 << 6)
+#define REL_CONTIG_IS_REPEAT_ALT		(1 << 7)
 #define REL_CONTIG_HAS_ALT 					(1 << 8)
 #define REL_CONTIG_UNIQUE 					(1 << 9)
 #define REL_CONTIG_BRIDGE 					(1 << 10)
 /// ReadRelationFlags - based on Contig vs patched read overlaps
-#define REL_READ_PRIMARY						(1 << 11)
+
 #define REL_READ_IS_ALT							(1 << 12)
 #define REL_READ_HAS_ALT 						(1 << 13)
 #define REL_READ_BRIDGE 						(1 << 14)
@@ -141,23 +142,26 @@ typedef struct
 #define CLASS_CONTIG_PRIMARY						(1 << 1)
 #define CLASS_CONTIG_ALT								(1 << 2)
 #define CLASS_CONTIG_DISCARD						(1 << 3)
-#define CLASS_CONTIG_MODIFIED						(1 << 4)		// TODO split, trimmed, etc... ?
-#define CLASS_CONTIG_VISITED						(1 << 5)  	// temporary flag
+#define CLASS_CONTIG_DISCARD_REPEAT			(1 << 4)
+#define CLASS_CONTIG_DISCARD_LEN				(1 << 5)
+#define CLASS_CONTIG_DISCARD_CREADS			(1 << 6)
+#define CLASS_CONTIG_MODIFIED						(1 << 7)		// TODO split, trimmed, etc... ?
+#define CLASS_CONTIG_VISITED						(1 << 8)  	// temporary flag
 /// READ JUNCTION FLAGS // TODO in development
-#define CLASS_READ_VALID     						(1 << 6)  	// 	128   initially all reads are valid, because they are part of a contig
-#define CLASS_READ_CHECKED	 						(1 << 7)  	// 	256
-#define CLASS_READ_DISCARD   						(1 << 8) 		// 	512   contig read should be completely cut out from contig
-#define CLASS_READ_NEWEND    						(1 << 10)  	// 	1,024	contig ends at current read at position contigPosEnd
-#define CLASS_READ_NEWSTART  						(1 << 11)  	// 	2,048	contig starts at current read at position: contigPosBeg
-#define CLASS_READ_BREAK_UNKNOWN       	(1 << 12)		//	4,096
-#define CLASS_READ_BREAK_MULTIREAD 			(1 << 13)		//	8,192
-#define CLASS_READ_BREAK_STARTEND 			(1 << 14)		//	16,384
-#define CLASS_READ_BREAK_FALSEJOINLEFT 	(1 << 15)		//	32,768
-#define CLASS_READ_BREAK_FALSEJOINRIGHT	(1 << 16)		//	65,536
-#define CLASS_READ_BREAK_HETEROZYGLEFT	(1 << 17)		//	131,072
-#define CLASS_READ_BREAK_HETEROZYGRIGHT	(1 << 18)		//	262,144
-#define CLASS_READ_BREAK_DEADENDLEFT		(1 << 19)		//	524,288
-#define CLASS_READ_BREAK_DEADENDRIGHT		(1 << 20)		//	1,048,576
+#define CLASS_READ_VALID     						(1 << 9)  	// 	128   initially all reads are valid, because they are part of a contig
+#define CLASS_READ_CHECKED	 						(1 << 10)  	// 	256
+#define CLASS_READ_DISCARD   						(1 << 11) 		// 	512   contig read should be completely cut out from contig
+#define CLASS_READ_NEWEND    						(1 << 12)  	// 	1,024	contig ends at current read at position contigPosEnd
+#define CLASS_READ_NEWSTART  						(1 << 13)  	// 	2,048	contig starts at current read at position: contigPosBeg
+#define CLASS_READ_BREAK_UNKNOWN       	(1 << 14)		//	4,096
+#define CLASS_READ_BREAK_MULTIREAD 			(1 << 15)		//	8,192
+#define CLASS_READ_BREAK_STARTEND 			(1 << 16)		//	16,384
+#define CLASS_READ_BREAK_FALSEJOINLEFT 	(1 << 17)		//	32,768
+#define CLASS_READ_BREAK_FALSEJOINRIGHT	(1 << 18)		//	65,536
+#define CLASS_READ_BREAK_HETEROZYGLEFT	(1 << 19)		//	131,072
+#define CLASS_READ_BREAK_HETEROZYGRIGHT	(1 << 20)		//	262,144
+#define CLASS_READ_BREAK_DEADENDLEFT		(1 << 21)		//	524,288
+#define CLASS_READ_BREAK_DEADENDRIGHT		(1 << 22)		//	1,048,576
 
 typedef struct
 {
