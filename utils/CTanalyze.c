@@ -2307,7 +2307,7 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 
 		if(properGapLen)
 		{
-			if(MAX(overlapBasesA, overlapBasesB) >= (int) (actx->contByContigs_CoveredLenPerc / 100.0 * MIN(conA->property.len, conB->property.len)))
+			if(overlapBasesA >= (int) (actx->contByContigs_CoveredLenPerc / 100.0 * conA->property.len))
 			{
 				validContainment = 1;
 			}
@@ -2329,9 +2329,8 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 		}
 		if (!validBridge && !validContainment)
 		{
-			if ((fail == 0 || fail == 4 || fail == 6) && MAX(overlapBasesA, overlapBasesB) >= (int) (0.4 * MIN(conA->property.len, conB->property.len)) &&
-					(MAX(conA->property.repBasesFromReadLAS,conA->property.repBasesFromContigLAS)/100.0 * conA->property.len > actx->maxPrimContigRepeatPerc ||
-					 MAX(conB->property.repBasesFromReadLAS,conB->property.repBasesFromContigLAS)/100.0 * conB->property.len > actx->maxPrimContigRepeatPerc))
+			if ((fail == 0 || fail == 4 || fail == 6) && overlapBasesA >= (int) (0.4 * conA->property.len) &&
+					(MAX(conA->property.repBasesFromReadLAS,conA->property.repBasesFromContigLAS)/100.0 * conA->property.len > actx->maxPrimContigRepeatPerc))
 			{
 				validRepeatContainment = 1;
 			}
@@ -2353,19 +2352,16 @@ int analyzeContigVsContigOverlaps(void* _ctx, Overlap* ovls, int novl)
 			{
 				crel->flag |= REL_CONTIG_IS_ALT;
 				conA->property.rflag |= REL_CONTIG_IS_ALT;
-				conB->property.rflag |= REL_CONTIG_HAS_ALT;
 			}
 			else if (validBridge)
 			{
 				crel->flag |= REL_CONTIG_BRIDGE;
 				conA->property.rflag |= REL_CONTIG_BRIDGE;
-				conB->property.rflag |= REL_CONTIG_BRIDGE;
 			}
 			else
 			{
 				crel->flag |= REL_CONTIG_IS_REPEAT_ALT;
 				conA->property.rflag |= REL_CONTIG_IS_REPEAT_ALT;
-				conB->property.rflag |= REL_CONTIG_HAS_ALT;
 			}
 
 			crel->corContigIdx = conB->property.contigID;
