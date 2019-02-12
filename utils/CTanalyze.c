@@ -1823,7 +1823,7 @@ void analyzeContigCreadIntersection(AnalyzeContext *actx)
 				if (contig_j->property.cflag & CLASS_CONTIG_DISCARD)
 					continue;
 
-				if (contig_j->property.len < 100000)
+				if (contig_j->property.len < 200000)
 					continue;
 
 #ifdef DEBUG_STEP1C
@@ -1882,7 +1882,10 @@ void analyzeContigCreadIntersection(AnalyzeContext *actx)
 					if ((contig_k->property.rflag & (REL_READ_IS_ALT)))
 						continue;
 
-					if (contig_k->property.len > 300000)
+					if (contig_k->property.len > 200000)
+						continue;
+
+					if (contig_k->numcReads < 5)
 						continue;
 
 //					if (contig_k->gClassificFlag & CONTIG_IS_CONTAINED)
@@ -3074,7 +3077,16 @@ void classify(AnalyzeContext *actx)
 					printf(" REL_TOUR_IS_ALT");
 				printf("\n");
 
-				conA->property.cflag |= (CLASS_CONTIG_ALT);
+				// special case if REL_TOUR_IS_ALT is true but no other ALT relationship is true and primary contig properties are met, then it must be PRIM contig
+				if((relTable[conA->property.contigID][j] & REL_TOUR_IS_ALT) && !(relTable[conA->property.contigID][j] & (REL_CONTIG_IS_ALT | REL_CONTIG_IS_REPEAT_ALT | REL_READ_IS_ALT))
+						&& validMinLen && validMinCreads && validRepeatPerc)
+				{
+					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_PRIMARY);
+				}
+				else
+				{
+					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_ALT);
+				}
 		}
 	}
 
@@ -3090,6 +3102,27 @@ void classify(AnalyzeContext *actx)
 		if(relTable[conA->property.contigID][0] > 1)
 		{
 			printf("CLASSIFY: %d MULTI l%d r(%d %d) v(%d, %d ,%d):\n",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+
+			int c=0;
+			for(j=2; j<=actx->numContigs+1; j++)
+			{
+				if(relTable[conA->property.contigID][j]!=0)
+				{
+					printf("  %d. REL with c%d: ", c++, j-2);
+					if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_ALT)
+						printf(" REL_CONTIG_IS_ALT");
+					if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_REPEAT_ALT)
+						printf(" REL_CONTIG_IS_REPEAT_ALT");
+					if(relTable[conA->property.contigID][j] & REL_READ_IS_ALT)
+						printf(" REL_READ_IS_ALT");
+					if(relTable[conA->property.contigID][j] & REL_TOUR_IS_ALT)
+						printf(" REL_TOUR_IS_ALT");
+					printf("\n");
+
+				}
+
+			}
+
 
 			if (relTable[conA->property.contigID][0] > 2)
 			{
@@ -3153,7 +3186,11 @@ void classify(AnalyzeContext *actx)
 
 					if(conA->property.contigID < j-2)
 					{
-						printf("found putative bridge: %d vs %d\n", conA->property.contigID, j-2);
+						Contig *conB = actx->contigs + (j-2);
+
+						printf("found putative bridge: %d vs %d\n", conA->property.contigID, conB->property.contigID);
+
+						if(conA->property.rflag & REL_TOUR_IS_ALT)
 					}
 				}
 			}
