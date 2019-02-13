@@ -2960,20 +2960,6 @@ void classify(AnalyzeContext *actx)
 	{
 		Contig *conA = actx->contigs_sorted[i];
 
-		// add containment touring relations to relation table
-		for (j=0; j<conA->numTourRelations; j++)
-		{
-			TourRelation *tRel = conA->tourRelations + j;
-			if (tRel->flag & REL_TOUR_IS_ALT)
-			{
-				if (relTable[conA->property.contigID][tRel->contigID1+2] == 0)
-				{
-					relTable[conA->property.contigID][0]++;
-				}
-				relTable[conA->property.contigID][tRel->contigID1+2] |= REL_TOUR_IS_ALT;
-			}
-		}
-
 		// add containment contig relations to relation table
 		for (j=0; j<conA->numContigRelations; j++)
 		{
@@ -3026,8 +3012,22 @@ void classify(AnalyzeContext *actx)
 				}
 				relTable[rRel->correspID][conA->property.contigID+2] |= REL_READ_IS_ALT;
 			}
-
 		}
+
+		// add containment touring relations to relation table
+		for (j=0; j<conA->numTourRelations; j++)
+		{
+			TourRelation *tRel = conA->tourRelations + j;
+			if (tRel->flag & REL_TOUR_IS_ALT)
+			{
+				if (relTable[conA->property.contigID][tRel->contigID1+2] == 0)
+				{
+					relTable[conA->property.contigID][0]++;
+				}
+				relTable[conA->property.contigID][tRel->contigID1+2] |= REL_TOUR_IS_ALT;
+			}
+		}
+
 	}
 
 	// classify ALT, PRIM, and CRAP relationships
@@ -3043,12 +3043,14 @@ void classify(AnalyzeContext *actx)
 		{
 				if(validMinCreads && validRepeatPerc && validMinLen)
 				{
-					printf("CLASSIFY: PRIM %d l%d r(%d %d) v(%d, %d ,%d)\n",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+					printf("CLASSIFY[%d][%d]: PRIM %d l%d r(%d %d) v(%d, %d ,%d)\n",
+							relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_PRIMARY);
 				}
 				else
 				{
-					printf("CLASSIFY: CRAP %d l%d r(%d %d) v(%d, %d ,%d)\n",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+					printf("CLASSIFY[%d][%d]: CRAP %d l%d r(%d %d) v(%d, %d ,%d)\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
+							conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_DISCARD);
 					if(!validMinCreads)
 						conA->property.cflag |= CLASS_CONTIG_DISCARD_CREADS;
@@ -3066,7 +3068,8 @@ void classify(AnalyzeContext *actx)
 						break;
 				}
 				assert(j<=actx->numContigs);
-				printf("CLASSIFY: %d ALT{ of %d} l%d r(%d %d) v(%d, %d ,%d): ",conA->property.contigID, j-2, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+				printf("CLASSIFY[%d][%d]: %d ALT{ of %d} l%d r(%d %d) v(%d, %d ,%d): ",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
+						conA->property.contigID, j-2, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 				if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_ALT)
 					printf(" REL_CONTIG_IS_ALT");
 				if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_REPEAT_ALT)
@@ -3101,7 +3104,8 @@ void classify(AnalyzeContext *actx)
 
 		if(relTable[conA->property.contigID][0] > 1)
 		{
-			printf("CLASSIFY: %d MULTI l%d r(%d %d) v(%d, %d ,%d):\n",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+			printf("CLASSIFY[%d][%d]: %d MULTI l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
+					conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 
 			int c=0;
 			for(j=2; j<=actx->numContigs+1; j++)
@@ -3127,7 +3131,8 @@ void classify(AnalyzeContext *actx)
 			if (relTable[conA->property.contigID][0] > 2)
 			{
 				conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_DISCARD);
-				printf("CLASSIFY: %d MULTIRSOLVED CRAP nrRel%d l%d r(%d %d) v(%d, %d ,%d):\n",conA->property.contigID, relTable[conA->property.contigID][0], conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+				printf("CLASSIFY[%d][%d]: %d MULTIRSOLVED CRAP nrRel%d l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
+						conA->property.contigID, relTable[conA->property.contigID][0], conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 			}
 			else
 			{
@@ -3161,12 +3166,14 @@ void classify(AnalyzeContext *actx)
 				if(numAlt)
 				{
 					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_DISCARD);
-					printf("CLASSIFY: %d MULTIRSOLVED CRAP ContInCont l%d r(%d %d) v(%d, %d ,%d):\n",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+					printf("CLASSIFY[%d][%d]: %d MULTIRSOLVED CRAP ContInCont l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
+							conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 				}
 				else
 				{
 					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_ALT);
-					printf("CLASSIFY: %d MULTIRSOLVED ALT l%d r(%d %d) v(%d, %d ,%d):\n",conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+					printf("CLASSIFY[%d][%d]: %d MULTIRSOLVED ALT l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
+							conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 				}
 			}
 		}
