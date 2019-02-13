@@ -314,11 +314,11 @@ void initAnalyzeContext(AnalyzeContext *actx)
 			assert(contigEndPathIdx1 == relatedContig->property.pathID);
 
 			contig->tourRelations[contig->numTourRelations].contigID1 = relatedContig->property.contigID;
-			contig->tourRelations[contig->numTourRelations].flag |= REL_TOUR_IS_ALT;
+			contig->tourRelations[contig->numTourRelations].flag |= REL_TOUR_IS_BUBBLE;
 			contig->numTourRelations++;
 
 			relatedContig->tourRelations[relatedContig->numTourRelations].contigID1 = contig->property.contigID;
-			relatedContig->tourRelations[relatedContig->numTourRelations].flag |= REL_TOUR_HAS_ALT;
+			relatedContig->tourRelations[relatedContig->numTourRelations].flag |= REL_TOUR_HAS_BUBBLE;
 			relatedContig->numTourRelations++;
 		}
 
@@ -332,11 +332,11 @@ void initAnalyzeContext(AnalyzeContext *actx)
 			assert(curPathRelID == relatedContig->property.pathID);
 
 			contig->tourRelations[contig->numTourRelations].contigID1 = relatedContig->property.contigID;
-			contig->tourRelations[contig->numTourRelations].flag |= REL_TOUR_IS_ALT;
+			contig->tourRelations[contig->numTourRelations].flag |= REL_TOUR_IS_SPUR;
 			contig->numTourRelations++;
 
 			relatedContig->tourRelations[relatedContig->numTourRelations].contigID1 = contig->property.contigID;
-			relatedContig->tourRelations[relatedContig->numTourRelations].flag |= REL_TOUR_HAS_ALT;
+			relatedContig->tourRelations[relatedContig->numTourRelations].flag |= REL_TOUR_HAS_SPUR;
 			relatedContig->numTourRelations++;
 		}
 
@@ -371,12 +371,7 @@ void initAnalyzeContext(AnalyzeContext *actx)
 		else if(contigEndPathIdx1 == -1 && contigEndPathIdx2 == -1)
 		{
 			contig->tourRelations[contig->numTourRelations].contigID1 = -1;
-			contig->tourRelations[contig->numTourRelations].flag |= REL_TOUR_PRIMARY;
-
-			if(getNumberOfSubgraphContigs(actx->contigFileNamesAndOffsets, contig->property.contigID) == 1)
-			{
-				contig->tourRelations[contig->numTourRelations].flag |= REL_TOUR_UNIQUE;
-			}
+			contig->tourRelations[contig->numTourRelations].flag |= REL_TOUR_UNIQUE;
 			contig->numTourRelations++;
 		}
 	}
@@ -2944,16 +2939,17 @@ void classify(AnalyzeContext *actx)
 	int i, j;
 
 	// i ... [0, ..., numContigs-1
-	// j ... [0, ..., numContigs+1]
-	// j=0. position: keep number of distinct ALT relationships
-	// j=1. position: keep number of distinct CONTIG_BRIDGE relationships
-	// j=2. - (n+1).position: contig relationships
+	// j ... [0, ..., numContigs+2]
+	// j= [0, ..., numContigs-1]: contig relationships
+	// j= numContigs. position: keep number of distinct ALT relationships, only REL_CONTIG_IS_ALT, REL_CONTIG_IS_REPEATALT, REL_READ_IS_ALT, and REL_TOUR_IS_ALT if its a bubble
+	// j= numContigs+1. position: keep number of distinct CONTIG_BRIDGE relationships
+	// j= numContigs+2. position: flag - REL_TOUR_IS_ALT if its a spur, will be used to split and trim contigs if both are primary
 
 	int ** relTable = (int **)malloc (sizeof(int*)*(actx->numContigs));
 	for(i=0; i<actx->numContigs; i++)
 	{
-		relTable[i] = (int*) malloc (sizeof(int)*(actx->numContigs+2));
-		bzero(relTable[i], sizeof(int)*(actx->numContigs+2));
+		relTable[i] = (int*) malloc (sizeof(int)*(actx->numContigs+3));
+		bzero(relTable[i], sizeof(int)*(actx->numContigs+3));
 	}
 
 	for (i = actx->numContigs - 1;  i >= 0 ; i--)
@@ -2966,29 +2962,29 @@ void classify(AnalyzeContext *actx)
 			ContigRelation *cRel = conA->contigRelations + j;
 			if (cRel->flag & (REL_CONTIG_IS_ALT | REL_CONTIG_IS_REPEAT_ALT))
 			{
-				if (relTable[conA->property.contigID][cRel->corContigIdx+2] == 0)
+				if (relTable[conA->property.contigID][cRel->corContigIdx] == 0)
 				{
-					relTable[conA->property.contigID][0]++;
+					relTable[conA->property.contigID][actx->numContigs]++;
 				}
 				if (cRel->flag & REL_CONTIG_IS_ALT)
-					relTable[conA->property.contigID][cRel->corContigIdx+2] |= REL_CONTIG_IS_ALT;
+					relTable[conA->property.contigID][cRel->corContigIdx] |= REL_CONTIG_IS_ALT;
 				else
-					relTable[conA->property.contigID][cRel->corContigIdx+2] |= REL_CONTIG_IS_REPEAT_ALT;
+					relTable[conA->property.contigID][cRel->corContigIdx] |= REL_CONTIG_IS_REPEAT_ALT;
 			}
 
 			if (cRel->flag & (REL_CONTIG_BRIDGE))
 			{
-				if (relTable[conA->property.contigID][cRel->corContigIdx+2] == 0)
+				if (relTable[conA->property.contigID][cRel->corContigIdx] == 0)
 				{
-					relTable[conA->property.contigID][1]++;
+					relTable[conA->property.contigID][actx->numContigs+1]++;
 				}
-				relTable[conA->property.contigID][cRel->corContigIdx+2] |= REL_CONTIG_BRIDGE;
+				relTable[conA->property.contigID][cRel->corContigIdx] |= REL_CONTIG_BRIDGE;
 
-				if (relTable[cRel->corContigIdx][conA->property.contigID+2] == 0)
+				if (relTable[cRel->corContigIdx][conA->property.contigID] == 0)
 				{
-					relTable[cRel->corContigIdx][1]++;
+					relTable[cRel->corContigIdx][actx->numContigs+1]++;
 				}
-				relTable[cRel->corContigIdx][conA->property.contigID+2] |= REL_CONTIG_BRIDGE;
+				relTable[cRel->corContigIdx][conA->property.contigID] |= REL_CONTIG_BRIDGE;
 			}
 		}
 
@@ -2998,19 +2994,19 @@ void classify(AnalyzeContext *actx)
 			ReadRelation *rRel = conA->readRelations + j;
 			if ((rRel->flag & REL_READ_IS_ALT))
 			{
-				if (relTable[conA->property.contigID][rRel->correspID+2] == 0)
+				if (relTable[conA->property.contigID][rRel->correspID] == 0)
 				{
-					relTable[conA->property.contigID][0]++;
+					relTable[conA->property.contigID][actx->numContigs]++;
 				}
-				relTable[conA->property.contigID][rRel->correspID+2] |= REL_READ_IS_ALT;
+				relTable[conA->property.contigID][rRel->correspID] |= REL_READ_IS_ALT;
 			}
 			else if (rRel->flag & REL_READ_HAS_ALT)
 			{
-				if (relTable[rRel->correspID][conA->property.contigID+2] == 0)
+				if (relTable[rRel->correspID][conA->property.contigID] == 0)
 				{
-					relTable[rRel->correspID][0]++;
+					relTable[rRel->correspID][actx->numContigs]++;
 				}
-				relTable[rRel->correspID][conA->property.contigID+2] |= REL_READ_IS_ALT;
+				relTable[rRel->correspID][conA->property.contigID] |= REL_READ_IS_ALT;
 			}
 		}
 
@@ -3018,16 +3014,20 @@ void classify(AnalyzeContext *actx)
 		for (j=0; j<conA->numTourRelations; j++)
 		{
 			TourRelation *tRel = conA->tourRelations + j;
-			if (tRel->flag & REL_TOUR_IS_ALT)
+			if (tRel->flag & REL_TOUR_IS_BUBBLE)
 			{
-				if (relTable[conA->property.contigID][tRel->contigID1+2] == 0)
-				{
-					relTable[conA->property.contigID][0]++;
-				}
-				relTable[conA->property.contigID][tRel->contigID1+2] |= REL_TOUR_IS_ALT;
+					if (relTable[conA->property.contigID][tRel->contigID1] == 0)
+					{
+						relTable[conA->property.contigID][actx->numContigs]++;
+					}
+					relTable[conA->property.contigID][tRel->contigID1] |= REL_TOUR_IS_BUBBLE;
+			}
+			else if (tRel->flag & REL_TOUR_IS_SPUR)
+			{
+				relTable[conA->property.contigID][actx->numContigs+2]++;
+				relTable[conA->property.contigID][tRel->contigID1] |= REL_TOUR_IS_SPUR;
 			}
 		}
-
 	}
 
 	// classify ALT, PRIM, and CRAP relationships
@@ -3039,17 +3039,17 @@ void classify(AnalyzeContext *actx)
 		int validMinCreads = (conA->numcReads > actx->minPrimContigReads) ? 1 : 0;
 		int validMinLen = (conA->property.len > actx->minPrimContigLen) ? 1 : 0;
 
-		if(relTable[conA->property.contigID][0] == 0)
+		if(relTable[conA->property.contigID][actx->numContigs] == 0)
 		{
 				if(validMinCreads && validRepeatPerc && validMinLen)
 				{
-					printf("CLASSIFY[%d][%d]: PRIM %d l%d r(%d %d) v(%d, %d ,%d)\n",
-							relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+					printf("CLASSIFY[%d][%d][%d]: PRIM %d l%d r(%d %d) v(%d, %d ,%d)\n", relTable[conA->property.contigID][actx->numContigs], relTable[conA->property.contigID][actx->numContigs+1],relTable[conA->property.contigID][actx->numContigs+2],
+							conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_PRIMARY);
 				}
 				else
 				{
-					printf("CLASSIFY[%d][%d]: CRAP %d l%d r(%d %d) v(%d, %d ,%d)\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
+					printf("CLASSIFY[%d][%d][%d]: CRAP %d l%d r(%d %d) v(%d, %d ,%d)\n",relTable[conA->property.contigID][actx->numContigs], relTable[conA->property.contigID][actx->numContigs+1],relTable[conA->property.contigID][actx->numContigs+2],
 							conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_DISCARD);
 					if(!validMinCreads)
@@ -3060,36 +3060,29 @@ void classify(AnalyzeContext *actx)
 						conA->property.cflag |= CLASS_CONTIG_DISCARD_REPEAT;
 				}
 		}
-		else if(relTable[conA->property.contigID][0] == 1) // exactly one to one relationship
+		else if(relTable[conA->property.contigID][actx->numContigs] == 1) // exactly one to one contained relationship
 		{
-				for(j=2; j<=actx->numContigs+1; j++)
+				for(j=0; j<actx->numContigs; j++)
 				{
-					if(relTable[conA->property.contigID][j]!=0)
+					if(relTable[conA->property.contigID][j] & (REL_CONTIG_IS_ALT | REL_CONTIG_IS_REPEAT_ALT | REL_READ_IS_ALT | REL_TOUR_IS_BUBBLE))
 						break;
 				}
-				assert(j<=actx->numContigs);
-				printf("CLASSIFY[%d][%d]: %d ALT{ of %d} l%d r(%d %d) v(%d, %d ,%d): ",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
-						conA->property.contigID, j-2, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+				assert(j<actx->numContigs);
+
+				printf("CLASSIFY[%d][%d][%d]: %d ALT{ of %d} l%d r(%d %d) v(%d, %d ,%d): ",relTable[conA->property.contigID][actx->numContigs], relTable[conA->property.contigID][actx->numContigs+1],relTable[conA->property.contigID][actx->numContigs+2],
+						conA->property.contigID, j, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 				if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_ALT)
 					printf(" REL_CONTIG_IS_ALT");
 				if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_REPEAT_ALT)
 					printf(" REL_CONTIG_IS_REPEAT_ALT");
 				if(relTable[conA->property.contigID][j] & REL_READ_IS_ALT)
 					printf(" REL_READ_IS_ALT");
-				if(relTable[conA->property.contigID][j] & REL_TOUR_IS_ALT)
-					printf(" REL_TOUR_IS_ALT");
+				if(relTable[conA->property.contigID][j] & REL_TOUR_IS_BUBBLE)
+					printf(" REL_TOUR_IS_BUBBLE");
 				printf("\n");
 
 				// special case if REL_TOUR_IS_ALT is true but no other ALT relationship is true and primary contig properties are met, then it must be PRIM contig
-				if((relTable[conA->property.contigID][j] & REL_TOUR_IS_ALT) && !(relTable[conA->property.contigID][j] & (REL_CONTIG_IS_ALT | REL_CONTIG_IS_REPEAT_ALT | REL_READ_IS_ALT))
-						&& validMinLen && validMinCreads && validRepeatPerc)
-				{
-					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_PRIMARY);
-				}
-				else
-				{
 					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_ALT);
-				}
 		}
 	}
 
@@ -3102,79 +3095,54 @@ void classify(AnalyzeContext *actx)
 		int validMinCreads = (conA->numcReads > actx->minPrimContigReads) ? 1 : 0;
 		int validMinLen = (conA->property.len > actx->minPrimContigLen) ? 1 : 0;
 
-		if(relTable[conA->property.contigID][0] > 1)
+		if(relTable[conA->property.contigID][actx->numContigs] > 1)
 		{
-			printf("CLASSIFY[%d][%d]: %d MULTI l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
+			printf("CLASSIFY[%d][%d][%d]: %d MULTI l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][actx->numContigs], relTable[conA->property.contigID][actx->numContigs+1],relTable[conA->property.contigID][actx->numContigs+2],
 					conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 
-			int c=0;
-			for(j=2; j<=actx->numContigs+1; j++)
+			int count=1;
+			for(j=0; j<actx->numContigs; j++)
 			{
-				if(relTable[conA->property.contigID][j]!=0)
+				if(relTable[conA->property.contigID][j] & (REL_CONTIG_IS_ALT | REL_CONTIG_IS_REPEAT_ALT | REL_READ_IS_ALT | REL_TOUR_IS_BUBBLE))
 				{
-					printf("  %d. REL with c%d: ", c++, j-2);
+					printf("  %d. REL with c%d: ", count++, j);
 					if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_ALT)
 						printf(" REL_CONTIG_IS_ALT");
 					if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_REPEAT_ALT)
 						printf(" REL_CONTIG_IS_REPEAT_ALT");
 					if(relTable[conA->property.contigID][j] & REL_READ_IS_ALT)
 						printf(" REL_READ_IS_ALT");
-					if(relTable[conA->property.contigID][j] & REL_TOUR_IS_ALT)
-						printf(" REL_TOUR_IS_ALT");
+					if(relTable[conA->property.contigID][j] & REL_TOUR_IS_BUBBLE)
+						printf(" REL_TOUR_IS_BUBBLE");
 					printf("\n");
-
 				}
-
 			}
 
 
-			if (relTable[conA->property.contigID][0] > 2)
+			int numPrim = 0;
+			for(j=0; j<actx->numContigs; j++)
 			{
-				conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_DISCARD);
-				printf("CLASSIFY[%d][%d]: %d MULTIRSOLVED CRAP nrRel%d l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
-						conA->property.contigID, relTable[conA->property.contigID][0], conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
+				if(relTable[conA->property.contigID][j] & (REL_CONTIG_IS_ALT | REL_CONTIG_IS_REPEAT_ALT | REL_READ_IS_ALT | REL_TOUR_IS_BUBBLE))
+				{
+					if(actx->contigs[j].property.cflag & CLASS_CONTIG_CLASSIFIED)
+					{
+						if(actx->contigs[j].property.cflag & CLASS_CONTIG_PRIMARY)
+							numPrim++;
+					}
+				}
+			}
+
+			if(numPrim == count)
+			{
+				conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_ALT);
+				printf("CLASSIFY[%d][%d]: %d MULTIRSOLVED ALT l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
+						conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 			}
 			else
 			{
-				int c=1;
-				int numPrim = 0;
-				int numAlt  = 0;
-				for(j=2; j<=actx->numContigs+1; j++)
-				{
-					if(relTable[conA->property.contigID][j]!=0)
-					{
-						printf("  %d. REL with c%d: ", c++, j-2);
-						if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_ALT)
-							printf(" REL_CONTIG_IS_ALT");
-						if(relTable[conA->property.contigID][j] & REL_CONTIG_IS_REPEAT_ALT)
-							printf(" REL_CONTIG_IS_REPEAT_ALT");
-						if(relTable[conA->property.contigID][j] & REL_READ_IS_ALT)
-							printf(" REL_READ_IS_ALT");
-						if(relTable[conA->property.contigID][j] & REL_TOUR_IS_ALT)
-							printf(" REL_TOUR_IS_ALT");
-						printf("\n");
-
-						if(actx->contigs[j-2].property.cflag & CLASS_CONTIG_ALT)
-							numAlt++;
-						if(actx->contigs[j-2].property.cflag & CLASS_CONTIG_PRIMARY)
-							numAlt++;
-					}
-
-				}
-				assert(numAlt + numPrim == 2);
-
-				if(numAlt)
-				{
-					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_DISCARD);
-					printf("CLASSIFY[%d][%d]: %d MULTIRSOLVED CRAP ContInCont l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
-							conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
-				}
-				else
-				{
-					conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_ALT);
-					printf("CLASSIFY[%d][%d]: %d MULTIRSOLVED ALT l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][0], relTable[conA->property.contigID][1],
-							conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
-				}
+				conA->property.cflag |= (CLASS_CONTIG_CLASSIFIED | CLASS_CONTIG_DISCARD);
+				printf("CLASSIFY[%d][%d][%d]: %d MULTIRSOLVED CRAP ContInCont l%d r(%d %d) v(%d, %d ,%d):\n",relTable[conA->property.contigID][actx->numContigs], relTable[conA->property.contigID][actx->numContigs+1],relTable[conA->property.contigID][actx->numContigs+2],
+						conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
 			}
 		}
 	}
@@ -3184,24 +3152,39 @@ void classify(AnalyzeContext *actx)
 	{
 		Contig *conA = actx->contigs_sorted[i];
 
-		if(relTable[conA->property.contigID][1] > 1)
+		if(relTable[conA->property.contigID][actx->numContigs+1])
 		{
-			for(j=2; j<=actx->numContigs+1; j++)
+			for(j=0; j<actx->numContigs; j++)
 			{
-				if(relTable[conA->property.contigID][j]!=0)
+				if(relTable[conA->property.contigID][j] & REL_CONTIG_BRIDGE)
 				{
 
-					if(conA->property.contigID < j-2)
+					if(conA->property.contigID < j)
 					{
-						Contig *conB = actx->contigs + (j-2);
+						Contig *conB = actx->contigs + (j);
 
 						printf("found putative bridge: %d vs %d\n", conA->property.contigID, conB->property.contigID);
-
-						//if(conA->property.rflag & REL_TOUR_IS_ALT)
 					}
 				}
 			}
 		}
+		else if (relTable[conA->property.contigID][actx->numContigs+2]) // is spur
+		{
+			for(j=0; j<actx->numContigs; j++)
+			{
+				if(relTable[conA->property.contigID][j] & REL_TOUR_IS_SPUR)
+				{
+					Contig *conB = actx->contigs + (j);
+
+					if((conA->property.cflag & CLASS_CONTIG_PRIMARY) && (conB->property.cflag & CLASS_CONTIG_PRIMARY) )
+					{
+						printf("found putative false join: %d vs %d\n", conA->property.contigID, conB->property.contigID);
+					}
+				}
+			}
+
+		}
+
 	}
 }
 

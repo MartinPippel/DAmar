@@ -116,17 +116,17 @@ typedef struct
 
 // CONTIG RELATION FLAGS
 /// TourRelationFlags - based on touring evaluates ends arguments
-#define REL_TOUR_PRIMARY						(1 << 0)
-#define REL_TOUR_IS_ALT							(1 << 1) // contig is bubble or spur
-#define REL_TOUR_HAS_ALT						(1 << 2) // contig is bubble or spur
-#define REL_TOUR_UNIQUE							(1 << 3) // contig has no other tour relationship
-#define REL_TOUR_IS_BRIDGE					(1 << 4) // contig bridges two other contigs
-#define REL_TOUR_HAS_BRIDGE					(1 << 5) // contig has another contig that is a bridge contig
+#define REL_TOUR_IS_SPUR						(1 << 0) // contig is spur
+#define REL_TOUR_IS_BUBBLE					(1 << 1) // contig is bubble
+#define REL_TOUR_HAS_SPUR						(1 << 2) // contig contains spur(s)
+#define REL_TOUR_HAS_BUBBLE					(1 << 3) // contig contains bubble(s)
+#define REL_TOUR_UNIQUE							(1 << 4) // contig has no other tour relationship
+#define REL_TOUR_IS_BRIDGE					(1 << 5) // contig bridges two other contigs
+#define REL_TOUR_HAS_BRIDGE					(1 << 6) // contig has another contig that is a bridge contig
 /// ContigRelationFlags - based on Contig vs Contig overlaps
 
-#define REL_CONTIG_IS_ALT						(1 << 6)
-#define REL_CONTIG_IS_REPEAT_ALT		(1 << 7)
-#define REL_CONTIG_HAS_ALT 					(1 << 8)
+#define REL_CONTIG_IS_ALT						(1 << 7)
+#define REL_CONTIG_IS_REPEAT_ALT		(1 << 8)
 #define REL_CONTIG_UNIQUE 					(1 << 9)
 #define REL_CONTIG_BRIDGE 					(1 << 10)
 /// ReadRelationFlags - based on Contig vs patched read overlaps
