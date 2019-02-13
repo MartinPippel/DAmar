@@ -3093,7 +3093,7 @@ void classify(AnalyzeContext *actx)
 		}
 	}
 
-	// resolve MULTI CONTAINED relationships
+	// resolve one to many relationship
 	for(i=0; i<actx->numContigs; i++)
 	{
 		Contig *conA = actx->contigs_sorted[i];
