@@ -397,7 +397,7 @@ char* getContigFastaFileName(AnalyzeContext *actx, Contig *contig)
 
 	for (i = 0; i < actx->contigFileNamesAndOffsets->numFileNames; i++)
 	{
-		if (contig->property.contigID >= actx->contigFileNamesAndOffsets->fromDbIdx[i] && contig->property.contigID < actx->contigFileNamesAndOffsets->fromDbIdx[i])
+		if (contig->property.contigID >= actx->contigFileNamesAndOffsets->fromDbIdx[i] && contig->property.contigID <= actx->contigFileNamesAndOffsets->fromDbIdx[i])
 		{
 			return actx->contigFileNamesAndOffsets->fileNames[i];
 		}
@@ -1818,8 +1818,8 @@ void analyzeContigCreadIntersection(AnalyzeContext *actx)
 				if (contig_j->property.cflag & CLASS_CONTIG_DISCARD)
 					continue;
 
-				if (contig_j->property.len < 200000)
-					continue;
+//				if (contig_j->property.len < 200000)
+//					continue;
 
 #ifdef DEBUG_STEP1C
 				printf("Check against contig_j: %d, len %d\n", contig_j->property.contigID, contig_j->property.len);
@@ -1877,11 +1877,11 @@ void analyzeContigCreadIntersection(AnalyzeContext *actx)
 					if ((contig_k->property.rflag & (REL_READ_IS_ALT)))
 						continue;
 
-					if (contig_k->property.len > 200000)
-						continue;
-
-					if (contig_k->numcReads < 5)
-						continue;
+//					if (contig_k->property.len > 200000)
+//						continue;
+//
+//					if (contig_k->numcReads < 5)
+//						continue;
 
 //					if (contig_k->gClassificFlag & CONTIG_IS_CONTAINED)
 //					{
@@ -3041,7 +3041,7 @@ void classify(AnalyzeContext *actx)
 
 		if(relTable[conA->property.contigID][actx->numContigs] == 0)
 		{
-				if(validMinCreads && validRepeatPerc && validMinLen)
+				if((validMinCreads && validRepeatPerc) || validMinLen)
 				{
 					printf("CLASSIFY[%d][%d][%d]: PRIM %d l%d r(%d %d) v(%d, %d ,%d)\n", relTable[conA->property.contigID][actx->numContigs], relTable[conA->property.contigID][actx->numContigs+1],relTable[conA->property.contigID][actx->numContigs+2],
 							conA->property.contigID, conA->property.len, conA->property.repBasesFromContigLAS, conA->property.repBasesFromReadLAS, validRepeatPerc, validMinCreads, validMinLen);
