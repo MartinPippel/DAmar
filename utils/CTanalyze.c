@@ -397,7 +397,7 @@ char* getContigFastaFileName(AnalyzeContext *actx, Contig *contig)
 
 	for (i = 0; i < actx->contigFileNamesAndOffsets->numFileNames; i++)
 	{
-		if (contig->property.contigID >= actx->contigFileNamesAndOffsets->fromDbIdx[i] && contig->property.contigID <= actx->contigFileNamesAndOffsets->fromDbIdx[i])
+		if (contig->property.contigID >= actx->contigFileNamesAndOffsets->fromDbIdx[i] && contig->property.contigID <= actx->contigFileNamesAndOffsets->toDbIdx[i])
 		{
 			return actx->contigFileNamesAndOffsets->fileNames[i];
 		}
