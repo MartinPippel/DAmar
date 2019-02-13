@@ -913,7 +913,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 			int j;
 			for (i = 0; i < ctx->curChains && valid; i++)
 			{
-				if ((chain->ovls[0]->flags & OVL_COMP) == (ctx->ovlChains[i].ovls[0]->flags && OVL_COMP))
+				if ((chain->ovls[0]->flags & OVL_COMP) == (ctx->ovlChains[i].ovls[0]->flags & OVL_COMP))
 				{
 					for (j = 0; j < chain->novl; j++)
 					{
@@ -1110,7 +1110,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	for (j = 0; j < novl; j++)
 	{
 		// get rid of all previous flags
-		ovl[j].flags = 0;
+		ovl[j].flags &= ~(OVL_CONT | OVL_DISCARD | OVL_TEMP | OVL_REPEAT);
 
 		ovl[j].flags |= filter(ctx, ovl + j);
 	}
