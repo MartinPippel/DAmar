@@ -90,10 +90,16 @@ function setPicardOptions()
 	CONTIG_PICARD_OPT="-Xmx${CT_FREEBAYES_PICARD_XMX}G -Xms${CT_FREEBAYES_PICARD_XMS}G -XX:-UseGCOverheadLimit"	
 }
 
+if [[ -z ${LONGRANGER_PATH} || ! -f ${LONGRANGER_PATH}/longranger ]]
+then
+	(>&2 echo "Variable LONGRANGER_PATH must be set to a proper longranger installation directory!!")
+    exit 1
+fi
+
 # Type: 0 - for 10x data 
 # Type: 1 - for Illuimina PE data
 myTypes=("1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7-FBstatistics", 
-"1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools")
+"01_FBprepareInput, 02_FBlongrangerAlign, 4-FBfreebayes, 5-FBbcftools")
 if [[ ${CT_FREEBAYES_TYPE} -eq 0 ]]
 then 
     ### 1-FBprepareInput
@@ -410,7 +416,62 @@ then
         (>&2 echo "step ${currentStep} in CT_FREEBAYES_TYPE ${CT_FREEBAYES_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_FREEBAYES_TYPE}]}")
         exit 1            
-    fi    		
+    fi    
+elif [[ ${CT_FREEBAYES_TYPE} -eq 0 ]]
+then 
+    ### 01_FBprepareInput
+    if [[ ${currentStep} -eq 1 ]]
+    then
+        ### clean up plans 
+        for x in $(ls freebayes_01_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        if [[ ! -f "${CT_FREEBAYES_REFFASTA}" ]]
+        then
+        	(>&2 echo "ERROR - set CT_FREEBAYES_REFFASTA to reference fasta file")
+        	exit 1
+   		fi
+   		
+   		echo "if [[ -d ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} ]]; then mv ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}" > freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -r ${CT_FREEBAYES_REFFASTA} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+	### 02_FBlongrangerAlign
+    if [[ ${currentStep} -eq 2 ]]
+    then
+        ### clean up plans 
+        for x in $(ls freebayes_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        REFNAME=$(basename ${CT_FREEBAYES_REFFASTA})
+        
+        if [[ ! -f "${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/${REFNAME}" ]]
+        then
+    		(>&2 echo "ERROR - cannot find reference fasta file \"${REFNAME}\" in dir \"${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref\"")
+        	exit 1
+   		fi
+        
+        
+        echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME}" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
+        echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1 | tr -d \"()\")" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
+        
+        
+        
+	
+	### 03_FBfreebayes
+	### 04-FBbcftools
+	### 05-FBstatistics
+	else
+        (>&2 echo "step ${currentStep} in CT_FREEBAYES_TYPE ${CT_FREEBAYES_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${CT_FREEBAYES_TYPE}]}")
+        exit 1            
+    fi    	    		
 else
     (>&2 echo "unknown CT_FREEBAYES_TYPE ${CT_FREEBAYES_TYPE}")
     (>&2 echo "supported types")

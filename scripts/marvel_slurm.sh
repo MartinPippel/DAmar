@@ -23,42 +23,6 @@ then
     exit 1
 fi
 
-if [[ -z "${COVERAGE_DIR}" ]]
-then 
-    (>&2 echo "ERROR - You have to set COVERAGE_DIR.")
-    exit 1
-fi
-
-if [[ -z "${PATCHING_DIR}" ]]
-then 
-    (>&2 echo "ERROR - You have to set PATCHING_DIR.")
-    exit 1
-fi
-
-if [[ -z "${ASSMEBLY_DIR}" ]]
-then 
-    (>&2 echo "ERROR - You have to set ASSMEBLY_DIR")
-    exit 1
-fi
-
-if [[ "${ASSMEBLY_DIR}" == "${PATCHING_DIR}" ]]
-then 
-    (>&2 echo "ERROR - PATCHING_DIR must be different from ASSMEBLY_DIR")
-    exit 1
-fi
-
-if [[ -z "${DB_PATH}" ]]
-then 
-    (>&2 echo "ERROR - You have to set DB_PATH. Location of the initial databases MARVEL and DAZZLER.")
-    exit 1
-fi
-
-if [[ -z "${QC_DATA_DIR}" ]]
-then 
-    (>&2 echo "ERROR - You have to set QC_DATA_DIR")
-    exit 1
-fi
-
 # file must be present 
 function realpath()
 {
@@ -150,31 +114,91 @@ realPathConfigFile=$(realpath "${configFile}")
 cwd=$(pwd)
 
 if [[ ${currentPhase} -eq -2 ]]
-then 
+then
+	if [[ -z "${QC_DATA_DIR}" ]]
+	then 
+    	(>&2 echo "ERROR - You have to set QC_DATA_DIR")
+    	exit 1
+	fi 
+	
 	mkdir -p ${QC_DATA_DIR}
 	cd ${QC_DATA_DIR}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
 elif [[ ${currentPhase} -eq -1 ]]
 then 
+	if [[ -z "${MITO_DIR}" ]]
+	then 
+    	(>&2 echo "ERROR - You have to set MITO_DIR.")
+    	exit 1
+	fi
+	
 	mkdir -p ${MITO_DIR}
 	cd ${MITO_DIR}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
 elif [[ ${currentPhase} -eq 0 ]]
 then 
+	if [[ -z "${COVERAGE_DIR}" ]]
+	then 
+    	(>&2 echo "ERROR - You have to set COVERAGE_DIR.")
+    	exit 1
+	fi
+
+	if [[ -z "${DB_PATH}" ]]
+	then 
+    	(>&2 echo "ERROR - You have to set DB_PATH. Location of the initial databases MARVEL and DAZZLER.")
+    	exit 1
+	fi
 	mkdir -p ${COVERAGE_DIR}
 	cd ${COVERAGE_DIR}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
 elif [[ ${currentPhase} -lt 3 ]]
 then 
+
+	if [[ -z "${PATCHING_DIR}" ]]
+	then 
+	    (>&2 echo "ERROR - You have to set PATCHING_DIR.")
+	    exit 1
+	fi
+
+	if [[ -z "${DB_PATH}" ]]
+	then 
+    	(>&2 echo "ERROR - You have to set DB_PATH. Location of the initial databases MARVEL and DAZZLER.")
+    	exit 1
+	fi
 	mkdir -p ${PATCHING_DIR}
 	cd ${PATCHING_DIR}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
 elif [[ ${currentPhase} -lt 16 ]]
 then
+
+	if [[ -z "${PATCHING_DIR}" ]]
+	then 
+    	(>&2 echo "ERROR - You have to set PATCHING_DIR.")
+    	exit 1
+	fi
+
+	if [[ -z "${ASSMEBLY_DIR}" ]]
+	then 
+	    (>&2 echo "ERROR - You have to set ASSMEBLY_DIR")
+	    exit 1
+	fi
+	
+	if [[ "${ASSMEBLY_DIR}" == "${PATCHING_DIR}" ]]
+	then 
+	    (>&2 echo "ERROR - PATCHING_DIR must be different from ASSMEBLY_DIR")
+	    exit 1
+	fi
+	
+	if [[ -z "${DB_PATH}" ]]
+	then 
+	    (>&2 echo "ERROR - You have to set DB_PATH. Location of the initial databases MARVEL and DAZZLER.")
+	    exit 1
+	fi
+	
 	if [[ -z "${FIX_REPMASK_USELAFIX_PATH}" ]]
 	then 
 		(>&2 echo "WARNING - Variable FIX_REPMASK_USELAFIX_PATH is not set.Try to use default path: patchedReads_dalign")

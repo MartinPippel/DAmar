@@ -1106,5 +1106,9 @@ MEM_arksTigmint=$((${SC_10X_BWA_THREADS}*4096))
 TIME_arksTigmint=24:00:00
 
 THREADS_longrangerBasic=${THREADS_juicer}
-MEM__longrangerBasic=$((${THREADS_juicer}*8192))
+MEM_longrangerBasic=$((${THREADS_juicer}*8192))
 TIME_longrangerBasic=24:00:00
+
+THREADS_supernova=${THREADS_juicer}
+MEM_supernova=$((${THREADS_juicer}*8192))
+TIME_supernova=24:00:00
