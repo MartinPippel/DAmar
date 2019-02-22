@@ -173,7 +173,7 @@ then
 	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID} --fastqs=${TENX_PATH}"	   					 
 		fi > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.plan
         
-        echo "$(${LONGRANGER_PATH}/supernova run --version | head -n1 | tr -d \"()\")" > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.version
+        echo "$(${SUPERNOVA_PATH}/supernova run --version | head -n1)" > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.version
 	else
         (>&2 echo "step ${currentStep} in RAW_QC_TYPE ${RAW_QC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_QC_TYPE}]}")
