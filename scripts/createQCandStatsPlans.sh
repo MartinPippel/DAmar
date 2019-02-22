@@ -35,14 +35,71 @@ function setFastpOptions()
 	fi
 }
 
+function setJellyfishOptions()
+{
+	JELLYFISH_OPT="-C"
+	
+	if [[ "x$1" == "xcount" ]]
+	then 
+		if [[ -z "${RAW_QC_JELLYFISH_KMER}" ]]
+		then 
+			RAW_QC_JELLYFISH_KMER=21	
+		fi
+		JELLYFISH_OPT="${JELLYFISH_OPT} -m ${RAW_QC_JELLYFISH_KMER}"
+		
+		if [[ -z "${RAW_QC_JELLYFISH_SIZE}" ]]
+		then 
+			RAW_QC_JELLYFISH_SIZE=1000000000
+		fi
+		JELLYFISH_OPT="${JELLYFISH_OPT} -s ${RAW_QC_JELLYFISH_SIZE}"			
+	elif [[ "x$1" == "xhisto" ]]
+	then
+		if [[ -z "${RAW_QC_JELLYFISH_LOWHIST}" ]]
+		then 
+			RAW_QC_JELLYFISH_LOWHIST=1	
+		fi
+		JELLYFISH_OPT="${JELLYFISH_OPT} -l ${RAW_QC_JELLYFISH_LOWHIST}"
+		 
+		if [[ -z "${RAW_QC_JELLYFISH_HIGHHIST}" ]]
+		then 
+			RAW_QC_JELLYFISH_HIGHHIST=1000000
+		fi
+		JELLYFISH_OPT="${JELLYFISH_OPT} -h ${RAW_QC_JELLYFISH_HIGHHIST}"
+	fi 
+	
+	## general options, that are common in count and histo
+	if [[ -z "${RAW_QC_JELLYFISH_THREADS}" ]]
+	then 
+		RAW_QC_JELLYFISH_THREADS=12
+	fi
+	
+	JELLYFISH_OPT="${JELLYFISH_OPT} -t ${RAW_QC_JELLYFISH_THREADS}"
+	
+	if [[ -n "${RAW_QC_JELLYFISH_VERBOSE}" ]]
+	then 
+		JELLYFISH_OPT="${JELLYFISH_OPT} -v"
+	fi	
+}
+
+function setGenomeScopeOptions()
+{
+	# get the kmers that were used  in JellyFish 
+	setJellyfishOptions count
+
+	##TODO set max read length ???		
+	RAW_QC_GENOMESCOPE_KMER=${RAW_QC_JELLYFISH_KMER}
+	
+	RAW_QC_GENOMESCOPE_KMERMAX=${RAW_QC_JELLYFISH_HIGHHIST}
+}
+
 #type-0 [10x - prepare] [1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
 #type-1 [10x - de novo] [1-1]: 01_supernova
-#type-2 [10x|HiC - kmer-Gsize estimate] [1-2]: 01_jellyfish, 02_genomescope
+#type-2 [10x|HiC - kmer-Gsize estimate] [1-2]: 01_genomescope
 #type-3 [allData - MASH CONTAMINATION SCREEN] [1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
 
 
 myTypes=("01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck",
-"01_supernova", "01_jellyfish, 02_genomescope"
+"01_supernova", "01_genomescope"
 "01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen")
 
 #type-0 [10x - prepare] [1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
@@ -170,7 +227,7 @@ then
 	   			echo "mv 10x_${PROJECT_ID}_supernova 10x_${PROJECT_ID}_supernova_$(date '+%Y-%m-%d_%H-%M-%S')"	   			
 	   		fi
 	   		
-	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID} --fastqs=${TENX_PATH} --maxreads='all'"	   					 
+	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID}_supernova --fastqs=${TENX_PATH} --maxreads='all'"	   					 
 		fi > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.plan
         
         echo "$(${SUPERNOVA_PATH}/supernova run --version | head -n1)" > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.version
@@ -179,10 +236,10 @@ then
         (>&2 echo "valid steps are: ${myTypes[${RAW_QC_TYPE}]}")
         exit 1            
     fi		
-#type-2 [10x|HiC - kmer-Gsize estimate] [1-2]: 01_jellyfish, 02_genomescope
+#type-2 [10x|HiC - kmer-Gsize estimate] [1-1]: 01_genomescope
 elif [[ ${RAW_QC_TYPE} -eq 2 ]]
 then  
-	    ### 01_mashPrepare
+	### 01_genomescope
     if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
@@ -190,6 +247,26 @@ then
         do            
             rm $x
         done
+        
+    	longrangerOut="10x_${PROJECT_ID}_longrangerBasic/outs/barcoded.fastq.gz"
+        
+        if [[ ! -f ${longrangerOut} ]]
+        then 
+        	(>&2 echo "ERROR - longranger 10x data is not present at: ${longrangerOut}! Run longranger basic on 10x reads first!")
+	        exit 1
+    	fi
+        
+    	setJellyfishOptions count
+    	echo "mkdir -p genomescope"  > qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${JELLYFISH_PATH}/jellyfish count ${JELLYFISH_OPT} <(zcat ${longrangerOut}) -o genomescope/${PROJECT_ID}.jf" >> qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.plan
+        setJellyfishOptions histo
+        echo "${JELLYFISH_PATH}/jellyfish histo ${JELLYFISH_OPT} genomescope/${PROJECT_ID}.jf > genomescope/${PROJECT_ID}.histo" >> qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.plan
+        setGenomeScopeOptions
+        echo "Rscript ${GENOMESCOPE_PATH}/genomescope.R genomescope/${PROJECT_ID}.histo ${RAW_QC_GENOMESCOPE_KMER} 150 genomescope ${RAW_QC_GENOMESCOPE_KMERMAX}" >> qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.plan
+        
+        echo "jellyfish count $(${JELLYFISH_PATH}/jellyfish count --version | head -n1)" > qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.version
+        echo "jellyfish histo $(${JELLYFISH_PATH}/jellyfish histo --version | head -n1)" >> qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.version
+        #TODO add genomescope version         
 	fi
 
 ## mash contamination check
