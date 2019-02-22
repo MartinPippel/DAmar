@@ -170,7 +170,7 @@ then
 	   			echo "mv 10x_${PROJECT_ID}_supernova 10x_${PROJECT_ID}_supernova_$(date '+%Y-%m-%d_%H-%M-%S')"	   			
 	   		fi
 	   		
-	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID} --fastqs=${TENX_PATH}"	   					 
+	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID} --fastqs=${TENX_PATH} --maxreads='all'"	   					 
 		fi > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.plan
         
         echo "$(${SUPERNOVA_PATH}/supernova run --version | head -n1)" > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.version
