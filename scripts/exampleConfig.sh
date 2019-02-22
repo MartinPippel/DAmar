@@ -39,6 +39,7 @@ export JUICER_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer"
 export JUICER_TOOLS_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer_tools.1.9.8_jcuda.0.8.jar"
 export THREEDDNA_PATH="/projects/dazzler/pippel/prog/scaffolding/3d-dna/"
 export LONGRANGER_PATH="/projects/dazzler/pippel/prog/longranger-2.2.0"
+export SUPERNOVA_PATH="/projects/dazzler/pippel/prog/supernova-2.1.1"
 export ARKS_PATH="/projects/dazzler/pippel/prog/scaffolding/arks-build/bin"
 export TIGMINT_PATH="/projects/dazzler/pippel/prog/scaffolding/tigmint/bin"
 export LINKS_PATH="/projects/dazzler/pippel/prog/scaffolding/links_v1.8.6/"
@@ -74,15 +75,18 @@ PATCHING_DIR="patching"
 ASSMEBLY_DIR="assembly"
 COVERAGE_DIR="coverage"
 MITO_DIR="mitochondrion"
-MASH_DIR="contamination"
+QC_DATA_DIR="processedData"
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -2 - mash contamination screening <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -2 - data QC and statistics and format conversion <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-#type-0 steps [1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen 
+#type-0 [10x - prepare] [1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
+#type-1 [10x - de novo] [1-1]: 01_supernova
+#type-2 [allData - MASH CONTAMINATION SCREEN] [1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
+#type-3 [10x|HiC - kmer-Gsize estimate] [1-2]: 01_jellyfish, 02_genomescope
 RAW_MASH_TYPE=0
 
 RAW_MASH_SUBMIT_SCRIPTS_FROM=1
-RAW_MASH_SUBMIT_SCRIPTS_TO=5
+RAW_MASH_SUBMIT_SCRIPTS_TO=2
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -1 - mitochondrium assembly <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -1100,3 +1104,7 @@ TIME_mashScreen=24:00:00
 THREADS_arksTigmint=${SC_10X_BWA_THREADS}
 MEM_arksTigmint=$((${SC_10X_BWA_THREADS}*4096))
 TIME_arksTigmint=24:00:00
+
+THREADS_longrangerBasic=${THREADS_juicer}
+MEM__longrangerBasic=$((${THREADS_juicer}*8192))
+TIME_longrangerBasic=24:00:00

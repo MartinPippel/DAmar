@@ -53,6 +53,12 @@ then
     exit 1
 fi
 
+if [[ -z "${QC_DATA_DIR}" ]]
+then 
+    (>&2 echo "ERROR - You have to set QC_DATA_DIR")
+    exit 1
+fi
+
 # file must be present 
 function realpath()
 {
@@ -61,10 +67,10 @@ function realpath()
 
 ## find entry point to create first plan and submit that stuff 
 
-if [[ ${RAW_MASH_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+if [[ ${RAW_QC_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=-2
-    currentStep=${RAW_MASH_SUBMIT_SCRIPTS_FROM}     
+    currentStep=${RAW_QC_SUBMIT_SCRIPTS_FROM}     
 elif [[ ${RAW_MITO_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=-1
@@ -145,8 +151,8 @@ cwd=$(pwd)
 
 if [[ ${currentPhase} -eq -2 ]]
 then 
-	mkdir -p ${MASH_DIR}
-	cd ${MASH_DIR}
+	mkdir -p ${QC_DATA_DIR}
+	cd ${QC_DATA_DIR}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}
 elif [[ ${currentPhase} -eq -1 ]]
