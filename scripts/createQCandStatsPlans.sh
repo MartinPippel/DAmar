@@ -103,10 +103,10 @@ then
 	   			echo "mv 10x_${PROJECT_ID}_longrangerBasic 10x_${PROJECT_ID}_longrangerBasic_$(date '+%Y-%m-%d_%H-%M-%S')"
 	   		fi
 	   		
-	   		echo "${LONGRANGER_PATH} basic --id=10x_${PROJECT_ID}_longrangerBasic --fastqs=${TENX_PATH}"	   					 
+	   		echo "${LONGRANGER_PATH}/longranger basic --id=10x_${PROJECT_ID}_longrangerBasic --fastqs=${TENX_PATH}"	   					 
 		fi > qc_01_longrangerBasic_single_${RAW_DB%.db}.${slurmID}.plan
         
-        echo "$(${LONGRANGER_PATH}/longranger basic --version | head -n1 | tr -d \"()\")" > qc_01_longrangerBasic_single_${RAW_DB%.db}.${slurmID}.version	
+        echo "$(${LONGRANGER_PATH}/longranger basic --version | head -n1)" > qc_01_longrangerBasic_single_${RAW_DB%.db}.${slurmID}.version	
 	else
         (>&2 echo "step ${currentStep} in RAW_QC_TYPE ${RAW_QC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_QC_TYPE}]}")
