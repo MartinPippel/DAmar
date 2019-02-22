@@ -115,7 +115,10 @@ then
 #type-1 [10x - de novo] [1-1]: 01_supernova	
 elif [[ ${RAW_QC_TYPE} -eq 1 ]]
 then 
-	### clean up plans 
+	### 01_supernova
+    if [[ ${currentStep} -eq 1 ]]
+    then
+        ### clean up plans 
         for x in $(ls qc_01_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
@@ -170,10 +173,24 @@ then
 	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID} --fastqs=${TENX_PATH}"	   					 
 		fi > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.plan
         
-        echo "$(${LONGRANGER_PATH}/supernova run --version | head -n1 | tr -d \"()\")" > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.version		
+        echo "$(${LONGRANGER_PATH}/supernova run --version | head -n1 | tr -d \"()\")" > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.version
+	else
+        (>&2 echo "step ${currentStep} in RAW_QC_TYPE ${RAW_QC_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${RAW_QC_TYPE}]}")
+        exit 1            
+    fi		
 #type-2 [10x|HiC - kmer-Gsize estimate] [1-2]: 01_jellyfish, 02_genomescope
 elif [[ ${RAW_QC_TYPE} -eq 2 ]]
 then  
+	    ### 01_mashPrepare
+    if [[ ${currentStep} -eq 1 ]]
+    then
+        ### clean up plans 
+        for x in $(ls qc_01_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+	fi
 
 ## mash contamination check
 elif [[ ${RAW_QC_TYPE} -eq 3 ]]
