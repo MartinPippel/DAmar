@@ -14,7 +14,7 @@ SCRIPTS = rid2bid.py DBprepare.py paths2rids.py marvelStats.sh n50.py splitDiplo
           createMitoAssemblyPlans.sh createWhatshapPlans.sh trimLowerCaseTips.py \
           create10XPlans.sh splitReads.py createBionanoPlans.sh \
 	  	  generate_site_positions.py \
-          createMashPlans.sh mashPlot.R
+          createQCandStatsPlans.sh mashPlot.R
 
 all: $(ALL)
 
