@@ -1864,7 +1864,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		// update unique intervals based low complexity and tandem repeat
 		int i;
 		int predust, dust, postdust;
-		for (i=0; i<numIntervals; i++)
+		for (i=0; i<curItv; i++)
 		{
 			anchorItv *a = uniqIntervals + i;
 
