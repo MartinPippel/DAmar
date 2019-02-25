@@ -124,6 +124,7 @@ typedef struct
 	HITS_DB* db;
 	HITS_TRACK* trackRepeat;
 	HITS_TRACK* trackTrim;
+	HITS_TRACK* trackDust;
 
 	int* r2bin;
 	int max_r2bin;
@@ -1027,6 +1028,33 @@ static int find_repeat_modules(FilterContext* ctx, Overlap* ovls, int novl)
 	return 1;
 }
 
+static int getRepeatBasesFromInterval(HITS_TRACK* repeat, int readID, int beg, int end)
+{
+	track_anno* rep_anno = repeat->anno;
+	track_data* rep_data = repeat->data;
+
+	track_anno rb, re;
+
+	int repBases = 0;
+	int rBeg, rEnd;
+
+	// repeat bases in a-read
+	rb = rep_anno[readID] / sizeof(track_data);
+	re = rep_anno[readID + 1] / sizeof(track_data);
+
+	while (rb < re)
+	{
+		rBeg = rep_data[rb];
+		rEnd = rep_data[rb + 1];
+
+		repBases += intersect(beg, end, rBeg, rEnd);
+
+		rb += 2;
+	}
+
+	return repBases;
+}
+
 static int filter(FilterContext* ctx, Overlap* ovl)
 {
 	int nLen = ovl->path.aepos - ovl->path.abpos;
@@ -1174,6 +1202,43 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 		track_anno* repeats_anno = ctx->trackRepeat->anno;
 		track_data* repeats_data = ctx->trackRepeat->data;
 
+		int WINDOW=500;
+
+		// analyze repeat structure
+		{
+
+			int predust=0;
+			int postdust=0;
+			int dust;
+
+			b = repeats_anno[ovl->aread] / sizeof(track_data);
+			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
+
+			int rb1, re1, rb2, re2;
+
+			rb1 = repeats_data[b];
+			re1 = repeats_data[b + 1];
+
+			b+=2;
+			while (b < e)
+			{
+				rb2 = repeats_data[b];
+				re2 = repeats_data[b + 1];
+
+				predust = getRepeatBasesFromInterval(ctx->trackDust, ovl->aread, MAX(trim_ab, re1 - WINDOW), re1);
+				dust = getRepeatBasesFromInterval(ctx->trackDust, ovl->aread, re1, rb2);
+				postdust = getRepeatBasesFromInterval(ctx->trackDust, ovl->aread, rb2, MIN(rb2 + WINDOW, trim_ae));
+
+				printf("#LC PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f", predust, re1 - MAX(trim_ab, re1 - WINDOW), predust*100.0/re1 - MAX(trim_ab, re1 - WINDOW),
+						dust, rb2 - re1, dust*100.0/(rb2-re1), postdust, MIN(rb2 + WINDOW, trim_ae) - rb2, postdust*100.0/MIN(rb2 + WINDOW, trim_ae),
+						predust+dust+postdust, (re1 - MAX(trim_ab, re1 - WINDOW)) + (rb2 - re1) +(MIN(rb2 + WINDOW, trim_ae)-rb2),
+						(predust+dust+postdust)*100.0/((re1 - MAX(trim_ab, re1 - WINDOW)) + (rb2 - re1) +(MIN(rb2 + WINDOW, trim_ae)-rb2)));
+
+				b+=2;
+			}
+		}
+
+
 		int rp_mergeTip_ab = trim_ab;
 		int rp_mergeTip_ae = trim_ae;
 
@@ -1276,9 +1341,6 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 		if (!(ret & OVL_REPEAT))
 		{
 			// Check A-read !!!!
-
-			b = repeats_anno[ovl->aread] / sizeof(track_data);
-			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
 			ovllen = MIN(ovl->path.aepos, rp_mergeTip_ae) - MAX(ovl->path.abpos, rp_mergeTip_ab);
 			repeat = 0;
 
@@ -1296,6 +1358,9 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 
 		if (!(ret & OVL_REPEAT))
 		{
+			b = repeats_anno[ovl->aread] / sizeof(track_data);
+			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
+
 			while (b < e)
 			{
 				rb = repeats_data[b];
@@ -1872,7 +1937,8 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					}
 				}
 			}
-			j = k + 1;
+			k++;
+			j = k;
 		}
 		if (ctx->removeMultiMappers > 1 && numMultiMapper)
 		{
@@ -2057,7 +2123,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpLqTwWZ] [-dnolRsSumMfyYzNZ <int>] [-rt <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpLqTwWZ] [-dnolRsSumMfyYzZ <int>] [-rtD <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v ... verbose\n");
 	fprintf(stderr, "         -d ... max divergence allowed [0,100]\n");
@@ -2087,8 +2153,7 @@ static void usage()
 	fprintf(stderr, "         -I ... include read ids found in file, all other are excluded\n");
 	fprintf(stderr, "         -P ... write read ids of repeat spanners to file\n");
 	fprintf(stderr, "         -z ... drop entering/leaving alignments if number is below -z <int>\n");
-	fprintf(stderr,
-			"         -y ... merge repeats if they are closer then -y bases apart (if distance > 100, then smaller repeats (< 100) usually from DBdust are ignored)\n");
+	fprintf(stderr,	"         -y ... merge repeats if they are closer then -y bases apart (if distance > 100, then smaller repeats (< 100) usually from DBdust are ignored)\n");
 	fprintf(stderr, "         -Y ... merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
 	fprintf(stderr, "         -a ... write discarded overlaps that may not symmetrically removed to file\n");
 	fprintf(stderr, "         -A ... read file of discarded overlaps and remove them symmetrically\n");
@@ -2096,6 +2161,7 @@ static void usage()
 	fprintf(stderr, "         -W ... -w + remove overlaps that fall into multi-mapping alignment intervals\n");
 	fprintf(stderr, "         -Z ... remove at most -Z percent of the worst alignments. Set -d INT to avoid loss of good alignments. Set -z INT to avoid loss of contiguity !\n");
 	fprintf(stderr, "                This option was included to get rid of low coverage repeats or random alignments, that clearly get separated by diff scores\n");
+	fprintf(stderr, "         -D ... read low complexity track (dust or tan_dust)\n");
 }
 
 static int opt_repeat_count(int argc, char** argv, char opt)
@@ -2148,6 +2214,8 @@ int main(int argc, char* argv[])
 	char* pathInDiscardedOvls = NULL;
 	char* pcTrackRepeats = DEF_ARG_R;
 	char* arg_trimTrack = DEF_ARG_T;
+	char* arg_dustTrack = NULL;
+
 	int arg_purge = 0;
 
 	fctx.fileSpanningReads = NULL;
@@ -2185,7 +2253,7 @@ int main(int argc, char* argv[])
 	}
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "TvLpwWy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:")) != -1)
+	while ((c = getopt(argc, argv, "TvLpwWy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:")) != -1)
 	{
 		switch (c)
 		{
@@ -2312,8 +2380,12 @@ int main(int argc, char* argv[])
 			arg_trimTrack = optarg;
 			break;
 
+		case 'D':
+			arg_dustTrack = optarg;
+			break;
+
 		default:
-			fprintf(stderr, "unknown option %c\n", c);
+			fprintf(stderr, "[ERROR] unknown option -%c\n", optopt);
 			usage();
 			exit(1);
 		}
@@ -2383,6 +2455,18 @@ int main(int argc, char* argv[])
 			exit(1);
 		}
 	}
+
+	if (arg_dustTrack)
+	{
+		fctx.trackDust = track_load(&db, arg_dustTrack);
+
+		if (!fctx.trackDust)
+		{
+			fprintf(stderr, "could not load track %s\n", arg_dustTrack);
+			exit(1);
+		}
+	}
+
 
 	fctx.trackTrim = track_load(&db, arg_trimTrack);
 
