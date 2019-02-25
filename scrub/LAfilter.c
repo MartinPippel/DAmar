@@ -1229,11 +1229,14 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 				dust = getRepeatBasesFromInterval(ctx->trackDust, ovl->aread, re1, rb2);
 				postdust = getRepeatBasesFromInterval(ctx->trackDust, ovl->aread, rb2, MIN(rb2 + WINDOW, trim_ae));
 
-				printf("#LC PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f", predust, re1 - MAX(trim_ab, re1 - WINDOW), predust*100.0/re1 - MAX(trim_ab, re1 - WINDOW),
+				printf("#LC %d %d %d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f", ovl->aread, re1, rb2,
+						predust, re1 - MAX(trim_ab, re1 - WINDOW), predust*100.0/re1 - MAX(trim_ab, re1 - WINDOW),
 						dust, rb2 - re1, dust*100.0/(rb2-re1), postdust, MIN(rb2 + WINDOW, trim_ae) - rb2, postdust*100.0/MIN(rb2 + WINDOW, trim_ae),
 						predust+dust+postdust, (re1 - MAX(trim_ab, re1 - WINDOW)) + (rb2 - re1) +(MIN(rb2 + WINDOW, trim_ae)-rb2),
 						(predust+dust+postdust)*100.0/((re1 - MAX(trim_ab, re1 - WINDOW)) + (rb2 - re1) +(MIN(rb2 + WINDOW, trim_ae)-rb2)));
 
+				rb1=rb2;
+				re1=re2;
 				b+=2;
 			}
 		}
