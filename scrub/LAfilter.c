@@ -1202,46 +1202,6 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 		track_anno* repeats_anno = ctx->trackRepeat->anno;
 		track_data* repeats_data = ctx->trackRepeat->data;
 
-		int WINDOW=500;
-
-		// analyze repeat structure
-		{
-
-			int predust=0;
-			int postdust=0;
-			int dust;
-
-			b = repeats_anno[ovl->aread] / sizeof(track_data);
-			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
-
-			int rb1, re1, rb2, re2;
-
-			rb1 = repeats_data[b];
-			re1 = repeats_data[b + 1];
-
-			b+=2;
-			while (b < e)
-			{
-				rb2 = repeats_data[b];
-				re2 = repeats_data[b + 1];
-
-				predust = getRepeatBasesFromInterval(ctx->trackDust, ovl->aread, MAX(trim_ab, re1 - WINDOW), re1);
-				dust = getRepeatBasesFromInterval(ctx->trackDust, ovl->aread, re1, rb2);
-				postdust = getRepeatBasesFromInterval(ctx->trackDust, ovl->aread, rb2, MIN(rb2 + WINDOW, trim_ae));
-
-				printf("#LC %d %d %d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", ovl->aread, re1, rb2,
-						predust, re1 - MAX(trim_ab, re1 - WINDOW), predust*100.0/(re1 - MAX(trim_ab, re1 - WINDOW)),
-						dust, rb2 - re1, dust*100.0/(rb2-re1), postdust, MIN(rb2 + WINDOW, trim_ae) - rb2, postdust*100.0/(MIN(rb2 + WINDOW, trim_ae) - rb2),
-						predust+dust+postdust, (re1 - MAX(trim_ab, re1 - WINDOW)) + (rb2 - re1) +(MIN(rb2 + WINDOW, trim_ae)-rb2),
-						(predust+dust+postdust)*100.0/((re1 - MAX(trim_ab, re1 - WINDOW)) + (rb2 - re1) +(MIN(rb2 + WINDOW, trim_ae)-rb2)));
-
-				rb1=rb2;
-				re1=re2;
-				b+=2;
-			}
-		}
-
-
 		int rp_mergeTip_ab = trim_ab;
 		int rp_mergeTip_ae = trim_ae;
 
@@ -1788,6 +1748,144 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 	free(ovl_sort);
 }
 
+#define ANCHOR_INVALID 	(1 << 0)
+#define ANCHOR_TRIM 		(1 << 1)
+#define ANCHOR_LOWCOMP 	(1 << 2)
+
+typedef struct{
+
+	int beg;
+	int end;
+	int flag;
+} anchorItv;
+
+static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
+{
+		int trim_ab, trim_ae;
+		int trim_alen;
+
+		int arlen = DB_READ_LEN(ctx->db, aread);
+
+		trim_ab = 0;
+		trim_ae = arlen;
+
+		if (ctx->trackTrim)
+		{
+			get_trim(ctx->db, ctx->trackTrim, aread, &trim_ab, &trim_ae);
+			trim_alen = trim_ae - trim_ab;
+		}
+		else
+		{
+			trim_ab = 0;
+			trim_ae = arlen;
+			trim_alen = arlen;
+		}
+
+		int WINDOW=500;
+		int b, e;
+
+		track_anno* repeats_anno = ctx->trackRepeat->anno;
+		track_data* repeats_data = ctx->trackRepeat->data;
+
+		b = repeats_anno[aread] / sizeof(track_data);
+		e = repeats_anno[aread + 1] / sizeof(track_data);
+
+
+		int numIntervals = (e - b + 1) + 4;
+		anchorItv *uniqIntervals = malloc(sizeof(anchorItv)*numIntervals);
+		bzero(uniqIntervals, sizeof(anchorItv)*numIntervals);
+
+
+		int rb1, rb2;
+		int re1, re2;
+
+		rb1 = repeats_data[b];
+		re1 = repeats_data[b + 1];
+
+		int curItv=0;
+		if(rb1 > 0)
+		{
+				uniqIntervals[curItv].beg = 0;
+				uniqIntervals[curItv].end = rb1;
+				curItv++;
+		}
+
+
+		b+=2;
+		while (b < e)
+		{
+			rb2 = repeats_data[b];
+			re2 = repeats_data[b + 1];
+
+			uniqIntervals[curItv].beg = re1;
+			uniqIntervals[curItv].end = rb2;
+			curItv++;
+
+			rb1=rb2;
+			re1=re2;
+			b+=2;
+		}
+
+		if(re1 < arlen)
+		{
+				uniqIntervals[curItv].beg = re1;
+				uniqIntervals[curItv].end = arlen;
+				curItv++;
+		}
+
+		// update unique intervals based on trim track
+		if(trim_ab > 0 || trim_ae < arlen)
+		{
+			int i;
+			for (i=0; i<numIntervals; i++)
+			{
+				anchorItv *a = uniqIntervals + i;
+
+				if (trim_ab >= a->end)
+				{
+					a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
+				}
+				else if (trim_ab > a->beg)
+				{
+					a->beg = trim_ab;
+				}
+
+				if(a->beg >= trim_ae)
+				{
+					a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
+				}
+				else if(a->end > trim_ae)
+				{
+					a->end = trim_ae;
+				}
+			}
+		}
+
+		// update unique intervals based low complexity and tandem repeat
+		int i;
+		int predust, dust, postdust;
+		for (i=0; i<numIntervals; i++)
+		{
+			anchorItv *a = uniqIntervals + i;
+
+			if(a->flag & ANCHOR_INVALID)
+				continue;
+
+			predust = getRepeatBasesFromInterval(ctx->trackDust, aread, MAX(0, a->beg - WINDOW), a->beg);
+			dust = getRepeatBasesFromInterval(ctx->trackDust, aread, a->beg, a->end);
+			postdust = getRepeatBasesFromInterval(ctx->trackDust, aread, a->end, MIN(a->end + WINDOW, arlen));
+
+			printf("#LC %d %d %d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end,
+								predust, a->beg - MAX(0, a->beg - WINDOW) , predust*100.0/(a->beg - MAX(0, a->beg - WINDOW) ),
+								dust, a->end - a->beg, dust*100.0/(a->end - a->beg),
+								postdust, MIN(a->end + WINDOW, arlen) - a->end, postdust*100.0/(MIN(a->end + WINDOW, arlen) - a->end),
+								predust+dust+postdust, (a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end),
+								(predust+dust+postdust)*100.0/((a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end)));
+
+		}
+
+}
+
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 {
 	FilterContext* ctx = (FilterContext*) _ctx;
@@ -1831,6 +1929,11 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 			j = k + 1;
 		}
+	}
+
+	if(ctx->trackDust)
+	{
+		analyzeRepeatIntervals(ctx, ovl->aread);
 	}
 
 	// set filter flags
