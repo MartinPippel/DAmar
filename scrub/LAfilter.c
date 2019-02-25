@@ -1027,15 +1027,16 @@ static int find_repeat_modules(FilterContext* ctx, Overlap* ovls, int novl)
 	return 1;
 }
 
-static int getRepeatBasesFromInterval(HITS_TRACK* repeat, int readID, int beg, int end)
+static void getRepeatBasesFromInterval(HITS_TRACK* repeat, int readID, int beg, int end, int *cumBases, int *largest)
 {
 	track_anno* rep_anno = repeat->anno;
 	track_data* rep_data = repeat->data;
 
 	track_anno rb, re;
 
-	int repBases = 0;
-	int rBeg, rEnd;
+	*cumBases = 0;
+	*largest = 0;
+	int rBeg, rEnd, tmp;
 
 	// repeat bases in a-read
 	rb = rep_anno[readID] / sizeof(track_data);
@@ -1046,12 +1047,17 @@ static int getRepeatBasesFromInterval(HITS_TRACK* repeat, int readID, int beg, i
 		rBeg = rep_data[rb];
 		rEnd = rep_data[rb + 1];
 
-		repBases += intersect(beg, end, rBeg, rEnd);
+		tmp = intersect(beg, end, rBeg, rEnd);
+
+		if(tmp)
+		{
+			*cumBases += tmp;
+			if(*largest < (rEnd - rBeg))
+				*largest = (rEnd - rBeg);
+		}
 
 		rb += 2;
 	}
-
-	return repBases;
 }
 
 static int filter(FilterContext* ctx, Overlap* ovl)
@@ -1758,6 +1764,27 @@ typedef struct
 	int flag;
 } anchorItv;
 
+//<0 The element pointed by p1 goes before the element pointed by p2
+//0  The element pointed by p1 is equivalent to the element pointed by p2
+//>0 The element pointed by p1 goes after the element pointed by p2
+
+
+static int cmp_aIvl(const void *a, const void *b)
+{
+	anchorItv * a1 = (anchorItv*)a;
+	anchorItv * a2 = (anchorItv*)b;
+
+	if(a1->flag & ANCHOR_INVALID)
+	{
+		return 1;
+	}
+	if(a2->flag & ANCHOR_INVALID)
+	{
+		return -1;
+	}
+	return a1->beg - a2->beg;
+}
+
 static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 {
 	int trim_ab, trim_ae;
@@ -1780,7 +1807,8 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		trim_alen = arlen;
 	}
 
-	int WINDOW = 500;
+	int WINDOW   = 500;
+	int MAXMERGE = 3000;
 	int b, e;
 
 	track_anno* repeats_anno = ctx->trackRepeat->anno;
@@ -1860,8 +1888,9 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		}
 
 		// update unique intervals based low complexity and tandem repeat
+		// todo hardcoded values !!!
 		int i;
-		int predust, dust, postdust;
+		int predust, dust, postdust, longestDust, longestDustl, longestDustr;
 		for (i = 0; i < curItv; i++)
 		{
 			anchorItv *a = uniqIntervals + i;
@@ -1869,17 +1898,169 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			if (a->flag & ANCHOR_INVALID)
 				continue;
 
-			predust = getRepeatBasesFromInterval(ctx->trackDust, aread, MAX(0, a->beg - WINDOW), a->beg);
-			dust = getRepeatBasesFromInterval(ctx->trackDust, aread, a->beg, a->end);
-			postdust = getRepeatBasesFromInterval(ctx->trackDust, aread, a->end, MIN(a->end + WINDOW, arlen));
+			if(a->end - a->beg > MAXMERGE)
+				continue;
 
-			printf("#LC %d %d %d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end, predust, a->beg - MAX(0, a->beg - WINDOW),
+			getRepeatBasesFromInterval(ctx->trackDust, aread, a->beg, a->end, &dust, &longestDust);
+
+			if(dust * 100.0 / (a->end - a->beg) > 50.0)
+			{
+				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+			}
+			else if(dust * 100.0 / (a->end - a->beg) > 20.0 && longestDust > 100)
+			{
+				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+			}
+			else if ((a->end - a->beg) < 100 && longestDust > 29)
+			{
+				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+			}
+			else // check if neighboring repeats end in low complexity interval
+			{
+				getRepeatBasesFromInterval(ctx->trackDust, aread, MAX(0, a->beg - WINDOW), a->beg, &predust, &longestDustl);
+				getRepeatBasesFromInterval(ctx->trackDust, aread, a->end, MIN(a->end + WINDOW, arlen),&postdust, &longestDustr);
+
+				if (predust > 200 || longestDustl > 100 || postdust > 200 || longestDustr > 100)
+				{
+					a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+				}
+			}
+
+			// merge tips if required
+			if(ctx->rp_mergeTips)
+			{
+				for (i = 0; i < curItv; i++)
+				{
+					anchorItv *a = uniqIntervals + i;
+
+					if (a->flag & ANCHOR_INVALID)
+						continue;
+
+					if(a->end < trim_ab + ctx->rp_mergeTips)
+					{
+						a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
+					}
+					else if(a->beg < trim_ab + ctx->rp_mergeTips)
+					{
+						a->beg = trim_ab + ctx->rp_mergeTips;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				for (i = curItv-1; i >= 0; --i)
+				{
+					anchorItv *a = uniqIntervals + i;
+
+					if (a->flag & ANCHOR_INVALID)
+						continue;
+
+					if(a->beg > trim_ae - ctx->rp_mergeTips)
+					{
+						a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
+					}
+					else if(a->end > trim_ae - ctx->rp_mergeTips)
+					{
+						a->end = trim_ae + ctx->rp_mergeTips;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+
+			track_anno* repeats_anno = ctx->trackDust->anno;
+			track_data* repeats_data = ctx->trackDust->data;
+
+			b = repeats_anno[aread] / sizeof(track_data);
+			e = repeats_anno[aread + 1] / sizeof(track_data);
+
+
+			// update unique anchors with all low complexity intervals !!!
+			int c = curItv;
+			for (i = 0; i < c; i++)
+			{
+				anchorItv *a = uniqIntervals + i;
+
+				if (a->flag & ANCHOR_INVALID)
+					continue;
+
+				while (b<e)
+				{
+					rb1 = repeats_data[b];
+					re1 = repeats_data[b + 1];
+
+					if(rb1 > a->end)
+						break;
+
+					if(re1 < a->beg)
+					{
+						b+=2;
+						continue;
+					}
+
+					// dust fully covers unique part
+					if(rb1 <= a->beg && re1 >= a->end)
+					{
+						a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+						break;
+					}
+
+					// dust aligns left with unique part
+					if(rb1 <= a->beg)
+					{
+						a->beg = re1;
+					}
+					// dust aligns with right unique part
+					if(re1 >= a->end)
+					{
+						a->end = rb1;
+					}
+					// dust splits uniq part, i.e. make unique part invalid an append splits to the end of uniqueIntervals
+
+					a->beg = re1;
+
+					if(curItv >= numIntervals)
+					{
+						numIntervals = 1.2*numIntervals + 10;
+						uniqIntervals = (anchorItv*)realloc(uniqIntervals, sizeof(anchorItv)*numIntervals);
+						bzero(uniqIntervals + curItv, sizeof(anchorItv)*numIntervals-curItv +1);
+					}
+					uniqIntervals[curItv].beg = a->beg;
+					uniqIntervals[curItv].end = rb1;
+					curItv++;
+
+					b+=2;
+				}
+			}
+
+			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end, a->flag, predust, a->beg - MAX(0, a->beg - WINDOW),
 					predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg), postdust,
 					MIN(a->end + WINDOW, arlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, arlen) - a->end), predust + dust + postdust,
 					(a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end),
 					(predust + dust + postdust) * 100.0 / ((a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end)));
 
 		}
+
+		qsort(uniqIntervals, curItv, sizeof(anchorItv), cmp_aIvl);
+
+		// report final unique anchors:
+		int anchorbases = 0;
+		printf("#anchors %d",aread);
+		for (i = 0; i < curItv; i++)
+		{
+			anchorItv *a = uniqIntervals + i;
+			if(a->flag & ANCHOR_INVALID)
+				break;
+
+			printf(" %d-%d-%d", a->beg, a->end, a->flag);
+			anchorbases += a->end-a->beg;
+		}
+		curItv = i;
+		printf(" sum n%d b%d\n", i, anchorbases);
 
 		free(uniqIntervals);
 	}
