@@ -53,7 +53,6 @@
 #define REMOVE_SPECREP_OVL ( 1 << 4 )
 #define REMOVE_ID_OVL ( 1 << 5 )
 
-
 typedef struct
 {
 	// stats counters
@@ -1688,9 +1687,8 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 		cumOverallBases += ovl_sort[i]->path.aepos - ovl_sort[i]->path.abpos;
 	}
 
-	if(ctx->nVerbose)
-		printf("Coverage[%d]: beg,end [%3d, %3d] avgCov %.2f\n", ovl->aread, numIncomingReads, numLeavingReads,
-			cumOverallBases*1.0/aTrimLen);
+	if (ctx->nVerbose)
+		printf("Coverage[%d]: beg,end [%3d, %3d] avgCov %.2f\n", ovl->aread, numIncomingReads, numLeavingReads, cumOverallBases * 1.0 / aTrimLen);
 
 	qsort(ovl_sort, novl, sizeof(Overlap*), cmp_ovls_qual);
 
@@ -1711,36 +1709,36 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 
 		int err = (int) (so->path.diffs * 100.0 / MIN(so->path.aepos - so->path.abpos, so->path.bepos - so->path.bbpos));
 
-		if(so->path.abpos <= trimABeg)
+		if (so->path.abpos <= trimABeg)
 			numRemovedIncomingReads++;
 
-		if(so->path.aepos >= trimAEnd)
+		if (so->path.aepos >= trimAEnd)
 			numRemovedLeavingReads++;
 
-		removeAlnBases +=  so->path.aepos - so->path.abpos;
+		removeAlnBases += so->path.aepos - so->path.abpos;
 
-		if (removeAlnBases*100.0/cumOverallBases < MaxRemovedAlnBasesPerc && numIncomingReads - numRemovedIncomingReads >= MinTipCov
+		if (removeAlnBases * 100.0 / cumOverallBases < MaxRemovedAlnBasesPerc && numIncomingReads - numRemovedIncomingReads >= MinTipCov
 				&& numLeavingReads - numRemovedLeavingReads >= MinTipCov)
 		{
-				so->flags |= OVL_DISCARD | OVL_DIFF;
-				ctx->nFilteredDiffs += 1;
-				if(ctx->nVerbose)
-				printf("DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread,
-						so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
+			so->flags |= OVL_DISCARD | OVL_DIFF;
+			ctx->nFilteredDiffs += 1;
+			if (ctx->nVerbose)
+				printf("DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread, so->path.abpos,
+						so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
 		}
 		else
 		{
-			if(ctx->nVerbose)
-				printf("DO NOT DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread,
-					so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
+			if (ctx->nVerbose)
+				printf("DO NOT DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread, so->path.abpos,
+						so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
 			break;
 		}
 
-		if(err < maxQV)
+		if (err < maxQV)
 		{
-			if(ctx->nVerbose)
-				printf("STOP reached maxqv of %d [%d, %d] a[%d, %d] b [%d, %d] %c\n",err, so->aread, so->bread,
-					so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N');
+			if (ctx->nVerbose)
+				printf("STOP reached maxqv of %d [%d, %d] a[%d, %d] b [%d, %d] %c\n", err, so->aread, so->bread, so->path.abpos, so->path.aepos, so->path.bbpos,
+						so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N');
 			break;
 		}
 	}
@@ -1752,7 +1750,8 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 #define ANCHOR_TRIM 		(1 << 1)
 #define ANCHOR_LOWCOMP 	(1 << 2)
 
-typedef struct{
+typedef struct
+{
 
 	int beg;
 	int end;
@@ -1761,40 +1760,40 @@ typedef struct{
 
 static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 {
-		int trim_ab, trim_ae;
-		int trim_alen;
+	int trim_ab, trim_ae;
+	int trim_alen;
 
-		int arlen = DB_READ_LEN(ctx->db, aread);
+	int arlen = DB_READ_LEN(ctx->db, aread);
 
+	trim_ab = 0;
+	trim_ae = arlen;
+
+	if (ctx->trackTrim)
+	{
+		get_trim(ctx->db, ctx->trackTrim, aread, &trim_ab, &trim_ae);
+		trim_alen = trim_ae - trim_ab;
+	}
+	else
+	{
 		trim_ab = 0;
 		trim_ae = arlen;
+		trim_alen = arlen;
+	}
 
-		if (ctx->trackTrim)
-		{
-			get_trim(ctx->db, ctx->trackTrim, aread, &trim_ab, &trim_ae);
-			trim_alen = trim_ae - trim_ab;
-		}
-		else
-		{
-			trim_ab = 0;
-			trim_ae = arlen;
-			trim_alen = arlen;
-		}
+	int WINDOW = 500;
+	int b, e;
 
-		int WINDOW=500;
-		int b, e;
+	track_anno* repeats_anno = ctx->trackRepeat->anno;
+	track_data* repeats_data = ctx->trackRepeat->data;
 
-		track_anno* repeats_anno = ctx->trackRepeat->anno;
-		track_data* repeats_data = ctx->trackRepeat->data;
+	b = repeats_anno[aread] / sizeof(track_data);
+	e = repeats_anno[aread + 1] / sizeof(track_data);
 
-		b = repeats_anno[aread] / sizeof(track_data);
-		e = repeats_anno[aread + 1] / sizeof(track_data);
-
-
+	if (b < e)
+	{
 		int numIntervals = (e - b + 1) + 4;
-		anchorItv *uniqIntervals = malloc(sizeof(anchorItv)*numIntervals);
-		bzero(uniqIntervals, sizeof(anchorItv)*numIntervals);
-
+		anchorItv *uniqIntervals = malloc(sizeof(anchorItv) * numIntervals);
+		bzero(uniqIntervals, sizeof(anchorItv) * numIntervals);
 
 		int rb1, rb2;
 		int re1, re2;
@@ -1802,16 +1801,15 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		rb1 = repeats_data[b];
 		re1 = repeats_data[b + 1];
 
-		int curItv=0;
-		if(rb1 > 0)
+		int curItv = 0;
+		if (rb1 > 0)
 		{
-				uniqIntervals[curItv].beg = 0;
-				uniqIntervals[curItv].end = rb1;
-				curItv++;
+			uniqIntervals[curItv].beg = 0;
+			uniqIntervals[curItv].end = rb1;
+			curItv++;
 		}
 
-
-		b+=2;
+		b += 2;
 		while (b < e)
 		{
 			rb2 = repeats_data[b];
@@ -1821,23 +1819,23 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			uniqIntervals[curItv].end = rb2;
 			curItv++;
 
-			rb1=rb2;
-			re1=re2;
-			b+=2;
+			rb1 = rb2;
+			re1 = re2;
+			b += 2;
 		}
 
-		if(re1 < arlen)
+		if (re1 < arlen)
 		{
-				uniqIntervals[curItv].beg = re1;
-				uniqIntervals[curItv].end = arlen;
-				curItv++;
+			uniqIntervals[curItv].beg = re1;
+			uniqIntervals[curItv].end = arlen;
+			curItv++;
 		}
 
 		// update unique intervals based on trim track
-		if(trim_ab > 0 || trim_ae < arlen)
+		if (trim_ab > 0 || trim_ae < arlen)
 		{
 			int i;
-			for (i=0; i<numIntervals; i++)
+			for (i = 0; i < numIntervals; i++)
 			{
 				anchorItv *a = uniqIntervals + i;
 
@@ -1850,11 +1848,11 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 					a->beg = trim_ab;
 				}
 
-				if(a->beg >= trim_ae)
+				if (a->beg >= trim_ae)
 				{
 					a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
 				}
-				else if(a->end > trim_ae)
+				else if (a->end > trim_ae)
 				{
 					a->end = trim_ae;
 				}
@@ -1864,26 +1862,27 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		// update unique intervals based low complexity and tandem repeat
 		int i;
 		int predust, dust, postdust;
-		for (i=0; i<curItv; i++)
+		for (i = 0; i < curItv; i++)
 		{
 			anchorItv *a = uniqIntervals + i;
 
-			if(a->flag & ANCHOR_INVALID)
+			if (a->flag & ANCHOR_INVALID)
 				continue;
 
 			predust = getRepeatBasesFromInterval(ctx->trackDust, aread, MAX(0, a->beg - WINDOW), a->beg);
 			dust = getRepeatBasesFromInterval(ctx->trackDust, aread, a->beg, a->end);
 			postdust = getRepeatBasesFromInterval(ctx->trackDust, aread, a->end, MIN(a->end + WINDOW, arlen));
 
-			printf("#LC %d %d %d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end,
-								predust, a->beg - MAX(0, a->beg - WINDOW) , predust*100.0/(a->beg - MAX(0, a->beg - WINDOW) ),
-								dust, a->end - a->beg, dust*100.0/(a->end - a->beg),
-								postdust, MIN(a->end + WINDOW, arlen) - a->end, postdust*100.0/(MIN(a->end + WINDOW, arlen) - a->end),
-								predust+dust+postdust, (a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end),
-								(predust+dust+postdust)*100.0/((a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end)));
+			printf("#LC %d %d %d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end, predust, a->beg - MAX(0, a->beg - WINDOW),
+					predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg), postdust,
+					MIN(a->end + WINDOW, arlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, arlen) - a->end), predust + dust + postdust,
+					(a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end),
+					(predust + dust + postdust) * 100.0 / ((a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end)));
 
 		}
 
+		free(uniqIntervals);
+	}
 }
 
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
@@ -1931,7 +1930,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
-	if(ctx->trackDust)
+	if (ctx->trackDust)
 	{
 		analyzeRepeatIntervals(ctx, ovl->aread);
 	}
@@ -2259,14 +2258,17 @@ static void usage()
 	fprintf(stderr, "         -I ... include read ids found in file, all other are excluded\n");
 	fprintf(stderr, "         -P ... write read ids of repeat spanners to file\n");
 	fprintf(stderr, "         -z ... drop entering/leaving alignments if number is below -z <int>\n");
-	fprintf(stderr,	"         -y ... merge repeats if they are closer then -y bases apart (if distance > 100, then smaller repeats (< 100) usually from DBdust are ignored)\n");
+	fprintf(stderr,
+			"         -y ... merge repeats if they are closer then -y bases apart (if distance > 100, then smaller repeats (< 100) usually from DBdust are ignored)\n");
 	fprintf(stderr, "         -Y ... merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
 	fprintf(stderr, "         -a ... write discarded overlaps that may not symmetrically removed to file\n");
 	fprintf(stderr, "         -A ... read file of discarded overlaps and remove them symmetrically\n");
 	fprintf(stderr, "         -w ... remove multi-mapper \n");
 	fprintf(stderr, "         -W ... -w + remove overlaps that fall into multi-mapping alignment intervals\n");
-	fprintf(stderr, "         -Z ... remove at most -Z percent of the worst alignments. Set -d INT to avoid loss of good alignments. Set -z INT to avoid loss of contiguity !\n");
-	fprintf(stderr, "                This option was included to get rid of low coverage repeats or random alignments, that clearly get separated by diff scores\n");
+	fprintf(stderr,
+			"         -Z ... remove at most -Z percent of the worst alignments. Set -d INT to avoid loss of good alignments. Set -z INT to avoid loss of contiguity !\n");
+	fprintf(stderr,
+			"                This option was included to get rid of low coverage repeats or random alignments, that clearly get separated by diff scores\n");
 	fprintf(stderr, "         -D ... read low complexity track (dust or tan_dust)\n");
 }
 
@@ -2573,7 +2575,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-
 	fctx.trackTrim = track_load(&db, arg_trimTrack);
 
 	if (!fctx.trackTrim)
@@ -2607,9 +2608,9 @@ int main(int argc, char* argv[])
 
 		for (i = 0; i < nvalues; i++)
 		{
-			if(values[i] < 0 || values[i] >= DB_NREADS(&db))
+			if (values[i] < 0 || values[i] >= DB_NREADS(&db))
 			{
-				fprintf(stderr, "[WARNING] LAfilter: excluding read %d not possible! Must be in range: [0, %d]", values[i], DB_NREADS(&db)-1);
+				fprintf(stderr, "[WARNING] LAfilter: excluding read %d not possible! Must be in range: [0, %d]", values[i], DB_NREADS(&db) - 1);
 				continue;
 			}
 			db.reads[values[i]].flags = READ_DISCARD;
@@ -2637,9 +2638,9 @@ int main(int argc, char* argv[])
 
 		for (i = 0; i < nvalues; i++)
 		{
-			if(values[i] < 0 || values[i] >= DB_NREADS(&db))
+			if (values[i] < 0 || values[i] >= DB_NREADS(&db))
 			{
-				fprintf(stderr, "[WARNING] LAfilter: including read %d not possible! Must be in range: [0, %d]", values[i], DB_NREADS(&db)-1);
+				fprintf(stderr, "[WARNING] LAfilter: including read %d not possible! Must be in range: [0, %d]", values[i], DB_NREADS(&db) - 1);
 				continue;
 			}
 			db.reads[values[i]].flags = READ_KEEP;
