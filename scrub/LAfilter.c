@@ -1222,9 +1222,12 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 		{
 			int i;
 			int anchorBases = 0;
-			for (i = 0; i < ctx->numIntervals; i++)
+			for (i = 0; i < ctx->curItv; i++)
 			{
 				anchorBases += intersect(trim_ab, trim_ae, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
+				if(ovl->aread == 8221478)
+					printf("repeat %d %d [%d, %d] %d", ovl->aread, ovl->bread, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end, anchorBases);
+
 			}
 
 			if (anchorBases < ctx->nMinNonRepeatBases)
@@ -1898,7 +1901,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		}
 
 		anchorbases = 0;
-		printf("#anchors %d", aread);
+		printf("#anchors_0 %d", aread);
 		for (i = 0; i < ctx->curItv; i++)
 		{
 			anchorItv *a = ctx->uniqIntervals + i;
@@ -1938,7 +1941,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		}
 
 		anchorbases = 0;
-		printf("#anchors %d", aread);
+		printf("#anchors_1 %d", aread);
 		for (i = 0; i < ctx->curItv; i++)
 		{
 			anchorItv *a = ctx->uniqIntervals + i;
@@ -2004,7 +2007,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	}
 
 	anchorbases = 0;
-	printf("#anchors %d", aread);
+	printf("#anchors_2 %d", aread);
 	for (i = 0; i < ctx->curItv; i++)
 	{
 		anchorItv *a = ctx->uniqIntervals + i;
@@ -2095,7 +2098,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	}
 
 	anchorbases = 0;
-	printf("#anchors %d", aread);
+	printf("#anchors_3 %d", aread);
 	for (i = 0; i < ctx->curItv; i++)
 	{
 		anchorItv *a = ctx->uniqIntervals + i;
@@ -2118,7 +2121,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	ctx->curItv = i;
 
 	anchorbases = 0;
-	printf("#anchors %d", aread);
+	printf("#anchors_3s %d", aread);
 	for (i = 0; i < ctx->curItv; i++)
 	{
 		anchorItv *a = ctx->uniqIntervals + i;
@@ -2200,7 +2203,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 
 	// report final unique anchors:
 	anchorbases = 0;
-	printf("#anchors %d", aread);
+	printf("#anchors_4 %d", aread);
 	for (i = 0; i < ctx->curItv; i++)
 	{
 		anchorItv *a = ctx->uniqIntervals + i;
