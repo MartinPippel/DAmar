@@ -2089,8 +2089,8 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			ctx->uniqIntervals[ctx->curItv].end = rb;
 
 			ctx->uniqIntervals[i].beg = re;
-			printf(" decrease cutItv_%d: [%d, %d] append new interval [%d, %d]\n", i, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end,
-					ctx->uniqIntervals[ctx->curItv].beg, ctx->uniqIntervals[ctx->curItv].end);
+			printf(" decrease cutItv_%d: [%d, %d] append new interval %d [%d, %d] f%d\n", i, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end,
+					ctx->curItv, ctx->uniqIntervals[ctx->curItv].beg, ctx->uniqIntervals[ctx->curItv].end, ctx->uniqIntervals[ctx->curItv].flag);
 			ctx->curItv++;
 
 			b += 2;
@@ -2102,8 +2102,8 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	for (i = 0; i < ctx->curItv; i++)
 	{
 		anchorItv *a = ctx->uniqIntervals + i;
-		if (a->flag & ANCHOR_INVALID)
-			continue;
+//		if (a->flag & ANCHOR_INVALID)
+//			continue;
 
 		printf(" %d-%d-%d", a->beg, a->end, a->flag);
 		anchorbases += a->end - a->beg;
