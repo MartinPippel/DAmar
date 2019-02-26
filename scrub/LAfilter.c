@@ -2023,12 +2023,14 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 
 					a->beg = re1;
 
+					printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
 					if(curItv >= numIntervals)
 					{
 						numIntervals = 1.2*numIntervals + 10;
 						uniqIntervals = (anchorItv*)realloc(uniqIntervals, sizeof(anchorItv)*numIntervals);
 						bzero(uniqIntervals + curItv, sizeof(anchorItv)*(numIntervals-curItv));
 					}
+					printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
 					uniqIntervals[curItv].beg = a->beg;
 					uniqIntervals[curItv].end = rb1;
 					curItv++;
