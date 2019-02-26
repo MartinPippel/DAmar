@@ -1924,52 +1924,6 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 				}
 			}
 
-			// merge tips if required
-			if(ctx->rp_mergeTips)
-			{
-				for (i = 0; i < curItv; i++)
-				{
-					anchorItv *a = uniqIntervals + i;
-
-					if (a->flag & ANCHOR_INVALID)
-						continue;
-
-					if(a->end < trim_ab + ctx->rp_mergeTips)
-					{
-						a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
-					}
-					else if(a->beg < trim_ab + ctx->rp_mergeTips)
-					{
-						a->beg = trim_ab + ctx->rp_mergeTips;
-					}
-					else
-					{
-						break;
-					}
-				}
-
-				for (i = curItv-1; i >= 0; --i)
-				{
-					anchorItv *a = uniqIntervals + i;
-
-					if (a->flag & ANCHOR_INVALID)
-						continue;
-
-					if(a->beg > trim_ae - ctx->rp_mergeTips)
-					{
-						a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
-					}
-					else if(a->end > trim_ae - ctx->rp_mergeTips)
-					{
-						a->end = trim_ae + ctx->rp_mergeTips;
-					}
-					else
-					{
-						break;
-					}
-				}
-			}
-
 			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end, a->flag, predust, a->beg - MAX(0, a->beg - WINDOW),
 					predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg), postdust,
 					MIN(a->end + WINDOW, arlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, arlen) - a->end), predust + dust + postdust,
@@ -2055,7 +2009,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			uniqIntervals[curItv].end = rb;
 
 			uniqIntervals[i].beg = re;
-			printf(" decrease cutItv_%d: [%d, %d] append new interval\n", uniqIntervals[i].beg, uniqIntervals[i].end, uniqIntervals[curItv].beg, uniqIntervals[curItv].end);
+			printf(" decrease cutItv_%d: [%d, %d] append new interval [%d, %d]\n", i, uniqIntervals[i].beg, uniqIntervals[i].end, uniqIntervals[curItv].beg, uniqIntervals[curItv].end);
 			curItv++;
 
 			b+=2;
@@ -2063,6 +2017,80 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	}
 
 	qsort(uniqIntervals, curItv, sizeof(anchorItv), cmp_aIvl);
+	for (i = 0; i < curItv; i++)
+	{
+		anchorItv *a = uniqIntervals + i;
+		if(a->flag & ANCHOR_INVALID)
+			break;
+	}
+	curItv = i;
+
+	// merge tips if required, i.e. if there is any repeat annotation within the first/last 2k?! sequence
+	if(ctx->rp_mergeTips)
+	{
+		int resort=0;
+		if(uniqIntervals[0].beg > trim_ab || uniqIntervals[0].end < trim_ab + ctx->rp_mergeTips)
+		{
+			for (i = 0; i < curItv; i++)
+			{
+				anchorItv *a = uniqIntervals + i;
+
+				if (a->flag & ANCHOR_INVALID)
+					continue;
+
+				if(a->end < trim_ab + ctx->rp_mergeTips)
+				{
+					a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
+					resort=1;
+				}
+				else if(a->beg < trim_ab + ctx->rp_mergeTips)
+				{
+					a->beg = trim_ab + ctx->rp_mergeTips;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+
+		if(uniqIntervals[curItv-1].end < trim_ae || uniqIntervals[curItv-1].beg > trim_ae - ctx->rp_mergeTips)
+		{
+			for (i = curItv-1; i >= 0; --i)
+			{
+				anchorItv *a = uniqIntervals + i;
+
+				if (a->flag & ANCHOR_INVALID)
+					continue;
+
+				if(a->beg > trim_ae - ctx->rp_mergeTips)
+				{
+					a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
+					resort=1;
+				}
+				else if(a->end > trim_ae - ctx->rp_mergeTips)
+				{
+					a->end = trim_ae + ctx->rp_mergeTips;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+
+		if (resort)
+		{
+			qsort(uniqIntervals, curItv, sizeof(anchorItv), cmp_aIvl);
+			for (i = 0; i < curItv; i++)
+			{
+				anchorItv *a = uniqIntervals + i;
+				if(a->flag & ANCHOR_INVALID)
+					break;
+			}
+			curItv = i;
+		}
+	}
 
 	// report final unique anchors:
 	int anchorbases = 0;
@@ -2076,11 +2104,9 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		printf(" %d-%d-%d", a->beg, a->end, a->flag);
 		anchorbases += a->end-a->beg;
 	}
-	curItv = i;
 	printf(" sum n%d b%d\n", i, anchorbases);
 
 	free(uniqIntervals);
-
 }
 
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
