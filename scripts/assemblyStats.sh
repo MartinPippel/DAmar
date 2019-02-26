@@ -389,7 +389,7 @@ then
 			mkdir -p ${bionanoPath}/${SC_BIONANO_ENZYME_1}
 			
 			#--------------------------- enzyme-1
-			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta"
+			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NCBI.fasta"
 			if [[ ! -f ${fname} ]]
 			then
 				(>&2 echo "ERROR - Cannot find file ${fname}")
@@ -423,7 +423,7 @@ then
 			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_1} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			# bionano combined (scaffolded + not scaffolded)
 			fext="N" 
-			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NCBI.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
@@ -432,7 +432,7 @@ then
 			mkdir -p ${bionanoPath}/${SC_BIONANO_ENZYME_2}
 			
 			#---------------------------  enzyme-2
-			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta"
+			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NCBI.fasta"
 			if [[ ! -f ${fname} ]]
 			then
 				(>&2 echo "ERROR - Cannot find file ${fname}")
@@ -465,7 +465,7 @@ then
 			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_2} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			# enzyme-2: bionano combined (scaffolded + not scaffolded)
 			fext="N" 
-			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NCBI.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
@@ -473,7 +473,7 @@ then
 			
 			#--------------------------- both enzymes 
 			
-			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/$(basename ${SC_BIONANO_REF}).cut_${SC_BIONANO_ENZYME_1}_${SC_BIONANO_ENZYME_2}_0kb_0labels_NGS_contigs_HYBRID_Export.fasta"
+			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/$(basename ${SC_BIONANO_REF}).cut_${SC_BIONANO_ENZYME_1}_${SC_BIONANO_ENZYME_2}_0kb_0labels_NGS_contigs_HYBRID_Export_NCBI.fasta"
 			if [[ ! -f ${fname} ]]
 			then
 				(>&2 echo "ERROR - Cannot find file ${fname}")
@@ -506,7 +506,7 @@ then
 			${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			# both enzymes: bionano combined (scaffolded + not scaffolded)
 			fext="N" 
-			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/$(basename ${SC_BIONANO_REF}).cut_${SC_BIONANO_ENZYME_1}_${SC_BIONANO_ENZYME_2}_0kb_0labels_NGS_contigs_HYBRID_Export.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/$(basename ${SC_BIONANO_REF}).cut_${SC_BIONANO_ENZYME_1}_${SC_BIONANO_ENZYME_2}_0kb_0labels_NGS_contigs_HYBRID_Export_NCBI.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/$(basename ${SC_BIONANO_REF}).cut_${SC_BIONANO_ENZYME_1}_${SC_BIONANO_ENZYME_2}_0kb_0labels_NGS_contigs_HYBRID_Export_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
@@ -514,7 +514,7 @@ then
 			
 		else 
 			### single enzyme workflow
-			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta"
+			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NCBI.fasta"
 			if [[ ! -f ${fname} ]]
 			then
 				(>&2 echo "ERROR - Cannot find file ${fname}")
@@ -552,7 +552,7 @@ then
 					
 			# bionano combined (scaffolded + not scaffolded)
 			fext="N" 
-			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NCBI.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
