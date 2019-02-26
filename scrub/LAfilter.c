@@ -2027,7 +2027,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 					{
 						numIntervals = 1.2*numIntervals + 10;
 						uniqIntervals = (anchorItv*)realloc(uniqIntervals, sizeof(anchorItv)*numIntervals);
-						bzero(uniqIntervals + curItv, sizeof(anchorItv)*(numIntervals-curItv + 1));
+						bzero(uniqIntervals + curItv, sizeof(anchorItv)*(numIntervals-curItv));
 					}
 					uniqIntervals[curItv].beg = a->beg;
 					uniqIntervals[curItv].end = rb1;
