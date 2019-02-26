@@ -1916,7 +1916,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		// update unique intervals based on trim track
 		if (trim_ab > 0 || trim_ae < arlen)
 		{
-			for (i = 0; i < ctx->numIntervals; i++)
+			for (i = 0; i < ctx->curItv; i++)
 			{
 				anchorItv *a = ctx->uniqIntervals + i;
 
