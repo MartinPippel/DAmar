@@ -2028,10 +2028,10 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 					{
 						numIntervals = 1.2*numIntervals + 10;
 						uniqIntervals = (anchorItv*)realloc(uniqIntervals, sizeof(anchorItv)*numIntervals);
-						//bzero(uniqIntervals + curItv, sizeof(anchorItv)*(numIntervals-curItv));
+						bzero(uniqIntervals + curItv, sizeof(anchorItv)*(numIntervals-curItv));
 					}
 					printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
-					uniqIntervals[curItv].beg = a->beg;
+					uniqIntervals[curItv].beg = uniqIntervals[i].beg;
 					uniqIntervals[curItv].end = rb1;
 					curItv++;
 
