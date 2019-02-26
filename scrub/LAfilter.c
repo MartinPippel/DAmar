@@ -2054,6 +2054,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
 			uniqIntervals[curItv].beg = uniqIntervals[i].beg;
 			uniqIntervals[curItv].end = rb;
+			printf(" decrease cutItv_%d: [%d, %d] append new interval\n", uniqIntervals[i].beg, uniqIntervals[i].end, uniqIntervals[curItv].beg, uniqIntervals[curItv].end);
 			curItv++;
 
 			b+=2;
