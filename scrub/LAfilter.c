@@ -1224,7 +1224,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 			int anchorBases = 0;
 			for (i = 0; i < ctx->curItv; i++)
 			{
-				anchorBases += intersect(trim_ab, trim_ae, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
+				anchorBases += intersect(ovl->path.abpos, ovl->path.aepos, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
 				if(ovl->aread == 8221478)
 					printf("repeat %d %d [%d, %d] %d\n", ovl->aread, ovl->bread, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end, anchorBases);
 
