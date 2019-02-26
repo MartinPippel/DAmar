@@ -1858,6 +1858,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	// reset current anchor interval index
 	ctx->curItv = 0;
 	bzero(ctx->uniqIntervals, sizeof(anchorItv) * (ctx->numIntervals));
+	int anchorbases = 0;
 
 	if (b < e)
 	{
@@ -1896,6 +1897,19 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			ctx->curItv++;
 		}
 
+		anchorbases = 0;
+		printf("#anchors %d", aread);
+		for (i = 0; i < ctx->curItv; i++)
+		{
+			anchorItv *a = ctx->uniqIntervals + i;
+			if (a->flag & ANCHOR_INVALID)
+				break;
+
+			printf(" %d-%d-%d", a->beg, a->end, a->flag);
+			anchorbases += a->end - a->beg;
+		}
+		printf(" sum n%d b%d\n", i, anchorbases);
+
 		// update unique intervals based on trim track
 		if (trim_ab > 0 || trim_ae < arlen)
 		{
@@ -1922,6 +1936,20 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 				}
 			}
 		}
+
+		anchorbases = 0;
+		printf("#anchors %d", aread);
+		for (i = 0; i < ctx->curItv; i++)
+		{
+			anchorItv *a = ctx->uniqIntervals + i;
+			if (a->flag & ANCHOR_INVALID)
+				break;
+
+			printf(" %d-%d-%d", a->beg, a->end, a->flag);
+			anchorbases += a->end - a->beg;
+		}
+		printf(" sum n%d b%d\n", i, anchorbases);
+
 
 		// update unique intervals based on low complexity and tandem repeat
 		// todo hardcoded values !!!
@@ -1975,7 +2003,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		ctx->curItv++;
 	}
 
-	int anchorbases = 0;
+	anchorbases = 0;
 	printf("#anchors %d", aread);
 	for (i = 0; i < ctx->curItv; i++)
 	{
