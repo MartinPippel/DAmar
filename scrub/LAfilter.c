@@ -2042,7 +2042,6 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			}
 			// dust splits uniq part, i.e. make unique part invalid an append splits to the end of uniqueIntervals
 			printf("dust %d,%d splits unique range %d, %d\n", rb, re, a->beg, a->end);
-			a->beg = re;
 
 			printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
 			if(curItv >= numIntervals)
@@ -2054,6 +2053,8 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
 			uniqIntervals[curItv].beg = uniqIntervals[i].beg;
 			uniqIntervals[curItv].end = rb;
+
+			uniqIntervals[i].beg = re;
 			printf(" decrease cutItv_%d: [%d, %d] append new interval\n", uniqIntervals[i].beg, uniqIntervals[i].end, uniqIntervals[curItv].beg, uniqIntervals[curItv].end);
 			curItv++;
 
