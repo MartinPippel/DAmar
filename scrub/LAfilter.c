@@ -1903,7 +1903,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		{
 			anchorItv *a = ctx->uniqIntervals + i;
 			if (a->flag & ANCHOR_INVALID)
-				break;
+				continue;
 
 			printf(" %d-%d-%d", a->beg, a->end, a->flag);
 			anchorbases += a->end - a->beg;
@@ -1943,7 +1943,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		{
 			anchorItv *a = ctx->uniqIntervals + i;
 			if (a->flag & ANCHOR_INVALID)
-				break;
+				continue;
 
 			printf(" %d-%d-%d", a->beg, a->end, a->flag);
 			anchorbases += a->end - a->beg;
@@ -2009,7 +2009,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	{
 		anchorItv *a = ctx->uniqIntervals + i;
 		if (a->flag & ANCHOR_INVALID)
-			break;
+				continue;
 
 		printf(" %d-%d-%d", a->beg, a->end, a->flag);
 		anchorbases += a->end - a->beg;
@@ -2100,7 +2100,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	{
 		anchorItv *a = ctx->uniqIntervals + i;
 		if (a->flag & ANCHOR_INVALID)
-			break;
+			continue;
 
 		printf(" %d-%d-%d", a->beg, a->end, a->flag);
 		anchorbases += a->end - a->beg;
