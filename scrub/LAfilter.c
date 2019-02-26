@@ -1809,7 +1809,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 
 	int WINDOW   = 500;
 	int MAXMERGE = 3000;
-	int b, e;
+	int i, b, e;
 
 	track_anno* repeats_anno = ctx->trackRepeat->anno;
 	track_data* repeats_data = ctx->trackRepeat->data;
@@ -1817,19 +1817,19 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	b = repeats_anno[aread] / sizeof(track_data);
 	e = repeats_anno[aread + 1] / sizeof(track_data);
 
+	int numIntervals = (e - b + 1) + 4;
+	anchorItv *uniqIntervals = malloc(sizeof(anchorItv) * numIntervals);
+	bzero(uniqIntervals, sizeof(anchorItv) * numIntervals);
+	int curItv = 0;
+
 	if (b < e)
 	{
-		int numIntervals = (e - b + 1) + 4;
-		anchorItv *uniqIntervals = malloc(sizeof(anchorItv) * numIntervals);
-		bzero(uniqIntervals, sizeof(anchorItv) * numIntervals);
-
 		int rb1, rb2;
 		int re1, re2;
 
 		rb1 = repeats_data[b];
 		re1 = repeats_data[b + 1];
 
-		int curItv = 0;
 		if (rb1 > 0)
 		{
 			uniqIntervals[curItv].beg = 0;
@@ -1862,7 +1862,6 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		// update unique intervals based on trim track
 		if (trim_ab > 0 || trim_ae < arlen)
 		{
-			int i;
 			for (i = 0; i < numIntervals; i++)
 			{
 				anchorItv *a = uniqIntervals + i;
@@ -1887,9 +1886,8 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			}
 		}
 
-		// update unique intervals based low complexity and tandem repeat
+		// update unique intervals based on low complexity and tandem repeat
 		// todo hardcoded values !!!
-		int i;
 		int predust, dust, postdust, longestDust, longestDustl, longestDustr;
 		for (i = 0; i < curItv; i++)
 		{
@@ -1972,109 +1970,115 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 				}
 			}
 
-			track_anno* repeats_anno = ctx->trackDust->anno;
-			track_data* repeats_data = ctx->trackDust->data;
-
-			b = repeats_anno[aread] / sizeof(track_data);
-			e = repeats_anno[aread + 1] / sizeof(track_data);
-
-
-			// update unique anchors with all low complexity intervals !!!
-			int c = curItv;
-			for (i = 0; i < c; i++)
-			{
-				anchorItv *a = uniqIntervals + i;
-
-				if (a->flag & ANCHOR_INVALID)
-					continue;
-
-				printf("check valid unique region %d, %d\n", a->beg, a->end);
-				while (b<e)
-				{
-
-
-					rb1 = repeats_data[b];
-					re1 = repeats_data[b + 1];
-
-					printf("check dust region [%d, %d]\n", rb1, re1);
-					if(rb1 > a->end)
-					{
-						printf("dust behind unique region %d, %d\n", a->beg, a->end);
-						break;
-					}
-
-					if(re1 < a->beg)
-					{
-						printf("dust before unique region %d, %d\n", a->beg, a->end);
-						b+=2;
-						continue;
-					}
-
-					// dust fully covers unique part
-					if(rb1 <= a->beg && re1 >= a->end)
-					{
-						printf("dust fully covers unique region %d, %d\n", a->beg, a->end);
-						a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
-						break;
-					}
-
-					// dust aligns left with unique part
-					if(rb1 <= a->beg)
-					{
-						a->beg = re1;
-					}
-					// dust aligns with right unique part
-					if(re1 >= a->end)
-					{
-						a->end = rb1;
-					}
-					// dust splits uniq part, i.e. make unique part invalid an append splits to the end of uniqueIntervals
-					printf("dust %d,%d splits unique range %d, %d\n", rb1, re1, a->beg, a->end);
-					a->beg = re1;
-
-					printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
-					if(curItv >= numIntervals)
-					{
-						numIntervals = 1.2*numIntervals + 10;
-						uniqIntervals = (anchorItv*)realloc(uniqIntervals, sizeof(anchorItv)*numIntervals);
-						bzero(uniqIntervals + curItv, sizeof(anchorItv)*(numIntervals-curItv));
-					}
-					printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
-					uniqIntervals[curItv].beg = uniqIntervals[i].beg;
-					uniqIntervals[curItv].end = rb1;
-					curItv++;
-
-					b+=2;
-				}
-			}
-
 			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end, a->flag, predust, a->beg - MAX(0, a->beg - WINDOW),
 					predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg), postdust,
 					MIN(a->end + WINDOW, arlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, arlen) - a->end), predust + dust + postdust,
 					(a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end),
 					(predust + dust + postdust) * 100.0 / ((a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end)));
-
 		}
-
-		qsort(uniqIntervals, curItv, sizeof(anchorItv), cmp_aIvl);
-
-		// report final unique anchors:
-		int anchorbases = 0;
-		printf("#anchors %d",aread);
-		for (i = 0; i < curItv; i++)
-		{
-			anchorItv *a = uniqIntervals + i;
-			if(a->flag & ANCHOR_INVALID)
-				break;
-
-			printf(" %d-%d-%d", a->beg, a->end, a->flag);
-			anchorbases += a->end-a->beg;
-		}
-		curItv = i;
-		printf(" sum n%d b%d\n", i, anchorbases);
-
-		free(uniqIntervals);
 	}
+	else // add full read inteval as uniq range
+	{
+		uniqIntervals[0].beg = trim_ab;
+		uniqIntervals[0].end = trim_ae;
+		curItv++;
+
+	}
+
+	repeats_anno = ctx->trackDust->anno;
+	repeats_data = ctx->trackDust->data;
+
+	b = repeats_anno[aread] / sizeof(track_data);
+	e = repeats_anno[aread + 1] / sizeof(track_data);
+
+	int rb, re;
+
+	// update unique anchors with all low complexity intervals !!!
+	int c = curItv;
+	for (i = 0; i < c; i++)
+	{
+		anchorItv *a = uniqIntervals + i;
+
+		if (a->flag & ANCHOR_INVALID)
+			continue;
+
+		printf("check valid unique region %d, %d\n", a->beg, a->end);
+		while (b<e)
+		{
+			rb = repeats_data[b];
+			re = repeats_data[b + 1];
+
+			printf("check dust region [%d, %d]\n", rb, re);
+			if(rb > a->end)
+			{
+				printf("dust behind unique region %d, %d\n", a->beg, a->end);
+				break;
+			}
+
+			if(re < a->beg)
+			{
+				printf("dust before unique region %d, %d\n", a->beg, a->end);
+				b+=2;
+				continue;
+			}
+
+			// dust fully covers unique part
+			if(rb <= a->beg && re >= a->end)
+			{
+				printf("dust fully covers unique region %d, %d\n", a->beg, a->end);
+				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+				break;
+			}
+
+			// dust aligns left with unique part
+			if(rb <= a->beg)
+			{
+				a->beg = re;
+			}
+			// dust aligns with right unique part
+			if(re >= a->end)
+			{
+				a->end = rb;
+			}
+			// dust splits uniq part, i.e. make unique part invalid an append splits to the end of uniqueIntervals
+			printf("dust %d,%d splits unique range %d, %d\n", rb, re, a->beg, a->end);
+			a->beg = re;
+
+			printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
+			if(curItv >= numIntervals)
+			{
+				numIntervals = 1.2*numIntervals + 10;
+				uniqIntervals = (anchorItv*)realloc(uniqIntervals, sizeof(anchorItv)*numIntervals);
+				bzero(uniqIntervals + curItv, sizeof(anchorItv)*(numIntervals-curItv));
+			}
+			printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
+			uniqIntervals[curItv].beg = uniqIntervals[i].beg;
+			uniqIntervals[curItv].end = rb;
+			curItv++;
+
+			b+=2;
+		}
+	}
+
+	qsort(uniqIntervals, curItv, sizeof(anchorItv), cmp_aIvl);
+
+	// report final unique anchors:
+	int anchorbases = 0;
+	printf("#anchors %d",aread);
+	for (i = 0; i < curItv; i++)
+	{
+		anchorItv *a = uniqIntervals + i;
+		if(a->flag & ANCHOR_INVALID)
+			break;
+
+		printf(" %d-%d-%d", a->beg, a->end, a->flag);
+		anchorbases += a->end-a->beg;
+	}
+	curItv = i;
+	printf(" sum n%d b%d\n", i, anchorbases);
+
+	free(uniqIntervals);
+
 }
 
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
