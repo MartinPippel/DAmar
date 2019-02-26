@@ -1988,16 +1988,24 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 				if (a->flag & ANCHOR_INVALID)
 					continue;
 
+				printf("check valid unique region %d, %d\n", a->beg, a->end);
 				while (b<e)
 				{
+
+
 					rb1 = repeats_data[b];
 					re1 = repeats_data[b + 1];
 
+					printf("check dust region [%d, %d]\n", rb1, re1);
 					if(rb1 > a->end)
+					{
+						printf("dust behind unique region %d, %d\n", a->beg, a->end);
 						break;
+					}
 
 					if(re1 < a->beg)
 					{
+						printf("dust before unique region %d, %d\n", a->beg, a->end);
 						b+=2;
 						continue;
 					}
@@ -2005,6 +2013,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 					// dust fully covers unique part
 					if(rb1 <= a->beg && re1 >= a->end)
 					{
+						printf("dust fully covers unique region %d, %d\n", a->beg, a->end);
 						a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 						break;
 					}
@@ -2020,7 +2029,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 						a->end = rb1;
 					}
 					// dust splits uniq part, i.e. make unique part invalid an append splits to the end of uniqueIntervals
-					printf("dust %d,%d splits repeat %d, %d\n", rb1, re1, a->beg, a->end);
+					printf("dust %d,%d splits unique range %d, %d\n", rb1, re1, a->beg, a->end);
 					a->beg = re1;
 
 					printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
