@@ -53,6 +53,18 @@
 #define REMOVE_SPECREP_OVL ( 1 << 4 )
 #define REMOVE_ID_OVL ( 1 << 5 )
 
+#define ANCHOR_INVALID 	(1 << 0)
+#define ANCHOR_TRIM 		(1 << 1)
+#define ANCHOR_LOWCOMP 	(1 << 2)
+
+typedef struct
+{
+
+	int beg;
+	int end;
+	int flag;
+} anchorItv;
+
 typedef struct
 {
 	// stats counters
@@ -138,6 +150,10 @@ typedef struct
 	int ** discardedAreadList;
 	int * discardedBreads;
 
+	// experimental keep track of unique read intervals
+	int numIntervals;
+	int curItv;
+	anchorItv *uniqIntervals;
 } FilterContext;
 
 extern char* optarg;
@@ -1049,10 +1065,10 @@ static void getRepeatBasesFromInterval(HITS_TRACK* repeat, int readID, int beg, 
 
 		tmp = intersect(beg, end, rBeg, rEnd);
 
-		if(tmp)
+		if (tmp)
 		{
 			*cumBases += tmp;
-			if(*largest < (rEnd - rBeg))
+			if (*largest < (rEnd - rBeg))
 				*largest = (rEnd - rBeg);
 		}
 
@@ -1202,237 +1218,16 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 
 	if (ctx->nMinNonRepeatBases != -1)
 	{
-		int b, e, rb, re, ovllen, repeat;
-
-		track_anno* repeats_anno = ctx->trackRepeat->anno;
-		track_data* repeats_data = ctx->trackRepeat->data;
-
-		int rp_mergeTip_ab = trim_ab;
-		int rp_mergeTip_ae = trim_ae;
-
-		if (ctx->rp_mergeTips)
+		if (ctx->trackDust)
 		{
-			int cumRep = 0;
-
-			b = repeats_anno[ovl->aread] / sizeof(track_data);
-			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
-
-			while (b < e)
+			int i;
+			int anchorBases = 0;
+			for (i = 0; i < ctx->numIntervals; i++)
 			{
-				rb = repeats_data[b];
-				re = repeats_data[b + 1];
-
-				// ignore repeats starting behind rp_mergeTip offset
-				if (rb > trim_ab + ctx->rp_mergeTips)
-					break;
-
-				// ignore repeat in front of trim intervaL
-				if (re < trim_ab)
-				{
-					b += 2;
-					continue;
-				}
-
-				if (rb < trim_ab)
-				{
-					cumRep += re - trim_ab;
-				}
-				else
-				{
-					cumRep += re - rb;
-				}
-
-				if (re > trim_ab + ctx->rp_mergeTips)
-					break;
-
-				b += 2;
+				anchorBases += intersect(trim_ab, trim_ae, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
 			}
 
-			if (cumRep > 1 + ctx->rp_mergeTips / 3)
-			{
-				rp_mergeTip_ab = trim_ab + ctx->rp_mergeTips;
-			}
-
-			// check end of the Aread
-			cumRep = 0;
-
-			b = repeats_anno[ovl->aread] / sizeof(track_data);
-			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
-
-			while (b < e)
-			{
-				rb = repeats_data[b];
-				re = repeats_data[b + 1];
-
-				// ignore repeats that end before trim_ae - rp_mergeTip offset
-				if (re < trim_ae - ctx->rp_mergeTips)
-				{
-					b += 2;
-					continue;
-				}
-
-				// ignore repeat behind end of trim intervaL
-				if (rb > trim_ae)
-				{
-					break;
-				}
-
-				if (re > trim_ae)
-				{
-					cumRep += trim_ae - rb;
-				}
-				else
-				{
-					cumRep += re - rb;
-				}
-
-				b += 2;
-			}
-
-			if (cumRep > 1 + ctx->rp_mergeTips / 3)
-			{
-				rp_mergeTip_ae = trim_ae - ctx->rp_mergeTips;
-			}
-		}
-
-		if (rp_mergeTip_ae < rp_mergeTip_ab)
-		{
-			if (ctx->nVerbose)
-			{
-				printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
-			}
-
-			ctx->nFilteredRepeat++;
-			ret |= OVL_DISCARD | OVL_REPEAT;
-		}
-
-		if (!(ret & OVL_REPEAT))
-		{
-			// Check A-read !!!!
-			ovllen = MIN(ovl->path.aepos, rp_mergeTip_ae) - MAX(ovl->path.abpos, rp_mergeTip_ab);
-			repeat = 0;
-
-			if (ovllen < ctx->nMinNonRepeatBases)
-			{
-				if (ctx->nVerbose)
-				{
-					printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
-				}
-
-				ctx->nFilteredRepeat++;
-				ret |= OVL_DISCARD | OVL_REPEAT;
-			}
-		}
-
-		if (!(ret & OVL_REPEAT))
-		{
-			b = repeats_anno[ovl->aread] / sizeof(track_data);
-			e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
-
-			while (b < e)
-			{
-				rb = repeats_data[b];
-				re = repeats_data[b + 1];
-
-				if (re < rp_mergeTip_ab || rb > rp_mergeTip_ae)
-				{
-					b += 2;
-					continue;
-				}
-
-				if (rb < rp_mergeTip_ab)
-				{
-					rb = rp_mergeTip_ab;
-				}
-
-				if (re > rp_mergeTip_ae)
-				{
-					re = rp_mergeTip_ae;
-				}
-
-				repeat += intersect(ovl->path.abpos, ovl->path.aepos, rb, re);
-
-				b += 2;
-			}
-
-			if (repeat > 0 && ovllen - repeat < ctx->nMinNonRepeatBases)
-			{
-				if (ctx->nVerbose)
-				{
-					printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
-				}
-
-				ctx->nFilteredRepeat++;
-				ret |= OVL_DISCARD | OVL_REPEAT;
-			}
-		}
-
-		if (!(ret & OVL_REPEAT))
-		{
-			// check B-Read only if we don't know yet if overlap is discarded by repeat
-
-			b = repeats_anno[ovl->bread] / sizeof(track_data);
-			e = repeats_anno[ovl->bread + 1] / sizeof(track_data);
-
-			// roughly map rp_mergeTip positions to B-read
-			ovllen = ovl->path.bepos - ovl->path.bbpos;
-
-			if (ovl->path.aepos > rp_mergeTip_ae)
-				ovllen -= (ovl->path.aepos - rp_mergeTip_ae);
-
-			if (ovl->path.abpos < rp_mergeTip_ab)
-				ovllen -= (rp_mergeTip_ab - ovl->path.abpos);
-
-			if (ovllen < ctx->nMinNonRepeatBases)
-			{
-				if (ctx->nVerbose)
-				{
-					printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
-				}
-
-				ctx->nFilteredRepeat++;
-				ret |= OVL_DISCARD | OVL_REPEAT;
-			}
-		}
-
-		if (!(ret & OVL_REPEAT))
-		{
-			int bbpos, bepos;
-
-			if (ovl->flags & OVL_COMP)
-			{
-				if (ovl->path.aepos > rp_mergeTip_ae)
-					bbpos = ovlBLen - (ovl->path.bepos - (ovl->path.aepos - rp_mergeTip_ae));
-				else
-					bbpos = ovlBLen - ovl->path.bepos;
-				if (ovl->path.abpos < rp_mergeTip_ab)
-					bepos = ovlBLen - (ovl->path.bbpos - (rp_mergeTip_ab - ovl->path.abpos));
-				else
-					bepos = ovlBLen - ovl->path.bbpos;
-			}
-			else
-			{
-				bbpos = ovl->path.bbpos;
-				if (ovl->path.abpos < rp_mergeTip_ab)
-					bbpos += rp_mergeTip_ab - ovl->path.abpos;
-				bepos = ovl->path.bepos;
-				if (ovl->path.aepos > rp_mergeTip_ae)
-					bepos -= ovl->path.aepos - rp_mergeTip_ae;
-			}
-
-			repeat = 0;
-
-			while (b < e)
-			{
-				rb = repeats_data[b];
-				re = repeats_data[b + 1];
-
-				repeat += intersect(bbpos, bepos, rb, re);
-
-				b += 2;
-			}
-
-			if (repeat > 0 && ovllen - repeat < ctx->nMinNonRepeatBases)
+			if (anchorBases < ctx->nMinNonRepeatBases)
 			{
 				if (ctx->nVerbose)
 				{
@@ -1443,7 +1238,252 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 
 				ret |= OVL_DISCARD | OVL_REPEAT;
 			}
+		}
+		else
+		{
+			int b, e, rb, re, ovllen, repeat;
 
+			track_anno* repeats_anno = ctx->trackRepeat->anno;
+			track_data* repeats_data = ctx->trackRepeat->data;
+
+			int rp_mergeTip_ab = trim_ab;
+			int rp_mergeTip_ae = trim_ae;
+
+			if (ctx->rp_mergeTips)
+			{
+				int cumRep = 0;
+
+				b = repeats_anno[ovl->aread] / sizeof(track_data);
+				e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
+
+				while (b < e)
+				{
+					rb = repeats_data[b];
+					re = repeats_data[b + 1];
+
+					// ignore repeats starting behind rp_mergeTip offset
+					if (rb > trim_ab + ctx->rp_mergeTips)
+						break;
+
+					// ignore repeat in front of trim intervaL
+					if (re < trim_ab)
+					{
+						b += 2;
+						continue;
+					}
+
+					if (rb < trim_ab)
+					{
+						cumRep += re - trim_ab;
+					}
+					else
+					{
+						cumRep += re - rb;
+					}
+
+					if (re > trim_ab + ctx->rp_mergeTips)
+						break;
+
+					b += 2;
+				}
+
+				if (cumRep > 1 + ctx->rp_mergeTips / 3)
+				{
+					rp_mergeTip_ab = trim_ab + ctx->rp_mergeTips;
+				}
+
+				// check end of the Aread
+				cumRep = 0;
+
+				b = repeats_anno[ovl->aread] / sizeof(track_data);
+				e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
+
+				while (b < e)
+				{
+					rb = repeats_data[b];
+					re = repeats_data[b + 1];
+
+					// ignore repeats that end before trim_ae - rp_mergeTip offset
+					if (re < trim_ae - ctx->rp_mergeTips)
+					{
+						b += 2;
+						continue;
+					}
+
+					// ignore repeat behind end of trim intervaL
+					if (rb > trim_ae)
+					{
+						break;
+					}
+
+					if (re > trim_ae)
+					{
+						cumRep += trim_ae - rb;
+					}
+					else
+					{
+						cumRep += re - rb;
+					}
+
+					b += 2;
+				}
+
+				if (cumRep > 1 + ctx->rp_mergeTips / 3)
+				{
+					rp_mergeTip_ae = trim_ae - ctx->rp_mergeTips;
+				}
+			}
+
+			if (rp_mergeTip_ae < rp_mergeTip_ab)
+			{
+				if (ctx->nVerbose)
+				{
+					printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
+				}
+
+				ctx->nFilteredRepeat++;
+				ret |= OVL_DISCARD | OVL_REPEAT;
+			}
+
+			if (!(ret & OVL_REPEAT))
+			{
+				// Check A-read !!!!
+				ovllen = MIN(ovl->path.aepos, rp_mergeTip_ae) - MAX(ovl->path.abpos, rp_mergeTip_ab);
+				repeat = 0;
+
+				if (ovllen < ctx->nMinNonRepeatBases)
+				{
+					if (ctx->nVerbose)
+					{
+						printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
+					}
+
+					ctx->nFilteredRepeat++;
+					ret |= OVL_DISCARD | OVL_REPEAT;
+				}
+			}
+
+			if (!(ret & OVL_REPEAT))
+			{
+				b = repeats_anno[ovl->aread] / sizeof(track_data);
+				e = repeats_anno[ovl->aread + 1] / sizeof(track_data);
+
+				while (b < e)
+				{
+					rb = repeats_data[b];
+					re = repeats_data[b + 1];
+
+					if (re < rp_mergeTip_ab || rb > rp_mergeTip_ae)
+					{
+						b += 2;
+						continue;
+					}
+
+					if (rb < rp_mergeTip_ab)
+					{
+						rb = rp_mergeTip_ab;
+					}
+
+					if (re > rp_mergeTip_ae)
+					{
+						re = rp_mergeTip_ae;
+					}
+
+					repeat += intersect(ovl->path.abpos, ovl->path.aepos, rb, re);
+
+					b += 2;
+				}
+
+				if (repeat > 0 && ovllen - repeat < ctx->nMinNonRepeatBases)
+				{
+					if (ctx->nVerbose)
+					{
+						printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
+					}
+
+					ctx->nFilteredRepeat++;
+					ret |= OVL_DISCARD | OVL_REPEAT;
+				}
+			}
+
+			if (!(ret & OVL_REPEAT))
+			{
+				// check B-Read only if we don't know yet if overlap is discarded by repeat
+
+				b = repeats_anno[ovl->bread] / sizeof(track_data);
+				e = repeats_anno[ovl->bread + 1] / sizeof(track_data);
+
+				// roughly map rp_mergeTip positions to B-read
+				ovllen = ovl->path.bepos - ovl->path.bbpos;
+
+				if (ovl->path.aepos > rp_mergeTip_ae)
+					ovllen -= (ovl->path.aepos - rp_mergeTip_ae);
+
+				if (ovl->path.abpos < rp_mergeTip_ab)
+					ovllen -= (rp_mergeTip_ab - ovl->path.abpos);
+
+				if (ovllen < ctx->nMinNonRepeatBases)
+				{
+					if (ctx->nVerbose)
+					{
+						printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
+					}
+
+					ctx->nFilteredRepeat++;
+					ret |= OVL_DISCARD | OVL_REPEAT;
+				}
+			}
+
+			if (!(ret & OVL_REPEAT))
+			{
+				int bbpos, bepos;
+
+				if (ovl->flags & OVL_COMP)
+				{
+					if (ovl->path.aepos > rp_mergeTip_ae)
+						bbpos = ovlBLen - (ovl->path.bepos - (ovl->path.aepos - rp_mergeTip_ae));
+					else
+						bbpos = ovlBLen - ovl->path.bepos;
+					if (ovl->path.abpos < rp_mergeTip_ab)
+						bepos = ovlBLen - (ovl->path.bbpos - (rp_mergeTip_ab - ovl->path.abpos));
+					else
+						bepos = ovlBLen - ovl->path.bbpos;
+				}
+				else
+				{
+					bbpos = ovl->path.bbpos;
+					if (ovl->path.abpos < rp_mergeTip_ab)
+						bbpos += rp_mergeTip_ab - ovl->path.abpos;
+					bepos = ovl->path.bepos;
+					if (ovl->path.aepos > rp_mergeTip_ae)
+						bepos -= ovl->path.aepos - rp_mergeTip_ae;
+				}
+
+				repeat = 0;
+
+				while (b < e)
+				{
+					rb = repeats_data[b];
+					re = repeats_data[b + 1];
+
+					repeat += intersect(bbpos, bepos, rb, re);
+
+					b += 2;
+				}
+
+				if (repeat > 0 && ovllen - repeat < ctx->nMinNonRepeatBases)
+				{
+					if (ctx->nVerbose)
+					{
+						printf("overlap %d -> %d: drop due to repeat in b\n", ovl->aread, ovl->bread);
+					}
+
+					ctx->nFilteredRepeat++;
+
+					ret |= OVL_DISCARD | OVL_REPEAT;
+				}
+
+			}
 		}
 	}
 
@@ -1548,6 +1588,13 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 		fctx->cover_multi_mapper = (char*) malloc(DB_READ_MAXLEN(fctx->db));
 	}
 
+	if (fctx->trackDust)
+	{
+		fctx->numIntervals = 20;
+		fctx->uniqIntervals = malloc(sizeof(anchorItv) * fctx->numIntervals);
+		bzero(fctx->uniqIntervals, sizeof(anchorItv) * fctx->numIntervals);
+		fctx->curItv = 0;
+	}
 }
 
 static void filter_post(FilterContext* ctx)
@@ -1647,6 +1694,8 @@ static void filter_post(FilterContext* ctx)
 	if (ctx->removeMultiMappers > 1)
 		free(ctx->cover_multi_mapper);
 
+	if (ctx->trackDust)
+		free(ctx->uniqIntervals);
 }
 
 static int cmp_ovls_qual(const void* a, const void* b)
@@ -1752,33 +1801,16 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 	free(ovl_sort);
 }
 
-#define ANCHOR_INVALID 	(1 << 0)
-#define ANCHOR_TRIM 		(1 << 1)
-#define ANCHOR_LOWCOMP 	(1 << 2)
-
-typedef struct
-{
-
-	int beg;
-	int end;
-	int flag;
-} anchorItv;
-
-//<0 The element pointed by p1 goes before the element pointed by p2
-//0  The element pointed by p1 is equivalent to the element pointed by p2
-//>0 The element pointed by p1 goes after the element pointed by p2
-
-
 static int cmp_aIvl(const void *a, const void *b)
 {
-	anchorItv * a1 = (anchorItv*)a;
-	anchorItv * a2 = (anchorItv*)b;
+	anchorItv * a1 = (anchorItv*) a;
+	anchorItv * a2 = (anchorItv*) b;
 
-	if(a1->flag & ANCHOR_INVALID)
+	if (a1->flag & ANCHOR_INVALID)
 	{
 		return 1;
 	}
-	if(a2->flag & ANCHOR_INVALID)
+	if (a2->flag & ANCHOR_INVALID)
 	{
 		return -1;
 	}
@@ -1787,6 +1819,9 @@ static int cmp_aIvl(const void *a, const void *b)
 
 static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 {
+	// reset current anchor interval index
+	ctx->curItv = 0;
+
 	int trim_ab, trim_ae;
 	int trim_alen;
 
@@ -1807,7 +1842,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		trim_alen = arlen;
 	}
 
-	int WINDOW   = 500;
+	int WINDOW = 500;
 	int MAXMERGE = 3000;
 	int i, b, e;
 
@@ -1817,10 +1852,12 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	b = repeats_anno[aread] / sizeof(track_data);
 	e = repeats_anno[aread + 1] / sizeof(track_data);
 
-	int numIntervals = (e - b + 1) + 4;
-	anchorItv *uniqIntervals = malloc(sizeof(anchorItv) * numIntervals);
-	bzero(uniqIntervals, sizeof(anchorItv) * numIntervals);
-	int curItv = 0;
+	if (ctx->numIntervals < (e - b + 1) + 4)
+	{
+		ctx->numIntervals = (e - b + 1) + 4;
+		ctx->uniqIntervals = (anchorItv*) realloc(ctx->uniqIntervals, ctx->numIntervals * sizeof(anchorItv));
+		bzero(ctx->uniqIntervals + ctx->curItv, sizeof(anchorItv) * (ctx->numIntervals - ctx->curItv));
+	}
 
 	if (b < e)
 	{
@@ -1832,9 +1869,9 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 
 		if (rb1 > 0)
 		{
-			uniqIntervals[curItv].beg = 0;
-			uniqIntervals[curItv].end = rb1;
-			curItv++;
+			ctx->uniqIntervals[ctx->curItv].beg = 0;
+			ctx->uniqIntervals[ctx->curItv].end = rb1;
+			ctx->curItv++;
 		}
 
 		b += 2;
@@ -1843,9 +1880,9 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			rb2 = repeats_data[b];
 			re2 = repeats_data[b + 1];
 
-			uniqIntervals[curItv].beg = re1;
-			uniqIntervals[curItv].end = rb2;
-			curItv++;
+			ctx->uniqIntervals[ctx->curItv].beg = re1;
+			ctx->uniqIntervals[ctx->curItv].end = rb2;
+			ctx->curItv++;
 
 			rb1 = rb2;
 			re1 = re2;
@@ -1854,17 +1891,17 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 
 		if (re1 < arlen)
 		{
-			uniqIntervals[curItv].beg = re1;
-			uniqIntervals[curItv].end = arlen;
-			curItv++;
+			ctx->uniqIntervals[ctx->curItv].beg = re1;
+			ctx->uniqIntervals[ctx->curItv].end = arlen;
+			ctx->curItv++;
 		}
 
 		// update unique intervals based on trim track
 		if (trim_ab > 0 || trim_ae < arlen)
 		{
-			for (i = 0; i < numIntervals; i++)
+			for (i = 0; i < ctx->numIntervals; i++)
 			{
-				anchorItv *a = uniqIntervals + i;
+				anchorItv *a = ctx->uniqIntervals + i;
 
 				if (trim_ab >= a->end)
 				{
@@ -1889,23 +1926,23 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		// update unique intervals based on low complexity and tandem repeat
 		// todo hardcoded values !!!
 		int predust, dust, postdust, longestDust, longestDustl, longestDustr;
-		for (i = 0; i < curItv; i++)
+		for (i = 0; i < ctx->curItv; i++)
 		{
-			anchorItv *a = uniqIntervals + i;
+			anchorItv *a = ctx->uniqIntervals + i;
 
 			if (a->flag & ANCHOR_INVALID)
 				continue;
 
-			if(a->end - a->beg > MAXMERGE)
+			if (a->end - a->beg > MAXMERGE)
 				continue;
 
 			getRepeatBasesFromInterval(ctx->trackDust, aread, a->beg, a->end, &dust, &longestDust);
 
-			if(dust * 100.0 / (a->end - a->beg) > 50.0)
+			if (dust * 100.0 / (a->end - a->beg) > 50.0)
 			{
 				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 			}
-			else if(dust * 100.0 / (a->end - a->beg) > 20.0 && longestDust > 100)
+			else if (dust * 100.0 / (a->end - a->beg) > 20.0 && longestDust > 100)
 			{
 				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 			}
@@ -1916,7 +1953,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			else // check if neighboring repeats end in low complexity interval
 			{
 				getRepeatBasesFromInterval(ctx->trackDust, aread, MAX(0, a->beg - WINDOW), a->beg, &predust, &longestDustl);
-				getRepeatBasesFromInterval(ctx->trackDust, aread, a->end, MIN(a->end + WINDOW, arlen),&postdust, &longestDustr);
+				getRepeatBasesFromInterval(ctx->trackDust, aread, a->end, MIN(a->end + WINDOW, arlen), &postdust, &longestDustr);
 
 				if (predust > 200 || longestDustl > 100 || postdust > 200 || longestDustr > 100)
 				{
@@ -1924,19 +1961,18 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 				}
 			}
 
-			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end, a->flag, predust, a->beg - MAX(0, a->beg - WINDOW),
-					predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg), postdust,
-					MIN(a->end + WINDOW, arlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, arlen) - a->end), predust + dust + postdust,
+			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end, a->flag, predust,
+					a->beg - MAX(0, a->beg - WINDOW), predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg),
+					postdust, MIN(a->end + WINDOW, arlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, arlen) - a->end), predust + dust + postdust,
 					(a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end),
 					(predust + dust + postdust) * 100.0 / ((a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end)));
 		}
 	}
-	else // add full read inteval as uniq range
+	else // add full read interval as uniq range
 	{
-		uniqIntervals[0].beg = trim_ab;
-		uniqIntervals[0].end = trim_ae;
-		curItv++;
-
+		ctx->uniqIntervals[0].beg = trim_ab;
+		ctx->uniqIntervals[0].end = trim_ae;
+		ctx->curItv++;
 	}
 
 	repeats_anno = ctx->trackDust->anno;
@@ -1948,36 +1984,36 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	int rb, re;
 
 	// update unique anchors with all low complexity intervals !!!
-	int c = curItv;
+	int c = ctx->curItv;
 	for (i = 0; i < c; i++)
 	{
-		anchorItv *a = uniqIntervals + i;
+		anchorItv *a = ctx->uniqIntervals + i;
 
 		if (a->flag & ANCHOR_INVALID)
 			continue;
 
 		printf("check valid unique region %d, %d\n", a->beg, a->end);
-		while (b<e)
+		while (b < e)
 		{
 			rb = repeats_data[b];
 			re = repeats_data[b + 1];
 
 			printf("check dust region [%d, %d]\n", rb, re);
-			if(rb > a->end)
+			if (rb > a->end)
 			{
 				printf("dust behind unique region %d, %d\n", a->beg, a->end);
 				break;
 			}
 
-			if(re < a->beg)
+			if (re < a->beg)
 			{
 				printf("dust before unique region %d, %d\n", a->beg, a->end);
-				b+=2;
+				b += 2;
 				continue;
 			}
 
 			// dust fully covers unique part
-			if(rb <= a->beg && re >= a->end)
+			if (rb <= a->beg && re >= a->end)
 			{
 				printf("dust fully covers unique region %d, %d\n", a->beg, a->end);
 				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
@@ -1985,65 +2021,66 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			}
 
 			// dust aligns left with unique part
-			if(rb <= a->beg)
+			if (rb <= a->beg)
 			{
 				a->beg = re;
 			}
 			// dust aligns with right unique part
-			if(re >= a->end)
+			if (re >= a->end)
 			{
 				a->end = rb;
 			}
 			// dust splits uniq part, i.e. make unique part invalid an append splits to the end of uniqueIntervals
 			printf("dust %d,%d splits unique range %d, %d\n", rb, re, a->beg, a->end);
 
-			printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
-			if(curItv >= numIntervals)
+			printf("curItv %d >= numIntervals %d\n", ctx->curItv, ctx->numIntervals);
+			if (ctx->curItv >= ctx->numIntervals)
 			{
-				numIntervals = 1.2*numIntervals + 10;
-				uniqIntervals = (anchorItv*)realloc(uniqIntervals, sizeof(anchorItv)*numIntervals);
-				bzero(uniqIntervals + curItv, sizeof(anchorItv)*(numIntervals-curItv));
+				ctx->numIntervals = 1.2 * ctx->numIntervals + 10;
+				ctx->uniqIntervals = (anchorItv*) realloc(ctx->uniqIntervals, sizeof(anchorItv) * ctx->numIntervals);
+				bzero(ctx->uniqIntervals + ctx->curItv, sizeof(anchorItv) * (ctx->numIntervals - ctx->curItv));
 			}
-			printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
-			uniqIntervals[curItv].beg = uniqIntervals[i].beg;
-			uniqIntervals[curItv].end = rb;
+			printf("curItv %d >= numIntervals %d\n", ctx->curItv, ctx->numIntervals);
+			ctx->uniqIntervals[ctx->curItv].beg = ctx->uniqIntervals[i].beg;
+			ctx->uniqIntervals[ctx->curItv].end = rb;
 
-			uniqIntervals[i].beg = re;
-			printf(" decrease cutItv_%d: [%d, %d] append new interval [%d, %d]\n", i, uniqIntervals[i].beg, uniqIntervals[i].end, uniqIntervals[curItv].beg, uniqIntervals[curItv].end);
-			curItv++;
+			ctx->uniqIntervals[i].beg = re;
+			printf(" decrease cutItv_%d: [%d, %d] append new interval [%d, %d]\n", i, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end,
+					ctx->uniqIntervals[ctx->curItv].beg, ctx->uniqIntervals[ctx->curItv].end);
+			ctx->curItv++;
 
-			b+=2;
+			b += 2;
 		}
 	}
 
-	qsort(uniqIntervals, curItv, sizeof(anchorItv), cmp_aIvl);
-	for (i = 0; i < curItv; i++)
+	qsort(ctx->uniqIntervals, ctx->curItv, sizeof(anchorItv), cmp_aIvl);
+	for (i = 0; i < ctx->curItv; i++)
 	{
-		anchorItv *a = uniqIntervals + i;
-		if(a->flag & ANCHOR_INVALID)
+		anchorItv *a = ctx->uniqIntervals + i;
+		if (a->flag & ANCHOR_INVALID)
 			break;
 	}
-	curItv = i;
+	ctx->curItv = i;
 
 	// merge tips if required, i.e. if there is any repeat annotation within the first/last 2k?! sequence
-	if(ctx->rp_mergeTips)
+	if (ctx->rp_mergeTips)
 	{
-		int resort=0;
-		if(uniqIntervals[0].beg > trim_ab || uniqIntervals[0].end < trim_ab + ctx->rp_mergeTips)
+		int resort = 0;
+		if (ctx->uniqIntervals[0].beg > trim_ab || ctx->uniqIntervals[0].end < trim_ab + ctx->rp_mergeTips)
 		{
-			for (i = 0; i < curItv; i++)
+			for (i = 0; i < ctx->curItv; i++)
 			{
-				anchorItv *a = uniqIntervals + i;
+				anchorItv *a = ctx->uniqIntervals + i;
 
 				if (a->flag & ANCHOR_INVALID)
 					continue;
 
-				if(a->end < trim_ab + ctx->rp_mergeTips)
+				if (a->end < trim_ab + ctx->rp_mergeTips)
 				{
 					a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
-					resort=1;
+					resort = 1;
 				}
-				else if(a->beg < trim_ab + ctx->rp_mergeTips)
+				else if (a->beg < trim_ab + ctx->rp_mergeTips)
 				{
 					a->beg = trim_ab + ctx->rp_mergeTips;
 				}
@@ -2054,21 +2091,21 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			}
 		}
 
-		if(uniqIntervals[curItv-1].end < trim_ae || uniqIntervals[curItv-1].beg > trim_ae - ctx->rp_mergeTips)
+		if (ctx->uniqIntervals[ctx->curItv - 1].end < trim_ae || ctx->uniqIntervals[ctx->curItv - 1].beg > trim_ae - ctx->rp_mergeTips)
 		{
-			for (i = curItv-1; i >= 0; --i)
+			for (i = ctx->curItv - 1; i >= 0; --i)
 			{
-				anchorItv *a = uniqIntervals + i;
+				anchorItv *a = ctx->uniqIntervals + i;
 
 				if (a->flag & ANCHOR_INVALID)
 					continue;
 
-				if(a->beg > trim_ae - ctx->rp_mergeTips)
+				if (a->beg > trim_ae - ctx->rp_mergeTips)
 				{
 					a->flag |= (ANCHOR_TRIM | ANCHOR_INVALID);
-					resort=1;
+					resort = 1;
 				}
-				else if(a->end > trim_ae - ctx->rp_mergeTips)
+				else if (a->end > trim_ae - ctx->rp_mergeTips)
 				{
 					a->end = trim_ae - ctx->rp_mergeTips;
 				}
@@ -2081,32 +2118,30 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 
 		if (resort)
 		{
-			qsort(uniqIntervals, curItv, sizeof(anchorItv), cmp_aIvl);
-			for (i = 0; i < curItv; i++)
+			qsort(ctx->uniqIntervals, ctx->curItv, sizeof(anchorItv), cmp_aIvl);
+			for (i = 0; i < ctx->curItv; i++)
 			{
-				anchorItv *a = uniqIntervals + i;
-				if(a->flag & ANCHOR_INVALID)
+				anchorItv *a = ctx->uniqIntervals + i;
+				if (a->flag & ANCHOR_INVALID)
 					break;
 			}
-			curItv = i;
+			ctx->curItv = i;
 		}
 	}
 
 	// report final unique anchors:
 	int anchorbases = 0;
-	printf("#anchors %d",aread);
-	for (i = 0; i < curItv; i++)
+	printf("#anchors %d", aread);
+	for (i = 0; i < ctx->curItv; i++)
 	{
-		anchorItv *a = uniqIntervals + i;
-		if(a->flag & ANCHOR_INVALID)
+		anchorItv *a = ctx->uniqIntervals + i;
+		if (a->flag & ANCHOR_INVALID)
 			break;
 
 		printf(" %d-%d-%d", a->beg, a->end, a->flag);
-		anchorbases += a->end-a->beg;
+		anchorbases += a->end - a->beg;
 	}
 	printf(" sum n%d b%d\n", i, anchorbases);
-
-	free(uniqIntervals);
 }
 
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
