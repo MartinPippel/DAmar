@@ -2020,7 +2020,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 						a->end = rb1;
 					}
 					// dust splits uniq part, i.e. make unique part invalid an append splits to the end of uniqueIntervals
-
+					printf("dust %d,%d splits repeat %d, %d\n", rb1, re1, a->beg, a->end);
 					a->beg = re1;
 
 					printf("curItv %d >= numIntervals %d\n", curItv, numIntervals);
