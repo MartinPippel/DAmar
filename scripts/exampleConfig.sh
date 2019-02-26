@@ -535,6 +535,7 @@ FIX_FILT_LAFILTER_REPEAT_IDX=0
 FIX_FILT_LAFILTER_TRIM=1
 FIX_FILT_LAFILTER_UBAS=0
 FIX_FILT_LAFILTER_PRELOAD=1
+FIX_FILT_LAFILTER_DUST="tan_dust"
 #FIX_FILT_LAFILTER_MERGEREPEATS=100
 #FIX_FILT_LAFILTER_MERGEREPEATTIPS=1000
 #FIX_FILT_LAFILTER_MINTIPCOV=3
@@ -544,6 +545,7 @@ FIX_FILT_LAFILTER_PRELOAD=1
 #FIX_FILT_LAFILTER_RESOLVE_REPEATS_AGG=1     # even more greedy: exchange m with M
 # LAmerge
 FIX_FILT_LAMERGE_NFILES=64
+
 
 # ----------------------------------------------------------------- TOURING OPTIONS ---------------------------------------------------------------------------------------------------------
 

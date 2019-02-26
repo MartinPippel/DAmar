@@ -334,8 +334,14 @@ function setLAfilterOptions()
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
-
+            
+            if [[ -n ${FIX_FILT_LAFILTER_DUST} ]]
+            then 
+            	FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -D ${FIX_FILT_LAFILTER_DUST}"
+            	FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}
+        	else
+        		FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
+			fi
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
         fi
     elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
@@ -348,8 +354,13 @@ function setLAfilterOptions()
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
-
+            if [[ -n ${FIX_FILT_LAFILTER_DUST} ]]
+            then 
+            	FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -D ${FIX_FILT_LAFILTER_DUST}"
+            	FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}
+        	else
+        		FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
+			fi            
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
         fi
     elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
@@ -362,7 +373,13 @@ function setLAfilterOptions()
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-            FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
+            if [[ -n ${FIX_FILT_LAFILTER_DUST} ]]
+            then 
+            	FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -D ${FIX_FILT_LAFILTER_DUST}"
+            	FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}
+        	else
+        		FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
+			fi
 
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
         fi
