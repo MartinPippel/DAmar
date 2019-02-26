@@ -1819,9 +1819,6 @@ static int cmp_aIvl(const void *a, const void *b)
 
 static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 {
-	// reset current anchor interval index
-	ctx->curItv = 0;
-
 	int trim_ab, trim_ae;
 	int trim_alen;
 
@@ -1856,8 +1853,11 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	{
 		ctx->numIntervals = (e - b + 1) + 4;
 		ctx->uniqIntervals = (anchorItv*) realloc(ctx->uniqIntervals, ctx->numIntervals * sizeof(anchorItv));
-		bzero(ctx->uniqIntervals + ctx->curItv, sizeof(anchorItv) * (ctx->numIntervals - ctx->curItv));
 	}
+
+	// reset current anchor interval index
+	ctx->curItv = 0;
+	bzero(ctx->uniqIntervals, sizeof(anchorItv) * (ctx->numIntervals));
 
 	if (b < e)
 	{
@@ -1975,6 +1975,19 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		ctx->curItv++;
 	}
 
+	int anchorbases = 0;
+	printf("#anchors %d", aread);
+	for (i = 0; i < ctx->curItv; i++)
+	{
+		anchorItv *a = ctx->uniqIntervals + i;
+		if (a->flag & ANCHOR_INVALID)
+			break;
+
+		printf(" %d-%d-%d", a->beg, a->end, a->flag);
+		anchorbases += a->end - a->beg;
+	}
+	printf(" sum n%d b%d\n", i, anchorbases);
+
 	repeats_anno = ctx->trackDust->anno;
 	repeats_data = ctx->trackDust->data;
 
@@ -2053,6 +2066,20 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		}
 	}
 
+	anchorbases = 0;
+	printf("#anchors %d", aread);
+	for (i = 0; i < ctx->curItv; i++)
+	{
+		anchorItv *a = ctx->uniqIntervals + i;
+		if (a->flag & ANCHOR_INVALID)
+			break;
+
+		printf(" %d-%d-%d", a->beg, a->end, a->flag);
+		anchorbases += a->end - a->beg;
+	}
+	printf(" sum n%d b%d\n", i, anchorbases);
+
+
 	qsort(ctx->uniqIntervals, ctx->curItv, sizeof(anchorItv), cmp_aIvl);
 	for (i = 0; i < ctx->curItv; i++)
 	{
@@ -2061,6 +2088,20 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			break;
 	}
 	ctx->curItv = i;
+
+	anchorbases = 0;
+	printf("#anchors %d", aread);
+	for (i = 0; i < ctx->curItv; i++)
+	{
+		anchorItv *a = ctx->uniqIntervals + i;
+		if (a->flag & ANCHOR_INVALID)
+			break;
+
+		printf(" %d-%d-%d", a->beg, a->end, a->flag);
+		anchorbases += a->end - a->beg;
+	}
+	printf(" sum n%d b%d\n", i, anchorbases);
+
 
 	// merge tips if required, i.e. if there is any repeat annotation within the first/last 2k?! sequence
 	if (ctx->rp_mergeTips)
@@ -2130,7 +2171,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	}
 
 	// report final unique anchors:
-	int anchorbases = 0;
+	anchorbases = 0;
 	printf("#anchors %d", aread);
 	for (i = 0; i < ctx->curItv; i++)
 	{
