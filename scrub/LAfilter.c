@@ -2070,7 +2070,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 				}
 				else if(a->end > trim_ae - ctx->rp_mergeTips)
 				{
-					a->end = trim_ae + ctx->rp_mergeTips;
+					a->end = trim_ae - ctx->rp_mergeTips;
 				}
 				else
 				{
