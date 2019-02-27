@@ -532,8 +532,8 @@ then
     exit 1
 fi
 
-myTypes=("1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilter, 13_LAmerge, 14_CTanalyze")
-#type-0 steps: 01_createCorrectedContigDB, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilter, 13_LAmerge, 14_CTanalyze
+myTypes=("1-createCorrectedContigDB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilter, 13_LAmerge, 14_CTanalyze, 15_CTstatistics")
+#type-0 steps: 01_createCorrectedContigDB, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilter, 13_LAmerge, 14_CTanalyze, 15_CTstatistics
 if [[ ${COR_CONTIG_TYPE} -eq 0 ]]
 then 
     ### createCorrectedContigDB
@@ -888,7 +888,27 @@ then
         setCTanalyzeOptions
 		echo "${MARVEL_PATH}/bin/CTanalyze${CONTIG_CTANALYZE_OPT} -C ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB%.db}.filt.las -F ${FIX_FILT_OUTDIR}/${FIX_DB%.DB} ${FIX_FILT_OUTDIR}/${FIX_DB%.DB}.filt.las -D ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}" > cont_14_CTanalyze_single_${CONT_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_14_CTanalyze_single_${CONT_DB%.db}.${slurmID}.version
-    else
+    ### 15_CTstatistics 
+	elif [[ ${currentStep} -eq 15 ]]
+    then
+		### clean up plans 
+        for x in $(ls cont_15_*_*_${CONT_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+                
+        ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+        if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+        then 
+        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+    	else
+        	cwd=$(pwd)
+        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+    	fi
+        ### create assemblyStats plan 
+        echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 8" > cont_15_CTstatistics_single_${CONT_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_15_CTstatistics_single_${CONT_DB%.db}.${slurmID}.version 
+	else
         (>&2 echo "step ${currentStep} in COR_CONTIG_TYPE ${COR_CONTIG_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_REPMASK_TYPE}]}")
         exit 1            

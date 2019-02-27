@@ -98,12 +98,12 @@ then
 	fi	
 elif [[ ${phase} -eq 7 ]] ## marvel corrected assembly stats  (last step in correction)
 then
-	if [[ -d ${FIX_FILT_OUTDIR}/correction/contigs ]]
+	if [[ -d ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs ]]
 	then
 		p=stats/contigs/${FIX_FILT_OUTDIR}/corr
 		mkdir -p ${p}
 		
-		for y in ${FIX_FILT_OUTDIR}/correction/contigs/*.fasta
+		for y in ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs/*.fasta
 		do
 			cat $y  
 		done > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_c.fasta
@@ -117,13 +117,53 @@ then
 		## copy config file
 		cp $config ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
 	else
-		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/correction/contigs not available")
+		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs not available")
   		exit 1
 	fi
 	
 elif [[ ${phase} -eq 8 ]] ## marvel corrected assembly stats after contig analysis  (last step after CTanalysis)
 then
-	echo "#todo" 
+	if [[ -d ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_CTANALYZE_DIR}/classified ]]
+	then
+		p=stats/contigs/${FIX_FILT_OUTDIR}/haploSplit
+		mkdir -p ${p}
+		
+		prim=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_CTANALYZE_DIR}/classified/asm.p.fa
+		alt=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_CTANALYZE_DIR}/classified/asm.a.fa
+		crap=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_CTANALYZE_DIR}/classified/asm.c.fa
+	
+		if [[ ! -f ${prim} ]]
+		then
+			(>&2 echo "ERROR - primary contig file missing: ${prim}")
+  			exit 1  			
+  		elif [[ ! -f ${alt} ]]
+		then
+			(>&2 echo "ERROR - alt contig file missing: ${alt}")
+  			exit 1
+		elif [[ ! -f ${crap} ]]
+		then
+			(>&2 echo "ERROR - crap contig file missing: ${crap}")
+  			exit 1  	
+		fi
+		
+		cp ${prim} ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.fasta
+		cp ${alt} ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.a.fasta
+		cp ${crap} ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.c.fasta
+		
+		cat ${prim} ${alt} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.fasta
+	
+		## create statistic files
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.stats
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.stats
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.a.stats
+		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.c.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.c.stats
+		
+		## copy config file
+		cp $config ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh	
+	else
+		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/correction/contigs not available")
+  		exit 1
+	fi
 elif [[ ${phase} -eq 9 ]] ## assembly stats after PacBio Arrow Correction 
 then
 	if [[ -d ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]
