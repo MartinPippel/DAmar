@@ -200,7 +200,13 @@ function setOGtourOptions()
     if [[ -n ${FIX_TOUR_OGTOUR_MAXBACKBONEDIST} && ${FIX_TOUR_OGTOUR_MAXBACKBONEDIST} -gt 1 ]]
     then
         TOUR_OGTOUR_OPT="${TOUR_OGTOUR_OPT} -b ${FIX_TOUR_OGTOUR_MAXBACKBONEDIST}"
-    fi    
+    fi  
+    
+    if [[ -n ${FIX_TOUR_OGTOUR_DEBUG} && ${FIX_TOUR_OGTOUR_DEBUG} -ne 0 ]]
+    then
+        TOUR_OGTOUR_OPT="${TOUR_OGTOUR_OPT} --debug"
+    fi
+      
 }
 
 
