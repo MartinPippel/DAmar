@@ -168,7 +168,7 @@ FIX_CORR_SUBMIT_SCRIPTS_TO=5
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 8 - contig analyze stats  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 COR_CONTIG_TYPE=0
-#type-0 steps: 01_createCorrectedContigDB, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilterCTchains, 13_LAmerge, 14_CTanalyze
+#type-0 steps: 01_createCorrectedContigDB, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilterCTchains, 13_LAmerge, 14_CTanalyze, 15_CTstatistics
 COR_CONTIG_SUBMIT_SCRIPTS_FROM=0
 COR_CONTIG_SUBMIT_SCRIPTS_TO=14
 
@@ -557,6 +557,7 @@ FIX_TOUR_OGBUILD_TRIM=1
 FIX_TOUR_OGTOUR_CIRCULAR=1
 FIX_TOUR_OGTOUR_LOOKAHAED=6
 FIX_TOUR_OGTOUR_DROPINV=1  
+FIX_TOUR_OGTOUR_DEBUG=1
 # tour2fasta
 FIX_TOUR_2FASTA_TRIM=1
 FIX_TOUR_2FASTA_SPLIT=0 ### split at every junction
