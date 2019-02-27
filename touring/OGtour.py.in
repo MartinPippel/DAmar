@@ -1154,8 +1154,8 @@ def main():
     parser.add_argument("database", help = "database name")
     parser.add_argument("graph", nargs = "+", help = "overlap graph")
 
-    parser.add_argument("-c", "--circular", help = "allow circular paths", default = "false", action = "store_true")
-    parser.add_argument("-d", "--dropinversions", help = "remove edges suspected to be due to inversions", default = "false", action = "store_true")
+    parser.add_argument("-c", "--circular", help = "allow circular paths", default = False, action = "store_true")
+    parser.add_argument("-d", "--dropinversions", help = "remove edges suspected to be due to inversions", default = False, action = "store_true")
     parser.add_argument("-l", "--lookahead", metavar = "n", help = "lookahead during touring (default {0})".format(DEF_PATH_LOOKAHEAD), default = DEF_PATH_LOOKAHEAD, type = int)
     parser.add_argument("-b", "--maxbackbonedist", metavar = "n", help = "maximum backbone distance for the same contig (default {0})".format(MAX_BB_DISTANCE), default = MAX_BB_DISTANCE, type = int)
     parser.add_argument("--debug", help = argparse.SUPPRESS, action = "store_true")
