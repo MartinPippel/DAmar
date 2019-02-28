@@ -1842,8 +1842,8 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		trim_alen = arlen;
 	}
 
-	int WINDOW = 500;
-	int MAXMERGE = 3000;
+	int WINDOW = 600;
+	int MAXMERGE = 2400;
 	int i, b, e;
 
 	track_anno* repeats_anno = ctx->trackRepeat->anno;
@@ -1973,7 +1973,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			{
 				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 			}
-			else if (dust * 100.0 / (a->end - a->beg) > 20.0 && longestDust > 100)
+			else if (dust * 100.0 / (a->end - a->beg) > 15.0 && longestDust > 100)
 			{
 				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 			}
