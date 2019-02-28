@@ -944,16 +944,16 @@ def process_graph(g, dropinversions, circular, lookahead, ilookahead, maxbackbon
     for v in g:
         fQuality = vertexEdgeQuality(g, v, eflags_prop, eend_prop, ediv_prop)
         if(startNode >= 0 and v == startNode):
-        	vquality_prop[v] = 0
+            vquality_prop[v] = 0
        	else:
-        	vquality_prop[v] = fQuality
+            vquality_prop[v] = fQuality
 
         arrStartVertices.append( (v, fQuality) )
 
     arrStartVertices.sort( key = operator.itemgetter(1) )
 
 	for (v, fQuality) in arrStartVertices:
-		logging.debug("start node {} qv {}".format(v,fQuality))
+	    logging.debug("start node {} qv {}".format(v,fQuality))
 		
     ### compute paths
 
