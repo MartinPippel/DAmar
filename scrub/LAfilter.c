@@ -2035,51 +2035,49 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	int c = ctx->curItv;
 	for (i = 0; i < c; i++)
 	{
-		anchorItv *a = ctx->uniqIntervals + i;
-
-		if (a->flag & ANCHOR_INVALID)
+		if (ctx->uniqIntervals[i].flag & ANCHOR_INVALID)
 			continue;
 
-		printf("check valid unique region %d, %d\n", a->beg, a->end);
+		printf("check valid unique region %d, %d\n", ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
 		while (b < e)
 		{
 			rb = repeats_data[b];
 			re = repeats_data[b + 1];
 
 			printf("check dust region [%d, %d]\n", rb, re);
-			if (rb > a->end)
+			if (rb > ctx->uniqIntervals[i].end)
 			{
-				printf("dust behind unique region %d, %d\n", a->beg, a->end);
+				printf("dust behind unique region %d, %d\n", ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
 				break;
 			}
 
-			if (re < a->beg)
+			if (re < ctx->uniqIntervals[i].beg)
 			{
-				printf("dust before unique region %d, %d\n", a->beg, a->end);
+				printf("dust before unique region %d, %d\n", ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
 				b += 2;
 				continue;
 			}
 
 			// dust fully covers unique part
-			if (rb <= a->beg && re >= a->end)
+			if (rb <= ctx->uniqIntervals[i].beg && re >= ctx->uniqIntervals[i].end)
 			{
-				printf("dust fully covers unique region %d, %d\n", a->beg, a->end);
-				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+				printf("dust fully covers unique region %d, %d\n", ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
+				ctx->uniqIntervals[i].flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 				break;
 			}
 
 			// dust aligns left with unique part
-			if (rb <= a->beg)
+			if (rb <= ctx->uniqIntervals[i].beg)
 			{
-				a->beg = re;
+				ctx->uniqIntervals[i].beg = re;
 			}
 			// dust aligns with right unique part
-			if (re >= a->end)
+			if (re >= ctx->uniqIntervals[i].end)
 			{
-				a->end = rb;
+				ctx->uniqIntervals[i].end = rb;
 			}
 			// dust splits uniq part, i.e. make unique part invalid an append splits to the end of uniqueIntervals
-			printf("dust %d,%d splits unique range %d, %d\n", rb, re, a->beg, a->end);
+			printf("dust %d,%d splits unique range %d, %d\n", rb, re, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
 
 			printf("curItv %d >= numIntervals %d\n", ctx->curItv, ctx->numIntervals);
 			if (ctx->curItv >= ctx->numIntervals)
