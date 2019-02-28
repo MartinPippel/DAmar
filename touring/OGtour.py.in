@@ -1191,7 +1191,7 @@ def main():
     logging.debug("dropinversions option: {}".format(args.dropinversions))
     logging.debug("debug option: {}".format(args.debug))
     logging.debug("lookahead option: {}".format(ilookahead))
-	logging.debug("startNode option: {}".format(args.startNode))
+    logging.debug("startNode option: {}".format(args.startNode))
 
     # print("opening db {}".format(args.database))
     # db = DB.DB(args.database)
