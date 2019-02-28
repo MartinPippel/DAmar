@@ -943,7 +943,7 @@ def process_graph(g, dropinversions, circular, lookahead, ilookahead, maxbackbon
 
     for v in g:
         fQuality = vertexEdgeQuality(g, v, eflags_prop, eend_prop, ediv_prop)
-        if v == startNode):
+        if v == startNode:
             fQuality = 0
 
         vquality_prop[v] = fQuality
