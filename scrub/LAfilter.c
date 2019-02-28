@@ -1842,6 +1842,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		trim_alen = arlen;
 	}
 
+	int MINANCHOR = 10;
 	int WINDOW = 600;
 	int MAXMERGE = 2400;
 	int i, b, e;
@@ -1871,7 +1872,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		rb1 = repeats_data[b];
 		re1 = repeats_data[b + 1];
 
-		if (rb1 > 0)
+		if (rb1 > 0 && rb1 > MINANCHOR)
 		{
 			ctx->uniqIntervals[ctx->curItv].beg = 0;
 			ctx->uniqIntervals[ctx->curItv].end = rb1;
@@ -1884,16 +1885,19 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			rb2 = repeats_data[b];
 			re2 = repeats_data[b + 1];
 
-			ctx->uniqIntervals[ctx->curItv].beg = re1;
-			ctx->uniqIntervals[ctx->curItv].end = rb2;
-			ctx->curItv++;
+			if(rb2 - re1 > MINANCHOR)
+			{
+				ctx->uniqIntervals[ctx->curItv].beg = re1;
+				ctx->uniqIntervals[ctx->curItv].end = rb2;
+				ctx->curItv++;
+			}
 
 			rb1 = rb2;
 			re1 = re2;
 			b += 2;
 		}
 
-		if (re1 < arlen)
+		if (re1 < arlen && arlen - re1 > MINANCHOR)
 		{
 			ctx->uniqIntervals[ctx->curItv].beg = re1;
 			ctx->uniqIntervals[ctx->curItv].end = arlen;
@@ -2135,7 +2139,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 
 
 	// merge tips if required, i.e. if there is any repeat annotation within the first/last 2k?! sequence
-	if (ctx->rp_mergeTips)
+	if (ctx->rp_mergeTips && ctx->curItv > 0)
 	{
 		int resort = 0;
 		if (ctx->uniqIntervals[0].beg > trim_ab || ctx->uniqIntervals[0].end < trim_ab + ctx->rp_mergeTips)
