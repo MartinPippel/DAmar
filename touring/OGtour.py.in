@@ -814,7 +814,7 @@ def graph_compute_paths(g, arrStartVertices, bbdist_prop,
 
     return arrPaths
 
-def process_graph(g, dropinversions, circular, lookahead, ilookahead, maxbackbonedist):
+def process_graph(g, dropinversions, circular, lookahead, ilookahead, maxbackbonedist, startNode):
     smark_prop = {}     # source marker
     tmark_prop = {}     # target marker
     ecolor_prop = {}
@@ -943,7 +943,10 @@ def process_graph(g, dropinversions, circular, lookahead, ilookahead, maxbackbon
 
     for v in g:
         fQuality = vertexEdgeQuality(g, v, eflags_prop, eend_prop, ediv_prop)
-        vquality_prop[v] = fQuality
+        if(startNode >= 0 and v == startNode):
+        	vquality_prop[v] = 0
+       	else:
+        	vquality_prop[v] = fQuality
 
         arrStartVertices.append( (v, fQuality) )
 
@@ -1161,6 +1164,7 @@ def main():
     parser.add_argument("-d", "--dropinversions", help = "remove edges suspected to be due to inversions", default = False, action = "store_true")
     parser.add_argument("-l", "--lookahead", metavar = "n", help = "lookahead during touring (default {0})".format(DEF_PATH_LOOKAHEAD), default = DEF_PATH_LOOKAHEAD, type = int)
     parser.add_argument("-b", "--maxbackbonedist", metavar = "n", help = "maximum backbone distance for the same contig (default {0})".format(MAX_BB_DISTANCE), default = MAX_BB_DISTANCE, type = int)
+    parser.add_argument("-s", "--startNode", metavar = "n", help = "select touring start node (default -1)", default = -1, type = int)
     parser.add_argument("--debug", help = argparse.SUPPRESS, action = "store_true")
 
     args = parser.parse_args()
@@ -1187,6 +1191,7 @@ def main():
     logging.debug("dropinversions option: {}".format(args.dropinversions))
     logging.debug("debug option: {}".format(args.debug))
     logging.debug("lookahead option: {}".format(ilookahead))
+	logging.debug("startNode option: {}".format(args.startNode))
 
     # print("opening db {}".format(args.database))
     # db = DB.DB(args.database)
@@ -1207,7 +1212,7 @@ def main():
 
         logging.info("touring...")
 
-        (g, paths, bbdist) = process_graph(g, args.dropinversions, args.circular, args.lookahead, ilookahead, args.maxbackbonedist)
+        (g, paths, bbdist) = process_graph(g, args.dropinversions, args.circular, args.lookahead, ilookahead, args.maxbackbonedist, args.startNode)
 
         setContigEnds = set()
 
