@@ -3312,11 +3312,11 @@ void createOutput(AnalyzeContext *actx)
 		// classification
 		if(con->property.cflag & CLASS_CONTIG_PRIMARY)
 		{
-			fprintf(sout, "%s%c\n", "PRI", FS);
+			fprintf(sout, "%s%c", "PRI", FS);
 		}
 		else if(con->property.cflag & CLASS_CONTIG_ALT)
 		{
-			fprintf(sout, "%s%c\n", "ALT", FS);
+			fprintf(sout, "%s%cs", "ALT", FS);
 		}
 		else
 		{
