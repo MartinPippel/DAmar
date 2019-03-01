@@ -127,6 +127,7 @@ then
 	then
 		p=stats/contigs/${FIX_FILT_OUTDIR}/haploSplit
 		mkdir -p ${p}
+		mkdir -p ${p}/forArrow
 		
 		prim=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_CTANALYZE_DIR}/classified/asm.p.fa
 		alt=${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_CTANALYZE_DIR}/classified/asm.a.fa
@@ -151,6 +152,16 @@ then
 		cp ${crap} ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.c.fasta
 		
 		cat ${prim} ${alt} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.fasta
+				
+		grep -e ">" ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.fasta | awk '{print $1}' | sed -e 's:^>::' > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.header
+		grep -e ">" ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.fasta | awk '{print $1}' | sed -e 's:^>::' > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.header
+		grep -e ">" ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.a.fasta | awk '{print $1}' | sed -e 's:^>::' > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.a.header				
+		grep -e ">" ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.c.fasta | awk '{print $1}' | sed -e 's:^>::' > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.c.header
+	
+		ln -s -r ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.fasta ${p}/forArrow/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.fasta
+		
+		ln -s -r -f ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.header ${p}/forArrow/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.header
+		ln -s -r -f ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.a.header ${p}/forArrow/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.a.header
 	
 		## create statistic files
 		cat ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.stats
@@ -169,7 +180,7 @@ then
 	if [[ -d ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]
 	then
 		
-		rawPath=stats/contigs/${FIX_FILT_OUTDIR}/raw
+		inputPath=${PB_ARROW_INFASTA}
 		arrowPath=stats/contigs/${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID}
 		fext="a"
 		if [[ ${PB_ARROW_RUNID} -eq 2 ]]
@@ -180,7 +191,8 @@ then
 			fext="@"		
 		fi
 		
-		if [[ ! -d ${rawPath} || ! -f ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.fasta || ! -f ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.fasta ]]
+		if [[ ! -d ${inputPath} || ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.p.fasta || ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.a.fasta ||
+			 ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.p.header || ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.a.header ]]
         then 
 	     	(>&2 echo "ERROR - stats folder or assembly staticstics are missing. Run last step of touring first.")
     	    exit 1        			
@@ -189,7 +201,7 @@ then
         mkdir -p ${arrowPath}        
 
 		## primary 
-		for z in $(cat ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.p.header)
+		for z in $(cat ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.p.header)
 		do
 			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
 			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
@@ -218,7 +230,7 @@ then
 		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta
 		gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fa.gz
 		## alternate
-		for z in $(cat ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.a.header)
+		for z in $(cat ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.a.header)
 		do
 			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
 			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
@@ -246,34 +258,8 @@ then
 			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}${arrowExtension}/ALL_${name}${pathID}${arrowExtension}.arrow.fa	| sed -e "s:[|_]arrow::g"					        		
 		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta
 		gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fa.gz
-		## all 	
-        for z in $(cat ${rawPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_r.header)
-		do
-			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
-			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
-			
-			arrowExtension=""
-			a=1
-			while [[ $a -lt ${PB_ARROW_RUNID} ]]
-			do
-				arrowExtension="${arrowExtension}_arrow"
-				a=$(($a+1))	
-			done
-			
-			if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}${arrowExtension} ]]
-			then 
-				echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}${arrowExtension}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.elog
-				continue
-			fi  
-			
-			if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}${arrowExtension}/ALL_${name}${pathID}${arrowExtension}.arrow.fa ]]
-			then 
-			 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}${arrowExtension}/ALL_${name}${pathID}${arrowExtension}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.elog
-				continue
-			fi  
-			
-			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}${arrowExtension}/ALL_${name}${pathID}${arrowExtension}.arrow.fa	| sed -e "s:[|_]arrow::g"					        		
-		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta	
+		## all 
+		cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta
         gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fa.gz
         if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta ]]
         then 
