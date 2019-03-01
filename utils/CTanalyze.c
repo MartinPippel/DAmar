@@ -1492,7 +1492,7 @@ void analyzeContigCoverageOfMappedReads(AnalyzeContext *actx)
 
 	// TODO pass variable, set by user ?
 	int COV_BIN_SIZE = 500;
-	int MIN_COV = 3;
+	int MIN_COV = 1;
 
 	bit *inReads = ba_new(DB_NREADS(actx->patchedReadDB));
 	bit *outReads = ba_new(DB_NREADS(actx->patchedReadDB));
