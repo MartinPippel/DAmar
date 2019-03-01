@@ -3174,7 +3174,7 @@ void classify(AnalyzeContext *actx)
 					{
 						Contig *conB = actx->contigs + (j);
 
-						printf("found putative bridge: %d vs %d\n", conA->property.contigID, conB->property.contigID);
+						printf("found putative bridge: %d (%s) vs %d (%s)\n", conA->property.contigID, getContigFastaFileName(actx, conA) ,conB->property.contigID, getContigFastaFileName(actx, conB));
 					}
 				}
 			}
@@ -3189,14 +3189,14 @@ void classify(AnalyzeContext *actx)
 
 					if ((conA->property.cflag & CLASS_CONTIG_PRIMARY) && (conB->property.cflag & CLASS_CONTIG_PRIMARY))
 					{
-						printf("found putative touring issue PvsP join: %d vs %d\n", conA->property.contigID, conB->property.contigID);
+						printf("found putative touring issue PvsP join: %d (%s) vs %d (%s)\n", conA->property.contigID, getContigFastaFileName(actx, conA), conB->property.contigID, getContigFastaFileName(actx, conB));
 					}
 					if (((conA->property.cflag & CLASS_CONTIG_PRIMARY)
 							&& ((conB->property.cflag & CLASS_CONTIG_DISCARD_LEN) && !(conB->property.cflag & CLASS_CONTIG_DISCARD_REPEAT)))
 							|| ((conB->property.cflag & CLASS_CONTIG_PRIMARY)
 									&& ((conA->property.cflag & CLASS_CONTIG_DISCARD_LEN) && !(conA->property.cflag & CLASS_CONTIG_DISCARD_REPEAT))))
 					{
-						printf("found putative touring issue PvsCL join: %d vs %d\n", conA->property.contigID, conB->property.contigID);
+						printf("found putative touring issue PvsCL join: %d (%s) vs %d (%s)\n", conA->property.contigID, getContigFastaFileName(actx, conA), conB->property.contigID, getContigFastaFileName(actx, conB));
 					}
 				}
 			}
