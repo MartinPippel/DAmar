@@ -105,7 +105,6 @@ typedef struct
 
 	int removeLowCoverageOverlaps;
 	int removeMultiMappers;
-	char* cover_multi_mapper;
 
 	int rp_mergeTips;  // increase repeat interval if it ends with rp_mergeTips Bases according to trim annotation
 	// repeat modules - merged repeats
@@ -1586,11 +1585,6 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 	fctx->le_lbins = malloc(sizeof(int) * fctx->le_maxbins);
 	fctx->le_rbins = malloc(sizeof(int) * fctx->le_maxbins);
 
-	if (fctx->removeMultiMappers > 1)
-	{
-		fctx->cover_multi_mapper = (char*) malloc(DB_READ_MAXLEN(fctx->db));
-	}
-
 	if (fctx->trackDust)
 	{
 		fctx->numIntervals = 20;
@@ -1693,9 +1687,6 @@ static void filter_post(FilterContext* ctx)
 		free(ctx->discardedBreads);
 	if (ctx->discardedAreadList)
 		free(ctx->discardedAreadList);
-
-	if (ctx->removeMultiMappers > 1)
-		free(ctx->cover_multi_mapper);
 
 	if (ctx->trackDust)
 		free(ctx->uniqIntervals);
@@ -2218,6 +2209,15 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	printf(" sum n%d b%d\n", i, anchorbases);
 }
 
+static int contained(int ab, int ae, int bb, int be)
+{
+	if (ab >= bb && ae <= be)
+	{
+		return 1;
+	}
+
+	return 0;
+}
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 {
 	FilterContext* ctx = (FilterContext*) _ctx;
@@ -2278,33 +2278,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	{
 		int foundMultiMapper = 0;
 
-		if (ctx->removeMultiMappers > 1)
-		{
-			bzero(ctx->cover_multi_mapper, DB_READ_MAXLEN(ctx->db));
-
-			if (ctx->trackRepeat)
-			{
-				track_anno* ranno = (track_anno*) (ctx->trackRepeat->anno);
-				track_data* rdata = (track_data*) (ctx->trackRepeat->data);
-
-				track_anno ob = ranno[ovl->aread] / sizeof(track_data);
-				track_anno oe = ranno[ovl->aread + 1] / sizeof(track_data);
-
-				while (ob < oe)
-				{
-					memset(ctx->cover_multi_mapper + rdata[ob], 1, rdata[ob + 1] - rdata[ob]);
-					ob += 2;
-				}
-			}
-		}
-
 		int k, l, m;
 		j = k = 0;
 
-		int trimABeg, trimAEnd;
-		int trimBBeg, trimBEnd;
-
-		int numMultiMapper = 0;
 		while (j < novl)
 		{
 			while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
@@ -2320,96 +2296,41 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				{
 					Overlap *o1 = ovl + l;
 
-					if (o1->flags & OVL_DISCARD)
+					// ignore stitched overlaps as those are contained anyway and we want to keep the non-stitched overlap !!!
+					if (o1->flags & OVL_STITCH)
 						continue;
-
-					trimABeg = 0;
-					trimAEnd = DB_READ_LEN(ctx->db, o1->aread);
-
-					if (ctx->trackTrim)
-						get_trim(ctx->db, ctx->trackTrim, o1->aread, &trimABeg, &trimAEnd);
-
-					trimBBeg = 0;
-					trimBEnd = DB_READ_LEN(ctx->db, o1->bread);
-
-					if (ctx->trackTrim)
-						get_trim(ctx->db, ctx->trackTrim, o1->bread, &trimBBeg, &trimBEnd);
 
 					for (m = l + 1; m <= k && !foundMultiMapper; m++)
 					{
 						Overlap *o2 = ovl + m;
 
-						if (o2->flags & OVL_DISCARD)
+						if (o2->flags & OVL_STITCH)
 							continue;
 
-						if (((o1->path.abpos == trimABeg || o1->path.bbpos == trimBBeg) && (o1->path.aepos == trimAEnd || o1->path.bepos == trimBEnd))
-								&& ((o2->path.abpos == trimABeg || o2->path.bbpos == trimBBeg) && (o2->path.aepos == trimAEnd || o2->path.bepos == trimBEnd))
-								&& ((abs(o1->path.abpos - o2->path.abpos) > ctx->twidth) && (abs(o1->path.aepos - o2->path.aepos) > ctx->twidth)))
+						if(contained(o1->path.abpos, o1->path.aepos, o2->path.abpos, o2->path.aepos) || contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) ||
+								contained(o1->path.bbpos, o1->path.bepos, o2->path.bbpos, o2->path.bepos) || contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos))
 						{
 							foundMultiMapper = 1;
+							break;
 						}
 					}
 				}
-
-				if (foundMultiMapper)
+				if(foundMultiMapper)
 				{
-					ctx->nMultiMapper++;
-					numMultiMapper++;
 					for (l = j; l <= k; l++)
 					{
-						if (!(ovl[l].flags & OVL_DISCARD))
-						{
+						ovl[l].flags |= OVL_DISCARD;
 #ifdef VERBOSE
-							printf("remove multi mapper: %d vs %d [%d, %d] %c [%d, %d]\n", ovl[l].aread, ovl[l].bread, ovl[l].path.abpos, ovl[l].path.aepos,
-									(ovl[l].flags & OVL_COMP) ? 'c' : 'n', ovl[l].path.bbpos, ovl[l].path.bepos);
+					printf("remove ovl, falls into multi mapper interval: %d vs %d [%d, %d] %c [%d, %d]\n", ovl[l].aread, ovl[l].bread, ovl[l].path.abpos, ovl[l].path.aepos,
+							(ovl[l].flags & OVL_COMP) ? 'c' : 'n', ovl[l].path.bbpos, ovl[l].path.bepos);
 #endif
-							ctx->nMultiMapperBases += ovl[l].path.aepos - ovl[l].path.abpos;
-							ovl[l].flags |= OVL_DISCARD;
-						}
-
-						if (ctx->removeMultiMappers > 1)
-						{
-							memset(ctx->cover_multi_mapper + ovl[l].path.abpos, 1, ovl[l].path.aepos - ovl[l].path.abpos);
-						}
-
+					ctx->nMultiMapper++;
+					ctx->nMultiMapperBases += ovl[l].path.aepos - ovl[l].path.abpos;
 					}
 				}
 			}
 			k++;
 			j = k;
-		}
-		if (ctx->removeMultiMappers > 1 && numMultiMapper)
-		{
-			for (j = 0; j < novl; j++)
-			{
-				Overlap *o = ovl + j;
-
-				if (o->flags & OVL_DISCARD)
-					continue;
-
-				int sumMultMapBases = 0;
-				for (k = o->path.abpos; k < o->path.aepos; k++)
-				{
-					if ((int) (ctx->cover_multi_mapper[k]))
-						sumMultMapBases++;
-					else
-						break;
-				}
-
-				int anchorBases = MAX(500, ctx->nMinNonRepeatBases);
-
-				if (sumMultMapBases + anchorBases >= (o->path.aepos - o->path.abpos))
-				{
-#ifdef VERBOSE
-					printf("remove ovl, falls into multi mapper interval: %d vs %d [%d, %d] %c [%d, %d]\n", o->aread, o->bread, o->path.abpos, o->path.aepos,
-							(o->flags & OVL_COMP) ? 'c' : 'n', o->path.bbpos, o->path.bepos);
-#endif
-					o->flags |= OVL_DISCARD;
-					ctx->nMultiMapper++;
-					ctx->nMultiMapperBases += o->path.aepos - o->path.abpos;
-				}
-
-			}
 		}
 	}
 
