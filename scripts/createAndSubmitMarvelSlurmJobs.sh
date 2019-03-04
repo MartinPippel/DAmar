@@ -201,7 +201,12 @@ then
 	then
 	    STEPSIZE=":${!TMP}"
 	fi
-
+	TMP="PARTITION_${jname}"
+	if [[ -n ${!TMP} ]]
+	then
+	    SLURM_PARTITION=":${!TMP}"
+	fi
+	
 	JOBS=$(wc -l ${prefix}_${cjobid}_${jname}_${jtype}_${db}.${slurmID}.plan | awk '{print $1}')
 	log_folder=log_${prefix}_${jname}_${db}
 	mkdir -p ${log_folder}
