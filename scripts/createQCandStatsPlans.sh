@@ -98,7 +98,7 @@ function setGenomeScopeOptions()
 #type-3 [allData - MASH CONTAMINATION SCREEN] [1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
 
 
-myTypes=("01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck",
+myTypes=("01_longrangerBasic, 02_longrangerToScaff10Xinput",
 "01_supernova", "01_genomescope"
 "01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen")
 
@@ -163,7 +163,33 @@ then
 	   		echo "${LONGRANGER_PATH}/longranger basic --id=10x_${PROJECT_ID}_longrangerBasic --fastqs=${TENX_PATH}"	   					 
 		fi > qc_01_longrangerBasic_single_${RAW_DB%.db}.${slurmID}.plan
         
-        echo "$(${LONGRANGER_PATH}/longranger basic --version | head -n1)" > qc_01_longrangerBasic_single_${RAW_DB%.db}.${slurmID}.version	
+        echo "$(${LONGRANGER_PATH}/longranger basic --version | head -n1)" > qc_01_longrangerBasic_single_${RAW_DB%.db}.${slurmID}.version
+    ## 02_longrangerToScaff10Xinput
+    elif [[ ${currentStep} -eq 2 ]]
+    then
+        ### clean up plans 
+        for x in $(ls qc_02_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        longrangerOut="10x_${PROJECT_ID}_longrangerBasic/outs/barcoded.fastq.gz"
+        
+        if [[ ! -f ${longrangerOut} ]] 
+       	then 
+       		(>&2 echo "ERROR - longranger 10x data is not present at: ${longrangerOut}! Run longranger basic on 10x reads first!")
+	        exit 1
+       	fi
+       	
+   		## convert longranger single file (fastq.gz) into two separated R1 R2 files (compressed?) and add 10x-barcode to header 
+    	## ? get rid of unrecognized barcode entries ?
+       	echo "mkdir -p scaff10x" > qc_02_longrangerToScaff10Xinput_single_${RAW_DB%.db}.${slurmID}.plan
+       	echo "gunzip -c ${longrangerOut} | paste - - - - - - - - | awk '/ BX:Z:/{print $1\"_\"substr(\$2,6,16)" "\$3" "\$4" "\$5" "\$6"_"substr(\$7,6,16)" "\$8" "\$9" "\$10}' | tee >(cut -f 1-4 -d \" \" | tr \" \" \"\\n\" > scaff10x/reads-1.fq) | cut -f 5-8 -d \" \" | tr \" \" \"\\n\" > scaff10x/reads-2.fq" >> qc_02_longrangerToScaff10Xinput_single_${RAW_DB%.db}.${slurmID}.plan
+	## 03_bxcheck   
+	elif [[ ${currentStep} -eq 2 ]]
+    then
+	    (>&2 echo "03_bxcheck not implemented yet!")
+        exit 1
 	else
         (>&2 echo "step ${currentStep} in RAW_QC_TYPE ${RAW_QC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_QC_TYPE}]}")
@@ -258,7 +284,7 @@ then
         
     	setJellyfishOptions count
     	echo "mkdir -p genomescope"  > qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "${JELLYFISH_PATH}/jellyfish count ${JELLYFISH_OPT} <(zcat ${longrangerOut}) -o genomescope/${PROJECT_ID}.jf" >> qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${JELLYFISH_PATH}/jellyfish count ${JELLYFISH_OPT} <(gunzip -c ${longrangerOut}) -o genomescope/${PROJECT_ID}.jf" >> qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.plan
         setJellyfishOptions histo
         echo "${JELLYFISH_PATH}/jellyfish histo ${JELLYFISH_OPT} genomescope/${PROJECT_ID}.jf > genomescope/${PROJECT_ID}.histo" >> qc_01_genomescope_single_${RAW_DB%.db}.${slurmID}.plan
         setGenomeScopeOptions
