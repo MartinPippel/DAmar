@@ -191,7 +191,7 @@ then
 			fext="@"		
 		fi
 		
-		if [[ ! -d ${inputPath} || ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.p.fasta || ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.a.fasta ||
+		if [[ ! -d ${inputPath} || ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.fasta ||
 			 ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.p.header || ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.a.header ]]
         then 
 	     	(>&2 echo "ERROR - stats folder or assembly staticstics are missing. Run last step of touring first.")
