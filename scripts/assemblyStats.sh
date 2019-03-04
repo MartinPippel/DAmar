@@ -191,7 +191,7 @@ then
 			fext="@"		
 		fi
 		
-		inExt=$(ls ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.fasta | sed -e "s:.fasta::" | awk -F \_ '{print \$NF}')   
+		inExt=$(ls ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.fasta | sed -e "s:.fasta::" | awk -F \_ '{print $NF}')   
 		
 		if [[ ! -d ${inputPath} || ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${inExt}.fasta ||
 			 ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${inExt}.p.header || ! -f ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${inExt}.a.header ]]
