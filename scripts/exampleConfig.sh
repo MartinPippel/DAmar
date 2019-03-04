@@ -43,6 +43,8 @@ export SUPERNOVA_PATH="/projects/dazzler/pippel/prog/supernova-2.1.1"
 export ARKS_PATH="/projects/dazzler/pippel/prog/scaffolding/arks-build/bin"
 export TIGMINT_PATH="/projects/dazzler/pippel/prog/scaffolding/tigmint/bin"
 export LINKS_PATH="/projects/dazzler/pippel/prog/scaffolding/links_v1.8.6/"
+export JELLYFISH_PATH="/projects/dazzler/pippel/prog/Jellyfish/jellyfish-2.2.10/bin/"
+export GENOMESCOPE_PATH="/projects/dazzler/pippel/prog/genomescope/"
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -170,7 +172,7 @@ FIX_CORR_SUBMIT_SCRIPTS_TO=5
 COR_CONTIG_TYPE=0
 #type-0 steps: 01_createCorrectedContigDB, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11_TKcombine, 12_LAfilterCTchains, 13_LAmerge, 14_CTanalyze, 15_CTstatistics
 COR_CONTIG_SUBMIT_SCRIPTS_FROM=0
-COR_CONTIG_SUBMIT_SCRIPTS_TO=14
+COR_CONTIG_SUBMIT_SCRIPTS_TO=15
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 9 - pacbio arrow correction  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -660,7 +662,7 @@ fi
 PB_ARROW_RUNID=1                                                          # used for output directory arrow_run${PB_ARROW_RUNID}
 PB_ARROW_BAM="${DB_PATH}"   										 # directory with bam files
 PB_ARROW_OUTDIR="${FIX_FILT_OUTDIR}"
-PB_ARROW_INFASTA="${FIX_FILT_OUTDIR}/correction/contigs"		    # will be ignored if runID is greater then 1
+PB_ARROW_INFASTA="stats/contigs/m1/haploSplit/forArrow"		    # will be ignored if runID is greater then 1
 PB_ARROW_MAKEUNIQUEHEADER=0                                                 # to ensure unique header, add sequence index to fasta header 
 ### pbalign
 PB_ARROW_PBALIGN_LOGFILE=1
