@@ -204,7 +204,7 @@ then
 	TMP="PARTITION_${jname}"
 	if [[ -n ${!TMP} ]]
 	then
-	    SLURM_PARTITION=":${!TMP}"
+	    SLURM_PARTITION="${!TMP}"
 	fi
 	
 	JOBS=$(wc -l ${prefix}_${cjobid}_${jname}_${jtype}_${db}.${slurmID}.plan | awk '{print $1}')
