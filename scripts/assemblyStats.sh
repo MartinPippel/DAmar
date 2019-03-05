@@ -217,7 +217,8 @@ then
 			mv ${arrowPath} ${arrowPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
 		fi
         mkdir -p ${arrowPath}        
-
+		mkdir -p ${arrowPath}/forArrow
+				
 		## primary 
 		for z in $(cat ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.p.header)
 		do
@@ -323,6 +324,17 @@ then
         	frac=$(echo "scale=2;${arrowedBases}*100/${allBases}" | bc)        	
         	echo "allBases ${allBases} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.aT.stats
     	fi	 
+    	
+    	## prepare files for another arrow run
+    	grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta | awk '{print $1}' | sed -e 's:^>::' >   ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.header
+		grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.header
+		grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.header				
+		
+		ln -s -r ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta ${arrowPath}/forArrow/${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta
+		
+		ln -s -r -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.header ${arrowPath}/forArrow/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.header
+		ln -s -r -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.header ${arrowPath}/forArrow/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.header
+    	
 	else
 		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} not available")
   		exit 1
