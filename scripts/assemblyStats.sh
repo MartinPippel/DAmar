@@ -49,6 +49,10 @@ then
 	if [[ -d ${FIX_FILT_OUTDIR}/tour ]]
 	then
 		p=stats/contigs/${FIX_FILT_OUTDIR}/raw
+		if [[ -d ${p} ]]
+		then
+			mv ${p} ${p}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
 		mkdir -p ${p}
 		
 		if [[ -f ${p}/coverage.hist ]]
@@ -101,6 +105,10 @@ then
 	if [[ -d ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs ]]
 	then
 		p=stats/contigs/${FIX_FILT_OUTDIR}/corr
+		if [[ -d ${p} ]]
+		then
+			mv ${p} ${p}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
 		mkdir -p ${p}
 		
 		for y in ${FIX_FILT_OUTDIR}/${COR_DIR}/contigs/*.fasta
@@ -126,6 +134,10 @@ then
 	if [[ -d ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${COR_CONTIG_CTANALYZE_DIR}/classified ]]
 	then
 		p=stats/contigs/${FIX_FILT_OUTDIR}/haploSplit
+		if [[ -d ${p} ]]
+		then
+			mv ${p} ${p}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
 		mkdir -p ${p}
 		mkdir -p ${p}/forArrow
 		
@@ -200,6 +212,10 @@ then
     	    exit 1        			
         fi
         
+        if [[ -d ${arrowPath} ]]
+		then
+			mv ${arrowPath} ${arrowPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
         mkdir -p ${arrowPath}        
 
 		## primary 
@@ -318,6 +334,10 @@ then
 		freebayesPath=stats/contigs/${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}
 		fext="f"
 		
+		if [[ -d ${freebayesPath} ]]
+		then
+			mv ${freebayesPath} ${freebayesPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
 		mkdir -p ${freebayesPath}
 		
 		fname=""
@@ -350,6 +370,10 @@ then
 		scaff10xPath=stats/contigs/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}
 		fext="x"
 		
+		if [[ -d ${scaff10xPath} ]]
+		then
+			mv ${scaff10xPath} ${scaff10xPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
 		mkdir -p ${scaff10xPath}
 				
 		if [[ ${SC_10X_TYPE} -eq 0 ]]
@@ -404,7 +428,11 @@ then
 		
 		prevExt=$(basename ${SC_BIONANO_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
 		cset=$(basename ${SC_BIONANO_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
-				
+
+		if [[ -d ${bionanoPath} ]]
+		then
+			mv ${bionanoPath} ${bionanoPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi				
 		mkdir -p ${bionanoPath}
 		
 		PROJECT_ID_CAPS=$(echo ${PROJECT_ID} | awk '{print toupper($0)}')
@@ -600,6 +628,10 @@ then
 		cset=$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF)}')
 		fext="s"
 				
+		if [[ -d ${hicSalsaPath} ]]
+		then
+			mv ${hicSalsaPath} ${hicSalsaPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
 		mkdir -p ${hicSalsaPath}
 		
 		fname="${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out/scaffolds_FINAL.fasta"
