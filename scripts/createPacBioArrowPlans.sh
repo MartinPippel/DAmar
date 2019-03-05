@@ -96,82 +96,37 @@ then
         	exit 1
    		fi
    		
-		# first run: evaluate variable: PB_ARROW_INFASTA and find there all *.fasta files  
-   		if [[ ${PB_ARROW_RUNID} -eq 1 ]]
-   		then
-	   		# sanity checks
-	   		numFiles=0 
-	   		for x in ${PB_ARROW_INFASTA}/*.fasta   		
-	   		do
-	   			if [[ ! -f ${x} || ! -s ${x} ]]
-	   			then
-	   				(>&2 echo "WARNING - file ${x} not available or empty")
-	   			else
-	   				numFiles=$((${numFiles}+1))
-	   			fi      						
-	   		done
-	
-			if [[ ${numFiles} -eq 0 ]]
-			then
-				(>&2 echo "ERROR - no input fasta found")
-		       	exit 1	
-			fi
-			
-			if [[ ! -d ${PB_ARROW_OUTDIR} ]] 
-			then
-				(>&2 echo "ERROR - Variable ${PB_ARROW_OUTDIR} is not set or cannot be accessed")
-	        	exit 1
-			fi
-			
-			echo "if [[ -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]; then mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}" > arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
-			if [[ -n ${PB_ARROW_MAKEUNIQUEHEADER} && ${PB_ARROW_MAKEUNIQUEHEADER} -eq 1 ]]
-			then
-				echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
-			else
-				echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
-			fi
-		# for all other runs try to find all previously created (i.e. current runID - 1) arrow corrected fa files 
+   		# sanity checks
+   		numFiles=0 
+   		for x in ${PB_ARROW_INFASTA}/*.fasta   		
+   		do
+   			if [[ ! -f ${x} || ! -s ${x} ]]
+   			then
+   				(>&2 echo "WARNING - file ${x} not available or empty")
+   			else
+   				numFiles=$((${numFiles}+1))
+   			fi      						
+   		done
+
+		if [[ ${numFiles} -eq 0 ]]
+		then
+			(>&2 echo "ERROR - no input fasta found")
+	       	exit 1	
+		fi
+		
+		if [[ ! -d ${PB_ARROW_OUTDIR} ]] 
+		then
+			(>&2 echo "ERROR - Variable ${PB_ARROW_OUTDIR} is not set or cannot be accessed")
+        	exit 1
+		fi
+		
+		echo "if [[ -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]; then mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}" > arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+		if [[ -n ${PB_ARROW_MAKEUNIQUEHEADER} && ${PB_ARROW_MAKEUNIQUEHEADER} -eq 1 ]]
+		then
+			echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		else
-			prevRunId=$((${PB_ARROW_RUNID}-1))
-			
-			if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${prevRunId} ]] 
-			then
-				(>&2 echo "ERROR - Cannot access directory from previuos arrow run: ${PB_ARROW_OUTDIR}/arrow_${prevRunId}")
-	        	exit 1
-			fi
-				
-			if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/arrow_in.header ]] 
-			then 
-				(>&2 echo "ERROR - Cannot access header file ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/arrow_in.header from previuos arrow run!")
-	        	exit 1
-			fi
-			
-			# sanity checks
-   			numFiles=0 
-	   		for x in $(cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/arrow_in.header)   		
-	   		do
-	   			if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/${x}/ALL_${x}.arrow.fa || ! -s ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/${x}/ALL_${x}.arrow.fa ]]
-	   			then
-	   				(>&2 echo "WARNING - file ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/${x}/ALL_${x}.arrow.fa not available or empty")
-	   			else
-	   				numFiles=$((${numFiles}+1))
-	   			fi      						
-	   		done
-	
-			if [[ ${numFiles} -eq 0 ]]
-			then
-			(>&2 echo "ERROR - Could not find any previously Arrow corrected contigs!")
-		       	exit 1	
-			fi
-			
-			echo "if [[ -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]; then mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}" > arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
-			if [[ -n ${PB_ARROW_MAKEUNIQUEHEADER} && ${PB_ARROW_MAKEUNIQUEHEADER} -eq 1 ]]
-			then
-				echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/arrow_in.header); do cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/\${x}/ALL_\${x}.arrow.fa; done | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan				
-			else
-				echo "for x in \$(cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/arrow_in.header); do cat ${PB_ARROW_OUTDIR}/arrow_${prevRunId}/\${x}/ALL_\${x}.arrow.fa; done | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
-			fi
-		fi		
+			echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+		fi
 		echo "sawriter ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		echo "samtools faidx ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		echo "grep -e \">\" ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta | sed -e 's:^>::' > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
