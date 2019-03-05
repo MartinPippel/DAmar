@@ -160,7 +160,7 @@ then
 	   			echo "mv 10x_${PROJECT_ID}_longrangerBasic 10x_${PROJECT_ID}_longrangerBasic_$(date '+%Y-%m-%d_%H-%M-%S')"
 	   		fi
 	   		
-	   		echo "${LONGRANGER_PATH}/longranger basic --id=10x_${PROJECT_ID}_longrangerBasic --fastqs=${TENX_PATH}"	   					 
+	   		echo "${LONGRANGER_PATH}/longranger basic --id=10x_${PROJECT_ID}_longrangerBasic --fastqs=${TENX_PATH} --sample=${PROJECT_ID}"	   					 
 		fi > qc_01_longrangerBasic_single_${RAW_DB%.db}.${slurmID}.plan
         
         echo "$(${LONGRANGER_PATH}/longranger basic --version | head -n1)" > qc_01_longrangerBasic_single_${RAW_DB%.db}.${slurmID}.version
