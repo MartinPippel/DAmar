@@ -457,8 +457,13 @@ then
    		fi
         
         
-        echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME}" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
-        echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME}" >> freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
+        if [[ ! -d ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/refdata-${REFNAME} ]]
+        then
+        	echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../../ " > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
+    	else 
+    		echo "[WARNING] Using previously created reference file ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/refdata-${REFNAME}. Please remove that folder to rerun longranger mkref"
+    	fi
+        echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME} && cd ../../../" >> freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1)" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
         echo "$(${LONGRANGER_PATH}/longranger align --version | head -n1)" >> freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
