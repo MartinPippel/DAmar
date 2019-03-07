@@ -96,10 +96,10 @@ then
     exit 1
 fi
 
-# Type: 0 [bwa mapping] - 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7-FBstatistics 
-# Type: 1 [longranger mapping] - 01_FBprepareInput, 02_FBlongrangerAlign, 4-FBfreebayes, 5-FBbcftools
-myTypes=("1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7-FBstatistics", 
-"01_FBprepareInput, 02_FBlongrangerAlign, 4-FBfreebayes, 5-FBbcftools")
+# Type: 0 [bwa mapping] - 01_FBprepareInput, 02_FBfastp, 03_FBbwa, 04_FBmarkDuplicates, 05_FBfreebayes, 06_FBconsensus, 07_FBstatistics 
+# Type: 1 [longranger mapping] - 01_FBprepareInput, 02_FBlongrangerAlign, 03_FBfreebayes, 04_FBconsensus, 05_FBstatistics
+myTypes=("01_FBprepareInput, 02_FBfastp, 03_FBbwa, 04_FBmarkDuplicates, 05_FBfreebayes, 06_FBconsensus, 07_FBstatistics", 
+"01_FBprepareInput, 02_FBlongrangerAlign, 03_FBfreebayes, 04_FBconsensus, 05_FBstatistics")
 if [[ ${CT_FREEBAYES_TYPE} -eq 0 ]]
 then 
     ### 1-FBprepareInput
@@ -359,7 +359,7 @@ then
 
 		echo "freebayes $(${PACBIO_BASE_ENV} && freebayes --version && ${PACBIO_BASE_ENV_DEACT})" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
 		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
-   	### 6-FBbcftools
+   	### 06_FBconsensus
     elif [[ ${currentStep} -eq 6 ]]
     then
         ### clean up plans 
@@ -401,7 +401,7 @@ then
             rm $x
         done
         
-            	### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+        ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
     	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
         then 
         	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
@@ -464,20 +464,121 @@ then
     	 
         if [[ ! -d ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/refdata-${REFNAME%.fasta} ]]
         then
-        	echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../../ " > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
+        	echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../../ " 
+        	echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	else 
     		echo "[WARNING] Using previously created reference file ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/refdata-${REFNAME}. Please remove that folder to rerun longranger mkref"
-    	fi
-        echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../" >> freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan        
+    		echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+    	fi > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan                
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1)" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
         echo "$(${LONGRANGER_PATH}/longranger align --version | head -n1)" >> freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
-        
-        
-	
 	### 03_FBfreebayes
-	### 04-FBbcftools
+	elif [[ ${currentStep} -eq 3 ]]
+    then
+	    ### clean up plans 
+        for x in $(ls freebayes_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+		REFNAME=$(basename ${CT_FREEBAYES_REFFASTA})
+        
+        if [[ ! -f "${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/${REFNAME}" ]]
+        then
+    		(>&2 echo "ERROR - cannot find reference fasta file \"${REFNAME}\" in dir \"${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref\"")
+        	exit 1
+   		fi
+   		
+   		if [[ ! -d "${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams!")
+        	exit 1
+   		fi
+        
+        outdir="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes"
+   		if [[ ! -d "${outdir}" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${outdir}!")
+        	exit 1
+   		fi
+   	
+   	
+   		ref=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa
+   		
+   		if [[ ! -f "${ref}.fai" ]]
+        then
+        	(>&2 echo "ERROR - cannot reference fasta index file ${ref}.fai!")
+        	exit 1
+   		fi
+   		
+   		bam=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/10x_${PROJECT_ID}_longrangerAlign/outs/possorted_bam.bam
+   		if [[ ! -f ${bam} ]]
+   		then 
+   			(>&2 echo "ERROR - cannot final duplicate marked bam file: ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam!")
+        	exit 1
+   		fi 
+   		
+   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} '{print "freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ou -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.plan
+
+		echo "freebayes $(${PACBIO_BASE_ENV} && freebayes --version && ${PACBIO_BASE_ENV_DEACT})" > freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.version
+		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.version   
+	### 04-FBconsensus
+	elif [[ ${currentStep} -eq 4 ]]
+    then
+		### clean up plans 
+        for x in $(ls freebayes_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+		ref=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa
+   		
+   		if [[ ! -f "${ref}.fai" ]]
+        then
+        	(>&2 echo "ERROR - cannot reference fasta index file ${ref}.fai!")
+        	exit 1
+   		fi
+   		
+   		indir="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes/"
+   		if [[ ! -d "${indir}" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${indir}!")
+        	exit 1
+   		fi
+   		
+   		outdir="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/"
+        
+    	# create list of bcf files, same order as in ref.fai
+        echo "awk -v d=\"${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes/\" '{print d\$1\":1-\"\$2\".bcf\"}' ${ref}.fai > ${outdir}/${PROJECT_ID}_10x_concatList.txt" > freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
+        echo "bcftools concat -nf ${outdir}/${PROJECT_ID}_10x_concatList.txt | bcftools view -Ob -e'type=\"ref\"' | bcftools norm -Ob -f $ref -o ${outdir}/${PROJECT_ID}_10x.bcf" >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
+        echo "bcftools index ${outdir}/${PROJECT_ID}_10x.bcf" >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
+        echo "bcftools consensus -i'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Hla -f ${ref} ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.fasta" >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
+      
+		echo "Num. bases affected $(bcftools view -H -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Ov ${outdir}/${PROJECT_ID}_10x.bcf | awk -F \"\\t\" '{print \$4\"\\t\"\$5}' | awk '{lenA=length(\$1); lenB=length(\$2); if (lenA < lenB ) {sum+=lenB-lenA} else if ( lenA > lenB ) { sum+=lenA-lenB } else {sum+=lenA}} END {print sum}') > ${outdir}/${PROJECT_ID}_10x.numvar" >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
+		echo "bcftools view -i 'QUAL>1 && (GT="AA" || GT="Aa")' -Oz  ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.changes.vcf.gz" >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
+            
+      	echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.version
 	### 05-FBstatistics
+	elif [[ ${currentStep} -eq 5 ]]
+    then
+		### clean up plans 
+        for x in $(ls freebayes_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+    	
+		### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+    	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+        then 
+        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+    	else
+        	cwd=$(pwd)
+        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+    	fi
+    	### create assemblyStats plan 
+    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 11" > freebayes_05_FBstatistics_single_${CONT_DB}.${slurmID}.plan
+    	git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > freebayes_05_FBstatistics_single_${CONT_DB}.${slurmID}.version
 	else
         (>&2 echo "step ${currentStep} in CT_FREEBAYES_TYPE ${CT_FREEBAYES_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_FREEBAYES_TYPE}]}")
