@@ -456,7 +456,12 @@ then
         	exit 1
    		fi
         
-        
+		if [[ ! -d ${TENX_PATH} ]]
+        then 
+        	(>&2 echo "ERROR - cannot find 10x reads. Variable TENX_PATH has to be set to a directoty containing 10x reads.")
+        	exit 1
+    	fi
+    	 
         if [[ ! -d ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/refdata-${REFNAME} ]]
         then
         	echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../../ " > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
