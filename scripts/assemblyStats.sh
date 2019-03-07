@@ -330,7 +330,7 @@ then
 		grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.header
 		grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.header				
 		
-		ln -s -r ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta ${arrowPath}/forArrow/${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta
+		ln -s -r -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta ${arrowPath}/forArrow/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta
 		
 		ln -s -r -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.header ${arrowPath}/forArrow/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.p.header
 		ln -s -r -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.header ${arrowPath}/forArrow/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.a.header
