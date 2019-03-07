@@ -184,7 +184,7 @@ then
    		## convert longranger single file (fastq.gz) into two separated R1 R2 files (compressed?) and add 10x-barcode to header 
     	## ? get rid of unrecognized barcode entries ?
        	echo "mkdir -p scaff10x" > qc_02_longrangerToScaff10Xinput_single_${RAW_DB%.db}.${slurmID}.plan
-       	echo "gunzip -c ${longrangerOut} | paste - - - - - - - - | awk '/ BX:Z:/{print \$1\"_\"substr(\$2,6,16)" "\$3" "\$4" "\$5" "\$6\"_\"substr(\$7,6,16)\" \"\$8\" \"\$9\" \"\$10}' | tee >(cut -f 1-4 -d \" \" | tr \" \" \"\\n\" > scaff10x/reads-1.fq) | cut -f 5-8 -d \" \" | tr \" \" \"\\n\" > scaff10x/reads-2.fq" >> qc_02_longrangerToScaff10Xinput_single_${RAW_DB%.db}.${slurmID}.plan
+       	echo "gunzip -c ${longrangerOut} | paste - - - - - - - - | awk '/ BX:Z:/{print \$1\"_\"substr(\$2,6,16)\" \"\$3\" \"\$4\" \"\$5\" \"\$6\"_\"substr(\$7,6,16)\" \"\$8\" \"\$9\" \"\$10}' | tee >(cut -f 1-4 -d \" \" | tr \" \" \"\\n\" > scaff10x/reads-1.fq) | cut -f 5-8 -d \" \" | tr \" \" \"\\n\" > scaff10x/reads-2.fq" >> qc_02_longrangerToScaff10Xinput_single_${RAW_DB%.db}.${slurmID}.plan
 	## 03_bxcheck   
 	elif [[ ${currentStep} -eq 2 ]]
     then
