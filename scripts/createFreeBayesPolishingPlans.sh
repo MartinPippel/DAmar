@@ -417,7 +417,7 @@ then
         (>&2 echo "valid steps are: ${myTypes[${CT_FREEBAYES_TYPE}]}")
         exit 1            
     fi    
-elif [[ ${CT_FREEBAYES_TYPE} -eq 0 ]]
+elif [[ ${CT_FREEBAYES_TYPE} -eq 1 ]]
 then 
     ### 01_FBprepareInput
     if [[ ${currentStep} -eq 1 ]]
@@ -440,7 +440,7 @@ then
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "ln -s -r ${CT_FREEBAYES_REFFASTA} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 	### 02_FBlongrangerAlign
-    if [[ ${currentStep} -eq 2 ]]
+    elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
         for x in $(ls freebayes_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
@@ -460,8 +460,8 @@ then
         echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME}" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
         echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME}" >> freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
         
-        echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1 )" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
-        echo "$(${LONGRANGER_PATH}/longranger align --version | head -n1 )" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
+        echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1)" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
+        echo "$(${LONGRANGER_PATH}/longranger align --version | head -n1)" >> freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
         
         
 	
