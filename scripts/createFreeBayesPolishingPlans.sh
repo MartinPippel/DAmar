@@ -96,8 +96,8 @@ then
     exit 1
 fi
 
-# Type: 0 - for 10x data 
-# Type: 1 - for Illuimina PE data
+# Type: 0 [bwa mapping] - 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7-FBstatistics 
+# Type: 1 [longranger mapping] - 01_FBprepareInput, 02_FBlongrangerAlign, 4-FBfreebayes, 5-FBbcftools
 myTypes=("1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7-FBstatistics", 
 "01_FBprepareInput, 02_FBlongrangerAlign, 4-FBfreebayes, 5-FBbcftools")
 if [[ ${CT_FREEBAYES_TYPE} -eq 0 ]]
@@ -435,7 +435,6 @@ then
    		fi
    		
    		echo "if [[ -d ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} ]]; then mv ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}" > freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
@@ -459,8 +458,10 @@ then
         
         
         echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME}" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
-        echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1 | tr -d \"()\")" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
+        echo "cd ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME}" >> freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.plan
         
+        echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1 )" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
+        echo "$(${LONGRANGER_PATH}/longranger align --version | head -n1 )" > freebayes_02_FBlongrangerAlign_single_${CONT_DB}.${slurmID}.version
         
         
 	
