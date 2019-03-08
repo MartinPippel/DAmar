@@ -1769,6 +1769,11 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 		if (removeAlnBases * 100.0 / cumOverallBases < MaxRemovedAlnBasesPerc && numIncomingReads - numRemovedIncomingReads >= MinTipCov
 				&& numLeavingReads - numRemovedLeavingReads >= MinTipCov)
 		{
+			if (ctx->fileOutDiscardedOverlaps)
+			{
+				fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", so->aread, so->bread);
+			}
+
 			so->flags |= OVL_DISCARD | OVL_DIFF;
 			ctx->nFilteredDiffs += 1;
 			if (ctx->nVerbose)
