@@ -496,7 +496,7 @@ then
         	exit 1
    		fi
         
-        outdir="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes"
+        outdir="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes/"
    		if [[ ! -d "${outdir}" ]]
         then
         	(>&2 echo "ERROR - cannot access directory ${outdir}!")
