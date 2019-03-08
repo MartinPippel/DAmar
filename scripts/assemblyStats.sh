@@ -218,20 +218,22 @@ then
 		fi
         mkdir -p ${arrowPath}        
 		mkdir -p ${arrowPath}/forArrow
-				
+	
+		#not valid anymore
+		arrowExtension=""
+#		a=1
+#		while [[ $a -lt ${PB_ARROW_RUNID} ]]
+#		do
+#			arrowExtension="${arrowExtension}_arrow"
+#			a=$(($a+1))	
+#		done
+					
 		## primary 
 		for z in $(cat ${inputPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_?.p.header)
 		do
 			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
 			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
 			
-			arrowExtension=""
-			a=1
-			while [[ $a -lt ${PB_ARROW_RUNID} ]]
-			do
-				arrowExtension="${arrowExtension}_arrow"
-				a=$(($a+1))	
-			done
 			
 			if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}${arrowExtension} ]]
 			then 
@@ -253,14 +255,6 @@ then
 		do
 			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
 			pathID=$(echo ${z} | awk -F \_ '{print $NF}')
-			
-			arrowExtension=""
-			a=1
-			while [[ $a -lt ${PB_ARROW_RUNID} ]]
-			do
-				arrowExtension="${arrowExtension}_arrow"
-				a=$(($a+1))	
-			done
 			
 			if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}${arrowExtension} ]]
 			then 
@@ -285,7 +279,7 @@ then
         	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.stats
         	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
         	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgt" | wc -m)
-        	frac=$(echo "scale=2;${arrowedBases}*100/\${allBases}" | bc)
+        	frac=$(echo "scale=2;${arrowedBases}*100/${allBases}" | bc)
         	echo "allBases ${allBases} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.stats
         	${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.T.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.T.failed.fasta
         	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.T.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${fext}.T.stats
