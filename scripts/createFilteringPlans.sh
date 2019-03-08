@@ -232,17 +232,9 @@ function setLAfilterOptions()
     fi            
     if [[ -n ${FIX_FILT_LAFILTER_MULTIMAPPER} && ${FIX_FILT_LAFILTER_MULTIMAPPER} -gt 0 ]]
     then
-        if [[ ${FIX_FILT_LAFILTER_MULTIMAPPER} -eq 1 ]]
-        then
-            FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -w"
-        else
-            FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -W"
-        fi
+        FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -w"
     fi
-    if [[ -n ${FIX_FILT_LAFILTER_REMPERCWORSTALN} && ${FIX_FILT_LAFILTER_REMPERCWORSTALN} -gt 0 ]]
-    then
-        FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -Z ${FIX_FILT_LAFILTER_REMPERCWORSTALN}"
-    fi                
+                
     if [[ -n ${FIX_FILT_LAFILTER_EXCLUDEREADS} || -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
     then
         if [[ -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
@@ -469,6 +461,11 @@ then
                     then
                         addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round1.${x}.txt"
                     fi
+                    if [[ -n ${FIX_FILT_LAFILTER_REMPERCWORSTALN} && ${FIX_FILT_LAFILTER_REMPERCWORSTALN} -gt 0 ]]
+					then
+    					addOpt="${addOpt} -Z ${FIX_FILT_LAFILTER_REMPERCWORSTALN}"
+					fi
+                    
                     echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R1.las"
                 done > filt.round1_02_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
             # last filter job
@@ -476,10 +473,10 @@ then
             then
                 # create merged set of discarded ovls 
                 cat ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt
-
+					
                 for x in $(seq 1 ${fixblocks})
                 do 
-                    addOpt=""
+                	addOpt=""
                     if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
                     then
                         addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt"
