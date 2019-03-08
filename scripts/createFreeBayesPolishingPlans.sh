@@ -532,11 +532,13 @@ then
             rm $x
         done
         
+        REFNAME=$(basename ${CT_FREEBAYES_REFFASTA})
+        
 		ref=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa
    		
    		if [[ ! -f "${ref}.fai" ]]
         then
-        	(>&2 echo "ERROR - cannot reference fasta index file ${ref}.fai!")
+        (>&2 echo "ERROR - cannot find reference fasta index file ${ref}.fai!")
         	exit 1
    		fi
    		
