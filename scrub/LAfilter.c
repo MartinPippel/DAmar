@@ -2499,8 +2499,7 @@ static void usage()
 	fprintf(stderr, "         -Y ... merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
 	fprintf(stderr, "         -a ... write discarded overlaps that may not symmetrically removed to file\n");
 	fprintf(stderr, "         -A ... read file of discarded overlaps and remove them symmetrically\n");
-	fprintf(stderr, "         -w ... remove multi-mapper \n");
-	fprintf(stderr, "         -W ... -w + remove overlaps that fall into multi-mapping alignment intervals\n");
+	fprintf(stderr, "         -w ... remove multi-mapper overlaps within the same read\n");
 	fprintf(stderr,
 			"         -Z ... remove at most -Z percent of the worst alignments. Set -d INT to avoid loss of good alignments. Set -z INT to avoid loss of contiguity !\n");
 	fprintf(stderr,
@@ -2597,7 +2596,7 @@ int main(int argc, char* argv[])
 	}
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "TvLpwWy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:")) != -1)
+	while ((c = getopt(argc, argv, "TvLpwy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:")) != -1)
 	{
 		switch (c)
 		{
@@ -2639,10 +2638,6 @@ int main(int argc, char* argv[])
 
 		case 'w':
 			fctx.removeMultiMappers = 1;
-			break;
-
-		case 'W':
-			fctx.removeMultiMappers += 2;
 			break;
 
 		case 'z':
