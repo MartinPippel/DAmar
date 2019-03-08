@@ -194,7 +194,7 @@ static int handler_coverage( void* _ctx, Overlap* ovl, int novl )
             continue;
         }
 
-        bases += ovl[ i ].path.bepos - ovl[ i ].path.bbpos;
+        bases += ovl[ i ].path.aepos - ovl[ i ].path.abpos;
 
         memset( ctx->cov_read_active + ovl[ i ].path.abpos, 1, ovl[ i ].path.aepos - ovl[ i ].path.abpos );
     }
