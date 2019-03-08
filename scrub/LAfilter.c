@@ -2350,40 +2350,15 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		if (ctx->trackTrim)
 			get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimBeg, &trimEnd);
 
-		int entercov = 0;
-		int leavecov = 0;
-		int bases = 0;
-
-		char * cov_read_active = malloc(DB_READ_MAXLEN( ctx->db ));
-		bzero( cov_read_active, DB_READ_MAXLEN( ctx->db ) );
-
-
-    for ( j = 0; j < novl; j++ )
-    {
-    	Overlap* ovl_j = ovl + j;
-
-			if (ovl_j->flags & OVL_DISCARD)
-				continue;
-
-			if (ovl_j->path.abpos <= trimBeg)
-				entercov++;
-
-			if (ovl_j->path.aepos >= trimEnd)
-				leavecov++;
-
-
-    	bases += ovl_j->path.aepos - ovl_j->path.abpos;
-      memset( cov_read_active + ovl_j->path.abpos, 1, ovl_j->path.aepos - ovl_j->path.abpos );
-    }
-
-    int active = 0;
-    for ( j = trimBeg; j < trimEnd; j++ )
-    {
-    	  active += cov_read_active[ j ];
-    }
-
-		if (bases / (trimEnd - trimBeg) <= ctx->removeLowCoverageOverlaps || (leavecov && entercov && (trimEnd-trimBeg) - active > ctx->nMaxUnalignedBases) )
+		if (trimEnd - trimBeg)
 		{
+			int entercov = 0;
+			int leavecov = 0;
+			int bases = 0;
+
+			char * cov_read_active = malloc(DB_READ_MAXLEN(ctx->db));
+			bzero(cov_read_active, DB_READ_MAXLEN(ctx->db));
+
 			for (j = 0; j < novl; j++)
 			{
 				Overlap* ovl_j = ovl + j;
@@ -2391,15 +2366,41 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				if (ovl_j->flags & OVL_DISCARD)
 					continue;
 
-				ovl_j->flags |= OVL_DISCARD;
-				ctx->nLowCovALn++;
-				if (ctx->fileOutDiscardedOverlaps)
+				if (ovl_j->path.abpos <= trimBeg)
+					entercov++;
+
+				if (ovl_j->path.aepos >= trimEnd)
+					leavecov++;
+
+				bases += ovl_j->path.aepos - ovl_j->path.abpos;
+				memset(cov_read_active + ovl_j->path.abpos, 1, ovl_j->path.aepos - ovl_j->path.abpos);
+			}
+
+			int active = 0;
+			for (j = trimBeg; j < trimEnd; j++)
+			{
+				active += cov_read_active[j];
+			}
+
+			if (bases / (trimEnd - trimBeg) <= ctx->removeLowCoverageOverlaps || (leavecov && entercov && (trimEnd - trimBeg) - active > ctx->nMaxUnalignedBases))
+			{
+				for (j = 0; j < novl; j++)
 				{
-					fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", ovl_j->aread, ovl_j->bread);
+					Overlap* ovl_j = ovl + j;
+
+					if (ovl_j->flags & OVL_DISCARD)
+						continue;
+
+					ovl_j->flags |= OVL_DISCARD;
+					ctx->nLowCovALn++;
+					if (ctx->fileOutDiscardedOverlaps)
+					{
+						fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", ovl_j->aread, ovl_j->bread);
+					}
 				}
 			}
+			free(cov_read_active);
 		}
-		free(cov_read_active);
 	}
 
 	// find repeat modules and rescue overlaps
