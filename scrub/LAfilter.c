@@ -1224,7 +1224,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 			for (i = 0; i < ctx->curItv; i++)
 			{
 				anchorBases += intersect(ovl->path.abpos, ovl->path.aepos, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end);
-				if(ovl->aread == 8221478)
+				if (ovl->aread == 8221478)
 					printf("repeat %d %d [%d, %d] %d\n", ovl->aread, ovl->bread, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end, anchorBases);
 
 			}
@@ -1876,7 +1876,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			rb2 = repeats_data[b];
 			re2 = repeats_data[b + 1];
 
-			if(rb2 - re1 > MINANCHOR)
+			if (rb2 - re1 > MINANCHOR)
 			{
 				ctx->uniqIntervals[ctx->curItv].beg = re1;
 				ctx->uniqIntervals[ctx->curItv].end = rb2;
@@ -1948,7 +1948,6 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		}
 		printf(" sum n%d b%d\n", i, anchorbases);
 
-
 		// update unique intervals based on low complexity and tandem repeat
 		// todo hardcoded values !!!
 		int predust, dust, postdust, longestDust, longestDustl, longestDustr;
@@ -2007,7 +2006,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	{
 		anchorItv *a = ctx->uniqIntervals + i;
 		if (a->flag & ANCHOR_INVALID)
-				continue;
+			continue;
 
 		printf(" %d-%d-%d", a->beg, a->end, a->flag);
 		anchorbases += a->end - a->beg;
@@ -2082,8 +2081,8 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			ctx->uniqIntervals[ctx->curItv].end = rb;
 
 			ctx->uniqIntervals[i].beg = re;
-			printf(" decrease cutItv_%d: [%d, %d] append new interval %d [%d, %d] f%d\n", i, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end,
-					ctx->curItv, ctx->uniqIntervals[ctx->curItv].beg, ctx->uniqIntervals[ctx->curItv].end, ctx->uniqIntervals[ctx->curItv].flag);
+			printf(" decrease cutItv_%d: [%d, %d] append new interval %d [%d, %d] f%d\n", i, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end, ctx->curItv,
+					ctx->uniqIntervals[ctx->curItv].beg, ctx->uniqIntervals[ctx->curItv].end, ctx->uniqIntervals[ctx->curItv].flag);
 			ctx->curItv++;
 
 			b += 2;
@@ -2102,7 +2101,6 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		anchorbases += a->end - a->beg;
 	}
 	printf(" sum n%d b%d\n", i, anchorbases);
-
 
 	qsort(ctx->uniqIntervals, ctx->curItv, sizeof(anchorItv), cmp_aIvl);
 	for (i = 0; i < ctx->curItv; i++)
@@ -2125,7 +2123,6 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 		anchorbases += a->end - a->beg;
 	}
 	printf(" sum n%d b%d\n", i, anchorbases);
-
 
 	// merge tips if required, i.e. if there is any repeat annotation within the first/last 2k?! sequence
 	if (ctx->rp_mergeTips && ctx->curItv > 0)
@@ -2307,31 +2304,38 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						if (o2->flags & OVL_STITCH)
 							continue;
 
-						if(contained(o1->path.abpos, o1->path.aepos, o2->path.abpos, o2->path.aepos) || contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) ||
-								contained(o1->path.bbpos, o1->path.bepos, o2->path.bbpos, o2->path.bepos) || contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos))
+						if (contained(o1->path.abpos, o1->path.aepos, o2->path.abpos, o2->path.aepos)
+								|| contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos)
+								|| contained(o1->path.bbpos, o1->path.bepos, o2->path.bbpos, o2->path.bepos)
+								|| contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos))
 						{
 							foundMultiMapper = 1;
 							break;
 						}
 					}
 				}
-				if(foundMultiMapper)
+				if (foundMultiMapper)
 				{
 					for (l = j; l <= k; l++)
 					{
 						ovl[l].flags |= OVL_DISCARD;
 #ifdef VERBOSE
-					printf("remove ovl, falls into multi mapper interval: %d vs %d [%d, %d] %c [%d, %d]\n", ovl[l].aread, ovl[l].bread, ovl[l].path.abpos, ovl[l].path.aepos,
-							(ovl[l].flags & OVL_COMP) ? 'c' : 'n', ovl[l].path.bbpos, ovl[l].path.bepos);
+						printf("remove ovl, falls into multi mapper interval: %d vs %d [%d, %d] %c [%d, %d]\n", ovl[l].aread, ovl[l].bread, ovl[l].path.abpos,
+								ovl[l].path.aepos, (ovl[l].flags & OVL_COMP) ? 'c' : 'n', ovl[l].path.bbpos, ovl[l].path.bepos);
 #endif
-					ctx->nMultiMapper++;
-					ctx->nMultiMapperBases += ovl[l].path.aepos - ovl[l].path.abpos;
+						ctx->nMultiMapper++;
+						ctx->nMultiMapperBases += ovl[l].path.aepos - ovl[l].path.abpos;
 					}
 				}
 			}
 			k++;
 			j = k;
 		}
+	}
+
+	if (ctx->remUpToXPercAln)
+	{
+		removeWorstAlignments(ctx, ovl, novl);
 	}
 
 	// detect weird overlaps and discard them, i.e. those that are obviously wrong but couldn't be removed with repeat annotation or local alignment filter
@@ -2348,10 +2352,15 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 		int entercov = 0;
 		int leavecov = 0;
+		int bases = 0;
 
-		for (j = 0; j < novl; j++)
-		{
-			Overlap* ovl_j = ovl + j;
+		char * cov_read_active = malloc(DB_READ_MAXLEN( ctx->db ));
+		bzero( cov_read_active, DB_READ_MAXLEN( ctx->db ) );
+
+
+    for ( j = 0; j < novl; j++ )
+    {
+    	Overlap* ovl_j = ovl + j;
 
 			if (ovl_j->flags & OVL_DISCARD)
 				continue;
@@ -2362,19 +2371,19 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			if (ovl_j->path.aepos >= trimEnd)
 				leavecov++;
 
-//			if (ovl_j->aread == 142600)
-//			{
-//				printf("check %d vs %d inA [%d, %d] inB [%d, %d] trimA [%d, %d] >> %d  --- %d << \n", ovl_j->aread, ovl_j->bread, ovl_j->path.abpos,
-//						ovl_j->path.aepos, ovl_j->path.bbpos, ovl_j->path.bepos, trimBeg, trimEnd, entercov, leavecov);
-//			}
 
-		}
+    	bases += ovl_j->path.aepos - ovl_j->path.abpos;
+      memset( cov_read_active + ovl_j->path.abpos, 1, ovl_j->path.aepos - ovl_j->path.abpos );
+    }
 
-		// actually if this happens the whole aread should be discarded,
-		// because it leaves regions in the aread that have no overlaps at all (depends on -u flag, number of unaligned bases, which is 0 by default)
-		if (entercov && entercov < ctx->removeLowCoverageOverlaps)
+    int active = 0;
+    for ( j = trimBeg; j < trimEnd; j++ )
+    {
+    	  active += cov_read_active[ j ];
+    }
+
+		if (bases / (trimEnd - trimBeg) <= ctx->removeLowCoverageOverlaps || (leavecov && entercov && (trimEnd-trimBeg) - active > ctx->nMaxUnalignedBases) )
 		{
-//			printf("found entercov %d < %d: aread %d: remove", entercov, ctx->removeLowCoverageOverlaps, ovl->aread);
 			for (j = 0; j < novl; j++)
 			{
 				Overlap* ovl_j = ovl + j;
@@ -2382,48 +2391,15 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				if (ovl_j->flags & OVL_DISCARD)
 					continue;
 
-				if (ovl_j->path.abpos <= trimBeg)
+				ovl_j->flags |= OVL_DISCARD;
+				ctx->nLowCovALn++;
+				if (ctx->fileOutDiscardedOverlaps)
 				{
-//					printf(" %d", ovl_j->bread);
-					ovl_j->flags |= OVL_DISCARD;
-					ctx->nLowCovALn++;
-					if (ctx->fileOutDiscardedOverlaps)
-					{
-						fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", ovl_j->aread, ovl_j->bread);
-					}
+					fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", ovl_j->aread, ovl_j->bread);
 				}
 			}
-//				printf("\n");
 		}
-
-		if (leavecov && leavecov < ctx->removeLowCoverageOverlaps)
-		{
-//			printf("found leavecov %d < %d: aread %d remove", leavecov, ctx->removeLowCoverageOverlaps, ovl->aread);
-			for (j = 0; j < novl; j++)
-			{
-				Overlap* ovl_j = ovl + j;
-
-				if (ovl_j->flags & OVL_DISCARD)
-					continue;
-
-				if (ovl_j->path.aepos >= trimEnd)
-				{
-//					printf(" %d", ovl_j->bread);
-					ovl_j->flags |= OVL_DISCARD;
-					ctx->nLowCovALn++;
-					if (ctx->fileOutDiscardedOverlaps)
-					{
-						fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", ovl_j->aread, ovl_j->bread);
-					}
-				}
-			}
-//			printf("\n");
-		}
-	}
-
-	if (ctx->remUpToXPercAln)
-	{
-		removeWorstAlignments(ctx, ovl, novl);
+		free(cov_read_active);
 	}
 
 	// find repeat modules and rescue overlaps
