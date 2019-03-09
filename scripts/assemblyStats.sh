@@ -339,6 +339,7 @@ then
 	then
 		freebayesPath=stats/contigs/${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}
 		fext="f"
+		prevExt=$(basename ${CT_FREEBAYES_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF-1)}')		
 		
 		if [[ -d ${freebayesPath} ]]
 		then
@@ -346,14 +347,7 @@ then
 		fi
 		mkdir -p ${freebayesPath}
 		
-		fname=""
-		if [[ ${CT_FREEBAYES_TYPE} -eq 0 ]]
-		then 
-			fname="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/${PROJECT_ID}_10x.fasta"
-		elif [[ ${CT_FREEBAYES_TYPE} -eq 1 ]]
-		then 
-			fname="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/${PROJECT_ID}_hic.fasta"
-		fi
+		fname="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/${PROJECT_ID}_10x.fasta"
 		
 		if [[ ! -f ${fname} ]]
 		then
@@ -361,9 +355,10 @@ then
   			exit 1
 		fi
 		
-		cat ${fname} > ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.fasta
-		gzip -c ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.fasta > ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.fa.gz
-		cat ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${fext}.p.stats
+		cat ${fname} > ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${prevExt}${fext}.p.fasta
+		cp ${fname%.fasta}.numvar ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${prevExt}${fext}.p.numvar
+		gzip -c ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${prevExt}${fext}.p.fasta > ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${prevExt}${fext}.p.fa.gz
+		cat ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${prevExt}${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${freebayesPath}/${PROJECT_ID}_${CT_FREEBAYES_OUTDIR}_${prevExt}${fext}.p.stats
 		cp ${config} ${freebayesPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 	else
 		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID} not available")
