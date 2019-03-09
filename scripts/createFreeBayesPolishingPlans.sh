@@ -558,7 +558,7 @@ then
         echo "bcftools consensus -i'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Hla -f ${ref} ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.fasta" >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
       
 		echo "echo \"Num. bases affected \$(bcftools view -H -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Ov ${outdir}/${PROJECT_ID}_10x.bcf | awk -F \"\\t\" '{print \$4\"\\t\"\$5}' | awk '{lenA=length(\$1); lenB=length(\$2); if (lenA < lenB ) {sum+=lenB-lenA} else if ( lenA > lenB ) { sum+=lenA-lenB } else {sum+=lenA}} END {print sum}')\" > ${outdir}/${PROJECT_ID}_10x.numvar " >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
-		echo "bcftools view -i 'QUAL>1 && (GT="AA" || GT="Aa")' -Oz  ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.changes.vcf.gz" >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
+		echo "bcftools view -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Oz  ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.changes.vcf.gz" >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
             
       	echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.version
 	### 05-FBstatistics
