@@ -343,7 +343,7 @@ then
         	echo "cd ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams && ${LONGRANGER_PATH}/longranger wgs --id=10x_${PROJECT_ID}_longrangerWgs --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	else 
     		echo "[WARNING] Using previously created reference file ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME}. Please remove that folder to rerun longranger mkref"
-    		echo "cd ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams && ${LONGRANGER_PATH}/longranger wgs --id=10x_${PROJECT_ID}_longrangerWgs --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+    		echo "cd ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams && ${LONGRANGER_PATH}/longranger wgs --vcmode gatk:${GATK_PATH} --id=10x_${PROJECT_ID}_longrangerWgs --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	fi > phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.plan                
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1)" > phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version
