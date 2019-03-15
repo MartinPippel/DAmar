@@ -96,12 +96,12 @@ then
         	exit 1
    		fi
    		
-   		echo "if [[ -d ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} ]]; then mv ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}" > phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_reads" >> phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/10x_reads" >> phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_bams" >> phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/10x_bams" >> phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref && ln -s -r ${CT_PHASE_REFFASTA} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref && samtools faidx ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/$(basename ${CT_PHASE_REFFASTA}) && bwa index ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/$(basename ${CT_PHASE_REFFASTA})" >> phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.plan		
+   		echo "if [[ -d ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} ]]; then mv ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}" > phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_reads" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/10x_reads" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_bams" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/10x_bams" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref && ln -s -r ${CT_PHASE_REFFASTA} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref && samtools faidx ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/$(basename ${CT_PHASE_REFFASTA}) && bwa index ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/$(basename ${CT_PHASE_REFFASTA})" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.plan		
 		
 		# sanity checks
    		numFiles=0 
@@ -112,12 +112,12 @@ then
    				(>&2 echo "WARNING - file ${x} not available or empty.")
    			else
    				numFiles=$((${numFiles}+1))
-   				echo "ln -s -f -r ${x} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_reads/" >> phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.plan
+   				echo "ln -s -f -r ${x} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_reads/" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.plan
    			fi      						
    		done
 
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.version
 
 		if [[ ${numFiles} -eq 0 ]]
 		then
@@ -130,8 +130,8 @@ then
 	   			else
 	   				numFiles=$((${numFiles}+1))
 	   				# create dextract plans 
-	   				echo "${DAZZLER_PATH}/bin/dextract -v -f -o ${x} | gzip > ${x%.subreads.bam}.fa.gz && ln -s -f -r ${x} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_reads/" >> phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.plan
-	   				echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DEXTRACTOR/.git rev-parse --short HEAD)" >> phase_01_WhatshapPrepareInput_block_${CONT_DB}.${slurmID}.version  	   				
+	   				echo "${DAZZLER_PATH}/bin/dextract -v -f -o ${x} | gzip > ${x%.subreads.bam}.fa.gz && ln -s -f -r ${x} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_reads/" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.plan
+	   				echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DEXTRACTOR/.git rev-parse --short HEAD)" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.version  	   				
 	   			fi      						
 	   		done
 		fi
@@ -303,16 +303,16 @@ then
         	exit 1
    		fi
    		
-   		echo "if [[ -d ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} ]]; then mv ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}" > phase_01_LongrangerPrepareInput_block_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams" >> phase_01_LongrangerPrepareInput_block_${CONT_DB}.${slurmID}.plan
-		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref" >> phase_01_LongrangerPrepareInput_block_${CONT_DB}.${slurmID}.plan
+   		echo "if [[ -d ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} ]]; then mv ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}" > phase_01_LongrangerPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams" >> phase_01_LongrangerPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref" >> phase_01_LongrangerPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		
 		### prepare fasta file, i.e. sort according length and use only first 500 contigs for phasing
 	
 		NCONTIGS=500
 		IN=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/phase.fasta
 		IGNORE=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta
-		echo "awk '/^>/ {printf(\"%s%s\\t\",(N>0?\"\\n\":\"\"),\$0);N++;next;} {printf(\"%s\",\$0);} END {printf(\"\\n\");}' ${CT_PHASE_REFFASTA} | awk -F '\t' '{printf(\"%d\\t%s\\n\",length(\$2),\$0);}' | sort -k1,1rn | cut -f 2- | tee >(head -n ${NCONTIGS} | tr \"\\t\" \"\\n\" > ${IN}) | tail -n +${NCONTIGS} | tr \"\\t\" \"\\n\" > ${IGNORE}" >> phase_01_LongrangerPrepareInput_block_${CONT_DB}.${slurmID}.plan 
+		echo "awk '/^>/ {printf(\"%s%s\\t\",(N>0?\"\\n\":\"\"),\$0);N++;next;} {printf(\"%s\",\$0);} END {printf(\"\\n\");}' ${CT_PHASE_REFFASTA} | awk -F '\t' '{printf(\"%d\\t%s\\n\",length(\$2),\$0);}' | sort -k1,1rn | cut -f 2- | tee >(head -n ${NCONTIGS} | tr \"\\t\" \"\\n\" > ${IN}) | tail -n +${NCONTIGS} | tr \"\\t\" \"\\n\" > ${IGNORE}" >> phase_01_LongrangerPrepareInput_single_${CONT_DB}.${slurmID}.plan 
 				
 	### 02_LongrangerLongrangerWgs
     elif [[ ${currentStep} -eq 2 ]]
