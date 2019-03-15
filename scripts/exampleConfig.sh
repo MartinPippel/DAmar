@@ -85,10 +85,10 @@ QC_DATA_DIR="processedData"
 #type-1 [10x - de novo] [1-1]: 01_supernova
 #type-2 [allData - MASH CONTAMINATION SCREEN] [1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
 #type-3 [10x|HiC - kmer-Gsize estimate] [1-2]: 01_jellyfish, 02_genomescope
-RAW_MASH_TYPE=0
+RAW_QC_TYPE=0
 
-RAW_MASH_SUBMIT_SCRIPTS_FROM=1
-RAW_MASH_SUBMIT_SCRIPTS_TO=2
+RAW_QC_SUBMIT_SCRIPTS_FROM=1
+RAW_QC_SUBMIT_SCRIPTS_TO=2
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -1 - mitochondrium assembly <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -190,18 +190,18 @@ CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO=8
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 11 - Freebayes polishing on contigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-CT_FREEBAYES_TYPE=0
-#type-0 steps: 1-FBprepareInput, 2-FBfastp, 3-FBbwa, 4-FBmarkDuplicates, 5-FBfreebayes, 6-FBbcftools, 7-FBstatistics
-#type-1 steps: 1-FBprepareInput, 2-FBbwa, 3-FBmarkDuplicates, 4-FBfreebayes, 5-FBbcftools
+CT_FREEBAYES_TYPE=1
+# Type: 0 [bwa mapping] - 01_FBprepareInput, 02_FBfastp, 03_FBbwa, 04_FBmarkDuplicates, 05_FBfreebayes, 06_FBconsensus, 07_FBstatistics 
+# Type: 1 [longranger mapping] - 01_FBprepareInput, 02_FBlongrangerAlign, 03_FBfreebayes, 04_FBconsensus, 05_FBstatistics
 CT_FREEBAYES_SUBMIT_SCRIPTS_FROM=1
-CT_FREEBAYES_SUBMIT_SCRIPTS_TO=7
+CT_FREEBAYES_SUBMIT_SCRIPTS_TO=5
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 12 - Whatshap phasing  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-CT_WHATSHAP_TYPE=0
-# Type: 0 steps: 1-WHprepareInput, 2-WHminimap2PacBio, 3-WHPacBioBamSplitByRef, 4-WHPacBioBamSeparate, 5-WHPacBioBamMerge, in progress 
-CT_WHATSHAP_SUBMIT_SCRIPTS_FROM=1
-CT_WHATSHAP_SUBMIT_SCRIPTS_TO=5
+CT_PHASE_TYPE=1
+## type-1 [Whatshap]   - pacbio, 10x: 		01_WhatshapPrepareInput, 02_WhatshapMinimap2PacBio, 03_WhatshapPacBioBamSplitByRef, 04_WhatshapPacBioBamSplitByRef, 05_WhatshapPacBioBamMerge
+## type-2 [Longranger] - 10x: 				01_LongrangerPrepareInput, 02_LongrangerLongrangerWgs, 03_LongrangerBcftoolsConsensus
+## type-3 [HapCut2]    - pacbio, 10x, HiC: 	todo
+CT_PHASE_SUBMIT_SCRIPTS_FROM=1
+CT_PHASE_SUBMIT_SCRIPTS_TO=2
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -717,31 +717,31 @@ CT_PURGEHAPLOTIGS_THREADS=24
 # ----------------------------------------------------------------- CONTIG WHATSHAP PAHSING OPTIONS ----------------------------------------------------------------------------------------------------
 
 ### general whatshap options
-CT_WHATSHAP_RUNID=1
-CT_WHATSHAP_OUTDIR="${FIX_FILT_OUTDIR}"
-CT_WHATSHAP_REFFASTA="stats/contigs/m1/freebayes/mMyoMyo_m1_f.p.fasta"
+CT_PHASE_RUNID=1
+CT_PHASE_OUTDIR="${FIX_FILT_OUTDIR}"
+CT_PHASE_REFFASTA="stats/contigs/m1/freebayes/mMyoMyo_m1_f.p.fasta"
 ### use either reads - then full pipeline is started ...
-CT_WHATSHAP_READS_10X=${TENX_PATH}
-CT_WHATSHAP_READS_PACBIO=${DB_PATH}
-CT_WHATSHAP_READS_HIC=${HIC_PATH}
+CT_PHASE_READS_10X=${TENX_PATH}
+CT_PHASE_READS_PACBIO=${DB_PATH}
+CT_PHASE_READS_HIC=${HIC_PATH}
 ### bwa
-CT_WHATSHAP_BWA_THREADS=40
-CT_WHATSHAP_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
+CT_PHASE_BWA_THREADS=40
+CT_PHASE_BWA_VERBOSITY=3						# 1=error, 2=warning, 3=message, 4+=debugging [3]
 ### picard tools
-CT_WHATSHAP_PICARD_XMX=24						# java memory options in Gb
-CT_WHATSHAP_PICARD_XMS=24						# java memory options in Gb
+CT_PHASE_PICARD_XMX=24						# java memory options in Gb
+CT_PHASE_PICARD_XMS=24						# java memory options in Gb
 ### samtools sort
-CT_WHATSHAP_SAMTOOLS_THREADS=10
-CT_WHATSHAP_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
+CT_PHASE_SAMTOOLS_THREADS=10
+CT_PHASE_SAMTOOLS_MEM=4							# Set maximum memory in Gigabases per thread
 ### qv min mapping quality
-CT_WHATSHAP_HIC_MINMAPQV=10
-CT_WHATSHAP_10X_MINMAPQV=10
-CT_WHATSHAP_PACBIO_MINMAPQV=10
+CT_PHASE_HIC_MINMAPQV=10
+CT_PHASE_10X_MINMAPQV=10
+CT_PHASE_PACBIO_MINMAPQV=10
  ### minimap2
-CT_WHATSHAP_MINIMAP2IDXTHREADS=8										# number of threads to create reference index
-CT_WHATSHAP_MINIMAP2ALNTHREADS=24										# number of threads to align reads
-CT_WHATSHAP_SAMTOOLSTHREADS=8
-CT_WHATSHAP_SAMTOOLSMEM=1
+CT_PHASE_MINIMAP2IDXTHREADS=8										# number of threads to create reference index
+CT_PHASE_MINIMAP2ALNTHREADS=24										# number of threads to align reads
+CT_PHASE_SAMTOOLSTHREADS=8
+CT_PHASE_SAMTOOLSMEM=1
 
 # ----------------------------------------------------------------- SCAFFOLDING - 10X OPTIONS ----------------------------------------------------------------------------------------------------
 
@@ -1046,8 +1046,8 @@ THREADS_WHprepareInput=1
 MEM_WHprepareInput=46000	     
 TIME_WHprepareInput=24:00:00
 
-THREADS_WHPacBioMinimap2=${CT_WHATSHAP_MINIMAP2ALNTHREADS}
-MEM_WHPacBioMinimap2=$((${CT_WHATSHAP_MINIMAP2ALNTHREADS}*4096))     
+THREADS_WHPacBioMinimap2=${CT_PHASE_MINIMAP2ALNTHREADS}
+MEM_WHPacBioMinimap2=$((${CT_PHASE_MINIMAP2ALNTHREADS}*4096))     
 TIME_WHPacBioMinimap2=24:00:00
 
 ##### MITO PIPELINE
@@ -1113,6 +1113,14 @@ TIME_arksTigmint=24:00:00
 THREADS_longrangerBasic=${THREADS_juicer}
 MEM_longrangerBasic=$((${THREADS_juicer}*8192))
 TIME_longrangerBasic=24:00:00
+
+#THREADS_FBlongrangerAlign=${THREADS_juicer}
+#MEM_FBlongrangerAlign=$((${THREADS_juicer}*8192))
+#TIME_FBlongrangerAlign=240:00:00
+
+THREADS_FBfreebayes=1
+MEM_FBfreebayes=32768
+TIME_FBfreebayes=24:00:00
 
 THREADS_supernova=${THREADS_juicer}
 MEM_supernova=$((${THREADS_juicer}*8192))

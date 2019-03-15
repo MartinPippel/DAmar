@@ -11,7 +11,7 @@ SCRIPTS = rid2bid.py DBprepare.py paths2rids.py marvelStats.sh n50.py splitDiplo
           slurmStats.sh assemblyStats.sh exampleConfig.sh \
           createDAScoverPlans.sh createPurgeHaplotigPlans.sh createFreeBayesPolishingPlans.sh \
           createHiCPlans.sh get_stats.pl filter_five_end.pl two_read_bam_combiner.pl \
-          createMitoAssemblyPlans.sh createWhatshapPlans.sh trimLowerCaseTips.py \
+          createMitoAssemblyPlans.sh createPhasePlans.sh trimLowerCaseTips.py \
           create10XPlans.sh splitReads.py createBionanoPlans.sh \
 	  	  generate_site_positions.py \
           createQCandStatsPlans.sh mashPlot.R

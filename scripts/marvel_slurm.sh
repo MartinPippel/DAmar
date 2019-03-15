@@ -88,10 +88,10 @@ elif [[ ${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM} -gt 0 ]]
 then 
     currentPhase=11
     currentStep=${CT_FREEBAYES_SUBMIT_SCRIPTS_FROM}                                           
-elif [[ ${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
+elif [[ ${CT_PHASE_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=12
-    currentStep=${CT_WHATSHAP_SUBMIT_SCRIPTS_FROM}
+    currentStep=${CT_PHASE_SUBMIT_SCRIPTS_FROM}
 elif [[ ${SC_10X_SUBMIT_SCRIPTS_FROM} -gt 0 ]] 
 then 
     currentPhase=13

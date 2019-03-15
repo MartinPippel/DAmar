@@ -190,10 +190,10 @@ then
     fi
 elif [[ ${currentPhase} -eq 12 ]]
 then 
-    ${SUBMIT_SCRIPTS_PATH}/createWhatshapPlans.sh ${configFile} ${currentStep} ${slurmID}
+    ${SUBMIT_SCRIPTS_PATH}/createPhasePlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
-        (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createWhatshapPlans.sh failed some how. Stop here.")
+        (>&2 echo "${SUBMIT_SCRIPTS_PATH}/createPhasePlans.sh failed some how. Stop here.")
         exit 1      
     fi
 elif [[ ${currentPhase} -eq 13 ]]
