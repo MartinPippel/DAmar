@@ -12,8 +12,8 @@ def eprint(*args, **kwargs):
 def fasta_iter(fh):
     faiter = (x[1] for x in itertools.groupby(fh, lambda line: line[0] == ">"))
     for header in faiter:
-        header = header.next()[1:].strip()
-        seq = "".join(s.strip() for s in faiter.next())
+        header = next(header)[1:].strip()
+        seq = "".join(s.strip() for s in next(faiter))
 
         fields = header.split()
         args = {}
