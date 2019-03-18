@@ -312,7 +312,7 @@ then
 		NCONTIGS=500
 		IN=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/phase.fasta
 		IGNORE=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta
-		echo "awk '/^>/ {printf(\"%s%s\\t\",(N>0?\"\\n\":\"\"),\$0);N++;next;} {printf(\"%s\",\$0);} END {printf(\"\\n\");}' ${CT_PHASE_REFFASTA} | awk -F '\t' '{printf(\"%d\\t%s\\n\",length(\$2),\$0);}' | sort -k1,1rn | cut -f 2- | tee >(head -n ${NCONTIGS} | tr \"\\t\" \"\\n\" > ${IN}) | tail -n +${NCONTIGS} | tr \"\\t\" \"\\n\" > ${IGNORE}" >> phase_01_LongrangerPrepareInput_single_${CONT_DB}.${slurmID}.plan 
+		echo "awk '/^>/ {printf(\"%s%s\\t\",(N>0?\"\\n\":\"\"),\$1);N++;next;} {printf(\"%s\",\$0);} END {printf(\"\\n\");}' ${CT_PHASE_REFFASTA} | awk -F '\t' '{printf(\"%d\\t%s\\n\",length(\$2),\$0);}' | sort -k1,1rn | cut -f 2- | tee >(head -n ${NCONTIGS} | tr \"\\t\" \"\\n\" > ${IN}) | tail -n +${NCONTIGS} | tr \"\\t\" \"\\n\" > ${IGNORE}" >> phase_01_LongrangerPrepareInput_single_${CONT_DB}.${slurmID}.plan 
 				
 	### 02_LongrangerLongrangerWgs
     elif [[ ${currentStep} -eq 2 ]]
