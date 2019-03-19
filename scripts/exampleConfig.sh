@@ -197,12 +197,14 @@ CT_FREEBAYES_TYPE=1
 CT_FREEBAYES_SUBMIT_SCRIPTS_FROM=1
 CT_FREEBAYES_SUBMIT_SCRIPTS_TO=5
 
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 12 - phasing contigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 CT_PHASE_TYPE=1
-## type-1 [Whatshap]   - pacbio, 10x: 		01_WhatshapPrepareInput, 02_WhatshapMinimap2PacBio, 03_WhatshapPacBioBamSplitByRef, 04_WhatshapPacBioBamSplitByRef, 05_WhatshapPacBioBamMerge
-## type-2 [Longranger] - 10x: 				01_LongrangerPrepareInput, 02_LongrangerLongrangerWgs, 03_LongrangerBcftoolsConsensus
-## type-3 [HapCut2]    - pacbio, 10x, HiC: 	todo
+## type-0 [Whatshap]   - pacbio, 10x: 		01_WhatshapPrepareInput, 02_WhatshapMinimap2PacBio, 03_WhatshapPacBioBamSplitByRef, 04_WhatshapPacBioBamSplitByRef, 05_WhatshapPacBioBamMerge
+## type-1 [Longranger] - 10x: 				01_LongrangerPrepareInput, 02_LongrangerLongrangerWgs, 03_LongrangerBcftoolsConsensus, 04_LongrangerStatistics
+## type-2 [HapCut2]    - pacbio, 10x, HiC: 	todo
 CT_PHASE_SUBMIT_SCRIPTS_FROM=1
-CT_PHASE_SUBMIT_SCRIPTS_TO=2
+CT_PHASE_SUBMIT_SCRIPTS_TO=4
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
