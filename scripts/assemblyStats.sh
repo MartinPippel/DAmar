@@ -680,7 +680,7 @@ then
 	  			exit 1
 			fi
 			
-			cp ${fname} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fasta
+			cp ${fname} ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fasta > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fa.gz	
 			cat ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.stats
 			${QUAST_PATH}/quast.py -o ${phasePath} -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset} ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fasta
