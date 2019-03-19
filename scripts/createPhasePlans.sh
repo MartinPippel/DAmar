@@ -380,8 +380,8 @@ then
    		echo "bcftools view -Ob -f PASS ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/phased_sort.vcf -o ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
    		### index bcf file
 		echo "bcftools index ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan   		
-   		echo "bcftools consensus -H1 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fasta ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h1.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
-   		echo "bcftools consensus -H2 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fasta ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h2.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+   		echo "bcftools consensus -H1 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fa ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h1.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+   		echo "bcftools consensus -H2 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fa ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h2.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
    		
    		if [ -s "${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta" ]
 		then 
