@@ -357,7 +357,51 @@ then
     	fi > phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.plan                
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version)" > phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version
-        echo "$(${LONGRANGER_PATH}/longranger wgs --version)" >> phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version   		
+        echo "$(${LONGRANGER_PATH}/longranger wgs --version)" >> phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version
+        echo "gatk CreateSequenceDictionary $(java -jar ${GATK_PATH} CreateSequenceDictionary --version | head -n 0)" >> phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version   		
+   	## 03_LongrangerBcftoolsConsensus
+   	elif [[ ${currentStep} -eq 3 ]]
+    then
+        ### clean up plans 
+        for x in $(ls phase_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+   	
+   		if [[ ! -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams/10x_${PROJECT_ID}_longrangerWgs/outs/phased_variants.vcf.gz ]] 
+   		then
+   			(>&2 echo "ERROR - file ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams/10x_${PROJECT_ID}_longrangerWgs/outs/phased_variants.vcf.gz is missing. Rerun 02_LongrangerLongrangerWgs!")
+        	exit 1
+   		fi
+   		
+   		### filter phased vcf files for PASS calls
+   		echo "zcat ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams/10x_${PROJECT_ID}_longrangerWgs/outs/phased_variants.vcf.gz | grep -e \"^#\" -e \"PASS\" > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/tmp.vcf" > phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+   		### resort vcf according to reference 
+   		echo "java -jar ${GATK_PATH} SortVcf I=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/tmp.vcf O=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.vcf SD=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.dict" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+   		### create fasta file with bcftools consensus
+   		echo "bcftools consensus -H1 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fasta ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.vcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h1.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+   		echo "bcftools consensus -H2 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fasta ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.vcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h2.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+   		
+   		if [ -s "${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta" ]
+		then 
+   			echo "cat ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h1.fasta ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/${PROJECT_ID}_phased.h1.fasta"
+   			echo "cat ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h2.fasta ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/${PROJECT_ID}_phased.h2.fasta"
+		else
+   			echo "ln -s -f -r ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h1.fasta ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/${PROJECT_ID}_phased.h1.fasta"
+   			echo "ln -s -f -r ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h2.fasta ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/${PROJECT_ID}_phased.h2.fasta"
+		fi >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+   		
+   		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.version
+   		echo "gatk SortVcf $(java -jar ${GATK_PATH} SortVcf --version | head -n 0)" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.version
+   	## 04_LongrangerStatistics
+   	elif [[ ${currentStep} -eq 4 ]]
+    then
+    	### clean up plans 
+        for x in $(ls phase_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+    	
    		
 	else
         (>&2 echo "step ${currentStep} in CT_PHASE_TYPE ${CT_PHASE_TYPE} not supported")
@@ -380,6 +424,8 @@ then
         	(>&2 echo "ERROR - set CT_PHASE_REFFASTA to reference fasta file")
         	exit 1
    		fi
+   		
+   		
 	else
         (>&2 echo "step ${currentStep} in CT_PHASE_TYPE ${CT_PHASE_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PHASE_TYPE}]}")
