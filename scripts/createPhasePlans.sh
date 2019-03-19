@@ -343,7 +343,7 @@ then
         	### create picard dict file manually if its not present !!!
         	if [[ ! -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.dict ]]
         	then
-        		echo "java -jar ${GATK_PATH} CreateSequenceDictionary R=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa O=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.dict"
+        		echo "java -jar ${GATK_PATH} CreateSequenceDictionary -R=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa -O=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.dict"
         	fi
         	echo "cd ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams && ${LONGRANGER_PATH}/longranger wgs --vcmode=gatk:${GATK_PATH} --id=10x_${PROJECT_ID}_longrangerWgs --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=$(pwd)/${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	else 
