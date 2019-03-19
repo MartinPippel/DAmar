@@ -358,7 +358,7 @@ then
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version)" > phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version
         echo "$(${LONGRANGER_PATH}/longranger wgs --version)" >> phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version
-        echo "gatk CreateSequenceDictionary $(java -jar ${GATK_PATH} CreateSequenceDictionary --version | head -n 0)" >> phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version   		
+        echo "gatk CreateSequenceDictionary $(java -jar ${GATK_PATH} CreateSequenceDictionary --version 1> /dev/null)" 2>> phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version   		
    	## 03_LongrangerBcftoolsConsensus
    	elif [[ ${currentStep} -eq 3 ]]
     then
@@ -392,7 +392,7 @@ then
 		fi >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
    		
    		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.version
-   		echo "gatk SortVcf $(java -jar ${GATK_PATH} SortVcf --version | head -n 0)" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.version
+   		echo "gatk SortVcf $(java -jar ${GATK_PATH} SortVcf --version | 1> /dev/null)" 2>> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.version
    	## 04_LongrangerStatistics
    	elif [[ ${currentStep} -eq 4 ]]
     then
