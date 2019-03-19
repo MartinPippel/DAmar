@@ -73,12 +73,12 @@ function setSamtoolsOptions()
 	fi
 }
 
-## type-1 [Whatshap]   - pacbio, 10x: 		01_WhatshapPrepareInput, 02_WhatshapMinimap2PacBio, 03_WhatshapPacBioBamSplitByRef, 04_WhatshapPacBioBamSplitByRef, 05_WhatshapPacBioBamMerge
-## type-2 [Longranger] - 10x: 				01_LongrangerPrepareInput, 02_LongrangerLongrangerWgs, 03_LongrangerBcftoolsConsensus
-## type-3 [HapCut2]    - pacbio, 10x, HiC: 	todo
+## type-0 [Whatshap]   - pacbio, 10x: 		01_WhatshapPrepareInput, 02_WhatshapMinimap2PacBio, 03_WhatshapPacBioBamSplitByRef, 04_WhatshapPacBioBamSplitByRef, 05_WhatshapPacBioBamMerge
+## type-1 [Longranger] - 10x: 				01_LongrangerPrepareInput, 02_LongrangerLongrangerWgs, 03_LongrangerBcftoolsConsensus, 04_LongrangerStatistics
+## type-2 [HapCut2]    - pacbio, 10x, HiC: 	todo
 
 myTypes=("01_WhatshapPrepareInput, 02_WhatshapMinimap2PacBio, 03_WhatshapPacBioBamSplitByRef, 04_WhatshapPacBioBamSplitByRef, 05_WhatshapPacBioBamMerge",
-"01_LongrangerPrepareInput, 02_LongrangerLongrangerWgs, 03_LongrangerBcftoolsConsensus", "01_HapCut2PrepareInput")
+"01_LongrangerPrepareInput, 02_LongrangerLongrangerWgs, 03_LongrangerBcftoolsConsensus, 04_LongrangerStatistics", "01_HapCut2PrepareInput")
 if [[ ${CT_PHASE_TYPE} -eq 0 ]]
 then 
     ### 01_WhatshapPrepareInput
@@ -401,8 +401,18 @@ then
         do            
             rm $x
         done
-    	
-   		
+        
+        ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+    	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+        then 
+        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+    	else
+        	cwd=$(pwd)
+        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+    	fi
+    	### create assemblyStats plan 
+    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 15" > phase_04_LongrangerStatistics_single_${CONT_DB}.${slurmID}.plan
+    	git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > phase_04_LongrangerStatistics_single_${CONT_DB}.${slurmID}.version
 	else
         (>&2 echo "step ${currentStep} in CT_PHASE_TYPE ${CT_PHASE_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PHASE_TYPE}]}")
