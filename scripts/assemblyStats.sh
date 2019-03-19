@@ -652,7 +652,55 @@ then
 	else
 		(>&2 echo "ERROR - directory ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} not available")
   		exit 1
-	fi			
+	fi		
+elif [[ ${phase} -eq 15 ]] ## PHASING 
+then
+	if [[ -d ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} ]]
+	then
+		
+		phasePath=stats/contigs/${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}
+		prevExt=$(basename ${CT_PHASE_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		cset=$(basename ${CT_PHASE_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		
+		if [[ ${CT_PHASE_TYPE} -eq 1 ]]
+		then
+			fext="s"
+			
+			if [[ -d ${phasePath} ]]
+			then
+				mv ${phasePath} ${phasePath}_$(date '+%Y-%m-%d_%H-%M-%S')	
+			fi
+			mkdir -p ${phasePath}
+			
+			fname1="${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/${PROJECT_ID}_phased.h1.fasta"
+			fname2="${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/${PROJECT_ID}_phased.h2.fasta"
+			if [[ ! -f ${fname1} || ! -f ${fname2} ]]
+			then
+				(>&2 echo "ERROR - Cannot find phased files ${fname1} and / or ${fname2}")
+	  			exit 1
+			fi
+			
+			cp ${fname} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fasta
+			gzip -c ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fasta > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fa.gz	
+			cat ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.stats
+			${QUAST_PATH}/quast.py -o ${phasePath} -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset} ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.fasta
+			cp ${config} ${phasePath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
+			
+			## add phasing stats
+			awk -F , '{ for (i=1; i<=NF; i++)  { a[NR,i] = $i } } NF>p { p = NF } END { for(j=1; j<=p; j++) { str=a[1,j] for(i=2; i<=NR; i++){ str=str"\t"a[i,j]; } print str } }' ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams/10x_${PROJECT_ID}_longrangerWgs/outs/summary.csv >  ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.summary
+			## check if some contigs were ignored				
+			if [[ -s ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta ]]
+			then
+				echo "Unphased contigs num: $(grep -c -e \">\" ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta) size: $(du -h ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta | awk '{print $1}')" > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.error
+			fi			
+		else
+			(>&2 echo "ERROR - CT_PHASE_TYPE: ${CT_PHASE_TYPE} not supported yet!")
+  			exit 1
+		fi
+	else
+		(>&2 echo "ERROR - directory ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID} not available")
+  		exit 1
+	fi	
 else
 	(>&2 echo "Unknow Phase: ${phase}")
 	exit 1	
