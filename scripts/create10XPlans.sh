@@ -422,9 +422,12 @@ function setLinksOptions()
 
 #type 0: scaff10x - break10x pipeline		steps: 01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics
 #type 1: tigmint - arks - links pipeline	steps: 01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks, 05_arksLINKS
+#type 2: scaff10x using longranger bam		steps: 01_scaff10Xprepare, 02_scaff10xLongrangerAlign, 03_scaff10xPrepareIntermediate, 04_scaff10xScaff10x, 05_scaff10Xstatistics
+#type 3: break10x using longranger bam		steps: 01_break10Xprepare, 02_break10XLongrangerAlign, 03_break10XPrepareIntermediate, 04_break10XBreak10x, 05_break10Xstatistics
 
 myTypes=("01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics", 
-"01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks") 
+"01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks", "01_scaff10Xprepare, 02_scaff10xLongrangerAlign, 03_scaff10xPrepareIntermediate, 04_scaff10xScaff10x, 05_scaff10Xstatistics", 
+"01_break10Xprepare, 02_break10XLongrangerAlign, 03_break10XPrepareIntermediate, 04_break10XBreak10x, 05_break10Xstatistics") 
 if [[ ${SC_10X_TYPE} -eq 0 ]]
 then 
     ### 01_scaff10Xprepare
@@ -945,7 +948,96 @@ then
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
         exit 1            
+    fi
+#type 2: scaff10x using longranger bam		steps: 01_scaff10Xprepare, 02_scaff10xLongrangerAlign, 03_scaff10xPrepareIntermediate, 04_scaff10xScaff10x, 05_scaff10Xstatistics    
+elif [[ ${SC_10X_TYPE} -eq 2 ]]
+then 
+    ### 01_scaff10Xprepare
+    if [[ ${currentStep} -eq 1 ]]
+    then
+        ### clean up plans 
+        for x in $(ls 10x_01_scaff10X*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        if [[ ! -d "${SC_10X_READS}" ]]
+        then
+        	(>&2 echo "ERROR - set SC_10X_READS to proper 10x read directory")
+        	exit 1
+   		fi
+   		
+   		if [[ ! -f ${SC_10X_REF} ]]
+   		then
+   			(>&2 echo "ERROR - set SC_10X_REF to proper reference fasta file")
+        	exit 1	
+   		fi
+   		
+   		echo "if [[ -d ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ]]; then mv ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}" > 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+   		
+   		## we need a special reference fastq file with other names  
+   		echo "${SCAFF10X_PATH}/scaff_fastq -name tarseq -len 10 ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" > 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+   		## convert the reference fastq into fasta 
+   		echo "sed -n '1~4s/^@/>/p;2~4p' ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+
+		echo "scaff_fastq $(cat ${SCAFF10X_PATH}/version.txt)" > 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+	## 02_scaff10xLongrangerAlign
+    elif [[ ${currentStep} -eq 2 ]]
+    then
+        ### clean up plans 
+        for x in $(ls 10x_02_scaff10X*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        REFNAME=$(basename ${CT_FREEBAYES_REFFASTA})
+        
+        if [[ ! -f "${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta" ]]
+        then
+    		(>&2 echo "ERROR - cannot find reference fasta file ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta. Rerun step 01_scaff10Xprepare!")
+        	exit 1
+   		fi
+        
+		if [[ ! -d ${TENX_PATH} ]]
+        then 
+        	(>&2 echo "ERROR - cannot find 10x reads. Variable TENX_PATH has to be set to a directoty containing 10x reads.")
+        	exit 1
+    	fi
+    	 
+        if [[ ! -d ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/refdata-tarseq ]]
+        then
+        	echo "cd ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref tarseq.fasta && cd ../../../ " 
+        	echo "cd ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-tarseq --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+    	else 
+    		echo "[WARNING] Using previously created reference file ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/refdata-tarseq. Please remove that folder to rerun longranger mkref"
+    		echo "cd ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-tarseq --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+    	fi > 10x_02_scaff10xLongrangerAlign_single_${CONT_DB}.${slurmID}.plan                
+        
+        echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1)" > 10x_02_scaff10xLongrangerAlign_single_${CONT_DB}.${slurmID}.version
+        echo "$(${LONGRANGER_PATH}/longranger align --version | head -n1)" >> 10x_02_scaff10xLongrangerAlign_single_${CONT_DB}.${slurmID}.version             
+   	else
+        (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
+        exit 1            
     fi	
+#type 3: break10x using longranger bam		steps: 01_break10Xprepare, 02_break10XLongrangerAlign, 03_break10XPrepareIntermediate, 04_break10XBreak10x, 05_break10Xstatistics    
+elif [[ ${SC_10X_TYPE} -eq 3 ]]
+then 
+    ### 01_scaff10Xprepare
+    if [[ ${currentStep} -eq 1 ]]
+    then
+        ### clean up plans 
+        for x in $(ls 10x_01_scaff10X*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+   	else
+        (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
+        exit 1            
+    fi    
 else
     (>&2 echo "unknown SC_10X_TYPE ${SC_10X_TYPE}")
     (>&2 echo "supported types")
