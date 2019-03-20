@@ -680,24 +680,24 @@ then
 	  			exit 1
 			fi
 			
-			cp ${fname1} ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}1.fasta
-			gzip -c ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}1.fasta > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}1.fa.gz	
-			cat ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}1.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}1.stats
-			${QUAST_PATH}/quast.py -o ${phasePath} -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}1 ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}1.fasta
+			cp ${fname1} ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fasta
+			gzip -c ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fasta > ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fa.gz	
+			cat ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.stats
+			${QUAST_PATH}/quast.py -o ${phasePath} -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1 ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fasta
 
-			cp ${fname2} ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}2.fasta
-			gzip -c ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}2.fasta > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}2.fa.gz	
-			cat ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}2.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}2.stats
-			${QUAST_PATH}/quast.py -o ${phasePath} -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}2 ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}2.fasta
+			cp ${fname2} ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fasta
+			gzip -c ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fasta > ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fa.gz	
+			cat ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.stats
+			${QUAST_PATH}/quast.py -o ${phasePath} -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2 ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fasta
 		
 			cp ${config} ${phasePath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 			
 			## add phasing stats
-			awk -F , '{ for (i=1; i<=NF; i++)  { a[NR,i] = $i } } NF>p { p = NF } END { for(j=1; j<=p; j++) { str=a[1,j]; for(i=2; i<=NR; i++){ str=str"\t"a[i,j]; } print str } }' ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams/10x_${PROJECT_ID}_longrangerWgs/outs/summary.csv >  ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.summary
+			awk -F , '{ for (i=1; i<=NF; i++)  { a[NR,i] = $i } } NF>p { p = NF } END { for(j=1; j<=p; j++) { str=a[1,j]; for(i=2; i<=NR; i++){ str=str"\t"a[i,j]; } print str } }' ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams/10x_${PROJECT_ID}_longrangerWgs/outs/summary.csv >  ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}.summary
 			## check if some contigs were ignored				
 			if [[ -s ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta ]]
 			then
-				echo "Unphased contigs num: $(grep -c -e \">\" ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta) size: $(du -h ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta | awk '{print $1}')" > ${phasePath}/${PROJECT_ID}_${CT_PHASE_TYPE}_${prevExt}${fext}.${cset}.error
+				echo "Unphased contigs num: $(grep -c -e \">\" ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta) size: $(du -h ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta | awk '{print $1}')" > ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}.error
 			fi			
 		else
 			(>&2 echo "ERROR - CT_PHASE_TYPE: ${CT_PHASE_TYPE} not supported yet!")
