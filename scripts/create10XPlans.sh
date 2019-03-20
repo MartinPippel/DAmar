@@ -978,11 +978,11 @@ then
    		echo "mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
    		
    		## we need a special reference fastq file with other names  
-   		echo "${SCAFF10X_PATH}/scaff_fastq -name tarseq -len 10 ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" > 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "${SCAFF10X_PATH}/scaff_fastq -name tarseq -len 10 ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
    		## convert the reference fastq into fasta 
    		echo "sed -n '1~4s/^@/>/p;2~4p' ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
 
-		echo "scaff_fastq $(cat ${SCAFF10X_PATH}/version.txt)" > 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+		echo "scaff_fastq $(cat ${SCAFF10X_PATH}/version.txt)" > 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.version
 	## 02_scaff10xLongrangerAlign
     elif [[ ${currentStep} -eq 2 ]]
     then
