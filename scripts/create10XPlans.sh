@@ -1036,7 +1036,7 @@ then
    		
    		# we have to find the BX tag and append it to the fasta name 
    		# unfortunatelly the column is not fixed, in my example data its 19, 21 and 20 --> to be conservative: loop through all optional fields 12 - NF 
-   		echo "samtools view ${bam}  | awk '(\$2<100)&&(\$5>=0){ for(i = 12; i <= NF; i++) { if (\$i ~ \"BX:Z\") {print \$1"_"substr(\$i,6,16),\$2,\$3,\$4,\$5; break; } } }' > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/dalign.dat" > 10x_03_scaff10xPrepareIntermediate_single_${CONT_DB}.${slurmID}.plan
+   		echo "samtools view ${bam}  | awk '(\$2<100)&&(\$5>=0){ for(i = 12; i <= NF; i++) { if (\$i ~ \"BX:Z\") {print \$1\"_\"substr(\$i,6,16),\$2,\$3,\$4,\$5; break; } } }' > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/dalign.dat" > 10x_03_scaff10xPrepareIntermediate_single_${CONT_DB}.${slurmID}.plan
 
 	## 04_scaff10xScaff10x   		
    	elif [[ ${currentStep} -eq 4 ]]
