@@ -972,13 +972,20 @@ then
    			(>&2 echo "ERROR - set SC_10X_REF to proper reference fasta file")
         	exit 1	
    		fi
-   		
+   		   		   		
    		echo "if [[ -d ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ]]; then mv ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}" > 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
    		
+   		REFNAME=$(basename ${SC_10X_REF})
+   		
+   		if [[ ! -f ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME} ]]
+   		then
+   			ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}
+   		fi >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan   		
+   		
    		## we need a special reference fastq file with other names  
-   		echo "${SCAFF10X_PATH}/scaff_fastq -name tarseq -len 10 ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "${SCAFF10X_PATH}/scaff_fastq -name tarseq -len 10 ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
    		## convert the reference fastq into fasta 
    		echo "sed -n '1~4s/^@/>/p;2~4p' ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta" >> 10x_01_scaff10Xprepare_single_${CONT_DB}.${slurmID}.plan
 
@@ -991,9 +998,7 @@ then
         do            
             rm $x
         done
-        
-        REFNAME=$(basename ${CT_FREEBAYES_REFFASTA})
-        
+                
         if [[ ! -f "${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta" ]]
         then
     		(>&2 echo "ERROR - cannot find reference fasta file ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta. Rerun step 01_scaff10Xprepare!")
@@ -1054,13 +1059,20 @@ then
         	exit 1
    		fi
    		
+   		REFNAME=$(basename ${SC_10X_REF})
+   		
+   		if [[ ! -f ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME} ]]
+   		then
+   			ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}
+   		fi > 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan
+   		
    		setScaff10xOptions
 		
     	prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
         ext=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
                 
         options="-debug 1 -tmp $(pwd)/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ -dat ${dat}"
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${SC_10X_REF} dummy1 dummy2 ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${ext}.fasta" > 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan        
+        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${REFNAME} dummy1 dummy2 ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${ext}.fasta" >> 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan        
 		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" > 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.version
 	## 05_scaff10Xstatistics   		
    	elif [[ ${currentStep} -eq 5 ]]
