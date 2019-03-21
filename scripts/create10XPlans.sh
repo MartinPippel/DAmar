@@ -1048,9 +1048,9 @@ then
         done
         
         dat=${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/dalign.dat
-        if [[ ! -f ${bam} ]]
+        if [[ ! -f ${dat} ]]
    		then 
-   			(>&2 echo "ERROR - cannot dat file missing : ${dat}!. Rerun step 03_scaff10xPrepareIntermediate!")
+   			(>&2 echo "ERROR - dat file missing : ${dat}!. Rerun step 03_scaff10xPrepareIntermediate!")
         	exit 1
    		fi
    		
