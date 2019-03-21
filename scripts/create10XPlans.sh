@@ -1071,7 +1071,7 @@ then
     	prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
         ext=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
                 
-        options="-debug 1 -tmp $(pwd)/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ -dat ${dat}"
+        options="-debug 1 -tmp $(pwd)/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ -dat ../bams/dalign.dat"
         echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${REFNAME} dummy1 dummy2 ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${ext}.fasta" >> 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan        
 		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" > 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.version
 	## 05_scaff10Xstatistics   		
