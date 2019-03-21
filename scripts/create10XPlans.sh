@@ -92,6 +92,16 @@ function setScaff10xOptions()
 		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -reads ${SC_10X_SCAFF10X_MINREADS}"		
 	fi
 	
+	if [[ -n ${SC_10X_SCAFF10X_MINREADS_STEP1} && ${SC_10X_SCAFF10X_MINREADS_STEP1} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -read-s1 ${SC_10X_SCAFF10X_MINREADS_STEP1}"		
+	fi
+	
+	if [[ -n ${SC_10X_SCAFF10X_MINREADS_STEP2} && ${SC_10X_SCAFF10X_MINREADS_STEP2} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -read-s2 ${SC_10X_SCAFF10X_MINREADS_STEP2}"		
+	fi
+	
 	if [[ -n ${SC_10X_SCAFF10X_LONGREAD} && ${SC_10X_SCAFF10X_LONGREAD} -ne 0 ]]
 	then
 		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -longread ${SC_10X_SCAFF10X_LONGREAD}"		
@@ -110,6 +120,16 @@ function setScaff10xOptions()
 	if [[ -n ${SC_10X_SCAFF10X_MINSHAREDBARCODES} && ${SC_10X_SCAFF10X_MINSHAREDBARCODES} -ne 0 ]]
 	then
 		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -link ${SC_10X_SCAFF10X_MINSHAREDBARCODES}"		
+	fi
+
+	if [[ -n ${SC_10X_SCAFF10X_MINSHAREDBARCODES_STEP1} && ${SC_10X_SCAFF10X_MINSHAREDBARCODES_STEP1} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -link-s1 ${SC_10X_SCAFF10X_MINSHAREDBARCODES_STEP1}"		
+	fi
+
+	if [[ -n ${SC_10X_SCAFF10X_MINSHAREDBARCODES_STEP2} && ${SC_10X_SCAFF10X_MINSHAREDBARCODES_STEP2} -ne 0 ]]
+	then
+		SCAFF10X_SCAFF10X_OPT="${SCAFF10X_SCAFF10X_OPT} -link-s2 ${SC_10X_SCAFF10X_MINSHAREDBARCODES_STEP2}"		
 	fi
 	
 	if [[ -n ${SC_10X_SCAFF10X_BLOCK} && ${SC_10X_SCAFF10X_BLOCK} -ne 0 ]]
@@ -1071,9 +1091,9 @@ then
     	prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
         ext=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
                 
-        options="-debug 1 -tmp $(pwd)/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ -dat ../bams/dalign.dat"
-        echo "${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${REFNAME} dummy1 dummy2 ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${ext}.fasta" >> 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan        
-		echo "scaff10x $(cat ${SCAFF10X_PATH}/version.txt)" > 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.version
+        options="-debug 1 -data ../bams/dalign.dat"
+        echo "cd ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ && ${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${REFNAME} dummy1 dummy2 ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${ext}.fasta && cd  ../../" >> 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan        
+		echo "scaff10x $(${SCAFF10X_PATH}/scaff10x | grep Version)" > 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.version
 	## 05_scaff10Xstatistics   		
    	elif [[ ${currentStep} -eq 5 ]]
     then

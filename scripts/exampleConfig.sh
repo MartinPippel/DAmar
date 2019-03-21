@@ -31,7 +31,7 @@ WHATSHAP_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate whats
 ### ENVIRONMENT VARIABLES 
 export PATH=${MARVEL_PATH}/bin:${MARVEL_PATH}/scripts:$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:$PYTHONPATH
-export SCAFF10X_PATH="/projects/dazzler/pippel/prog/scaffolding/scaff10x"
+export SCAFF10X_PATH="/projects/dazzler/pippel/prog/scaffolding/Scaff10X_git/src/scaff-bin"
 export BIONANO_PATH="/projects/dazzler/pippel/prog/bionano/Solve3.3_10252018"
 export SALSA_PATH="/projects/dazzler/pippel/prog/scaffolding/SALSA"
 export QUAST_PATH="/projects/dazzler/pippel/prog/quast/"
