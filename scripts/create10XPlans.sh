@@ -1001,7 +1001,7 @@ then
    		
    		if [[ ! -f ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME} ]]
    		then
-   			ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}
+   			echo "ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}"
    		fi >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan   		
    		
    		## we need a special reference fastq file with other names  
@@ -1158,7 +1158,7 @@ then
    		
    		if [[ ! -f ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/${REFNAME} ]]
    		then
-   			ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/${REFNAME}
+   			echo "ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/${REFNAME}"
    		fi >> 10x_01_break10xPrepare_single_${CONT_DB}.${slurmID}.plan   		
    		
    		## we need a special reference fastq file with other names  
