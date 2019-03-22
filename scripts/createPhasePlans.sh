@@ -377,11 +377,11 @@ then
    		### resort vcf according to reference
    		echo "java -jar ${GATK_PATH} SortVcf -I=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams/10x_${PROJECT_ID}_longrangerWgs/outs/phased_variants.vcf.gz -O=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/phased_sort.vcf -SD=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.dict" > phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
    		### filter phased vcf files for PASS calls
-   		echo "bcftools view -Ob -f PASS ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/phased_sort.vcf -o ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+   		echo "${BCFTOOLS_PATH}/bcftools view -Ob -f PASS ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/phased_sort.vcf -o ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
    		### index bcf file
-		echo "bcftools index ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan   		
-   		echo "bcftools consensus -H1 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fa ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h1.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
-   		echo "bcftools consensus -H2 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fa ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h2.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+		echo "${BCFTOOLS_PATH}/bcftools index ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan   		
+   		echo "${BCFTOOLS_PATH}/bcftools consensus -H1 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fa ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h1.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
+   		echo "${BCFTOOLS_PATH}/bcftools consensus -H2 -f ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-phase/fasta/genome.fa ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_sort.bcf > ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h2.fasta" >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
    		
    		if [ -s "${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/ignore.fasta" ]
 		then 
@@ -392,7 +392,7 @@ then
    			echo "ln -s -f -r ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/filtered_phased_variants.h2.fasta ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/${PROJECT_ID}_phased.h2.fasta"
 		fi >> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.plan
    		
-   		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.version
+   		echo "bcftools $(${BCFTOOLS_PATH}/bcftools --version | head -n1 | awk '{print $2}')" > phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.version
    		echo "gatk SortVcf $(java -jar ${GATK_PATH} SortVcf --version | 1> /dev/null)" 2>> phase_03_LongrangerBcftoolsConsensus_single_${CONT_DB}.${slurmID}.version
    	## 04_LongrangerStatistics
    	elif [[ ${currentStep} -eq 4 ]]

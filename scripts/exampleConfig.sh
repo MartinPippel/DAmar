@@ -46,6 +46,7 @@ export LINKS_PATH="/projects/dazzler/pippel/prog/scaffolding/links_v1.8.6/"
 export JELLYFISH_PATH="/projects/dazzler/pippel/prog/Jellyfish/jellyfish-2.2.10/bin/"
 export GENOMESCOPE_PATH="/projects/dazzler/pippel/prog/genomescope/"
 export GATK_PATH="/projects/dazzler/pippel/prog/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar"
+export BCFTOOLS_PATH="/projects/dazzler/pippel/prog/bcftools"
 
 ## general information
 PROJECT_ID=iHylVes1
