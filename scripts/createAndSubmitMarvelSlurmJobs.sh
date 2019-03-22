@@ -282,56 +282,6 @@ done
 end=\$(date +%s)
 echo \"${file}.plan end \$end\"
 echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
-			else    # jtype == single ? can this really happen > 9999 jobs that are sequentially executed 
-	            echo "#!/bin/bash
-#SBATCH -J ${PROJECT_ID}_p${currentPhase}s${currentStep}
-#SBATCH -p ${SLURM_PARTITION}
-#SBATCH -c ${CORES} # Number of cores
-#SBATCH -n 1 # number of nodes
-#SBATCH -o ${log_folder}/${prefix}_${cjobid}_${db}_${d}_%A.out # Standard output
-#SBATCH -e ${log_folder}/${prefix}_${cjobid}_${db}_${d}_%A.err # Standard error
-#SBATCH --time=${TIME}
-#SBATCH --mem-per-cpu=$((${MEM}/${CORES}))
-#SBATCH --mail-user=pippel@mpi-cbg.de
-#SBATCH --mail-type=FAIL" > ${file}.slurm
-			if [[ -n ${SLURM_NUMACTL} && ${SLURM_NUMACTL} -gt 0  ]]
-			then	
-				echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
-			fi
-		    if [[ -n ${SLURM_ACCOUNT} ]]
-            then
-                echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
-            fi
-
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "qc" ]] 
-			then
-				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
-			elif [[ ${prefix} == "purgeHaplotigs" ]]
-			then	
-				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
-			fi
-
-			echo "export PATH=${MARVEL_PATH}/bin:\$PATH
-export PATH=${MARVEL_PATH}/scripts:\$PATH
-export PYTHONPATH=${MARVEL_PATH}/lib.python:\$PYTHONPATH
-
-FIRSTJOB=1
-LASTJOB=\$(wc -l ${file}.plan | awk '{print \$1}')
-
-beg=\$(date +%s)
-echo \"${file}.plan beg \$beg\"
-
-i=\${FIRSTJOB}
-while [[ \$i -le \${LASTJOB} ]]
-do 
-  echo \"eval line \$i\"
-  eval \$(sed -n \${i}p ${file}.plan) || exit 100
-  i=\$((\$i+1))
-done
-
-end=\$(date +%s)
-echo \"${file}.plan end \$end\"
-echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}.slurm
 	        fi
 	        d=$(($d+1))
 	        from=$((${to}+1))
