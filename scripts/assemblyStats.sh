@@ -412,7 +412,34 @@ then
 	    	done
 	    elif [[ ${SC_10X_TYPE} -eq 1 ]]
 		then
-			(>&2 echo "ERROR - 10x scaffolding type: ${SC_10X_TYPE}. Not implemented yet!")			
+			(>&2 echo "ERROR - 10x scaffolding type: ${SC_10X_TYPE}. Not implemented yet!")
+		elif [[ ${SC_10X_TYPE} -eq 2 ]] ## the new scaff10x 4.0 pipeline 
+		then
+			mRouAeg_m13_Affsx.p1.fasta.agp
+			preName=$(basename ${SC_10X_REF%.fasta})
+			prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+			prevSet=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
+			
+	        scaffdir="${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}"
+	        # scaff10x step 2
+	        inputScaffold="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${prevSet}.fasta"
+			
+			if [[ -f ${inputScaffold} ]]
+    		then
+    			f=$(basename $inputScaffold)
+    			cp ${inputScaffold} ${scaff10xPath}/
+    			cp ${inputScaffold}.agp ${scaff10xPath}/
+    			gzip -c ${scaff10xPath}/${f} > ${scaff10xPath}/${f%.fasta}.fa.gz
+    			cat ${scaff10xPath}/${f} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${f%.fasta}.stats
+    			${QUAST_PATH}/quast.py -o ${scaff10xPath}/${f%.fasta} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${f}
+    		else
+    			(>&2 echo "WARNING assemblyStats.sh 12 - File ${x} is missing.")	
+    			exit 1
+    		fi	
+	    elif [[ ${SC_10X_TYPE} -eq 3 ]]
+		then
+			(>&2 echo "ERROR - 10x scaffolding type: ${SC_10X_TYPE}. Not implemented yet!")
+    							
 		else
 	    	(>&2 echo "ERROR - unknow 10x scaffolding type: ${SC_10X_TYPE}")
   			exit 1
