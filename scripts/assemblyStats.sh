@@ -415,7 +415,6 @@ then
 			(>&2 echo "ERROR - 10x scaffolding type: ${SC_10X_TYPE}. Not implemented yet!")
 		elif [[ ${SC_10X_TYPE} -eq 2 ]] ## the new scaff10x 4.0 pipeline 
 		then
-			mRouAeg_m13_Affsx.p1.fasta.agp
 			preName=$(basename ${SC_10X_REF%.fasta})
 			prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
 			prevSet=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
