@@ -209,11 +209,13 @@ CT_PHASE_SUBMIT_SCRIPTS_TO=4
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-SC_10X_TYPE=0
-# Type: 0 scaff10x/break10x pipeline 	steps: 01_scaff10Xprepare, 02_scaff10Xbreak10, 03_scaff10Xscaff10x, 04_scaff10Xbreak10x, 05_scaff10Xscaff10x, 06_scaff10Xbreak10x, 07_scaff10Xstatistics
-# Type: 1 tigmint arks pipeline 		steps: 01_arksPrepare, 02_arksLonranger, 03_arksTigmint, 04_arksArks, 05_arksLINKS
+SC_10X_TYPE=2
+#type 0: scaff10x - break10x pipeline		steps: 01_scaff10xprepare, 02_scaff10xbreak10, 03_scaff10xscaff10x, 04_scaff10xbreak10x, 05_scaff10xscaff10x, 06_scaff10xbreak10x, 07_scaff10xStatistics
+#type 1: tigmint - arks - links pipeline	steps: 01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks, 05_arksLINKS
+#type 2: scaff10x using longranger bam		steps: 01_scaff10xprepare, 02_scaff10xLongrangerAlign, 03_scaff10xPrepareIntermediate, 04_scaff10xScaff10x, 05_scaff10xStatistics
+#type 3: break10x using longranger bam		steps: 01_break10xPrepare, 02_break10xLongrangerAlign, 03_break10xPrepareIntermediate, 04_break10xBreak10x, 05_break10xStatistics
 SC_10X_SUBMIT_SCRIPTS_FROM=1
-SC_10X_SUBMIT_SCRIPTS_TO=7
+SC_10X_SUBMIT_SCRIPTS_TO=5
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - bionano scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
