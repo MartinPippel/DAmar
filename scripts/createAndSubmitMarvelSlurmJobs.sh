@@ -331,7 +331,7 @@ done
 
 end=\$(date +%s)
 echo \"${file}.plan end \$end\"
-echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}}.slurm
+echo \"${file}.plan run time: $((${end}-${beg}))\"" >> ${file}.slurm
 	        fi
 	        d=$(($d+1))
 	        from=$((${to}+1))
