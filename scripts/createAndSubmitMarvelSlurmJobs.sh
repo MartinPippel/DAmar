@@ -211,7 +211,7 @@ then
 	log_folder=log_${prefix}_${jname}_${db}
 	mkdir -p ${log_folder}
 	first=1
-	if [[ ${JOBS} -gt 9999 ]]
+	if [[ ${JOBS} -gt 9999 && ${jtype} == "block" ]]
 	then
 	    from=1
 	    to=9999
@@ -222,9 +222,7 @@ then
 	        sed -n ${from},${to}p ${prefix}_${cjobid}_${jname}_${jtype}_${db}.${slurmID}.plan > ${file}.plan
 	        jobs=$((${to}-${from}+1))
 	        ### create slurm submit file
-	        if [[ ${jtype} == "block" ]]
-	        then 
-	            echo "#!/bin/bash
+	        echo "#!/bin/bash
 #SBATCH -J ${PROJECT_ID}_p${currentPhase}s${currentStep}
 #SBATCH -p ${SLURM_PARTITION}
 #SBATCH -a 1-${jobs}${STEPSIZE}
@@ -236,27 +234,27 @@ then
 #SBATCH --mem-per-cpu=$((${MEM}/${CORES}))
 #SBATCH --mail-user=pippel@mpi-cbg.de
 #SBATCH --mail-type=FAIL" > ${file}.slurm
-	            if [[ -n ${NTASKS_PER_NODE} ]]
-	            then
-	                echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
-	            fi 
-	        	if [[ -n ${SLURM_NUMACTL} && ${SLURM_NUMACTL} -gt 0  ]]
-				then	
-					echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
-				fi
-                if [[ -n ${SLURM_ACCOUNT} ]]
-                then
-                    echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
-                fi
-				if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "qc" ]]
-				then
-					echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
-				elif [[ ${prefix} == "purgeHaplotigs" ]]
-				then	
-					echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
-				fi
-				
-	            echo "export PATH=${MARVEL_PATH}/bin:\$PATH
+            if [[ -n ${NTASKS_PER_NODE} ]]
+            then
+                echo "#SBATCH --ntasks-per-node=${NTASKS_PER_NODE}" >> ${file}.slurm
+            fi 
+        	if [[ -n ${SLURM_NUMACTL} && ${SLURM_NUMACTL} -gt 0  ]]
+			then	
+				echo -e "#SBATCH --mem_bind=verbose,local" >> ${file}.slurm			
+			fi
+            if [[ -n ${SLURM_ACCOUNT} ]]
+            then
+                echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
+            fi
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "qc" ]]
+			then
+				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "purgeHaplotigs" ]]
+			then	
+				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+			fi
+			
+            echo "export PATH=${MARVEL_PATH}/bin:\$PATH
 export PATH=${MARVEL_PATH}/scripts:\$PATH
 export PYTHONPATH=${MARVEL_PATH}/lib.python:\$PYTHONPATH
 
@@ -282,7 +280,6 @@ done
 end=\$(date +%s)
 echo \"${file}.plan end \$end\"
 echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
-	        fi
 	        d=$(($d+1))
 	        from=$((${to}+1))
 	        to=$((${to}+9999))
