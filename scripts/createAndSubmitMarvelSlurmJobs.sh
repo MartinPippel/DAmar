@@ -410,7 +410,7 @@ fi
 
 if [[ ${resumeIdx} -eq 0 ]]
 then
-	if [[ ${JOBS} -gt 9999 ]]
+	if [[ ${JOBS} -gt 9999 && ${jtype} == "block" ]]
 	then
 		resumeIdx=1
 		file=${prefix}_${cjobid}_${jname}_${jtype}_${db}.${slurmID}.${resumeIdx}
