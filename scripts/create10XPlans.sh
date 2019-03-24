@@ -1247,7 +1247,7 @@ then
         ext=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
                 
         options="-debug 1 -dat ../bams/dalign.dat"
-        echo "cd ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ && ${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${REFNAME} ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}b.${ext}.fasta && cd  ../../" >> 10x_04_break10xBreak10x_single_${CONT_DB}.${slurmID}.plan        
+        echo "cd ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ && ${SCAFF10X_PATH}/break10x${SCAFF10X_BREAK10X_OPT} ${options} ${REFNAME} ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}b.${ext}.fasta ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}b.${ext}.breaks && cd  ../../" >> 10x_04_break10xBreak10x_single_${CONT_DB}.${slurmID}.plan        
 		echo "break10x $(${SCAFF10X_PATH}/break10x | grep Version)" > 10x_04_break10xBreak10x_single_${CONT_DB}.${slurmID}.version
 	## 05_break10xStatistics   		
    	elif [[ ${currentStep} -eq 5 ]]
