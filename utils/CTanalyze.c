@@ -1756,7 +1756,9 @@ void analyzeContigCreadIntersection(AnalyzeContext *actx)
 
 	int * contigJCovHist, *contigKCovHist;
 	int binSize = 100;
-	int nBins = (DB_READ_MAXLEN(actx->corContigDB) / binSize) + 1;
+	// FIX:  due to a very fragmented insect assembly, where the corrected vs uncorrected contig lengths differ significatntly, we have to increase the nBin by 20%
+	// TODO: keep track of longest uncorrected contig
+	int nBins = (DB_READ_MAXLEN(actx->corContigDB)*1.2 / binSize) + 1;
 	contigJCovHist = (int*) malloc(sizeof(int) * nBins);
 	contigKCovHist = (int*) malloc(sizeof(int) * nBins);
 
