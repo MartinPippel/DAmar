@@ -153,6 +153,9 @@ typedef struct
 	int numIntervals;
 	int curItv;
 	anchorItv *uniqIntervals;
+
+	int mergeRepeatsWindow;
+	int mergeRepeatsMaxLen;
 } FilterContext;
 
 extern char* optarg;
@@ -1839,8 +1842,8 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	}
 
 	int MINANCHOR = 10;
-	int WINDOW = 600;
-	int MAXMERGE = 2400;
+	int WINDOW =   ctx->mergeRepeatsWindow;
+	int MAXMERGE = ctx->mergeRepeatsMaxLen;
 	int i, b, e;
 
 	track_anno* repeats_anno = ctx->trackRepeat->anno;
@@ -2464,7 +2467,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpLqTwWZ] [-dnolRsSumMfyYzZ <int>] [-rtD <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpLqTwZ] [-dnolRsSumMfyYzZVW <int>] [-rtD <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v ... verbose\n");
 	fprintf(stderr, "         -d ... max divergence allowed [0,100]\n");
@@ -2505,6 +2508,9 @@ static void usage()
 	fprintf(stderr,
 			"                This option was included to get rid of low coverage repeats or random alignments, that clearly get separated by diff scores\n");
 	fprintf(stderr, "         -D ... read low complexity track (dust or tan_dust)\n");
+	fprintf(stderr, "         -V ... max merge distance of neighboring repeats (default: 2400)\n");
+	fprintf(stderr, "         -W ... window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
+	fprintf(stderr, "                or at -W bases at the tips of the neighboring repeat. Those can cause a fragmented repeat mask. (default: 600)\n");
 }
 
 static int opt_repeat_count(int argc, char** argv, char opt)
@@ -2587,6 +2593,9 @@ int main(int argc, char* argv[])
 	fctx.removeMultiMappers = 0;
 	fctx.remUpToXPercAln = 0;
 
+	fctx.mergeRepeatsWindow = 600;
+	fctx.mergeRepeatsMaxLen = 2400;
+
 	int c;
 
 	fctx.rm_mode = opt_repeat_count(argc, argv, 'm');
@@ -2596,7 +2605,7 @@ int main(int argc, char* argv[])
 	}
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "TvLpwy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:")) != -1)
+	while ((c = getopt(argc, argv, "TvLpwy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:V:W:")) != -1)
 	{
 		switch (c)
 		{
@@ -2722,6 +2731,15 @@ int main(int argc, char* argv[])
 		case 'D':
 			arg_dustTrack = optarg;
 			break;
+
+		case 'W':
+			fctx.mergeRepeatsWindow = atoi(optarg);
+			break;
+
+		case 'V':
+			fctx.mergeRepeatsMaxLen = atoi(optarg);
+			break;
+
 
 		default:
 			fprintf(stderr, "[ERROR] unknown option -%c\n", optopt);
