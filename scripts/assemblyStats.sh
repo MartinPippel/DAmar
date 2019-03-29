@@ -366,124 +366,115 @@ then
 	fi
 elif [[ ${phase} -eq 12 ]] ## 10x scaffolding 
 then
-	if [[ -d ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ]]
+	if [[ ${SC_10X_TYPE} -eq 0 ]] && [[ -d ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ]]
+	then 
+		
+		scaff10xPath=stats/contigs/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}
+		if [[ -d ${scaff10xPath} ]]
+		then
+			mv ${scaff10xPath} ${scaff10xPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
+		mkdir -p ${scaff10xPath}
+		
+		prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+        scaffdir="${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}"
+        # scaff10x step 2
+        inputScaffold0="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}b.p.fasta"
+        inputScaffold1="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.p.fasta" 
+    	inputScaffold2="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}bx.p.fasta"
+    	# scaff10x step 3a - break10x
+    	inputScaffold3="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}xb.p.fasta" 
+    	inputScaffold4="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}bxb.p.fasta"
+    	# scaff10x step 3b - scaff10x
+    	inputScaffold5="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}xx.p.fasta"
+    	inputScaffold6="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}bxbx.p.fasta"
+    	# scaff10x step 3c - break10x
+    	inputScaffold7="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}xxb.p.fasta"
+    	inputScaffold8="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}xbxb.p.fasta"
+    	inputScaffold9="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}bxbxb.p.fasta"
+    	
+    	cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
+    	for x in ${inputScaffold0} ${inputScaffold1} ${inputScaffold2} ${inputScaffold3} ${inputScaffold4} ${inputScaffold5} ${inputScaffold6} ${inputScaffold7} ${inputScaffold8} ${inputScaffold9}
+    	do 
+    		if [[ -f ${x} ]]
+    		then
+    			f=$(basename $x)
+    			cp ${x} ${scaff10xPath}/
+    			gzip -c ${scaff10xPath}/${f} > ${scaff10xPath}/${f%.fasta}.fa.gz
+    			cat ${scaff10xPath}/${f} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${f%.fasta}.stats
+    			${QUAST_PATH}/quast.py -o ${scaff10xPath}/${f%.fasta} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${f}
+    		else
+    			(>&2 echo "WARNING assemblyStats.sh 12 - File ${x} is missing.")	
+    		fi
+    	done
+    elif [[ ${SC_10X_TYPE} -eq 1 ]] && [[ -d ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ]]
+	then
+		(>&2 echo "ERROR - 10x scaffolding type: ${SC_10X_TYPE}. Not implemented yet!")
+	elif [[ ${SC_10X_TYPE} -eq 2 ]] && [[ -d ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ]] ## the new scaff10x 4.0 pipeline 
+	then
+		scaff10xPath=stats/contigs/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}
+		if [[ -d ${scaff10xPath} ]]
+		then
+			mv ${scaff10xPath} ${scaff10xPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
+		mkdir -p ${scaff10xPath}
+		
+		preName=$(basename ${SC_10X_REF%.fasta})
+		prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		prevSet=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		
+        scaffdir="${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}"
+        # scaff10x step 2
+        inputScaffold="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${prevSet}.fasta"
+		
+		if [[ -f ${inputScaffold} ]]
+		then
+			f=$(basename $inputScaffold)
+			cp ${inputScaffold} ${scaff10xPath}/
+			cp ${inputScaffold}.agp ${scaff10xPath}/
+			gzip -c ${scaff10xPath}/${f} > ${scaff10xPath}/${f%.fasta}.fa.gz
+			cat ${scaff10xPath}/${f} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${f%.fasta}.stats
+			${QUAST_PATH}/quast.py -o ${scaff10xPath}/${f%.fasta} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${f}
+			cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
+		else
+			(>&2 echo "WARNING assemblyStats.sh 12 - File ${inputScaffold} is missing.")	
+			exit 1
+		fi	
+    elif [[ ${SC_10X_TYPE} -eq 3 ]] && [[ -d ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID} ]]
 	then
 		
-		fext="x"	
-				
-		if [[ ${SC_10X_TYPE} -eq 0 ]]
-		then 
-			
-			scaff10xPath=stats/contigs/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}
-			if [[ -d ${scaff10xPath} ]]
-			then
-				mv ${scaff10xPath} ${scaff10xPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
-			fi
-			mkdir -p ${scaff10xPath}
-			
-			prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
-	        scaffdir="${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}"
-	        # scaff10x step 2
-	        inputScaffold0="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}b.p.fasta"
-	        inputScaffold1="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.p.fasta" 
-	    	inputScaffold2="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}bx.p.fasta"
-	    	# scaff10x step 3a - break10x
-	    	inputScaffold3="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}xb.p.fasta" 
-	    	inputScaffold4="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}bxb.p.fasta"
-	    	# scaff10x step 3b - scaff10x
-	    	inputScaffold5="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}xx.p.fasta"
-	    	inputScaffold6="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}bxbx.p.fasta"
-	    	# scaff10x step 3c - break10x
-	    	inputScaffold7="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}xxb.p.fasta"
-	    	inputScaffold8="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}xbxb.p.fasta"
-	    	inputScaffold9="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}bxbxb.p.fasta"
-	    	
-	    	cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
-	    	for x in ${inputScaffold0} ${inputScaffold1} ${inputScaffold2} ${inputScaffold3} ${inputScaffold4} ${inputScaffold5} ${inputScaffold6} ${inputScaffold7} ${inputScaffold8} ${inputScaffold9}
-	    	do 
-	    		if [[ -f ${x} ]]
-	    		then
-	    			f=$(basename $x)
-	    			cp ${x} ${scaff10xPath}/
-	    			gzip -c ${scaff10xPath}/${f} > ${scaff10xPath}/${f%.fasta}.fa.gz
-	    			cat ${scaff10xPath}/${f} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${f%.fasta}.stats
-	    			${QUAST_PATH}/quast.py -o ${scaff10xPath}/${f%.fasta} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${f}
-	    		else
-	    			(>&2 echo "WARNING assemblyStats.sh 12 - File ${x} is missing.")	
-	    		fi
-	    	done
-	    elif [[ ${SC_10X_TYPE} -eq 1 ]]
+		scaff10xPath=stats/contigs/${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}
+		if [[ -d ${scaff10xPath} ]]
 		then
-			(>&2 echo "ERROR - 10x scaffolding type: ${SC_10X_TYPE}. Not implemented yet!")
-		elif [[ ${SC_10X_TYPE} -eq 2 ]] ## the new scaff10x 4.0 pipeline 
+			mv ${scaff10xPath} ${scaff10xPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
+		fi
+		mkdir -p ${scaff10xPath}
+		
+		preName=$(basename ${SC_10X_REF%.fasta})
+		prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		prevSet=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		
+        scaffdir="${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}"
+        # scaff10x step 2
+        inputScaffold="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}b.${prevSet}.fasta"
+		
+		if [[ -f ${inputScaffold} ]]
 		then
-			scaff10xPath=stats/contigs/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}
-			if [[ -d ${scaff10xPath} ]]
-			then
-				mv ${scaff10xPath} ${scaff10xPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
-			fi
-			mkdir -p ${scaff10xPath}
-			
-			preName=$(basename ${SC_10X_REF%.fasta})
-			prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
-			prevSet=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
-			
-	        scaffdir="${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}"
-	        # scaff10x step 2
-	        inputScaffold="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${prevSet}.fasta"
-			
-			if [[ -f ${inputScaffold} ]]
-    		then
-    			f=$(basename $inputScaffold)
-    			cp ${inputScaffold} ${scaff10xPath}/
-    			cp ${inputScaffold}.agp ${scaff10xPath}/
-    			gzip -c ${scaff10xPath}/${f} > ${scaff10xPath}/${f%.fasta}.fa.gz
-    			cat ${scaff10xPath}/${f} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${f%.fasta}.stats
-    			${QUAST_PATH}/quast.py -o ${scaff10xPath}/${f%.fasta} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${f}
-    			cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
-    		else
-    			(>&2 echo "WARNING assemblyStats.sh 12 - File ${inputScaffold} is missing.")	
-    			exit 1
-    		fi	
-	    elif [[ ${SC_10X_TYPE} -eq 3 ]]
-		then
-			
-			scaff10xPath=stats/contigs/${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}
-			if [[ -d ${scaff10xPath} ]]
-			then
-				mv ${scaff10xPath} ${scaff10xPath}_$(date '+%Y-%m-%d_%H-%M-%S')	
-			fi
-			mkdir -p ${scaff10xPath}
-			
-			preName=$(basename ${SC_10X_REF%.fasta})
-			prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
-			prevSet=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
-			
-	        scaffdir="${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}"
-	        # scaff10x step 2
-	        inputScaffold="${scaffdir}/${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}b.${prevSet}.fasta"
-			
-			if [[ -f ${inputScaffold} ]]
-    		then
-    			f=$(basename $inputScaffold)
-    			cp ${inputScaffold} ${scaff10xPath}/
-    			cp ${inputScaffold%.fasta}.breaks ${scaff10xPath}/
-    			gzip -c ${scaff10xPath}/${f} > ${scaff10xPath}/${f%.fasta}.fa.gz
-    			cat ${scaff10xPath}/${f} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${f%.fasta}.stats
-    			${QUAST_PATH}/quast.py -o ${scaff10xPath}/${f%.fasta} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${f}
-    			cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
-    		else
-    			(>&2 echo "WARNING assemblyStats.sh 12 - File ${inputScaffold} is missing.")	
-    			exit 1
-    		fi
+			f=$(basename $inputScaffold)
+			cp ${inputScaffold} ${scaff10xPath}/
+			cp ${inputScaffold%.fasta}.breaks ${scaff10xPath}/
+			gzip -c ${scaff10xPath}/${f} > ${scaff10xPath}/${f%.fasta}.fa.gz
+			cat ${scaff10xPath}/${f} | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${scaff10xPath}/${f%.fasta}.stats
+			${QUAST_PATH}/quast.py -o ${scaff10xPath}/${f%.fasta} -t 1 -s -e --est-ref-size ${gsize} ${scaff10xPath}/${f}
+			cp ${config} ${scaff10xPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 		else
-	    	(>&2 echo "ERROR - unknow 10x scaffolding type: ${SC_10X_TYPE}")
-  			exit 1
+			(>&2 echo "WARNING assemblyStats.sh 12 - File ${inputScaffold} is missing.")	
+			exit 1
 		fi
 	else
-		(>&2 echo "ERROR - directory ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} not available")
-  		exit 1
-	fi	
+    (>&2 echo "ERROR - unknow 10x scaffolding type: ${SC_10X_TYPE} or directory ${SC_10X_OUTDIR}/[breal10x|scaff10x]s_${SC_10X_RUNID} not available")
+		exit 1
+	fi
 elif [[ ${phase} -eq 13 ]] ## bionano scaffolding 
 then
 	if [[ -d ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID} ]]
