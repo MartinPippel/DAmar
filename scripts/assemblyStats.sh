@@ -682,7 +682,7 @@ then
 		
 		prevExt=$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
 		cset=$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF)}')
-		fext="s"
+		fext="S"
 				
 		if [[ -d ${hicSalsaPath} ]]
 		then
