@@ -273,8 +273,8 @@ then
 		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.version
 	### 02_HICsalsaBwa 
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -362,8 +362,8 @@ then
 			echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${o}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:ILLUMINA\tPU:none\" ${ref} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/reads/${f2} | samtools view -Sb - > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${o}_bwa_2.bam" 				 
 		done > hic_02_HICsalsaBwa_block_${CONT_DB}.${slurmID}.plan
 		
-   		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_02_HICsalsaBwa_block_${CONT_DB}.${slurmID}.version
-   		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_02_HICsalsaBwa_block_${CONT_DB}.${slurmID}.version
+   		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_02_HICsalsaBwa_block_${CONT_DB}.${slurmID}.version
+   		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_02_HICsalsaBwa_block_${CONT_DB}.${slurmID}.version
 	### 03_HICsalsaFilter
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -390,7 +390,7 @@ then
 			echo "samtools view -h ${b2} | perl ${MARVEL_PATH}/scripts/filter_five_end.pl | samtools view -Sb - > ${d}/${f2}" 				 
 		done > hic_03_HICsalsaFilter_block_${CONT_DB}.${slurmID}.plan
 					
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_03_HICsalsaFilter_block_${CONT_DB}.${slurmID}.version	   	
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_03_HICsalsaFilter_block_${CONT_DB}.${slurmID}.version	   	
 	### 04_HICsalsaMerge
     elif [[ ${currentStep} -eq 4 ]]
     then
@@ -427,7 +427,7 @@ then
 			echo "perl ${MARVEL_PATH}/scripts/two_read_bam_combiner.pl ${b1} ${b2} $(which samtools) ${SC_HIC_MINMAPQV} | samtools view -bS -t ${ref}.fai - | samtools sort -o ${o} -"			 				 
 			done > hic_04_HICsalsaMerge_single_${CONT_DB}.${slurmID}.plan
 		   
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_04_HICsalsaMerge_single_${CONT_DB}.${slurmID}.version		
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_04_HICsalsaMerge_single_${CONT_DB}.${slurmID}.version		
    	### 05_HICsalsaMarkduplicates
     elif [[ ${currentStep} -eq 5 ]]
     then
@@ -448,7 +448,7 @@ then
    		## if multiple bam files are available (e.g. different Lanes) then merge files prior to markduplicates
    		files=$(ls ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/*_bwaFilt.bam)
    		   		   		
-   		echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" > hic_05_HICsalsaMarkduplicates_single_${CONT_DB}.${slurmID}.version
+   		echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && conda deactivate)" > hic_05_HICsalsaMarkduplicates_single_${CONT_DB}.${slurmID}.version
    		
    		if [[ $(echo $files | wc -w) -eq 1 ]]
    		then
@@ -462,7 +462,7 @@ then
    			m=${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.metrics
    			i=$(echo -e ${files} | sed -e "s:${SC_HIC_OUTDIR}:I=${SC_HIC_OUTDIR}:g")
    			echo "picard ${CONTIG_PICARD_OPT} MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard ${CONTIG_PICARD_OPT} MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${SC_HIC_SAMTOOLS_THREADS} ${o} && ln -s -f -r ${o} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID} && ln -s -f -r ${ob}.bai ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}"
-   			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && ${PACBIO_BASE_ENV_DEACT})" >> hic_05_HICsalsaMarkduplicates_single_${CONT_DB}.${slurmID}.version	
+   			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && conda deactivate)" >> hic_05_HICsalsaMarkduplicates_single_${CONT_DB}.${slurmID}.version	
    		else
    	 		(>&2 echo "ERROR - cannot find file with following pattern: ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/*_bwaFilt.bam!")
         	exit 1
@@ -508,7 +508,7 @@ then
        	echo "export PATH=${SALSA_PATH}:\$PATH && run_pipeline.py -a ${ref} -l ${ref}.fai -b ${bed} -e ${SC_HIC_ENZYME_SEQ} -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out -m yes" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
        	
        	echo "SALSA $(git --git-dir=${SALSA_PATH}/.git rev-parse --short HEAD)" > hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
-       	echo "${PACBIO_BASE_ENV} && bedtools --version && ${PACBIO_BASE_ENV_DEACT}" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
+       	echo "${PACBIO_BASE_ENV} && bedtools --version && conda deactivate" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
     ### 07_HICsalsaStatistics
     elif [[ ${currentStep} -eq 7 ]]
     then
@@ -645,8 +645,8 @@ then
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
 	### 02_HIC3dnaJuicer
 	elif [[ ${currentStep} -eq 2 ]]
     then
@@ -777,8 +777,8 @@ then
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
 		echo "3d-dna $(git --git-dir=${THREEDDNA_PATH}/.git rev-parse --short HEAD)" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.version
 	### 02_HIC3dnaJuicer
 	elif [[ ${currentStep} -eq 2 ]]
