@@ -329,7 +329,7 @@ then
         	## we have to trim off the 10x adapter
         	
         	numR1Files=0
-			for x in TENX_PATH/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
+			for x in ${TENX_PATH}/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
 			do
 				if [[ -f ${x} ]]
 				then	
