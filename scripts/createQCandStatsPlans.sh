@@ -464,16 +464,16 @@ then
     	then 
     		for x in 10x/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
     		do
-    			echo "cat ${x} $(echo ${x} | sed -e "s:_R1_:_R2_:") mash sketch -k 21 -s 10000 -r -m 2 -o $(echo ${x%.fastq.gz}.msh | sed -e "s:_R1::") -"
+    			echo "zcat ${x} $(echo ${x} | sed -e "s:_R1_:_R2_:") | mash sketch -k 21 -s 10000 -r -m 2 -o $(echo ${x%.fastq.gz}.msh | sed -e "s:_R1::") -"
     		done
     	fi >> qc_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.plan
     	
     	# hic
     	if [[ -n ${HIC_PATH} && -d "${HIC_PATH}" && -d hic ]]
     	then
-    		for x in ${HIC_PATH}/${PROJECT_ID}_*_*_R1.fastq.gz
+    		for x in hic/${PROJECT_ID}_*_*_R1.fastq.gz
 			do
-				echo "cat ${x} ${x%_R1.fastq.gz}_R2.fastq.gz | mash sketch -k 21 -s 10000 -r -m 2 -o ${x%_R1.fastq.gz}.msh -"
+				echo "zcat ${x} ${x%_R1.fastq.gz}_R2.fastq.gz | mash sketch -k 21 -s 10000 -r -m 2 -o ${x%_R1.fastq.gz}.msh -"
 			done    		
     	fi >> qc_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.plan
     	
