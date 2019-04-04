@@ -199,8 +199,8 @@ then
 			tail -n +2 ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats | awk '{print $8"_"$7}' > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist 
 			${SEQKIT_PATH} grep -f ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.fasta > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.fasta
 			${SEQKIT_PATH} grep -v -f ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.fasta > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.fasta
-			cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.stats
-			cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.stats 
+			cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.stats
+			cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.stats 
 		done
 	else
 		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/correction/contigs not available")
