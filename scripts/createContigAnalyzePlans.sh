@@ -898,13 +898,16 @@ then
         done
                 
         ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
-        if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
-        then 
-        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
-    	else
-        	cwd=$(pwd)
-        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
-    	fi
+        if [[ -n ${COR_CONTIG_CTANALYZE_FULLSTATS} && ${COR_CONTIG_CTANALYZE_FULLSTATS} -gt 0 ]]
+        then
+	        if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+	        then 
+	        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+	    	else
+	        	cwd=$(pwd)
+	        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+	    	fi
+		fi
         ### create assemblyStats plan 
         echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 8" > cont_15_CTstatistics_single_${CONT_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > cont_15_CTstatistics_single_${CONT_DB%.db}.${slurmID}.version 

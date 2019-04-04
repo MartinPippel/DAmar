@@ -38,7 +38,7 @@ export QUAST_PATH="/projects/dazzler/pippel/prog/quast/"
 export JUICER_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer"
 export JUICER_TOOLS_PATH="/projects/dazzler/pippel/prog/scaffolding/juicer_tools.1.9.8_jcuda.0.8.jar"
 export THREEDDNA_PATH="/projects/dazzler/pippel/prog/scaffolding/3d-dna/"
-export LONGRANGER_PATH="/projects/dazzler/pippel/prog/longranger-2.2.0"
+export LONGRANGER_PATH="/projects/dazzler/pippel/prog/longranger-2.2.2"
 export SUPERNOVA_PATH="/projects/dazzler/pippel/prog/supernova-2.1.1"
 export ARKS_PATH="/projects/dazzler/pippel/prog/scaffolding/arks-build/bin"
 export TIGMINT_PATH="/projects/dazzler/pippel/prog/scaffolding/tigmint/bin"
@@ -538,6 +538,8 @@ FIX_FILT_LAFILTER_VERBOSE=0	  # be carful if enabnled creates huge log files
 FIX_FILT_LAFILTER_NREP=100
 FIX_FILT_LAFILTER_OLEN=4000
 FIX_FILT_LAFILTER_PURGE=1
+FIX_FILT_LAFILTER_MAXREPEATMERGELEN=3000
+FIX_FILT_LAFILTER_MAXREPEATMERGEWINDOW=800
 #FIX_FILT_LAFILTER_STITCH=${SCRUB_LAGAP_STITCH}
 FIX_FILT_LAFILTER_REPEAT_IDX=0
 FIX_FILT_LAFILTER_TRIM=1
@@ -660,7 +662,8 @@ then
       COR_CONTIG_CTANALYZE_READREPEATTRACK=frepeats_c${FIX_SCRUB_LAREPEAT_COV[$x]}_l${FIX_SCRUB_LAREPEAT_LEAVE_COV[$x]}h${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}_${ptype}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust
 else  
       COR_CONTIG_CTANALYZE_READREPEATTRACK=frepeats_calCov_l${FIX_SCRUB_LAREPEAT_LEAVE_COV[$x]}h${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}_${ptype}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust
-fi   
+fi  
+COR_CONTIG_CTANALYZE_FULLSTATS=0   
 
 # ----------------------------------------------------------------- PACBIO ARROW OPTIONS ----------------------------------------------------------------------------------------------------
 
@@ -763,11 +766,15 @@ SC_10X_SCAFF10X_THREADS=48
 #SC_10X_SCAFF10X_ALIGNER=bwa		### bwa or smalt
 #SC_10X_SCAFF10X_SCORE=20
 SC_10X_SCAFF10X_MATRIX=2000
-SC_10X_SCAFF10X_MINREADS=12				### VGP: round1: 12, round2: 8 (default: 10)
+#SC_10X_SCAFF10X_MINREADS=12                            ### VGP: round1: 12, round2: 8 (default: 10)
+SC_10X_SCAFF10X_MINREADS_STEP1=12
+SC_10X_SCAFF10X_MINREADS_STEP2=8
 SC_10X_SCAFF10X_LONGREAD=1
-SC_10X_SCAFF10X_GAPSIZE=100				### should be the same as used in scaff_reads
+SC_10X_SCAFF10X_GAPSIZE=100                             ### should be the same as used in scaff_reads
 SC_10X_SCAFF10X_EDGELEN=50000
-SC_10X_SCAFF10X_MINSHAREDBARCODES=10		### VGP: round1: 10, round2: 10
+#SC_10X_SCAFF10X_MINSHAREDBARCODES=10           ### VGP: round1: 10, round2: 10
+SC_10X_SCAFF10X_MINSHAREDBARCODES_STEP1=10
+SC_10X_SCAFF10X_MINSHAREDBARCODES_STEP2=10
 SC_10X_SCAFF10X_BLOCK=50000				### VGP: round1: 50000, round2: 50000
 #SC_10X_SCAFF10X_SAM="path to previously created sam file"
 #SC_10X_SCAFF10X_BAM="path to previously created bam file"
