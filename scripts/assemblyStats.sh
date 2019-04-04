@@ -193,7 +193,7 @@ then
 		mkdir -p ${p}/filter
 		## add some primary contig filter based on repeats
 		header="count cumBases $(head -n 1 ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.cstats)"  
-		for x in (seq 70 1 80)
+		for x in $(seq 70 1 80)
 		do
 		tail -n +2 ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.cstats | awk -v t=${x} '{if ($3>t || $4 > t) {s+=$2; c+=1; print c"\t"s"\t"$0}}' > filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats
 			tail -n +2 filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats | awk '{print $8"_"$7}' > filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist 
