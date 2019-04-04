@@ -333,14 +333,45 @@ function setLAfilterOptions()
         fi
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	if [[ ${#FIX_FILT_LAFILTER_REPEAT_IDX[@]} -eq 0 ]] ## its not a bash arroy
+        	then
+        		tmp=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	elif [[ ${#FIX_FILT_LAFILTER_REPEAT_IDX[@]} -eq 1 ]] ## bash arroy with one element
+        	then
+        		tmp=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX[0]}]} | awk '{print $NF}')_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	elif [[ ${#FIX_FILT_LAFILTER_REPEAT_IDX[@]} -eq 2 ]] ## bash arroy with two element
+        	then
+        		
+        		tmp1=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX[0]}]} | awk '{print $NF}')
+        		tmp2=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX[1]}]} | awk '{print $NF}')
+        		
+        		if [[ ! -f .${FIX_DB%.db}.${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ]]
+        		then
+        			echo "WARNING missing track ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!" 
+        			echo "run TKcombine for tracks ${tmp1}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} and ${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} on the fly"
+        			
+        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp1}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust
+        			
+        			if [[ ! -f .${FIX_DB%.db}.${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ]]
+        			then
+        				(>&2 echo "ERROR could not create desired repeat track ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!")
+        				exit 1
+        			fi  
+        			      
+        			tmp=${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}			 	
+        		fi 
+        	else ## bash arroy with more than two element are not supported
+        		(>&2 echo "More then two repeat tracks are nor supported yet!!")
+        		exit 1
+        	fi
             
             if [[ -n ${FIX_FILT_LAFILTER_DUST} ]]
             then 
             	FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -D ${FIX_FILT_LAFILTER_DUST}"
-            	FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}
+            	FIX_FILT_LAFILTER_REPEATTRACK=${tmp}
         	else
-        		FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
+        		FIX_FILT_LAFILTER_REPEATTRACK=${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
 			fi
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
         fi
@@ -353,13 +384,44 @@ function setLAfilterOptions()
         fi          
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	if [[ ${#FIX_FILT_LAFILTER_REPEAT_IDX[@]} -eq 0 ]] ## its not a bash arroy
+        	then
+        		tmp=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	elif [[ ${#FIX_FILT_LAFILTER_REPEAT_IDX[@]} -eq 1 ]] ## bash arroy with one element
+        	then
+        		tmp=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX[0]}]} | awk '{print $NF}')_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	elif [[ ${#FIX_FILT_LAFILTER_REPEAT_IDX[@]} -eq 2 ]] ## bash arroy with two element
+        	then
+        		
+        		tmp1=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX[0]}]} | awk '{print $NF}')
+        		tmp2=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX[1]}]} | awk '{print $NF}')
+        		
+        		if [[ ! -f .${FIX_DB%.db}.${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ]]
+        		then
+        			echo "WARNING missing track ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!" 
+        			echo "run TKcombine for tracks ${tmp1}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} and ${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} on the fly"
+        			
+        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp1}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust
+        			
+        			if [[ ! -f .${FIX_DB%.db}.${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ]]
+        			then
+        				(>&2 echo "ERROR could not create desired repeat track ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!")
+        				exit 1
+        			fi  
+        			      
+        			tmp=${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}			 	
+        		fi 
+        	else ## bash arroy with more than two element are not supported
+        		(>&2 echo "More then two repeat tracks are nor supported yet!!")
+        		exit 1
+        	fi
             if [[ -n ${FIX_FILT_LAFILTER_DUST} ]]
             then 
             	FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -D ${FIX_FILT_LAFILTER_DUST}"
-            	FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}
+            	FIX_FILT_LAFILTER_REPEATTRACK=${tmp}
         	else
-        		FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
+        		FIX_FILT_LAFILTER_REPEATTRACK=${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
 			fi            
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
         fi
@@ -372,13 +434,44 @@ function setLAfilterOptions()
         fi
         if [[ -n ${FIX_FILT_LAFILTER_REPEAT_IDX} ]]
         then 
-            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	if [[ ${#FIX_FILT_LAFILTER_REPEAT_IDX[@]} -eq 0 ]] ## its not a bash arroy
+        	then
+        		tmp=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX}]} | awk '{print $NF}')_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	elif [[ ${#FIX_FILT_LAFILTER_REPEAT_IDX[@]} -eq 1 ]] ## bash arroy with one element
+        	then
+        		tmp=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX[0]}]} | awk '{print $NF}')_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	elif [[ ${#FIX_FILT_LAFILTER_REPEAT_IDX[@]} -eq 2 ]] ## bash arroy with two element
+        	then
+        		
+        		tmp1=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX[0]}]} | awk '{print $NF}')
+        		tmp2=f$(echo ${SCRUB_LAREPEAT_OPT[${FIX_FILT_LAFILTER_REPEAT_IDX[1]}]} | awk '{print $NF}')
+        		
+        		if [[ ! -f .${FIX_DB%.db}.${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ]]
+        		then
+        			echo "WARNING missing track ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!" 
+        			echo "run TKcombine for tracks ${tmp1}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} and ${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} on the fly"
+        			
+        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp1}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust
+        			
+        			if [[ ! -f .${FIX_DB%.db}.${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ]]
+        			then
+        				(>&2 echo "ERROR could not create desired repeat track ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!")
+        				exit 1
+        			fi  
+        			      
+        			tmp=${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}			 	
+        		fi 
+        	else ## bash arroy with more than two element are not supported
+        		(>&2 echo "More then two repeat tracks are nor supported yet!!")
+        		exit 1
+        	fi
             if [[ -n ${FIX_FILT_LAFILTER_DUST} ]]
             then 
             	FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -D ${FIX_FILT_LAFILTER_DUST}"
-            	FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}
+            	FIX_FILT_LAFILTER_REPEATTRACK=${tmp}
         	else
-        		FIX_FILT_LAFILTER_REPEATTRACK=f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
+        		FIX_FILT_LAFILTER_REPEATTRACK=${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust
 			fi
 
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -r ${FIX_FILT_LAFILTER_REPEATTRACK}"
