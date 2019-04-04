@@ -194,7 +194,7 @@ then
 		## add some primary contig filter based on repeats
 		header="count cumBases $(head -n 1 ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.cstats)"  
 		for x in $(seq 65 1 80)
-		dos
+		do
 			echo "${header}" > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats
 			tail -n +2 ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.cstats | awk -v t=${x} '{if ($3>t || $4 > t) {s+=$2; c+=1; print c"\t"s"\t"$0}}' >> ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats
 			tail -n +2 ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats | awk '{print $8"_"$7}' > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist 
