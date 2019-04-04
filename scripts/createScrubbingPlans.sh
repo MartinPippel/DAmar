@@ -838,6 +838,26 @@ then
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust"            
 		done >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+		
+		### merge appropriate calCov and cCOV tracks 
+		for x in $(seq 0 $((${numRepeatTracks}-1)))
+        do
+        	tmp1=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	for y in $(seq ${x} $((${numRepeatTracks}-1)))
+        	do
+        		tmp2=$(echo ${SCRUB_LAREPEAT_OPT[${y}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        		
+    			if [[ "$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" == "$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" ]]
+        		then
+        			
+        			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+        			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS="_"} {print $1,v1 v2,$3,$4,$5}')"
+        			echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2}"
+        		fi
+        	done
+		done >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+		
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.version      
     #### LAstitch
     elif [[ ${currentStep} -eq 8 ]]
@@ -1170,6 +1190,26 @@ then
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust"            
 		done >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+		
+		### merge appropriate calCov and cCOV tracks 
+		for x in $(seq 0 $((${numRepeatTracks}-1)))
+        do
+        	tmp1=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	for y in $(seq ${x} $((${numRepeatTracks}-1)))
+        	do
+        		tmp2=$(echo ${SCRUB_LAREPEAT_OPT[${y}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        		
+    			if [[ "$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" == "$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" ]]
+        		then
+        			
+        			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+        			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS="_"} {print $1,v1 v2,$3,$4,$5}')"
+        			echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2}"
+        		fi
+        	done
+        done >> scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+		
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scrub_07_TKcombine_single_${FIX_DB%.db}.${slurmID}.version      
     #### LAstitch
     elif [[ ${currentStep} -eq 8 ]]
@@ -1519,6 +1559,25 @@ then
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust"            
 		done >> scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+		
+		### merge appropriate calCov and cCOV tracks 
+		for x in $(seq 0 $((${numRepeatTracks}-1)))
+        do
+        	tmp1=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	for y in $(seq ${x} $((${numRepeatTracks}-1)))
+        	do
+        		tmp2=$(echo ${SCRUB_LAREPEAT_OPT[${y}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        		
+    			if [[ "$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" == "$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" ]]
+        		then
+        			
+        			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+        			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS="_"} {print $1,v1 v2,$3,$4,$5}')"
+        			echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2}"
+        		fi
+        	done
+        done >> scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scrub_21_TKcombine_single_${FIX_DB%.db}.${slurmID}.version        
     #### LAstitch
     elif [[ ${currentStep} -eq 22 ]]
@@ -1946,6 +2005,26 @@ then
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK}" 
             echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust"            
 		done >> scrub_35_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+		
+		### merge appropriate calCov and cCOV tracks 
+		for x in $(seq 0 $((${numRepeatTracks}-1)))
+        do
+        	tmp1=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	for y in $(seq ${x} $((${numRepeatTracks}-1)))
+        	do
+        		tmp2=$(echo ${SCRUB_LAREPEAT_OPT[${y}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        		
+    			if [[ "$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" == "$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" ]]
+        		then
+        			
+        			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+        			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS="_"} {print $1,v1 v2,$3,$4,$5}')"
+        			echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2}"
+        		fi
+        	done
+        done >> scrub_35_TKcombine_single_${FIX_DB%.db}.${slurmID}.plan
+		
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > scrub_35_TKcombine_single_${FIX_DB%.db}.${slurmID}.version        
     #### LAstitch
     elif [[ ${currentStep} -eq 36 ]]
