@@ -185,9 +185,9 @@ then
 		cp $config ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S').config.sh
 		
 		## copy assembly relationship stats as well as properties
-		cp ${prim%.fa} ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.cstats
-		cp ${alt%.fa} ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.a.cstats
-		cp ${crap%.fa} ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.c.cstats
+		cp ${prim%.fa}.stats ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.cstats
+		cp ${alt%.fa}.stats ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.a.cstats
+		cp ${crap%.fa}.stats ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.c.cstats
 		
 		## FOR TESTING PURPOSE ONLY
 		mkdir -p ${p}/filter
