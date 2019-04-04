@@ -195,12 +195,12 @@ then
 		header="count cumBases $(head -n 1 ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.cstats)"  
 		for x in $(seq 70 1 80)
 		do
-		tail -n +2 ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.cstats | awk -v t=${x} '{if ($3>t || $4 > t) {s+=$2; c+=1; print c"\t"s"\t"$0}}' > filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats
-			tail -n +2 filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats | awk '{print $8"_"$7}' > filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist 
-			${SEQKIT_PATH} grep -f filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.fasta > filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.fasta
-			${SEQKIT_PATH} grep -v -f filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.fasta > filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.fasta
-			cat filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > cat filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.stats
-			cat filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > cat filter/${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.stats 
+		tail -n +2 ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.cstats | awk -v t=${x} '{if ($3>t || $4 > t) {s+=$2; c+=1; print c"\t"s"\t"$0}}' > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats
+			tail -n +2 ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.cstats | awk '{print $8"_"$7}' > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist 
+			${SEQKIT_PATH} grep -f ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.fasta > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.fasta
+			${SEQKIT_PATH} grep -v -f ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.excludeP${x}RepeatContigs.clist ${p}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.p.fasta > ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.fasta
+			cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pIP${x}.stats
+			cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > cat ${p}/filter/${PROJECT_ID}_${FIX_FILT_OUTDIR}_h.pEP${x}.stats 
 		done
 	else
 		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/correction/contigs not available")
