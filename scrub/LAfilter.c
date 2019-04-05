@@ -1997,9 +1997,11 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 							a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 							break;
 					}
-					checkFlanks+=100;
-					if(checkFlanks>WINDOW)
+
+					if(checkFlanks < WINDOW && checkFlanks + 100 > WINDOW)
 						checkFlanks = WINDOW;
+					else
+						checkFlanks+=100;
 				}
 			}
 
