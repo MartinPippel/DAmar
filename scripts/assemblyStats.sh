@@ -513,6 +513,15 @@ then
 		PROJECT_ID_CAPS=$(echo ${PROJECT_ID} | awk '{print toupper($0)}')
 		REF_NAME=$(basename ${SC_BIONANO_REF} | tr '.' '_')
 		
+		
+		if [[ -f ${SC_BIONANO_REF_EXCLUSELIST} && -s ${bionanoPath}/ref/exclude.fasta ]]
+   		then
+   			fext="E"
+			cp ${bionanoPath}/ref/exclude.fasta ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+   		fi
+		
 		if [[ -n "${SC_BIONANO_ASSEMBLY_2}" && -f ${SC_BIONANO_ASSEMBLY_2} && ${SC_BIONANO_ASSEMBLY_1} != ${SC_BIONANO_ASSEMBLY_2} ]]
 		then
 			### two enzyme workflow 
@@ -531,7 +540,7 @@ then
 			cp ${fname} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_1} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cp ${config} ${bionanoPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/hybrid_scaffold_informatics_report.txt ${bionanoPath}/${SC_BIONANO_ENZYME_1}/
 			# enzyme-1: cut bionano conflicts in input assembly
@@ -539,7 +548,7 @@ then
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/$(basename ${SC_BIONANO_REF}).cut.fasta ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/conflicts.txt ${bionanoPath}/${SC_BIONANO_ENZYME_1}/
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/ -t 1 -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			# bionano not scaffolded 
 			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta"
 			if [[ ! -f ${fname} ]]
@@ -551,14 +560,14 @@ then
 			cp ${fname} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_1} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			# bionano combined (scaffolded + not scaffolded)
 			fext="N" 
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NCBI.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_1}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_1} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_1}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			
 			mkdir -p ${bionanoPath}/${SC_BIONANO_ENZYME_2}
 			
@@ -574,14 +583,14 @@ then
 			cp ${fname} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_2} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/hybrid_scaffold_informatics_report.txt ${bionanoPath}/${SC_BIONANO_ENZYME_2}/
 			# enzyme-2: cut bionano conflicts in input assembly
 			fext="C" 
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/$(basename ${SC_BIONANO_REF}).cut.fasta ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/conflicts.txt ${bionanoPath}/${SC_BIONANO_ENZYME_2}/
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/ -t 1 -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			# enzyme-2: bionano not scaffolded 
 			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta"
 			if [[ ! -f ${fname} ]]
@@ -593,14 +602,14 @@ then
 			cp ${fname} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_2} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			# enzyme-2: bionano combined (scaffolded + not scaffolded)
 			fext="N" 
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NCBI.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/${SC_BIONANO_ENZYME_2}/hybrid_scaffolds_M1/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/${SC_BIONANO_ENZYME_2} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${SC_BIONANO_ENZYME_2}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			
 			#--------------------------- both enzymes 
 			
@@ -615,14 +624,14 @@ then
 			cp ${fname} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/ -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/hybrid_scaffold_informatics_report.txt ${bionanoPath}/
 			# both enzymes: cut bionano conflicts in input assembly
 			fext="C" 
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/$(basename ${SC_BIONANO_REF}).cut.fasta ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/conflicts.txt ${bionanoPath}/
-			${QUAST_PATH}/quast.py -o ${bionanoPath}/ -t 1 -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			# both enzymes: bionano not scaffolded 
 			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/$(basename ${SC_BIONANO_REF}).cut_${SC_BIONANO_ENZYME_1}_${SC_BIONANO_ENZYME_2}_0kb_0labels_NGS_contigs_HYBRID_Export_NOT_SCAFFOLDED.fasta"
 			if [[ ! -f ${fname} ]]
@@ -634,14 +643,14 @@ then
 			cp ${fname} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			# both enzymes: bionano combined (scaffolded + not scaffolded)
 			fext="N" 
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/$(basename ${SC_BIONANO_REF}).cut_${SC_BIONANO_ENZYME_1}_${SC_BIONANO_ENZYME_2}_0kb_0labels_NGS_contigs_HYBRID_Export_NCBI.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/two_enzyme_hybrid_scaffold_M1/AGPExport/$(basename ${SC_BIONANO_REF}).cut_${SC_BIONANO_ENZYME_1}_${SC_BIONANO_ENZYME_2}_0kb_0labels_NGS_contigs_HYBRID_Export_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			
 		else 
 			### single enzyme workflow
@@ -657,7 +666,7 @@ then
 			cat ${fname} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cp ${config} ${bionanoPath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/hybrid_scaffold_informatics_report.txt ${bionanoPath}
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD.agp ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.agp
@@ -667,7 +676,7 @@ then
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/$(basename ${SC_BIONANO_REF}).cut.fasta ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
 			cp ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/conflicts.txt ${bionanoPath}
-			${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			
 			# bionano not scaffolded 
 			fname="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta"
@@ -680,7 +689,7 @@ then
 			cat ${fname} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 					
 			# bionano combined (scaffolded + not scaffolded)
 			fext="N" 
@@ -688,7 +697,7 @@ then
 			cat ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out/hybrid_scaffolds/${PROJECT_ID_CAPS}_REFINEFINAL1_bppAdjust_cmap_${REF_NAME}_NGScontigs_HYBRID_SCAFFOLD_NOT_SCAFFOLDED.fasta >> ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			gzip -c ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fa.gz
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
-			${QUAST_PATH}/quast.py -o ${bionanoPath} -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 		fi
 	else
 		(>&2 echo "ERROR - directory ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID} not available")
@@ -758,12 +767,12 @@ then
 			cp ${fname1} ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fasta
 			gzip -c ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fasta > ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fa.gz	
 			cat ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.stats
-			${QUAST_PATH}/quast.py -o ${phasePath} -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1 ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1 ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}1.fasta
 
 			cp ${fname2} ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fasta
 			gzip -c ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fasta > ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fa.gz	
 			cat ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.stats
-			${QUAST_PATH}/quast.py -o ${phasePath} -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2 ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --est-ref-size ${gsize} -o ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2 ${phasePath}/${PROJECT_ID}_${CT_PHASE_OUTDIR}_${prevExt}${fext}.${cset}2.fasta
 		
 			cp ${config} ${phasePath}/$(date '+%Y-%m-%d_%H-%M-%S')_$(basename ${config})
 			

@@ -81,6 +81,12 @@ function setBionanoOptions()
 	fi
 }
 
+if [[ ! -f ${SEQKIT_PATH} ]]
+then 
+(>&2 echo "[ERRROR] You have to set SEQKIT_PATH in your config file to a proper seqkit binary!")
+    exit 1
+fi 
+
 myTypes=("01_BNscaffold, 02_BNstatistics")
 if [[ ${SC_BIONANO_TYPE} -eq 0 ]]
 then 
@@ -139,7 +145,14 @@ then
    		echo "mkdir -p ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
-   		echo "ln -s -r ${SC_BIONANO_REF} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   		
+   		if [[ -f ${SC_BIONANO_REF_EXCLUSELIST} ]]
+   		then
+   			echo "${SEQKIT_PATH} grep -v -f ${SC_BIONANO_REF_EXCLUSELIST} ${SC_BIONANO_REF} > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/$(basename ${SC_BIONANO_REF})" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   			echo "${SEQKIT_PATH} grep -f ${SC_BIONANO_REF_EXCLUSELIST} ${SC_BIONANO_REF} > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/exclude.fasta" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   		else
+   			echo "ln -s -r ${SC_BIONANO_REF} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   		fi
    		echo "ln -s -r ${SC_BIONANO_ASSEMBLY_1} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/cmaps/${PROJECT_ID}_${SC_BIONANO_ENZYME_1}.cmap" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    	
    		if [[ ${TWO_ENZYME_WORKFLOW} ]]

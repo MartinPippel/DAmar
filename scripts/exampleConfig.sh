@@ -830,6 +830,7 @@ SC_10X_LINKS_MINCONTIGLEN=15000		# minimum contig length to consider for scaffol
 ### general bionano options
 SC_BIONANO_RUNID=1
 SC_BIONANO_REF="stats/contigs/m1/scaff10x_1/mMyoMyo_m1_f.p.fasta"
+SC_BIONANO_REF_EXCLUSELIST="stats/contigs/m1/haploSplit/filter/mMyoMyo_m1_h.p.excludeP65RepeatContigs.clist"
 SC_BIONANO_OUTDIR="${FIX_FILT_OUTDIR}"
 
 SC_BIONANO_CONFLICTLEVEL_GENOMEMAPS=2			## 1 no filter, 2 cut contig at conflict, 3 exclude conflicting contig
