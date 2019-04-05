@@ -1979,18 +1979,27 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			{
 				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 			}
-			else if ((a->end - a->beg) < 100 && longestDust > 29)
+			else if ((a->end - a->beg) < 100 && longestDust > 20)
 			{
 				a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 			}
 			else // check if neighboring repeats end in low complexity interval
 			{
-				getRepeatBasesFromInterval(ctx->trackDust, aread, MAX(0, a->beg - WINDOW), a->beg, &predust, &longestDustl);
-				getRepeatBasesFromInterval(ctx->trackDust, aread, a->end, MIN(a->end + WINDOW, arlen), &postdust, &longestDustr);
+				int checkFlanks = MIN(100, WINDOW);
 
-				if (predust > 200 || longestDustl > 100 || postdust > 200 || longestDustr > 100)
+				while (checkFlanks <= WINDOW)
 				{
-					a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+					getRepeatBasesFromInterval(ctx->trackDust, aread, MAX(0, a->beg - checkFlanks), a->beg, &predust, &longestDustl);
+					getRepeatBasesFromInterval(ctx->trackDust, aread, a->end, MIN(a->end + checkFlanks, arlen), &postdust, &longestDustr);
+
+					if ((predust*100.0/checkFlanks > 20.0 && longestDustl > 30) || (postdust*100/checkFlanks > 20.0 && longestDustr > 30))
+					{
+							a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+							break;
+					}
+					checkFlanks+=100;
+					if(checkFlanks>WINDOW)
+						checkFlanks = WINDOW;
 				}
 			}
 
