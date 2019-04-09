@@ -137,5 +137,10 @@ for i in range( len(arrSizes) ):
  
 print("{} in {} ... ng50 {} ... asm size {}".format(ng_total, ng_count, arrSizes[ng_count-1][2], ng_size))
 print("{} in {} ... n50 {}  ... asm size {}".format(n_total, n_count, arrSizes[n_count-1][2], n_size))
-print("longest_3 {} {} {}".format(arrSizes[0][2], arrSizes[1][2], arrSizes[2][2]))
+if n_count >= 3:
+    print("longest_3 {} {} {}".format(arrSizes[0][2], arrSizes[1][2], arrSizes[2][2]))
+elif n_count == 2:
+    print("longest_2 {} {} {}".format(arrSizes[0][2], arrSizes[1][2]))
+elif n_count == 1:
+    print("longest_1 {} {} {}".format(arrSizes[0][2]))    
 print("contigs lt200k {} lt1M {} ge1M {} ge5M {} ge10M {} ge20M {}".format(nSmallContigs,nlt1MContigs,n1MContigs,n5MContigs,n10MContigs,n20MContigs))
