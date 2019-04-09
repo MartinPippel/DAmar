@@ -184,56 +184,56 @@ PB_ARROW_TYPE=0
 PB_ARROW_SUBMIT_SCRIPTS_FROM=1
 PB_ARROW_SUBMIT_SCRIPTS_TO=7
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 10 - contig purge haplotigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-CT_PURGEHAPLOTIGS_TYPE=0
-#type-0 steps: 1-prepInFasta, 2-createMinimap2RefIndex, 3-minimap2, 4-bamMerge, 5-readCovHist, 6-contigCovHist, 7-purgeHaplotigs, 8-statistics
-CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM=1
-CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO=8
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 11 - Freebayes polishing on contigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-CT_FREEBAYES_TYPE=1
-# Type: 0 [bwa mapping] - 01_FBprepareInput, 02_FBfastp, 03_FBbwa, 04_FBmarkDuplicates, 05_FBfreebayes, 06_FBconsensus, 07_FBstatistics 
-# Type: 1 [longranger mapping] - 01_FBprepareInput, 02_FBlongrangerAlign, 03_FBfreebayes, 04_FBconsensus, 05_FBstatistics
-CT_FREEBAYES_SUBMIT_SCRIPTS_FROM=1
-CT_FREEBAYES_SUBMIT_SCRIPTS_TO=5
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 12 - phasing contigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-CT_PHASE_TYPE=1
-## type-0 [Whatshap]   - pacbio, 10x: 		01_WhatshapPrepareInput, 02_WhatshapMinimap2PacBio, 03_WhatshapPacBioBamSplitByRef, 04_WhatshapPacBioBamSplitByRef, 05_WhatshapPacBioBamMerge
-## type-1 [Longranger] - 10x: 				01_LongrangerPrepareInput, 02_LongrangerLongrangerWgs, 03_LongrangerBcftoolsConsensus, 04_LongrangerStatistics
-## type-2 [HapCut2]    - pacbio, 10x, HiC: 	todo
-CT_PHASE_SUBMIT_SCRIPTS_FROM=1
-CT_PHASE_SUBMIT_SCRIPTS_TO=4
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-SC_10X_TYPE=2
-#type 0: scaff10x - break10x pipeline		steps: 01_scaff10xprepare, 02_scaff10xbreak10, 03_scaff10xscaff10x, 04_scaff10xbreak10x, 05_scaff10xscaff10x, 06_scaff10xbreak10x, 07_scaff10xStatistics
-#type 1: tigmint - arks - links pipeline	steps: 01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks, 05_arksLINKS
-#type 2: scaff10x using longranger bam		steps: 01_scaff10xprepare, 02_scaff10xLongrangerAlign, 03_scaff10xPrepareIntermediate, 04_scaff10xScaff10x, 05_scaff10xStatistics
-#type 3: break10x using longranger bam		steps: 01_break10xPrepare, 02_break10xLongrangerAlign, 03_break10xPrepareIntermediate, 04_break10xBreak10x, 05_break10xStatistics
-SC_10X_SUBMIT_SCRIPTS_FROM=1
-SC_10X_SUBMIT_SCRIPTS_TO=5
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - bionano scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-SC_BIONANO_TYPE=0
-# Type: 0 steps: 01_BNscaffold, 02_BNstatistics 
-SC_BIONANO_SUBMIT_SCRIPTS_FROM=1
-SC_BIONANO_SUBMIT_SCRIPTS_TO=2
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 15 - HiC QC and scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-SC_HIC_TYPE=0
-# Type: 0 Arima Mapping Pipeline (For QC) 				 steps: 01_HICsalsaPrepareInput, 02_HICsalsaBwa, 03_HICsalsaFilter, 04_HICsalsaMerge, 05_HICsalsaMarkduplicates, 06_HICsalsaSalsa, 07_HICsalsaStatistics 
-# Type: 1 Phase Genomics Mapping Pipeline (For QC) 		 steps: 01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock
-# Type: 2 Aiden Lab Juicer/3d-dna Scaffolding Pipeline   steps: 01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaAssemblyPipeline
-# Type: 3 Aiden Lab Juicer/3d-dna visualization Pipeline steps: 01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaVisualize
-SC_HIC_SUBMIT_SCRIPTS_FROM=1
-SC_HIC_SUBMIT_SCRIPTS_TO=7
+	# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 10 - contig purge haplotigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	
+	CT_PURGEHAPLOTIGS_TYPE=0
+	#type-0 steps: 1-prepInFasta, 2-createMinimap2RefIndex, 3-minimap2, 4-bamMerge, 5-readCovHist, 6-contigCovHist, 7-purgeHaplotigs, 8-statistics
+	CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_FROM=1
+	CT_PURGEHAPLOTIGS_SUBMIT_SCRIPTS_TO=8
+	
+	# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 11 - Freebayes polishing on contigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	
+	CT_FREEBAYES_TYPE=1
+	# Type: 0 [bwa mapping] - 01_FBprepareInput, 02_FBfastp, 03_FBbwa, 04_FBmarkDuplicates, 05_FBfreebayes, 06_FBconsensus, 07_FBstatistics 
+	# Type: 1 [longranger mapping] - 01_FBprepareInput, 02_FBlongrangerAlign, 03_FBfreebayes, 04_FBconsensus, 05_FBstatistics
+	CT_FREEBAYES_SUBMIT_SCRIPTS_FROM=1
+	CT_FREEBAYES_SUBMIT_SCRIPTS_TO=5
+	
+	# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 12 - phasing contigs  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	
+	CT_PHASE_TYPE=1
+	## type-0 [Whatshap]   - pacbio, 10x: 		01_WhatshapPrepareInput, 02_WhatshapMinimap2PacBio, 03_WhatshapPacBioBamSplitByRef, 04_WhatshapPacBioBamSplitByRef, 05_WhatshapPacBioBamMerge
+	## type-1 [Longranger] - 10x: 				01_LongrangerPrepareInput, 02_LongrangerLongrangerWgs, 03_LongrangerBcftoolsConsensus, 04_LongrangerStatistics
+	## type-2 [HapCut2]    - pacbio, 10x, HiC: 	todo
+	CT_PHASE_SUBMIT_SCRIPTS_FROM=1
+	CT_PHASE_SUBMIT_SCRIPTS_TO=4
+	
+	# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 13 - scaff10x scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	
+	SC_10X_TYPE=2
+	#type 0: scaff10x - break10x pipeline		steps: 01_scaff10xprepare, 02_scaff10xbreak10, 03_scaff10xscaff10x, 04_scaff10xbreak10x, 05_scaff10xscaff10x, 06_scaff10xbreak10x, 07_scaff10xStatistics
+	#type 1: tigmint - arks - links pipeline	steps: 01_arksPrepare, 02_arksLongranger, 03_arksTigmint, 04_arksArks, 05_arksLINKS
+	#type 2: scaff10x using longranger bam		steps: 01_scaff10xprepare, 02_scaff10xLongrangerAlign, 03_scaff10xPrepareIntermediate, 04_scaff10xScaff10x, 05_scaff10xStatistics
+	#type 3: break10x using longranger bam		steps: 01_break10xPrepare, 02_break10xLongrangerAlign, 03_break10xPrepareIntermediate, 04_break10xBreak10x, 05_break10xStatistics
+	SC_10X_SUBMIT_SCRIPTS_FROM=1
+	SC_10X_SUBMIT_SCRIPTS_TO=5
+	
+	# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 14 - bionano scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	
+	SC_BIONANO_TYPE=0
+	# Type: 0 steps: 01_BNscaffold, 02_BNstatistics 
+	SC_BIONANO_SUBMIT_SCRIPTS_FROM=1
+	SC_BIONANO_SUBMIT_SCRIPTS_TO=2
+	
+	# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 15 - HiC QC and scaffolding  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	
+	SC_HIC_TYPE=0
+	# Type: 0 Arima Mapping Pipeline (For QC) 				 steps: 01_HICsalsaPrepareInput, 02_HICsalsaBwa, 03_HICsalsaFilter, 04_HICsalsaMerge, 05_HICsalsaMarkduplicates, 06_HICsalsaSalsa, 07_HICsalsaStatistics 
+	# Type: 1 Phase Genomics Mapping Pipeline (For QC) 		 steps: 01_HICphasePrepareInput, 02_HICphaseBwa, 03_HICphaseFilter, 04_HICphaseMatlock
+	# Type: 2 Aiden Lab Juicer/3d-dna Scaffolding Pipeline   steps: 01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaAssemblyPipeline
+	# Type: 3 Aiden Lab Juicer/3d-dna visualization Pipeline steps: 01_HIC3dnaPrepareInput, 02_HIC3dnaJuicer, 03_HIC3dnaVisualize
+	SC_HIC_SUBMIT_SCRIPTS_FROM=1
+	SC_HIC_SUBMIT_SCRIPTS_TO=7
 # ----------------------------------------------------------------- RAW MITOCHONDRION OPTIONS - always on RAW_DB ---------------------------------------------------------------------------
 
 RAW_MITO_REFFASTA=/projects/dazzlerAssembly/LAB1608.HYLES_VESPERTILIO/data/mitochondria_ref/iHylVes_mt.fasta
@@ -830,7 +830,7 @@ SC_10X_LINKS_MINCONTIGLEN=15000		# minimum contig length to consider for scaffol
 ### general bionano options
 SC_BIONANO_RUNID=1
 SC_BIONANO_REF="stats/contigs/m1/scaff10x_1/mMyoMyo_m1_f.p.fasta"
-SC_BIONANO_REF_EXCLUSELIST="stats/contigs/m1/haploSplit/filter/mMyoMyo_m1_h.p.excludeP65RepeatContigs.clist"
+SC_BIONANO_REF_EXCLUDELIST="stats/contigs/m1/haploSplit/filter/mMyoMyo_m1_h.p.excludeP65RepeatContigs.clist"
 SC_BIONANO_OUTDIR="${FIX_FILT_OUTDIR}"
 
 SC_BIONANO_CONFLICTLEVEL_GENOMEMAPS=2			## 1 no filter, 2 cut contig at conflict, 3 exclude conflicting contig
@@ -854,7 +854,8 @@ SC_BIONANO_ASSEMBLY_NOISE_1="/projects/dazzlerAssembly/mRhiFer_LAB1237/bionano/S
 SC_HIC_RUNID=1												# used for output directory purgeHaplotigs_run${PB_ARROW_RUNID}
 SC_HIC_READS="${HIC_PATH}"   								# directory with pacbio fasta files
 SC_HIC_OUTDIR="${FIX_FILT_OUTDIR}"
-SC_HIC_REFFASTA="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
+SC_HIC_REF="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
+SC_HIC_REF_EXCLUDELIST="stats/contigs/m1/haploSplit/filter/mMyoMyo_m1_h.p.excludeP65RepeatContigs.clist"
 SC_HIC_ENZYME_NAME="Sau3AI"
 SC_HIC_ENZYME_SEQ="GATC"		
 ### fastp

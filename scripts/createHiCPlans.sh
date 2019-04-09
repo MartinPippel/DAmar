@@ -251,9 +251,9 @@ then
             rm $x
         done
         
-        if [[ ! -f "${SC_HIC_REFFASTA}" ]]
+        if [[ ! -f "${SC_HIC_REF}" ]]
         then
-        	(>&2 echo "ERROR - set SC_HIC_REFFASTA to reference fasta file")
+        	(>&2 echo "ERROR - set SC_HIC_REF to reference fasta file")
         	exit 1
    		fi
    		
@@ -268,9 +268,16 @@ then
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "sed -e \"s/:/-/g\" ${SC_HIC_REFFASTA} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		
+		if [[ -f ${SC_HIC_REF_EXCLUDELIST} ]]
+   		then
+   			echo "${SEQKIT_PATH} grep -v -f ${SC_HIC_REF_EXCLUDELIST} ${SC_HIC_REF} | sed -e \"s/:/-/g\" ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   			echo "${SEQKIT_PATH} grep -f ${SC_HIC_REF_EXCLUDELIST} ${SC_HIC_REF} | sed -e \"s/:/-/g\" ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/exclude.fasta" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   		else   			
+   			echo "sed -e \"s/:/-/g\" ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   		fi		
+		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		
 		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.version
@@ -296,11 +303,11 @@ then
         	exit 1
    		fi
    		
-   		ref=${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})
+   		ref=${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})
    		
    		if [[ ! -f "${ref}" ]]
         then
-        (>&2 echo "ERROR - cannot reference fasta file ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})!")
+        (>&2 echo "ERROR - cannot reference fasta file ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})!")
         	exit 1
    		fi
    		
@@ -406,7 +413,7 @@ then
         	exit 1
    		fi
    		
-   		ref=${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})
+   		ref=${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})
    		
    		if [[ ! -f ${ref}.fai ]]
    		then  
@@ -482,7 +489,7 @@ then
         	exit 1
 		fi
 		
-		ref="${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REFFASTA})"
+		ref="${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})"
 		
 		if [[ ! -f ${ref} ]]
        	then
@@ -565,9 +572,9 @@ then
     	fi
     	
     	
-    	if [[ ! -f "${SC_HIC_REFFASTA}" ]]
+    	if [[ ! -f "${SC_HIC_REF}" ]]
         then
-        	(>&2 echo "ERROR - set SC_HIC_REFFASTA to reference fasta file")
+        	(>&2 echo "ERROR - set SC_HIC_REF to reference fasta file")
         	exit 1
    		fi
    		
@@ -624,7 +631,15 @@ then
 		echo "ln -s -f -r ${JUICER_TOOLS_PATH} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer_tools.jar" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create reference subdir + link and do indexing 
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -r ${SC_HIC_REFFASTA} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		
+		if [[ -f ${SC_HIC_REF_EXCLUDELIST} ]]
+   		then
+   			echo "${SEQKIT_PATH} grep -v -f ${SC_HIC_REF_EXCLUDELIST} ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >>hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   			echo "${SEQKIT_PATH} grep -f ${SC_HIC_REF_EXCLUDELIST} ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/exclude.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   		else   			
+   			echo "ln -s -r ${SC_HIC_REF} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   		fi
+		
 		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "awk '{print \$1\" \"\$2}' ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta.fai > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.sizes" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
@@ -695,9 +710,9 @@ then
     	fi
     	
     	
-    	if [[ ! -f "${SC_HIC_REFFASTA}" ]]
+    	if [[ ! -f "${SC_HIC_REF}" ]]
         then
-        	(>&2 echo "ERROR - set SC_HIC_REFFASTA to reference fasta file")
+        	(>&2 echo "ERROR - set SC_HIC_REF to reference fasta file")
         	exit 1
    		fi
    		
@@ -754,7 +769,15 @@ then
 		echo "ln -s -f -r ${JUICER_TOOLS_PATH} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/scripts/juicer_tools.jar" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create reference subdir + link and do indexing 
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -r ${SC_HIC_REFFASTA} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		
+		if [[ -f ${SC_HIC_REF_EXCLUDELIST} ]]
+   		then
+   			echo "${SEQKIT_PATH} grep -v -f ${SC_HIC_REF_EXCLUDELIST} ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >>hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   			echo "${SEQKIT_PATH} grep -f ${SC_HIC_REF_EXCLUDELIST} ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/exclude.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   		else   			
+   			echo "ln -s -r ${SC_HIC_REF} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+   		fi		
+		
 		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "awk '{print \$1\" \"\$2}' ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta.fai > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.sizes" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan

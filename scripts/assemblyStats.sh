@@ -23,6 +23,11 @@ then
     exit 1
 fi
 
+if [[ ! -f ${SEQKIT_PATH} ]]
+then
+	(>&2 echo "Variable SEQKIT_PATH must be set to a proper seqkit binary!!")
+    exit 1
+fi
 
 mkdir -p stats
 
@@ -514,10 +519,10 @@ then
 		REF_NAME=$(basename ${SC_BIONANO_REF} | tr '.' '_')
 		
 		
-		if [[ -f ${SC_BIONANO_REF_EXCLUSELIST} && -s ${bionanoPath}/ref/exclude.fasta ]]
+		if [[ -f ${SC_BIONANO_REF_EXCLUSELIST} && -s ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/exclude.fasta ]]
    		then
    			fext="E"
-			cp ${bionanoPath}/ref/exclude.fasta ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
+			cp  ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/exclude.fasta ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
 			cat ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.stats
 			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset} ${bionanoPath}/${PROJECT_ID}_${SC_BIONANO_OUTDIR}_${prevExt}${fext}.${cset}.fasta
    		fi

@@ -146,10 +146,10 @@ then
    		echo "mkdir -p ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    		
-   		if [[ -f ${SC_BIONANO_REF_EXCLUSELIST} ]]
+   		if [[ -f ${SC_BIONANO_REF_EXCLUDELIST} ]]
    		then
-   			echo "${SEQKIT_PATH} grep -v -f ${SC_BIONANO_REF_EXCLUSELIST} ${SC_BIONANO_REF} > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/$(basename ${SC_BIONANO_REF})" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
-   			echo "${SEQKIT_PATH} grep -f ${SC_BIONANO_REF_EXCLUSELIST} ${SC_BIONANO_REF} > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/exclude.fasta" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   			echo "${SEQKIT_PATH} grep -v -f ${SC_BIONANO_REF_EXCLUDELIST} ${SC_BIONANO_REF} > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/$(basename ${SC_BIONANO_REF})" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
+   			echo "${SEQKIT_PATH} grep -f ${SC_BIONANO_REF_EXCLUDELIST} ${SC_BIONANO_REF} > ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref/exclude.fasta" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    		else
    			echo "ln -s -r ${SC_BIONANO_REF} ${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/ref" >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    		fi
