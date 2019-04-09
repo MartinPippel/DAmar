@@ -852,7 +852,7 @@ then
         			
         			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
         			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
-    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS="_"} {print $1,v1 v2,$3,$4,$5}')"
+    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS=OFS="_"} {print $1,v1 v2,$3,$4,$5}')"
         			echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2}"
         		fi
         	done
@@ -1204,7 +1204,7 @@ then
         			
         			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
         			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
-    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS="_"} {print $1,v1 v2,$3,$4,$5}')"
+    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS=OFS="_"} {print $1,v1 v2,$3,$4,$5}')"
         			echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2}"
         		fi
         	done
@@ -1573,7 +1573,7 @@ then
         			
         			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
         			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
-    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS="_"} {print $1,v1 v2,$3,$4,$5}')"
+    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS=OFS="_"} {print $1,v1 v2,$3,$4,$5}')"
         			echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2}"
         		fi
         	done
@@ -2019,7 +2019,7 @@ then
         			
         			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
         			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
-    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS="_"} {print $1,v1 v2,$3,$4,$5}')"
+    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS=OFS="_"} {print $1,v1 v2,$3,$4,$5}')"
         			echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2}"
         		fi
         	done
