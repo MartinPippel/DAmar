@@ -345,7 +345,7 @@ then
         	then
         		echo "java -jar ${GATK_PATH} CreateSequenceDictionary -R=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa -O=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.dict"
         	fi
-        	echo "cd ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams && ${LONGRANGER_PATH}/longranger wgs --vcmode=gatk:${GATK_PATH} --id=10x_${PROJECT_ID}_longrangerWgs --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=$(pwd)/${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+        	echo "cd ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams && ${LONGRANGER_PATH}/longranger wgs --vcmode=gatk:${GATK_PATH} --id=10x_${PROJECT_ID}_longrangerWgs --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=$(pwd)/${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	else 
     		(>&2 echo "[WARNING] Using previously created reference file ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME}. Please remove that folder to rerun longranger mkref")
     		### create picard dict file manually if its not present !!!
@@ -353,7 +353,7 @@ then
         	then
         		echo "java -jar ${GATK_PATH} CreateSequenceDictionary R=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa O=${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.dict"
         	fi
-    		echo "cd ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams && ${LONGRANGER_PATH}/longranger wgs --vcmode=gatk:${GATK_PATH} --id=10x_${PROJECT_ID}_longrangerWgs --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=$(pwd)/${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+    		echo "cd ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/bams && ${LONGRANGER_PATH}/longranger wgs --vcmode=gatk:${GATK_PATH} --id=10x_${PROJECT_ID}_longrangerWgs --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=$(pwd)/${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	fi > phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.plan                
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version)" > phase_02_LongrangerLongrangerWgs_single_${CONT_DB}.${slurmID}.version
