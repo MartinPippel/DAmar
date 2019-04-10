@@ -892,7 +892,7 @@ then
 		echo "samtools $(${CONDA_HIC_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.version
 		echo "bwa $(${CONDA_HIC_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.version        
 	### 02_HiChiglassBwa
-	if [[ ${currentStep} -eq 2 ]]
+	elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
         for x in $(ls hic_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
@@ -981,7 +981,7 @@ then
    		echo "bwa $(${CONDA_HIC_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_02_HiChiglassBwa_block_${CONT_DB}.${slurmID}.version
    		echo "samtools $(${CONDA_HIC_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_02_HiChiglassBwa_block_${CONT_DB}.${slurmID}.version                        
 	### 03_HiChiglassFilter
-	if [[ ${currentStep} -eq 3 ]]
+	elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
         for x in $(ls hic_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
@@ -1024,7 +1024,7 @@ then
     	echo "pairtools split --output-pairs -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.output.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
     	echo "pairix ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.output.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan    	
 	### 04_HiChiglassMatrix
-	if [[ ${currentStep} -eq 4 ]]
+	elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
         for x in $(ls hic_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
