@@ -477,7 +477,7 @@ then
 			done    		
     	fi >> qc_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.plan
     	
-    	echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > qc_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.version
+    	echo "mash $(${CONDA_BASE_ENV} && mash --version && conda deactivate)" > qc_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.version
     ### 03_mashCombine
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -504,7 +504,7 @@ then
     	        
         echo "mash paste -l ${PROJECT_ID}.msh ${PROJECT_ID}_mash.files" > qc_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
         echo "mash dist -t ${PROJECT_ID}.msh ${PROJECT_ID}.msh > ${PROJECT_ID}.tbl" >> qc_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > qc_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.version
+        echo "mash $(${CONDA_BASE_ENV} && mash --version && conda deactivate)" > qc_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.version
 	### 04_mashPlot
     elif [[ ${currentStep} -eq 4 ]]
     then
@@ -551,7 +551,7 @@ then
         		echo "mash screen -p ${threads} -w ${MASH_REF_GENOMES} ${x} > ${out}"
         	fi
 		done > qc_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.plan   
-		echo "mash $(${PACBIO_BASE_ENV} && mash --version && ${PACBIO_BASE_ENV_DEACT})" > qc_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.version     
+		echo "mash $(${CONDA_BASE_ENV} && mash --version && conda deactivate)" > qc_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.version     
     else
         (>&2 echo "step ${currentStep} in RAW_QC_TYPE ${RAW_QC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_QC_TYPE}]}")

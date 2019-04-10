@@ -116,8 +116,8 @@ then
    			fi      						
    		done
 
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" > phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${CONDA_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${CONDA_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> phase_01_WhatshapPrepareInput_single_${CONT_DB}.${slurmID}.version
 
 		if [[ ${numFiles} -eq 0 ]]
 		then
@@ -187,8 +187,8 @@ then
         	name=$(basename ${x%.subreads.fa.gz})
         	echo "minimap2 -a -x map-pb -R \"@RG\tID:${name}\tSM:${PROJECT_ID}_HIC\tLB:${PROJECT_ID}_HIC\tPL:PACBIO\tPU:none\" -t ${CT_PHASE_MINIMAP2ALNTHREADS} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/ref/${ref}.idx ${x} | samtools view -h - | samtools sort -@ ${CT_PHASE_SAMTOOLSTHREADS} -m ${CT_PHASE_SAMTOOLSMEM}G -o ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_bams/${ref}_${name}_minimap2.sort.bam -T /tmp/${ref}_${name}_minimap2.sort.tmp && samtools index -@ ${CT_PHASE_SAMTOOLSTHREADS} ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_bams/${ref}_${name}_minimap2.sort.bam"        	
 		done > phase_02_PhasePacBioMinimap2_block_${CONT_DB}.${slurmID}.plan 
-    	echo "minimap2 $(${PACBIO_BASE_ENV} && minimap2 --version && ${PACBIO_BASE_ENV_DEACT})" > phase_02_PhasePacBioMinimap2_block_${CONT_DB}.${slurmID}.version
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && ${PACBIO_BASE_ENV_DEACT})" >> phase_02_PhasePacBioMinimap2_block_${CONT_DB}.${slurmID}.version
+    	echo "minimap2 $(${CONDA_BASE_ENV} && minimap2 --version && conda deactivate)" > phase_02_PhasePacBioMinimap2_block_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${CONDA_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> phase_02_PhasePacBioMinimap2_block_${CONT_DB}.${slurmID}.version
 	### 03_WhatshapPacBioBamSplitByRef
     elif [[ ${currentStep} -eq 3 ]]
     then
@@ -222,7 +222,7 @@ then
    		do
         	echo "bamtools split -in  ${x} -reference"			   			   		
 		done > phase_03_WhatshapPacBioBamSplitByRef_block_${CONT_DB}.${slurmID}.plan
-		echo "$(${PACBIO_BASE_ENV} && bamtools --version | grep bamtools && ${PACBIO_BASE_ENV_DEACT})" > phase_03_WhatshapPacBioBamSplitByRef_block_${CONT_DB}.${slurmID}.version
+		echo "$(${CONDA_BASE_ENV} && bamtools --version | grep bamtools && conda deactivate)" > phase_03_WhatshapPacBioBamSplitByRef_block_${CONT_DB}.${slurmID}.version
 	### 04_WhatshapPacBioBamSplitByRef 
     elif [[ ${currentStep} -eq 4 ]]
     then
@@ -280,7 +280,7 @@ then
    		do
    			echo "bamtools merge -list ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_bams/${x}/in.fof -out ${CT_PHASE_OUTDIR}/phase_${CT_PHASE_RUNID}/pb_bams/${x}/ALL_${x}.bam"
 		done > phase_05_WhatshapPacBioBamMerge_block_${CONT_DB}.${slurmID}.plan
-		echo "$(${PACBIO_BASE_ENV} && bamtools --version | grep bamtools && ${PACBIO_BASE_ENV_DEACT})" > phase_05_WhatshapPacBioBamMerge_block_${CONT_DB}.${slurmID}.version    	
+		echo "$(${CONDA_BASE_ENV} && bamtools --version | grep bamtools && conda deactivate)" > phase_05_WhatshapPacBioBamMerge_block_${CONT_DB}.${slurmID}.version    	
     else
         (>&2 echo "step ${currentStep} in CT_PHASE_TYPE ${CT_PHASE_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PHASE_TYPE}]}")

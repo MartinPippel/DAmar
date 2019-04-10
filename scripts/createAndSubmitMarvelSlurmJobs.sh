@@ -246,12 +246,15 @@ then
             then
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "qc" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "qc" ]]
 			then
-				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
+				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "hic" ]]
+			then
+				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm				
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
-				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+				echo -e "\n${CONDA_PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
 			fi
 			
             echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -320,12 +323,15 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi	        
 	        
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "qc" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "qc" ]]
 			then
-				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
+				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "hic" ]]
+			then
+				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm				j				
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
-				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+				echo -e "\n${CONDA_PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
 			fi
 	
 	        echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -375,12 +381,15 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
             then
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "hic" || ${prefix} == "qc" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "qc" ]]
 			then
-				echo -e "\n${PACBIO_BASE_ENV}" >> ${file}.slurm
+				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "hic" ]]
+			then
+				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm				s			
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
-				echo -e "\n${PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+				echo -e "\n${CONDA_PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
 			fi
 
 			echo "export PATH=${MARVEL_PATH}/bin:\$PATH

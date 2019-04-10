@@ -126,8 +126,8 @@ then
 		echo "samtools faidx ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/$(basename ${CT_FREEBAYES_REFFASTA})" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/$(basename ${CT_FREEBAYES_REFFASTA})" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		
-		echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "samtools $(${CONDA_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${CONDA_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.version
 	### 2-FBfastp 
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -193,7 +193,7 @@ then
 				
 				echo "fastp -i ${id}/${f1} -I ${id}/${f2} -f 23 -G -Q -j ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${o}.json -h ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${o}.html -w ${CT_FREEBAYES_FASTP_THREADS} -o ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f1} -O ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f2}"				 
 			done > freebayes_02_FBfastp_block_${CONT_DB}.${slurmID}.plan
-	   		echo "fastp $(${PACBIO_BASE_ENV} && fastp 2>&1 | grep version | awk '{print $2}' && conda deactivate)" > freebayes_02_FBfastp_block_${CONT_DB}.${slurmID}.version	   		
+	   		echo "fastp $(${CONDA_BASE_ENV} && fastp 2>&1 | grep version | awk '{print $2}' && conda deactivate)" > freebayes_02_FBfastp_block_${CONT_DB}.${slurmID}.version	   		
 		else		
 			(>&2 echo "ERROR - set CT_FREEBAYES_READSTYPE ${CT_FREEBAYES_READSTYPE} not supported yet")
 	        exit 1			
@@ -273,8 +273,8 @@ then
 				echo "bwa mem${CONTIG_BWA_OPT} -R \"@RG\tID:${PROJECT_ID}\tSM:10X\" ${ref} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f1} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/reads/${f2} | samtools sort${CONTIG_SAMTOOLS_OPT} -O BAM -o ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${o}_bwa.bam && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${o}_bwa.bam" 				 
 			done > freebayes_03_FBbwa_block_${CONT_DB}.${slurmID}.plan
 			
-	   		echo "bwa $(${PACBIO_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > freebayes_03_FBbwa_block_${CONT_DB}.${slurmID}.version
-        	echo "samtools $(${PACBIO_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> freebayes_03_FBbwa_block_${CONT_DB}.${slurmID}.version
+	   		echo "bwa $(${CONDA_BASE_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > freebayes_03_FBbwa_block_${CONT_DB}.${slurmID}.version
+        	echo "samtools $(${CONDA_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> freebayes_03_FBbwa_block_${CONT_DB}.${slurmID}.version
 		else		
 			(>&2 echo "ERROR - set CT_FREEBAYES_READSTYPE ${CT_FREEBAYES_READSTYPE} not supported yet")
 	        exit 1			
@@ -299,7 +299,7 @@ then
    		
    		setPicardOptions
    		
-   		echo "picard MarkDuplicates $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && conda deactivate)" > freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version
+   		echo "picard MarkDuplicates $(${CONDA_BASE_ENV} && picard MarkDuplicates --version && conda deactivate)" > freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version
    		if [[ $(echo $files | wc -w) -eq 1 ]]
    		then
    			ob="${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam"
@@ -313,7 +313,7 @@ then
    			m=${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.metrics
    			i=$(echo -e ${files} | sed -e "s:${CT_FREEBAYES_OUTDIR}:I=${CT_FREEBAYES_OUTDIR}:g")
    			echo "picard ${CONTIG_PICARD_OPT} MergeSamFiles ${i} OUTPUT=${mrg} USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT && picard ${CONTIG_PICARD_OPT} MarkDuplicates I=${mrg} O=${o} M=${m} && samtools index -@ ${CT_FREEBAYES_SAMTOOLS_THREADS} ${o}"
-   			echo "picard MergeSamFiles $(${PACBIO_BASE_ENV} && picard MarkDuplicates --version && conda deactivate)" >> freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version	   			
+   			echo "picard MergeSamFiles $(${CONDA_BASE_ENV} && picard MarkDuplicates --version && conda deactivate)" >> freebayes_04_FBmarkDuplicates_block_${CONT_DB}.${slurmID}.version	   			
 		else
    	 		(>&2 echo "ERROR - cannot find file with following pattern: ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/*_bwa.bam")
         	exit 1
@@ -357,8 +357,8 @@ then
    		
    		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} '{print "freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ob -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.plan
 
-		echo "freebayes $(${PACBIO_BASE_ENV} && freebayes --version && conda deactivate)" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
-		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" >> freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
+		echo "freebayes $(${CONDA_BASE_ENV} && freebayes --version && conda deactivate)" > freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
+		echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" >> freebayes_05_FBfreebayes_block_${CONT_DB}.${slurmID}.version
    	### 06_FBconsensus
     elif [[ ${currentStep} -eq 6 ]]
     then
@@ -391,7 +391,7 @@ then
         echo "bcftools index ${outdir}/${PROJECT_ID}_10x.bcf" >> freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
         echo "bcftools consensus -i'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Hla -f ${ref} ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.fasta" >> freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.plan
       
-      	echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.version  
+      	echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > freebayes_06_FBconsensus_single_${CONT_DB}.${slurmID}.version  
     ### 7-FBstatistics
     elif [[ ${currentStep} -eq 7 ]]
     then
@@ -521,8 +521,8 @@ then
    		
    		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} '{print "freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ou -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.plan
 
-		echo "freebayes $(${PACBIO_BASE_ENV} && freebayes --version && conda deactivate)" > freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.version
-		echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" >> freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.version   
+		echo "freebayes $(${CONDA_BASE_ENV} && freebayes --version && conda deactivate)" > freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.version
+		echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" >> freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.version   
 	### 04-FBconsensus
 	elif [[ ${currentStep} -eq 4 ]]
     then
@@ -560,7 +560,7 @@ then
 		echo "echo \"Num. bases affected \$(bcftools view -H -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Ov ${outdir}/${PROJECT_ID}_10x.bcf | awk -F \"\\t\" '{print \$4\"\\t\"\$5}' | awk '{lenA=length(\$1); lenB=length(\$2); if (lenA < lenB ) {sum+=lenB-lenA} else if ( lenA > lenB ) { sum+=lenA-lenB } else {sum+=lenA}} END {print sum}')\" > ${outdir}/${PROJECT_ID}_10x.numvar " >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
 		echo "bcftools view -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Oz  ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.changes.vcf.gz" >> freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.plan
             
-      	echo "bcftools $(${PACBIO_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.version
+      	echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > freebayes_04_FBconsensus_single_${CONT_DB}.${slurmID}.version
 	### 05-FBstatistics
 	elif [[ ${currentStep} -eq 5 ]]
     then
