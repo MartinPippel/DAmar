@@ -328,7 +328,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "hic" ]]
 			then
-				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm				j				
+				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm			
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
 				echo -e "\n${CONDA_PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
@@ -386,7 +386,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "hic" ]]
 			then
-				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm				s			
+				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm			
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
 				echo -e "\n${CONDA_PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
