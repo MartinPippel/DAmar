@@ -889,8 +889,8 @@ then
 		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.plan
 		
-		echo "samtools $(${PACBIO_HIC_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.version
-		echo "bwa $(${PACBIO_HIC_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.version        
+		echo "samtools $(${CONDA_HIC_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.version
+		echo "bwa $(${CONDA_HIC_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.version        
 	### 02_HiChiglassBwa
 	if [[ ${currentStep} -eq 2 ]]
     then
@@ -978,8 +978,8 @@ then
 			 				 
 		done > hic_02_HiChiglassBwa_block_${CONT_DB}.${slurmID}.plan
 		
-   		echo "bwa $(${PACBIO_HIC_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_02_HiChiglassBwa_block_${CONT_DB}.${slurmID}.version
-   		echo "samtools $(${PACBIO_HIC_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_02_HiChiglassBwa_block_${CONT_DB}.${slurmID}.version                        
+   		echo "bwa $(${CONDA_HIC_ENV} && bwa 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" > hic_02_HiChiglassBwa_block_${CONT_DB}.${slurmID}.version
+   		echo "samtools $(${CONDA_HIC_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> hic_02_HiChiglassBwa_block_${CONT_DB}.${slurmID}.version                        
 	### 03_HiChiglassFilter
 	if [[ ${currentStep} -eq 3 ]]
     then
