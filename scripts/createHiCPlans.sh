@@ -1000,7 +1000,7 @@ then
    		## if multiple bam files are available (e.g. different Lanes) then merge files prior to markduplicates
    		files=$(ls ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/*_bwa.bam)
    		   		   		
-   		echo "picard MarkDuplicates $(${CONDA_HIC_ENV} && picard MarkDuplicates --version && conda deactivate)" > hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.version
+   		echo "picard MergeSamFiles $(${CONDA_HIC_ENV} && picard MarkDuplicates --version && conda deactivate)" > hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.version
    		
    		if [[ $(echo $files | wc -w) -eq 1 ]]
    		then
@@ -1020,8 +1020,8 @@ then
     	echo "pairtools sort --nproc ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.sorted.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.parsed.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan              
         
         echo "pairtools dedup -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.dedup.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.sorted.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
-    	echo "pairtools select \'(pair_type == \"UU\") or (pair_type == \"UR\") or (pair_type == \"RU\") \' -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.dedup.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
-    	echo "pairtools split --output-pairs -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.output.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
+    	echo "pairtools select '(pair_type == \"UU\") or (pair_type == \"UR\") or (pair_type == \"RU\")' -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.dedup.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
+    	echo "pairtools split --nproc-in ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} --nproc-out ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} --output-pairs ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.output.pairsam.gz --output-sam ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.output.bam ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
     	echo "pairix ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.output.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan    	
 	### 04_HiChiglassMatrix
 	elif [[ ${currentStep} -eq 4 ]]
