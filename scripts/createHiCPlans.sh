@@ -885,7 +885,7 @@ then
    			echo "sed -e \"s/:/-/g\" ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.plan
    		fi		
 		echo "samtools faidx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.plan
-		echo "awk '{print \$1\" \"\$2}' ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF}).fai > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.plan
+		echo "awk '{print \$1\"\t\"\$2}' ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF}).fai > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.plan
 		echo "bwa index -b 100000000 ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.plan
 		echo "cp ${configFile} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/config/$(basename ${configFile%.sh})_$(date '+%Y-%m-%d_%H-%M-%S').sh" >> hic_01_HIChiglassPrepare_single_${CONT_DB}.${slurmID}.plan
 		
@@ -1032,7 +1032,7 @@ then
             rm $x
         done        
         
-        echo "cooler cload pairix -p ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes:${SC_HIC_HIGLASS_COOLERRESOLUTION} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairs.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" > hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
+        echo "HDF5_USE_FILE_LOCKING=FALSE cooler cload pairix -p ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes:${SC_HIC_HIGLASS_COOLERRESOLUTION} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairs.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" > hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
         # normalization - (matrix balancing)
         echo "cooler balance ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" >> hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
         # aggregation - (for HiGlass view)
