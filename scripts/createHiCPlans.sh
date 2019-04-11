@@ -1021,8 +1021,8 @@ then
         
         echo "pairtools dedup -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.dedup.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.sorted.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
     	echo "pairtools select '(pair_type == \"UU\") or (pair_type == \"UR\") or (pair_type == \"RU\")' -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.dedup.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
-    	echo "pairtools split --nproc-in ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} --nproc-out ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} --output-pairs ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.output.pairsam.gz --output-sam ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.output.bam ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
-    	echo "pairix ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.output.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan    	
+		echo "pairtools split --nproc-in ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} --nproc-out ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} --output-pairs ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairs.gz --output-sam ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.bam ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairsam.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan
+    	echo "pairix -f -p pairs ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairs.gz" >> hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.plan    	
 	### 04_HiChiglassMatrix
 	elif [[ ${currentStep} -eq 4 ]]
     then
