@@ -1034,9 +1034,9 @@ then
         
         echo "HDF5_USE_FILE_LOCKING=FALSE cooler cload pairix -p ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes:${SC_HIC_HIGLASS_COOLERRESOLUTION} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairs.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" > hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
         # normalization - (matrix balancing)
-        echo "cooler balance ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" >> hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
+        echo "HDF5_USE_FILE_LOCKING=FALSE cooler balance ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" >> hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
         # aggregation - (for HiGlass view)
-        echo "cooler zoomify ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" >> hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
+        echo "HDF5_USE_FILE_LOCKING=FALSE cooler zoomify ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" >> hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
 	else
     	(>&2 echo "step ${currentStep} in SC_HIC_TYPE ${SC_HIC_TYPE} not supported")
     	(>&2 echo "valid steps are: ${myTypes[${SC_HIC_TYPE}]}")
