@@ -1032,7 +1032,7 @@ then
             rm $x
         done        
         
-        echo "cooler cload pairx ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes:${SC_HIC_HIGLASS_COOLERRESOLUTION} -p ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" > hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
+        echo "cooler cload pairix -p ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes:${SC_HIC_HIGLASS_COOLERRESOLUTION} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.filtered.pairs.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" > hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
         # normalization - (matrix balancing)
         echo "cooler balance ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${SC_HIC_HIGLASS_COOLERRESOLUTION}.cool" >> hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
         # aggregation - (for HiGlass view)
