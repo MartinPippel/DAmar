@@ -249,7 +249,7 @@ then
 			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "qc" ]]
 			then
 				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
-			elif [[ ${prefix} == "hic" ]]
+			elif [[ ${prefix} == "hic" ]] && ! [[ ${SC_HIC_TYPE} -eq 0 && ${currentStep} -eq 6 ]]
 			then
 				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm				
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -326,7 +326,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "qc" ]]
 			then
 				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
-			elif [[ ${prefix} == "hic" ]]
+			elif [[ ${prefix} == "hic" ]] && ! [[ ${SC_HIC_TYPE} -eq 0 && ${currentStep} -eq 6 ]]
 			then
 				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm			
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
@@ -384,7 +384,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "qc" ]]
 			then
 				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
-			elif [[ ${prefix} == "hic" ]]
+			elif [[ ${prefix} == "hic" ]] && ! [[ ${SC_HIC_TYPE} -eq 0 && ${currentStep} -eq 6 ]]
 			then
 				echo -e "\n${CONDA_HIC_ENV}" >> ${file}.slurm			
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
