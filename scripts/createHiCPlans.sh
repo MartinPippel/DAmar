@@ -535,15 +535,17 @@ then
    		   		  
    		echo "perl ${MARVEL_PATH}/scripts/get_stats.pl ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/${PROJECT_ID}_finalHiC.stats" > hic_07_HICsalsaStatistics_single_${CONT_DB}.${slurmID}.plan
    		
-   		
-		### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
-    	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
-        then 
-        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
-    	else
-        	cwd=$(pwd)
-        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
-    	fi
+   		if [[ -n ${SC_HIC_FULLSTATS} && ${SC_HIC_FULLSTATS} -gt 0 ]]
+   		then
+			### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+	    	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+	        then 
+	        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+	    	else
+	        	cwd=$(pwd)
+	        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+	    	fi
+		fi
     	### create assemblyStats plan 
     	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 14" >> hic_07_HICsalsaStatistics_single_${CONT_DB}.${slurmID}.plan
     	git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD >> hic_07_HICsalsaStatistics_single_${CONT_DB}.${slurmID}.version   		  	

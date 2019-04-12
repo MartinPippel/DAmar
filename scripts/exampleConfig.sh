@@ -859,7 +859,8 @@ SC_HIC_OUTDIR="${FIX_FILT_OUTDIR}"
 SC_HIC_REF="stats/contigs/m1/arrow_2/mMyoMyo_m1_A.p.fasta"	# will be ignored if runID is greater then 1
 SC_HIC_REF_EXCLUDELIST="stats/contigs/m1/haploSplit/filter/mMyoMyo_m1_h.p.excludeP65RepeatContigs.clist"
 SC_HIC_ENZYME_NAME="Sau3AI"
-SC_HIC_ENZYME_SEQ="GATC"		
+SC_HIC_ENZYME_SEQ="GATC"
+SC_HIC_FULLSTATS=0		
 ### fastp
 SC_HIC_FASTP_THREADS=4
 ### bwa
@@ -895,6 +896,7 @@ SC_HIC_3DDNAVISUALIZE_IGNOREMAPQV=0		#Ignore mapq suffix.
 ### HiGlass pipeline
 SC_HIC_HIGLASS_COOLERRESOLUTION=(10000, 50000, 100000)	# cooler binning: binsize : e.g.) 5000 (high resolution), 500000 (lower resolution)
 SC_HIC_HIGLASS_PAIRTOOLSTHREADS=8
+SC_HIC_FULLSTATS=0
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
