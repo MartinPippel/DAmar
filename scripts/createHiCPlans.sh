@@ -1021,8 +1021,8 @@ then
    		then
    			for x in ${files}
    			do
-   				echo "samtools view -h ${x} | pairtools parse -c ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${x%.bam}.parsed.pairsam.gz"
-    			echo "pairtools sort --nproc ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${x%.bam}.sorted.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${x%.bam}.parsed.pairsam.gz"   				
+   				echo "samtools view -h ${x} | pairtools parse -c ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/$(basename ${x%.bam}).parsed.pairsam.gz"
+    			echo "pairtools sort --nproc ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/$(basename ${x%.bam}).sorted.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/$(basename ${x%.bam}).parsed.pairsam.gz"   				
    			done
    		
    			echo "pairtools merge -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.sorted.pairsam.gz \$(ls ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/*_bwa.parsed.pairsam.gz)"
