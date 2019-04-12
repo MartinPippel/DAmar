@@ -250,14 +250,17 @@ then
         do            
             rm $x
         done
-   	        
-    	### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
-    	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
-        then 
-        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
-    	else
-        	cwd=$(pwd)
-        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+   	       
+   	    if [[ -n ${SC_BIONANO_FULLSTATS} && ${SC_BIONANO_FULLSTATS} -gt 0 ]]
+   	    then  
+    		### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+    		if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+        	then 
+        		bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+    		else
+        		cwd=$(pwd)
+        		ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+    		fi
     	fi
     	### create assemblyStats plan 
     	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 13" > bionano_02_BNstatistics_single_${CONT_DB}.${slurmID}.plan
