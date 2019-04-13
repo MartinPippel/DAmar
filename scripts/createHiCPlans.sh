@@ -1000,14 +1000,12 @@ then
    		setPicardOptions
    		   		
    		## if multiple bam files are available (e.g. different Lanes) then merge files prior to markduplicates
-   		files=$(ls ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/*_bwa.bam)
-   		   		   		
-   		echo "picard MergeSamFiles $(${CONDA_HIC_ENV} && picard MarkDuplicates --version && conda deactivate)" > hic_03_HiChiglassFilter_single_${CONT_DB}.${slurmID}.version
+   		files=$(ls ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/*_bwa.bam)   		   		   	   		
    		
    		if [[ $(echo $files | wc -w) -eq 1 ]]
    		then
    			ob="${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_allHiC.bam"
-			echo "ln -s -r ${files} ${ob}"
+			echo "ln -s -r -f ${files} ${ob}"
 			
 			echo "samtools view -h ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_allHiC.bam | pairtools parse -c ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta}).chrom.sizes -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.parsed.pairsam.gz"
     		echo "pairtools sort --nproc ${SC_HIC_HIGLASS_PAIRTOOLSTHREADS} -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.sorted.pairsam.gz ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/filter/${PROJECT_ID}_allHiC.parsed.pairsam.gz"              
