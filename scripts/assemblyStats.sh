@@ -721,8 +721,8 @@ then
 	then
 		hicSalsaPath=stats/contigs/${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}
 		
-		prevExt=$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
-		cset=$(basename ${SC_HIC_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF)}')
+		prevExt=$(basename ${SC_HIC_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+		cset=$(basename ${SC_HIC_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
 		fext="S"
 				
 		if [[ -d ${hicSalsaPath} ]]
