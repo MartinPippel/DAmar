@@ -20,13 +20,13 @@ DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzler/"
 SUBMIT_SCRIPTS_PATH="${MARVEL_PATH}/scripts"
 
 ############################## tools for pacbio arrow correction 
-CONDA_BASE_ENV="conda activate base"
+CONDA_BASE_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate base"
 ############################## tools HiC HiGlass pipleine, bwa, samtools, pairstools, cooler, ..;
-CONDA_HIC_ENV="conda activate hic"
+CONDA_HIC_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate hic"
 ############################## activate purgehaplotigs environment if requires
-CONDA_PURGEHAPLOTIGS_ENV="conda activate purge_haplotigs_env"
+CONDA_PURGEHAPLOTIGS_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate purge_haplotigs_env"
 ############################## tools for whatshap phasing
-CONDA_WHATSHAP_ENV="conda activate whatshap"
+CONDA_WHATSHAP_ENV="source /projects/dazzler/pippel/prog/miniconda3/bin/activate whatshap"
 
 ### ENVIRONMENT VARIABLES 
 export PATH=${MARVEL_PATH}/bin:${MARVEL_PATH}/scripts:$PATH
@@ -48,6 +48,8 @@ export GENOMESCOPE_PATH="/projects/dazzler/pippel/prog/genomescope/"
 export GATK_PATH="/projects/dazzler/pippel/prog/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar"
 export BCFTOOLS_PATH="/projects/dazzler/pippel/prog/bcftools"
 export SEQKIT_PATH="/projects/dazzler/pippel/prog/bin/seqkit"
+
+BGZIP_THREADS=6
 
 ## general information
 PROJECT_ID=iHylVes1
@@ -674,8 +676,10 @@ COR_CONTIG_CTANALYZE_FULLSTATS=0
 PB_ARROW_RUNID=1                                                          # used for output directory arrow_run${PB_ARROW_RUNID}
 PB_ARROW_BAM="${DB_PATH}"   										 # directory with bam files
 PB_ARROW_OUTDIR="${FIX_FILT_OUTDIR}"
-PB_ARROW_INFASTA="stats/contigs/m1/haploSplit/forArrow"		    # will be ignored if runID is greater then 1
-PB_ARROW_MAKEUNIQUEHEADER=0                                                 # to ensure unique header, add sequence index to fasta header 
+PB_ARROW_REFFASTA="stats/contigs/m1/haploSplit/test.fa"	
+PB_ARROW_P_HEADER="stats/contigs/m1/haploSplit/test.p.header"
+PB_ARROW_A_HEADER="stats/contigs/m1/haploSplit/test.a.header"	
+PB_ARROW_MAKEUNIQUEHEADER=0                                         # to ensure unique header, add sequence index to fasta header 
 ### pbalign
 PB_ARROW_PBALIGN_LOGFILE=1
 PB_ARROW_PBALIGN_UNALIGNFILE=1
@@ -895,8 +899,8 @@ SC_HIC_3DDNAVISUALIZE_MAPQV=1			#Build map for a specific mapq threshold (defaul
 SC_HIC_3DDNAVISUALIZE_CLEANUP=1			#Clean up when done (default: no cleanup.)
 SC_HIC_3DDNAVISUALIZE_IGNOREMAPQV=0		#Ignore mapq suffix.
 ### HiGlass pipeline
-SC_HIC_HIGLASS_COOLERRESOLUTION=(10000, 50000, 100000)	# cooler binning: binsize : e.g.) 5000 (high resolution), 500000 (lower resolution)
-SC_HIC_HIGLASS_PAIRTOOLSTHREADS=8
+SC_HIC_HIGLASS_COOLERRESOLUTION=(10000 50000 100000)	# cooler binning: binsize : e.g.) 5000 (high resolution), 500000 (lower resolution)
+SC_HIC_HIGLASS_PAIRTOOLSTHREADS=24
 SC_HIC_FULLSTATS=0
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
@@ -1162,3 +1166,12 @@ TIME_HiChiglassBwa=24:00:00
 THREADS_HiChiglassMatrix=${SC_HIC_HIGLASS_PAIRTOOLSTHREADS}
 MEM_HiChiglassMatrix=64000
 TIME_HiChiglassMatrixs=24:00:00
+
+########## statistics
+if [[ -z ${BGZIP_THREADS} ]]
+then
+	BGZIP_THREADS=1
+fi
+THREADS_statistics=${BGZIP_THREADS}
+MEM_statistics=$((${BGZIP_THREADS}*4096))     
+TIME_statistics=24:00:00
