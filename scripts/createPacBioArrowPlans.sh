@@ -90,30 +90,12 @@ then
             rm $x
         done
         
-        if [[ ! -d "${PB_ARROW_INFASTA}" ]]
+        if [[ ! -f "${PB_ARROW_REFFASTA}" ]]
         then
-        	(>&2 echo "ERROR - set PB_ARROW_INFASTA to input fasta directory")
+        	(>&2 echo "ERROR - set PB_ARROW_REFFASTA to input fasta file")
         	exit 1
    		fi
-   		
-   		# sanity checks
-   		numFiles=0 
-   		for x in ${PB_ARROW_INFASTA}/*.fasta   		
-   		do
-   			if [[ ! -f ${x} || ! -s ${x} ]]
-   			then
-   				(>&2 echo "WARNING - file ${x} not available or empty")
-   			else
-   				numFiles=$((${numFiles}+1))
-   			fi      						
-   		done
-
-		if [[ ${numFiles} -eq 0 ]]
-		then
-			(>&2 echo "ERROR - no input fasta found")
-	       	exit 1	
-		fi
-		
+   				
 		if [[ ! -d ${PB_ARROW_OUTDIR} ]] 
 		then
 			(>&2 echo "ERROR - Variable ${PB_ARROW_OUTDIR} is not set or cannot be accessed")
@@ -123,9 +105,9 @@ then
 		echo "if [[ -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ]]; then mv ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}" > arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		if [[ -n ${PB_ARROW_MAKEUNIQUEHEADER} && ${PB_ARROW_MAKEUNIQUEHEADER} -eq 1 ]]
 		then
-			echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+			echo "cat ${PB_ARROW_REFFASTA} | awk -v count=1 '{if (\$1 ~ /^>/) {print $1\"_\"; count+=1;} else print \$1;}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		else
-			echo "cat ${PB_ARROW_INFASTA}/*.fasta | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+			echo "cat ${PB_ARROW_REFFASTA} | awk '{ print \$1}' | sed \"s:|:_:g\" > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		fi
 		echo "sawriter ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		echo "samtools faidx ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
