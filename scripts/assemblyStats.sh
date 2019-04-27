@@ -220,8 +220,8 @@ then
 		arrowPath=stats/contigs/${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID}
 
 		fext="a"
-		prevExt=$(basename ${CT_FREEBAYES_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF-1)}')	
-		ext=$(basename ${CT_FREEBAYES_REFFASTA%.fasta} | awk -F '[_.]' '{print $NF}')	
+		prevExt=$(basename ${PB_ARROW_REFFASTA%.fasta} | awk -F '[_.]' '{print $(NF-1)}')	
+		ext=$(basename ${PB_ARROW_REFFASTA%.fasta} | awk -F '[_.]' '{print $NF}')	
 		
 		if [[ ! -f ${PB_ARROW_REFFASTA} ]]
         then 
@@ -258,6 +258,7 @@ then
 				
 				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"					        		
 			done > ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
 				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fa.gz && conda deactivate
@@ -287,6 +288,7 @@ then
 				
 				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"					        		
 			done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
 				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fa.gz && conda deactivate
@@ -313,6 +315,7 @@ then
 			fi
 			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"
 		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta
+		${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext} ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.fasta
 		if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 		then
 			${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fa.gz && conda deactivate
@@ -325,13 +328,13 @@ then
         	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.stats
         	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
         	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgt" | wc -m)
-        	frac=$(echo "scale=2;${arrowedBases}*100/${allBases}" | bc)
+        	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
         	echo "allBases ${allBases} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.stats
         	${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}T.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}T.failed.fasta
         	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}T.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}T.stats
 			allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}T.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
         	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}T.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgt" | wc -m)
-        	frac=$(echo "scale=2;${arrowedBases}*100/${allBases}" | bc)
+        	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
         	echo "allBases ${allBases} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}T.stats
     	fi
         	
@@ -340,13 +343,13 @@ then
         	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.stats
         	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
         	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgt" | wc -m)
-        	frac=$(echo "scale=2;${arrowedBases}*100/${allBases}" | bc)
+        	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
         	echo "allBases ${allBases} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.stats
         	${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.pT.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.pT.failed.fasta
         	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.pT.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.pT.stats
 			allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.pT.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
         	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.pT.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgt" | wc -m)
-        	frac=$(echo "scale=2;${arrowedBases}*100/${allBases}" | bc)
+        	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
         	echo "allBases ${allBases} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.pT.stats
     	fi 
        	
@@ -355,13 +358,13 @@ then
         	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.stats
         	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
         	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgt" | wc -m)
-        	frac=$(echo "scale=2;${arrowedBases}*100/${allBases}" | bc )
+        	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc )
         	echo "allBases ${allBases} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.stats
         	${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.aT.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.aT.failed.fasta
         	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.aT.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.aT.stats
 			allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.aT.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
         	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.aT.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgt" | wc -m)
-        	frac=$(echo "scale=2;${arrowedBases}*100/${allBases}" | bc)        	
+        	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)        	
         	echo "allBases ${allBases} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.aT.stats
     	fi	 
     	
