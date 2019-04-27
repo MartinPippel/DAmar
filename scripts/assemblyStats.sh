@@ -266,10 +266,10 @@ then
 				gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fa.gz
 			fi
 		fi
-		if [[-n ${PB_ARROW_P_HEADER} && -f ${PB_ARROW_P_HEADER} ]]
+		if [[ -n ${PB_ARROW_A_HEADER} && -f ${PB_ARROW_A_HEADER} ]]
 		then 
 			## alternate
-			for z in $(cat ${PB_ARROW_P_HEADER})
+			for z in $(cat ${PB_ARROW_A_HEADER})
 			do
 				name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
 				pathID=$(echo ${z} | awk -F \_ '{print $NF}')
@@ -315,7 +315,7 @@ then
 			fi
 			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"
 		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta
-		${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext} ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.fasta
+		${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext} ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta
 		if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 		then
 			${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fa.gz && conda deactivate
