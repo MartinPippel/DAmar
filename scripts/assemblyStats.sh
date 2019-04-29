@@ -258,7 +258,7 @@ then
 				
 				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"					        		
 			done > ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta
-			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
 				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.p.fa.gz && conda deactivate
@@ -288,7 +288,7 @@ then
 				
 				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"					        		
 			done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta
-			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
 				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.a.fa.gz && conda deactivate
@@ -315,7 +315,7 @@ then
 			fi
 			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"
 		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta
-		${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext} ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta
+		${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${xPROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext} ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta
 		if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 		then
 			${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fa.gz && conda deactivate
