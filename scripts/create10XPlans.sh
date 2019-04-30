@@ -1032,7 +1032,7 @@ then
         	echo "cd ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref tarseq.fasta && cd ../../../ " 
         	echo "cd ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-tarseq --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	else 
-    		echo "[WARNING] Using previously created reference file ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/refdata-tarseq. Please remove that folder to rerun longranger mkref"
+    		(>&2 echo "[WARNING] Using previously created reference file ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/refdata-tarseq. Please remove that folder to rerun longranger mkref" )
     		echo "cd ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-tarseq --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	fi > 10x_02_scaff10xLongrangerAlign_single_${CONT_DB}.${slurmID}.plan                
         
@@ -1185,9 +1185,9 @@ then
         	echo "cd ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref tarseq.fasta && cd ../../../ " 
         	echo "cd ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-tarseq --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	else 
-    		echo "[WARNING] Using previously created reference file ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/refdata-tarseq. Please remove that folder to rerun longranger mkref from scratch"
+    		(>&2 echo "[WARNING] Using previously created reference file ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/refdata-tarseq. Please remove that folder to rerun longranger mkref from scratch" )
     		echo "cd ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-tarseq --jobmode=slurm --localcores=24 --localmem=128 --maxjobs=500 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
-			fi > 10x_02_break10xLongrangerAlign_single_${CONT_DB}.${slurmID}.plan                
+		fi > 10x_02_break10xLongrangerAlign_single_${CONT_DB}.${slurmID}.plan                
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1)" > 10x_02_break10xLongrangerAlign_single_${CONT_DB}.${slurmID}.version
         echo "$(${LONGRANGER_PATH}/longranger align --version | head -n1)" >> 10x_02_break10xLongrangerAlign_single_${CONT_DB}.${slurmID}.version
