@@ -1000,7 +1000,7 @@ then
    		REFNAME=$(basename ${SC_10X_REF})
    		if [[ -f ${SC_10X_REF_EXCLUDELIST} ]]
    		then
-   			echo "${SEQKIT_PATH} grep -v -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/${REFNAME"
+   			echo "${SEQKIT_PATH} grep -v -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/${REFNAME}"
    			echo "${SEQKIT_PATH} grep -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/exclude.fasta"
    		else
    			echo "ln -s -r -f ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}" 
@@ -1159,7 +1159,7 @@ then
    		REFNAME=$(basename ${SC_10X_REF})
    		if [[ -f ${SC_10X_REF_EXCLUDELIST} ]]
    		then
-   			echo "${SEQKIT_PATH} grep -v -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/${REFNAME"
+   			echo "${SEQKIT_PATH} grep -v -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/${REFNAME}"
    			echo "${SEQKIT_PATH} grep -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/exclude.fasta"
    		else
    			echo "ln -s -r -f  ${SC_10X_REF} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/${REFNAME}" 
