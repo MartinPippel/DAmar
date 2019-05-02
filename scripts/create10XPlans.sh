@@ -996,9 +996,15 @@ then
    		echo "if [[ -d ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ]]; then mv ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}" > 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
    		echo "mkdir -p ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
-   		
+   		  		
    		REFNAME=$(basename ${SC_10X_REF})
-   		echo "ln -s -r -f ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan   		
+   		if [[ -f ${SC_10X_REF_EXCLUDELIST} ]]
+   		then
+   			echo "${SEQKIT_PATH} grep -v -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/${REFNAME"
+   			echo "${SEQKIT_PATH} grep -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/exclude.fasta"
+   		else
+   			echo "ln -s -r -f ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}" 
+   		fi >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan   		
    		
    		## we need a special reference fastq file with other names  
    		echo "${SCAFF10X_PATH}/scaff-bin/scaff_fastq -name tarseq -len 10 ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
@@ -1151,7 +1157,13 @@ then
    		echo "mkdir -p ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/bams" >> 10x_01_break10xPrepare_single_${CONT_DB}.${slurmID}.plan
    		
    		REFNAME=$(basename ${SC_10X_REF})
-   		echo "ln -s -r -f  ${SC_10X_REF} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/${REFNAME}" >> 10x_01_break10xPrepare_single_${CONT_DB}.${slurmID}.plan 
+   		if [[ -f ${SC_10X_REF_EXCLUDELIST} ]]
+   		then
+   			echo "${SEQKIT_PATH} grep -v -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/${REFNAME"
+   			echo "${SEQKIT_PATH} grep -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/exclude.fasta"
+   		else
+   			echo "ln -s -r -f  ${SC_10X_REF} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/${REFNAME}" 
+   		fi >> 10x_01_break10xPrepare_single_${CONT_DB}.${slurmID}.plan   		
    		
    		## we need a special reference fastq file with other names  
    		echo "${SCAFF10X_PATH}/scaff-bin/scaff_fastq -name tarseq -len 10 ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/${REFNAME} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_break10xPrepare_single_${CONT_DB}.${slurmID}.plan
