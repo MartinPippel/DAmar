@@ -1003,11 +1003,11 @@ then
    			echo "${SEQKIT_PATH} grep -v -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/${REFNAME}"
    			echo "${SEQKIT_PATH} grep -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/exclude.fasta"
    		else
-   			echo "ln -s -r -f ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}" 
+   			echo "ln -s -r -f ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/${REFNAME}" 
    		fi >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan   		
    		
    		## we need a special reference fastq file with other names  
-   		echo "${SCAFF10X_PATH}/scaff-bin/scaff_fastq -name tarseq -len 10 ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "${SCAFF10X_PATH}/scaff-bin/scaff_fastq -name tarseq -len 10 ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/${REFNAME} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
    		## convert the reference fastq into fasta 
    		echo "sed -n '1~4s/^@/>/p;2~4p' ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
 
@@ -1162,11 +1162,11 @@ then
    			echo "${SEQKIT_PATH} grep -v -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/${REFNAME}"
    			echo "${SEQKIT_PATH} grep -f ${SC_10X_REF_EXCLUDELIST} ${SC_10X_REF} > ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/exclude.fasta"
    		else
-   			echo "ln -s -r -f  ${SC_10X_REF} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/${REFNAME}" 
+   			echo "ln -s -r -f  ${SC_10X_REF} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/${REFNAME}" 
    		fi >> 10x_01_break10xPrepare_single_${CONT_DB}.${slurmID}.plan   		
    		
    		## we need a special reference fastq file with other names  
-   		echo "${SCAFF10X_PATH}/scaff-bin/scaff_fastq -name tarseq -len 10 ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/${REFNAME} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_break10xPrepare_single_${CONT_DB}.${slurmID}.plan
+   		echo "${SCAFF10X_PATH}/scaff-bin/scaff_fastq -name tarseq -len 10 ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/${REFNAME} ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_break10xPrepare_single_${CONT_DB}.${slurmID}.plan
    		## convert the reference fastq into fasta 
    		echo "sed -n '1~4s/^@/>/p;2~4p' ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/tarseq.fastq > ${SC_10X_OUTDIR}/break10x_${SC_10X_RUNID}/ref/tarseq.fasta" >> 10x_01_break10xPrepare_single_${CONT_DB}.${slurmID}.plan
 
