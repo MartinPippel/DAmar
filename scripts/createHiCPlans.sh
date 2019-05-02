@@ -279,7 +279,7 @@ then
    			echo "sed -e \"s/:/-/g\" ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})"
    		fi >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
    		
-   		if [[ -f ${SC_HIC_REF_FIXBIONANOGAPS} ]]
+   		if [[ -n ${SC_HIC_REF_FIXBIONANOGAPS} && ${SC_HIC_REF_FIXBIONANOGAPS} -gt 0 ]]
    		then
    			tmpName=${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta})
    			tmpName=${tmpName%.fa}_tmp.fasta
