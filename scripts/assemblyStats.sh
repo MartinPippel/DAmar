@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+set -euo pipefail 
+
 config=$1
 phase=$2
 
