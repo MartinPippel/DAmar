@@ -1,5 +1,6 @@
 #!/bin/bash 
 
+#http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail 
 
 config=$1
@@ -35,7 +36,6 @@ mkdir -p stats
 
 #### create fasta stats (haploid/diploid size, ng50s, etc)
 
-db=${DB%.db}
 gsize=${GSIZE}
 i=$((${#GSIZE}-1))
 if [[ "${GSIZE: -1}" =~ [gG] ]]
