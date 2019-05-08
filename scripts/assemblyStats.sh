@@ -331,8 +331,8 @@ then
         	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.stats
         	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
         	allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "Nn\n" | wc -m)
-        	allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGTnN\n" | wc -m)
-        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgt" | wc -m)
+        	allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGT\n" | wc -m)
+        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
         	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
         	fracNoN=$(echo "scale=4;${arrowedBases}*100/${allBasesNoN}" | bc)
         	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}_${prevExt}${fext}.${ext}.stats
