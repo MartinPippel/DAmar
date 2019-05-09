@@ -279,7 +279,7 @@ then
    			echo "sed -e \"s/:/-/g\" ${SC_HIC_REF} > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF})"
    		fi >> hic_01_HICsalsaPrepareInput_single_${CONT_DB}.${slurmID}.plan
    		
-   		if [[ -n ${SC_HIC_REF_FIXBIONANOGAPS} && ${SC_HIC_REF_FIXBIONANOGAPS} -gt 0 ]]
+   		if [[ -v ${SC_HIC_REF_FIXBIONANOGAPS} && ${SC_HIC_REF_FIXBIONANOGAPS} -gt 0 ]]
    		then
    			tmpName=${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/ref/$(basename ${SC_HIC_REF%.fasta})
    			tmpName=${tmpName%.fa}_tmp.fasta
@@ -519,11 +519,32 @@ then
        		(>&2 echo "ERROR - Enzyme is required, set variable SC_HIC_ENZYME_SEQ!")
         	exit 1	
        	fi
+       	
+       	SALSA_OPT="-s ${gsize}"
+       	if [[ -v ${SC_HIC_REF_DOBREAKS} && ${SC_HIC_REF_DOBREAKS} -gt 0 ]]
+       	then
+       		SALSA_OPT="${SALSA_OPT} -m yes"        		
+       	fi
+       	
+       	if [[ -v ${SC_HIC_REF_NUMITER} && ${SC_HIC_REF_NUMITER} -gt 0 ]]
+       	then
+       		SALSA_OPT="${SALSA_OPT} -i ${SC_HIC_REF_NUMITER}"     		
+       	fi
+       	
+		if [[ -v ${SC_HIC_MINCONTIG} && ${SC_HIC_MINCONTIG} -gt 0 ]]
+       	then
+       		SALSA_OPT="${SALSA_OPT} -c ${SC_HIC_MINCONTIG}"     		
+       	fi
+       	
+       	if [[ -v ${SC_HIC_KEEPINTERMEDIATES} && ${SC_HIC_KEEPINTERMEDIATES} -gt 0 ]]
+       	then
+       		SALSA_OPT="${SALSA_OPT} -p yes"     		
+       	fi
 		
 		echo "bedtools bamtobed -i ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bam > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed" > hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
 		echo "sort -k 4 ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC.bed > ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC_sortByName.bed" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
        	bed=${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/bams/${PROJECT_ID}_finalHiC_sortByName.bed
-       	echo "export PATH=${SALSA_PATH}:\$PATH && run_pipeline.py -a ${ref} -l ${ref}.fai -b ${bed} -e ${SC_HIC_ENZYME_SEQ} -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out -m yes" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
+       	echo "export PATH=${SALSA_PATH}:\$PATH && run_pipeline.py -a ${ref} -l ${ref}.fai -b ${bed} -e ${SC_HIC_ENZYME_SEQ} -o ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/out ${SALSA_OPT}" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.plan
        	
        	echo "SALSA $(git --git-dir=${SALSA_PATH}/.git rev-parse --short HEAD)" > hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version
        	echo "${CONDA_HIC_ENV} && bedtools --version && conda deactivate" >> hic_06_HICsalsaSalsa_single_${CONT_DB}.${slurmID}.version

@@ -899,9 +899,14 @@ SC_HIC_3DDNAVISUALIZE_MAPQV=1			#Build map for a specific mapq threshold (defaul
 SC_HIC_3DDNAVISUALIZE_CLEANUP=1			#Clean up when done (default: no cleanup.)
 SC_HIC_3DDNAVISUALIZE_IGNOREMAPQV=0		#Ignore mapq suffix.
 ### HiGlass pipeline
-SC_HIC_HIGLASS_COOLERRESOLUTION=(10000 50000 100000)	# cooler binning: binsize : e.g.) 5000 (high resolution), 500000 (lower resolution)
+SC_HIC_HIGLASS_COOLERRESOLUTION=(1000 5000)	# cooler binning: binsize : e.g.) 5000 (high resolution), 500000 (lower resolution)
 SC_HIC_HIGLASS_PAIRTOOLSTHREADS=24
 SC_HIC_FULLSTATS=0
+### SALSA
+SC_HIC_REF_DOBREAKS=1
+SC_HIC_REF_NUMITER=3       	
+SC_HIC_MINCONTIG=1000 
+SC_HIC_KEEPINTERMEDIATES=1       	
 
 # ***************************************************************** runtime parameter for slurm settings:  threads, mem, time ***************************************************************
 
