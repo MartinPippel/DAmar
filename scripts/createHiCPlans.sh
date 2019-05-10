@@ -679,7 +679,7 @@ then
 		echo "bwa index ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create resctriction site subdir + generate sites
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "python ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME_NAME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "python2 ${MARVEL_PATH}/scripts/generate_site_positions.py ${SC_HIC_ENZYME_NAME} ${PROJECT_ID} ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/references/${PROJECT_ID}.fasta ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/restriction_sites" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
 		# create fastq subdir + link zipped HIC reads  
 		echo "mkdir -p ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/fastq" >> hic_01_HIC3dnaPrepareInput_single_${CONT_DB}.${slurmID}.plan
    		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R[12].fastq.gz
