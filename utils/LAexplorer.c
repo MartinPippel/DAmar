@@ -306,7 +306,7 @@ static int cmp_ovls_qual(const void* a, const void* b)
     OverlapDetails* o1 = *(OverlapDetails**) a;
     OverlapDetails* o2 = *(OverlapDetails**) b;
 
-    return ((100 - (o1->ovl.path.diffs * 100.0 / (o1->ovl.path.aepos - o1->ovl.path.abpos))) * 10 - (100 - (o2->ovl.path.diffs * 100.0 / (o2->ovl.path.aepos - o2->ovl.path.abpos))) * 10);
+    return ((100 - (o2->ovl.path.diffs * 100.0 / (o2->ovl.path.aepos - o2->ovl.path.abpos))) * 10 - (100 - (o1->ovl.path.diffs * 100.0 / (o1->ovl.path.aepos - o1->ovl.path.abpos))) * 10);
 }
 
 static void adjust_drawing_area_size()
