@@ -438,7 +438,8 @@ then
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
 		echo "mkdir -p ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/freebayes" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
-		echo "ln -s -r ${CT_FREEBAYES_REFFASTA} ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan
+		# get rid of any colon's, as those will cause a crash of longranger		
+		echo "sed -e \"s/:/-/g\" ${CT_FREEBAYES_REFFASTA} > ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/ref/$(basename ${CT_FREEBAYES_REFFASTA})" >> freebayes_01_FBprepareInput_single_${CONT_DB}.${slurmID}.plan		
 	### 02_FBlongrangerAlign
     elif [[ ${currentStep} -eq 2 ]]
     then
