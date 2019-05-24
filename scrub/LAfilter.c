@@ -2313,14 +2313,14 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					Overlap *o1 = ovl + l;
 
 					// ignore stitched overlaps as those are contained anyway and we want to keep the non-stitched overlap !!!
-					if (o1->flags & OVL_STITCH)
+					if (o1->flags & (OVL_STITCH | OVL_DISCARD))
 						continue;
 
 					for (m = l + 1; m <= k && !foundMultiMapper; m++)
 					{
 						Overlap *o2 = ovl + m;
 
-						if (o2->flags & OVL_STITCH)
+						if (o2->flags & (OVL_STITCH | OVL_DISCARD))
 							continue;
 
 						if (contained(o1->path.abpos, o1->path.aepos, o2->path.abpos, o2->path.aepos)
