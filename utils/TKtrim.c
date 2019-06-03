@@ -26,7 +26,7 @@ static void usage()
 	fprintf(stderr, "[-voS] [-es <int>] <db> <trackIn> <trackOut>\n");
 	fprintf(stderr, "Options: -v ... verbose\n");
 	fprintf(stderr, "         -S ... summary stats for trimmed track\n");
-	fprintf(stderr, "		  -e ... remove n bases from given interval track (%d)\n", DEF_ARG_E);
+	fprintf(stderr, "		      -e ... remove n bases from given interval track (%d)\n", DEF_ARG_E);
 	fprintf(stderr, "         -s ... # bytes for an entry (%d)\n", DEF_ARG_S);
 	fprintf(stderr, "         -o ... old version (-1)\n");
 }
