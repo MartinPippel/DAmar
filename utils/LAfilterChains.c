@@ -1089,6 +1089,15 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 {
 #ifdef VERBOSE
 	printf( ANSI_COLOR_GREEN "PASS filtering\n" ANSI_COLOR_RESET);
+
+	printf( ANSI_COLOR_RED " OPTIONS\n" ANSI_COLOR_RESET);
+	printf( ANSI_COLOR_RED "  keepIdentity %d\n" ANSI_COLOR_RESET, fctx->keepIdentity);
+	printf( ANSI_COLOR_RED "  mergeRepDist %d\n" ANSI_COLOR_RESET, fctx->mergeRepDist);
+	printf( ANSI_COLOR_RED "  maxUnalignedB %d\n" ANSI_COLOR_RESET, fctx->maxUnalignedB);
+	printf( ANSI_COLOR_RED "  nContPerc %d\n" ANSI_COLOR_RESET, fctx->nContPerc);
+	printf( ANSI_COLOR_RED "  nFuzzBases %d\n" ANSI_COLOR_RESET, fctx->nFuzzBases);
+	printf( ANSI_COLOR_RED "  nMinNonRepeatBases %d\n" ANSI_COLOR_RESET, fctx->nMinNonRepeatBases);
+	printf( ANSI_COLOR_RED "  repeatWindowLookBack %d\n" ANSI_COLOR_RESET, fctx->repeatWindowLookBack);
 #endif
 
 	fctx->twidth = pctx->twidth;
