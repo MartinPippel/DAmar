@@ -1788,6 +1788,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			else
 			{
 				// create unique mask for b-read
+				printf("create uniqe mask for b_read %d\n", ovl->bread);
 				createUniqueMask(ctx, ovl->bread);
 
 				// check for proper chain
@@ -1955,6 +1956,8 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 					if(numdiffs*100.0/overlapBasesA <= ctx->diff && numdiffs*100.0/overlapBasesB <= ctx->diff )
 						validDiff = 1;
+
+					printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainmen %d validAnchor %d  validDiff %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor,  validDiff);
 
 					if (!validBridge || !validContainment || !validAnchor || ! validDiff)
 					{
