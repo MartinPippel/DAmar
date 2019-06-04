@@ -2038,7 +2038,7 @@ int main(int argc, char* argv[])
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:V:W:Y:")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:V:W:Y:I")) != -1)
 	{
 		switch (c)
 		{
