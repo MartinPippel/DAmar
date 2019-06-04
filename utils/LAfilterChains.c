@@ -1785,7 +1785,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					for (b = 0; b < ctx->ovlChains[a].novl; b++)
 						ctx->ovlChains[a].ovls[b]->flags |= OVL_DISCARD;
 			}
-			else
+
 			{
 				// create unique mask for b-read
 				printf("create uniqe mask for b_read %d\n", ovl->bread);
