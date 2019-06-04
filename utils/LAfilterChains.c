@@ -1745,7 +1745,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 		if (nAnchorOvls)
 		{
-			printf("contig: %8d len(%10d) | contig: %8d len(%10d) novl: %10d, anchorOvl: %5d\n", ovl[j].aread, DB_READ_LEN(ctx->db, ovl[j].aread), ovl[j].bread, DB_READ_LEN(ctx->db, ovl[j].bread), k - j + 1, nAnchorOvls);
+			printf("read: %8d len(%10d) | read: %8d len(%10d) novl: %10d, anchorOvl: %5d\n", ovl[j].aread, DB_READ_LEN(ctx->db, ovl[j].aread), ovl[j].bread, DB_READ_LEN(ctx->db, ovl[j].bread), k - j + 1, nAnchorOvls);
 			fflush(stdout);
 			chain(ctx, ovl + j, k - j + 1);
 
@@ -1918,7 +1918,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					int validAnchor = 0;
 					int validDiff = 0;
 
-					if (properGapLen)
+					if (properGapLen && ((properBegA || properBegB) && (properEndA || properEndB)))
 					{
 						if (MAX(coveredBasesInAread, coveredBasesInBread) >= (int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))))
 						{
