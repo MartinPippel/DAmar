@@ -1949,6 +1949,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 					if (!validBridge || !validContainment || !validAnchor || ! validDiff)
 					{
+						printf("   *** DISCARD chain ****\n");
 						for (b = 0; b < chain->novl; b++)
 							chain->ovls[b]->flags |= OVL_DISCARD;
 					}
