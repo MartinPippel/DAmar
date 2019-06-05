@@ -1751,6 +1751,24 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	// create unique mask for a-read
 	printf("-----> createUniqueMask for aread: %d\n", ovl->aread);
 	createUniqueMask(ctx, ovl->aread, 1);
+
+	//
+	int trim_abeg, trim_aend;
+	int trim_bbeg, trim_bend;
+	int trim_alen, trim_blen;
+
+	if(ctx->trackTrim)
+	{
+		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_abeg, &trim_aend);
+		trim_alen = trim_aend - trim_abeg;
+	}
+	else
+	{
+		 trim_abeg = 0;
+		 trim_aend = DB_READ_LEN(ctx->db, ovl->aread);
+		 trim_alen = trim_aend;
+	}
+
 	printf("ctx->curUniqAIntervals: %d\n", ctx->curUniqAIntervals);
 	while (j < novl)
 	{
@@ -1805,9 +1823,21 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 			{
 				// create unique mask for b-read
-				printf("-----> create unique mask for b_read %d\n", ovl->bread);
-				createUniqueMask(ctx, ovl->bread, 0);
+				printf("-----> create unique mask for b_read %d\n", ovl[j].bread);
+				createUniqueMask(ctx, ovl[j].bread, 0);
 				printf("ctx->curUniqBIntervals: %d\n", ctx->curUniqBIntervals);
+
+				if(ctx->trackTrim)
+				{
+					get_trim(ctx->db, ctx->trackTrim, ovl[j].bread, &trim_bbeg, &trim_bend);
+					trim_blen = trim_bend - trim_bbeg;
+				}
+				else
+				{
+					 trim_bbeg = 0;
+					 trim_bend = DB_READ_LEN(ctx->db, ovl[j].bread);
+					 trim_blen = trim_bend;
+				}
 
 				// check for proper chain
 				for (a = 0; a < ctx->curChains; a++)
@@ -1835,17 +1865,34 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					int fuzzy = (ctx->nFuzzBases) ? ctx->nFuzzBases : ctx->maxUnalignedB;
 
 					// check for proper begin
-					if (chain->ovls[0]->path.abpos < fuzzy)
+					if (chain->ovls[0]->path.abpos <= trim_abeg + fuzzy)
 						properBegA = 1;
-					if (chain->ovls[0]->path.bbpos < fuzzy)
-						properBegB = 1;
+
+					if(chain->ovls[0]->flags & OVL_COMP)
+					{
+						if (DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[0]->path.bbpos + fuzzy >= trim_bend)
+							properBegB = 1;
+					}
+					else
+					{
+						if (chain->ovls[0]->path.bbpos <= trim_bbeg + fuzzy)
+							properBegB = 1;
+					}
 
 					// check for proper end
-					if (chain->ovls[chain->novl - 1]->path.aepos + fuzzy > DB_READ_LEN(ctx->db, ovl[j].aread))
+					if (chain->ovls[chain->novl - 1]->path.aepos + fuzzy >= trim_aend)
 						properEndA = 1;
 
-					if (chain->ovls[chain->novl - 1]->path.bepos + fuzzy > DB_READ_LEN(ctx->db, ovl[j].bread))
-						properEndB = 1;
+					if(chain->ovls[0]->flags & OVL_COMP)
+					{
+						if (DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[chain->novl-1]->path.bepos - fuzzy <= trim_bbeg)
+							properEndB = 1;
+					}
+					else
+					{
+						if (chain->ovls[chain->novl - 1]->path.bepos + fuzzy >= trim_bend)
+							properEndB = 1;
+					}
 
 					coveredBasesInAread = chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos;
 					coveredBasesInBread = chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos;
