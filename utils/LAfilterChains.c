@@ -1235,6 +1235,8 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 
 	get_trim(ctx->db, ctx->trackTrim, read, &trim_beg, &trim_end);
 
+	printf("trim_beg %d, trim_end %d\n", trim_beg, trim_end);
+
 	int MINANCHOR = 10;
 	int WINDOW =   ctx->repeatWindowLookBack;
 	int MAXMERGE = ctx->mergeRepDist;
