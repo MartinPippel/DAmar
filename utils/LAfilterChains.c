@@ -1216,14 +1216,14 @@ static void createUniqueMask(FilterContext *ctx, int read)
 
 	if(read < 0)
 	{
-		numIntervals = &(ctx->maxUniqAIntervals);
-		curItv = &(ctx->curUniqAIntervals);
+		numIntervals = ctx->maxUniqAIntervals;
+		curItv = ctx->curUniqAIntervals;
 		uniqIntervals = ctx->uniqAIntervals;
 	}
 	else
 	{
-		numIntervals = &(ctx->maxUniqBIntervals);
-		curItv = &(ctx->curUniqBIntervals);
+		numIntervals = ctx->maxUniqBIntervals;
+		curItv = ctx->curUniqBIntervals;
 		uniqIntervals = ctx->uniqBIntervals;
 	}
 
@@ -1249,12 +1249,12 @@ static void createUniqueMask(FilterContext *ctx, int read)
 		*numIntervals = (e - b + 1) + 4;
 		if(read < 0)
 		{
-			ctx->uniqAIntervals = (anchorItv*) realloc(ctx->uniqAIntervals, ctx->maxUniqAIntervals * sizeof(anchorItv));
+			ctx->uniqAIntervals = (anchorItv*) realloc(ctx->uniqAIntervals, *numIntervals * sizeof(anchorItv));
 			uniqIntervals = ctx->uniqAIntervals;
 		}
 		else
 		{
-			ctx->uniqBIntervals = (anchorItv*) realloc(ctx->uniqBIntervals, ctx->maxUniqBIntervals * sizeof(anchorItv));
+			ctx->uniqBIntervals = (anchorItv*) realloc(ctx->uniqBIntervals, *numIntervals * sizeof(anchorItv));
 			uniqIntervals = ctx->uniqBIntervals;
 		}
 	}
@@ -1413,7 +1413,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 					(predust + dust + postdust) * 100.0 / ((a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, rlen) - a->end)));
 		}
 	}
-	else // add full read interval as uniq range
+	else // add full read interval as unique range
 	{
 		uniqIntervals[0].beg = trim_beg;
 		uniqIntervals[0].end = trim_end;
@@ -1495,13 +1495,13 @@ static void createUniqueMask(FilterContext *ctx, int read)
 				*numIntervals = 1.2 * (*numIntervals) + 10;
 				if(read < 0)
 				{
-					ctx->uniqAIntervals = (anchorItv*) realloc(ctx->uniqAIntervals, ctx->maxUniqAIntervals * sizeof(anchorItv));
+					ctx->uniqAIntervals = (anchorItv*) realloc(ctx->uniqAIntervals, *numIntervals * sizeof(anchorItv));
 					bzero(ctx->uniqAIntervals + (*curItv), sizeof(anchorItv) * (*numIntervals - *curItv));
 					uniqIntervals = ctx->uniqAIntervals;
 				}
 				else
 				{
-					ctx->uniqBIntervals = (anchorItv*) realloc(ctx->uniqBIntervals, ctx->maxUniqBIntervals * sizeof(anchorItv));
+					ctx->uniqBIntervals = (anchorItv*) realloc(ctx->uniqBIntervals, *numIntervals * sizeof(anchorItv));
 					bzero(ctx->uniqBIntervals + (*curItv), sizeof(anchorItv) * (*numIntervals - *curItv));
 					uniqIntervals = ctx->uniqBIntervals;
 				}
