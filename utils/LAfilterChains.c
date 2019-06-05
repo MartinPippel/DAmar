@@ -1216,14 +1216,14 @@ static void createUniqueMask(FilterContext *ctx, int read)
 
 	if(read < 0)
 	{
-		numIntervals = ctx->maxUniqAIntervals;
-		curItv = ctx->curUniqAIntervals;
+		numIntervals = &(ctx->maxUniqAIntervals);
+		curItv = &(ctx->curUniqAIntervals);
 		uniqIntervals = ctx->uniqAIntervals;
 	}
 	else
 	{
-		numIntervals = ctx->maxUniqBIntervals;
-		curItv = ctx->curUniqBIntervals;
+		numIntervals = &(ctx->maxUniqBIntervals);
+		curItv = &(ctx->curUniqBIntervals);
 		uniqIntervals = ctx->uniqBIntervals;
 	}
 
