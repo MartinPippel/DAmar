@@ -2034,7 +2034,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 					printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainment %d validAnchor %d  validDiff %d numUniqABases %d numUniqBBases %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor,  validDiff, numUniqABases ,numUniqBBases );
 
-					if (!validBridge || !validContainment || !validAnchor || ! validDiff)
+					if ((!properBegA && !properBegB) || (!properEndA && !properEndB) || !validBridge || !validContainment || !validAnchor || ! validDiff)
 					{
 						printf("   *** DISCARD chain ****\n");
 						for (b = 0; b < chain->novl; b++)
