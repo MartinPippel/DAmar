@@ -31,7 +31,7 @@
 #define DEF_ARG_Q TRACK_Q
 #define DEF_ARG_T TRACK_TRIM
 #define DEF_ARG_L TRACK_DUST
-#define DEF_ARG_F 10000
+#define DEF_ARG_F 0
 #define DEF_ARG_C 0
 #define DEF_ARG_U 2000
 #define DEF_ARG_N 1000
@@ -1831,17 +1831,19 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					int overlapBasesB;
 					int numdiffs = 0;
 
+					int fuzzy = (ctx->nFuzzBases) ? ctx->nFuzzBases : ctx->maxUnalignedB;
+
 					// check for proper begin
-					if (chain->ovls[0]->path.abpos < ctx->nFuzzBases)
+					if (chain->ovls[0]->path.abpos < fuzzy)
 						properBegA = 1;
-					if (chain->ovls[0]->path.bbpos < ctx->nFuzzBases)
+					if (chain->ovls[0]->path.bbpos < fuzzy)
 						properBegB = 1;
 
 					// check for proper end
-					if (chain->ovls[chain->novl - 1]->path.aepos + ctx->nFuzzBases > DB_READ_LEN(ctx->db, ovl[j].aread))
+					if (chain->ovls[chain->novl - 1]->path.aepos + fuzzy > DB_READ_LEN(ctx->db, ovl[j].aread))
 						properEndA = 1;
 
-					if (chain->ovls[chain->novl - 1]->path.bepos + ctx->nFuzzBases > DB_READ_LEN(ctx->db, ovl[j].bread))
+					if (chain->ovls[chain->novl - 1]->path.bepos + fuzzy > DB_READ_LEN(ctx->db, ovl[j].bread))
 						properEndB = 1;
 
 					coveredBasesInAread = chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos;
@@ -1902,7 +1904,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						// check for gap in A
 						else
 						{
-							if (chain->ovls[b]->path.abpos - chain->ovls[b - 1]->path.aepos > ctx->nFuzzBases)
+							if (chain->ovls[b]->path.abpos - chain->ovls[b - 1]->path.aepos > fuzzy)
 							{
 								// check gap
 								if(!gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8) && !badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos))
@@ -1920,7 +1922,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						// check for gap in B
 						else
 						{
-							if (chain->ovls[b]->path.bbpos - chain->ovls[b - 1]->path.bepos > ctx->nFuzzBases)
+							if (chain->ovls[b]->path.bbpos - chain->ovls[b - 1]->path.bepos > fuzzy)
 							{
 								int bbpos = chain->ovls[b - 1]->path.bepos;
 								int bepos = chain->ovls[b]->path.bbpos;
@@ -1945,27 +1947,35 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					int validAnchor = 0;
 					int validDiff = 0;
 
-					if (properGapLen && ((properBegA || properBegB) && (properEndA || properEndB)))
+					if(ctx->nFuzzBases || ctx->nContPerc)
 					{
-						if (MAX(coveredBasesInAread, coveredBasesInBread) >= (int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))))
+						if (properGapLen && ((properBegA || properBegB) && (properEndA || properEndB)))
 						{
-							validContainment = 1;
-						}
+							if (MAX(coveredBasesInAread, coveredBasesInBread) >= (int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))))
+							{
+								validContainment = 1;
+							}
 
-						//      contigA         ----------------
-						//      contigB	---------
-						//			min 50Kb overlap, both overhangs min 100Kb
-						else if (properBegA && !properEndA && properEndB && !properBegB && MAX(coveredBasesInAread, coveredBasesInBread) >= MIN(50000, 3 * ctx->nFuzzBases) && chain->ovls[chain->novl - 1]->path.aepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->aread) && chain->ovls[0]->path.bbpos - 100000 > 0)
-						{
-							validBridge = 1;
+							//      contigA         ----------------
+							//      contigB	---------
+							//			min 50Kb overlap, both overhangs min 100Kb
+							else if (properBegA && !properEndA && properEndB && !properBegB && MAX(coveredBasesInAread, coveredBasesInBread) >= MIN(50000, 3 * ctx->nFuzzBases) && chain->ovls[chain->novl - 1]->path.aepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->aread) && chain->ovls[0]->path.bbpos - 100000 > 0)
+							{
+								validBridge = 1;
+							}
+							//      contigA         ----------------
+							//      								contigB			------------
+							//			min 50Kb overlap, both overhangs min 100Kb
+							else if (!properBegA && properEndA && !properEndB && properBegB && MAX(coveredBasesInAread, coveredBasesInBread) >= MIN(50000, 3 * ctx->nFuzzBases) && chain->ovls[0]->path.abpos - 100000 > 0 && chain->ovls[chain->novl - 1]->path.bepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->bread))
+							{
+								validBridge = 1;
+							}
 						}
-						//      contigA         ----------------
-						//      								contigB			------------
-						//			min 50Kb overlap, both overhangs min 100Kb
-						else if (!properBegA && properEndA && !properEndB && properBegB && MAX(coveredBasesInAread, coveredBasesInBread) >= MIN(50000, 3 * ctx->nFuzzBases) && chain->ovls[0]->path.abpos - 100000 > 0 && chain->ovls[chain->novl - 1]->path.bepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->bread))
-						{
-							validBridge = 1;
-						}
+					}
+					else // contig bridges or containments are irrelevant
+					{
+						validBridge = 1;
+						validContainment = 1;
 					}
 
 					if(numUniqABases >= ctx->nMinNonRepeatBases && numUniqBBases >= ctx->nMinNonRepeatBases)
@@ -2017,9 +2027,10 @@ static void usage()
 	fprintf(stderr, "         -p      	purge discarded overlaps\n");
 	fprintf(stderr, "         -r <trc>	repeat track name (%s)\n", DEF_ARG_R);
 	fprintf(stderr, "         -k <int>  keep valid overlap chains: 0 ... best, 1 ... all\n");
+	fprintf(stderr, "\nFor CTanalyze (Contigs vs Contigs):\n");
 	fprintf(stderr, "         -f <int>  Bridge:      allow maximum of -f bases of structural variations between two neighboring overlaps of a chain, (default %d)\n", DEF_ARG_F);
 	fprintf(stderr, "         -c <int>  Containment: chain alignment must cover at least -p percent of the shorter read. p=[1,100], (default: %d)\n", DEF_ARG_C);
-	fprintf(stderr, "\nEXPERIMENTAL:\n");
+	fprintf(stderr, "\nEXPERIMENTAL (Read vs Reads):\n");
 	fprintf(stderr, "         -l <trc>  low complexity track (e.g. tan, dust, tan_dust, default: %s)\n", DEF_ARG_L);
 	fprintf(stderr, "         -q <trc>  q-track (default: %s)\n", DEF_ARG_Q);
 	fprintf(stderr, "         -t <trc>  trim-track (default: %s)\n", DEF_ARG_T);
