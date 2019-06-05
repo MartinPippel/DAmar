@@ -1258,6 +1258,9 @@ static void createUniqueMask(FilterContext *ctx, int read)
 			uniqIntervals = ctx->uniqBIntervals;
 		}
 	}
+	printf("ctx->curUniqAIntervals %d, ctx->maxUniqAIntervals %d\n", ctx->curUniqAIntervals, ctx->maxUniqAIntervals);
+	printf("ctx->curUniqBIntervals %d, ctx->maxUniqBIntervals %d\n", ctx->curUniqBIntervals, ctx->maxUniqBIntervals);
+	printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
 
 	// reset current anchor interval index
 	*curItv = 0;
@@ -1634,6 +1637,11 @@ static void createUniqueMask(FilterContext *ctx, int read)
 		anchorbases += a->end - a->beg;
 	}
 	printf(" sum n%d b%d\n", i, anchorbases);
+
+	printf("ctx->curUniqAIntervals %d, ctx->maxUniqAIntervals %d\n", ctx->curUniqAIntervals, ctx->maxUniqAIntervals);
+		printf("ctx->curUniqBIntervals %d, ctx->maxUniqBIntervals %d\n", ctx->curUniqBIntervals, ctx->maxUniqBIntervals);
+		printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
+
 }
 
 static int gapIsLowComplexity(FilterContext *ctx, int read, int beg, int end, float fraction)
