@@ -1207,14 +1207,13 @@ static int cmp_aIvl(const void *a, const void *b)
 	return a1->beg - a2->beg;
 }
 
-static void createUniqueMask(FilterContext *ctx, int read)
+static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 {
-	int r = abs(read);
 	int *numIntervals;
 	int *curItv;
 	anchorItv *uniqIntervals;
 
-	if(read < 0)
+	if(isAread)
 	{
 		numIntervals = &(ctx->maxUniqAIntervals);
 		curItv = &(ctx->curUniqAIntervals);
@@ -1232,7 +1231,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 	printf("ctx->curUniqBIntervals %p, ctx->maxUniqBIntervals %p\n", &(ctx->curUniqBIntervals), &(ctx->maxUniqBIntervals));
 
 	int trim_beg, trim_end;
-	int rlen = DB_READ_LEN(ctx->db, r);
+	int rlen = DB_READ_LEN(ctx->db, read);
 
 	trim_beg = 0;
 	trim_end = rlen;
@@ -1245,8 +1244,8 @@ static void createUniqueMask(FilterContext *ctx, int read)
 	track_anno* repeats_anno = ctx->trackRepeat->anno;
 	track_data* repeats_data = ctx->trackRepeat->data;
 
-	b = repeats_anno[r] / sizeof(track_data);
-	e = repeats_anno[r + 1] / sizeof(track_data);
+	b = repeats_anno[read] / sizeof(track_data);
+	e = repeats_anno[read + 1] / sizeof(track_data);
 
 	if (*numIntervals < (e - b + 1) + 4)
 	{
@@ -1312,7 +1311,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 		}
 
 		anchorbases = 0;
-		printf("#anchors_0 %d", r);
+		printf("#anchors_0 %d", read);
 		for (i = 0; i < *curItv; i++)
 		{
 			anchorItv *a = uniqIntervals + i;
@@ -1352,7 +1351,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 		}
 
 		anchorbases = 0;
-		printf("#anchors_1 %d", r);
+		printf("#anchors_1 %d", read);
 		for (i = 0; i < *curItv; i++)
 		{
 			anchorItv *a = uniqIntervals + i;
@@ -1377,7 +1376,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 			if (a->end - a->beg > MAXMERGE)
 				continue;
 
-			getRepeatBasesFromInterval(ctx->trackLowCompl, r, a->beg, a->end, &dust, &longestDust);
+			getRepeatBasesFromInterval(ctx->trackLowCompl, read, a->beg, a->end, &dust, &longestDust);
 
 			if (dust * 100.0 / (a->end - a->beg) > 50.0)
 			{
@@ -1397,8 +1396,8 @@ static void createUniqueMask(FilterContext *ctx, int read)
 
 				while (checkFlanks <= WINDOW)
 				{
-					getRepeatBasesFromInterval(ctx->trackLowCompl, r, MAX(0, a->beg - checkFlanks), a->beg, &predust, &longestDustl);
-					getRepeatBasesFromInterval(ctx->trackLowCompl, r, a->end, MIN(a->end + checkFlanks, rlen), &postdust, &longestDustr);
+					getRepeatBasesFromInterval(ctx->trackLowCompl, read, MAX(0, a->beg - checkFlanks), a->beg, &predust, &longestDustl);
+					getRepeatBasesFromInterval(ctx->trackLowCompl, read, a->end, MIN(a->end + checkFlanks, rlen), &postdust, &longestDustr);
 
 					if ((predust*100.0/checkFlanks > 20.0 && longestDustl > 30) || (postdust*100/checkFlanks > 20.0 && longestDustr > 30))
 					{
@@ -1413,7 +1412,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 				}
 			}
 
-			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", r, a->beg, a->end, a->flag, predust,
+			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", read, a->beg, a->end, a->flag, predust,
 					a->beg - MAX(0, a->beg - WINDOW), predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg),
 					postdust, MIN(a->end + WINDOW, rlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, rlen) - a->end), predust + dust + postdust,
 					(a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, rlen) - a->end),
@@ -1428,7 +1427,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 	}
 
 	anchorbases = 0;
-	printf("#anchors_2 %d", r);
+	printf("#anchors_2 %d", read);
 	for (i = 0; i < *curItv; i++)
 	{
 		anchorItv *a = uniqIntervals + i;
@@ -1443,8 +1442,8 @@ static void createUniqueMask(FilterContext *ctx, int read)
 	repeats_anno = ctx->trackLowCompl->anno;
 	repeats_data = ctx->trackLowCompl->data;
 
-	b = repeats_anno[r] / sizeof(track_data);
-	e = repeats_anno[r + 1] / sizeof(track_data);
+	b = repeats_anno[read] / sizeof(track_data);
+	e = repeats_anno[read + 1] / sizeof(track_data);
 
 	int rb, re;
 
@@ -1531,7 +1530,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 	}
 
 	anchorbases = 0;
-	printf("#anchors_3 %d", r);
+	printf("#anchors_3 %d", read);
 	for (i = 0; i < *curItv; i++)
 	{
 		anchorItv *a = uniqIntervals + i;
@@ -1553,7 +1552,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 	*curItv = i;
 
 	anchorbases = 0;
-	printf("#anchors_3s %d", r);
+	printf("#anchors_3s %d", read);
 	for (i = 0; i < *curItv; i++)
 	{
 		anchorItv *a = uniqIntervals + i;
@@ -1634,7 +1633,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 
 	// report final unique anchors:
 	anchorbases = 0;
-	printf("#anchors_4 %d", r);
+	printf("#anchors_4 %d", read);
 	for (i = 0; i < *curItv; i++)
 	{
 		anchorItv *a = uniqIntervals + i;
@@ -1750,7 +1749,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 	// create unique mask for a-read
 	printf("-----> createUniqueMask for aread: %d\n", ovl->aread);
-	createUniqueMask(ctx, -ovl->aread);
+	createUniqueMask(ctx, ovl->aread, 1);
 	printf("ctx->curUniqAIntervals: %d\n", ctx->curUniqAIntervals);
 	while (j < novl)
 	{
@@ -1806,7 +1805,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			{
 				// create unique mask for b-read
 				printf("-----> create unique mask for b_read %d\n", ovl->bread);
-				createUniqueMask(ctx, ovl->bread);
+				createUniqueMask(ctx, ovl->bread, 0);
 				printf("ctx->curUniqBIntervals: %d\n", ctx->curUniqBIntervals);
 
 				// check for proper chain
