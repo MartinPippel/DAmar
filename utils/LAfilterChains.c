@@ -1214,6 +1214,8 @@ static void createUniqueMask(FilterContext *ctx, int read)
 	int *curItv;
 	anchorItv *uniqIntervals;
 
+	printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
+
 	if(read < 0)
 	{
 		numIntervals = &(ctx->maxUniqAIntervals);
