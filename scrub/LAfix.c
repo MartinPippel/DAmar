@@ -72,6 +72,7 @@ typedef struct
 
 	FILE* fileFastaOut;
 	FILE* fileQvOut;
+	FILE* fileTrimOut;
 
 	// arguments
 
@@ -1849,6 +1850,9 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
+	if(fctx->fileTrimOut)
+		fprintf(fctx->fileTrimOut,"%d %d %d" , ovl->aread, trim_ab, trim_ae);
+
 	// sanity check tracks
 
 	int alen = DB_READ_LEN(fctx->db, ovl->aread);
@@ -2678,7 +2682,7 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	printf("usage: [-ladX] [-bCxQg <int>] [-ctqr <track>] [-f <patched.quiva>] <db> <in.las> <patched.fasta>\n");
+	printf("usage: [-ladX] [-bCxQg <int>] [-ctqr <track>] [-f <patched.quiva>] [-T <file>] <db> <in.las> <patched.fasta>\n");
 	printf("       -c ... convert track intervals (multiple -c possible)\n");
 	printf("       -f ... patch quality streams\n");
 	printf("       -x ... min length for fixed sequences (%d)\n", DEF_ARG_X);
@@ -2693,6 +2697,8 @@ static void usage()
 	printf("       -d ... discard all chimeric reads, (default: 0, i.e. keep longest part of chimeric reads)\n");
 	printf("       -b ... minimum border coverage to start a chimer detection (default: %d)\n", DEF_ARG_B);
 	printf("       -C ... maximum chimer length (default: %d)\n", DEF_ARG_C);
+	printf("       -T ... write trim interval after gap-, cross-, and chimer-detection into a file.\n");
+
 }
 
 int main(int argc, char* argv[])
@@ -2716,11 +2722,12 @@ int main(int argc, char* argv[])
 	// process arguments
 
 	char* pathQvOut = NULL;
+	char* pathTrimOut = NULL;
 	int c;
 	int lowc = 0;
 	opterr = 0;
 
-	while ((c = getopt(argc, argv, "dlXx:f:c:Q:g:t:q:r:b:C:")) != -1)
+	while ((c = getopt(argc, argv, "dlXx:f:c:Q:g:t:q:r:b:C:T:")) != -1)
 	{
 		switch (c)
 		{
@@ -2758,6 +2765,10 @@ int main(int argc, char* argv[])
 
 		case 'f':
 			pathQvOut = optarg;
+			break;
+
+		case 'T':
+			pathTrimOut = optarg;
 			break;
 
 		case 'q':
@@ -2823,6 +2834,15 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	if (pathTrimOut)
+	{
+		if ((fctx.fileTrimOut = fopen(pathTrimOut, "w")) == NULL)
+		{
+			fprintf(stderr, "error: could not open '%s'\n", pathTrimOut);
+			exit(1);
+		}
+	}
+
 	if (Open_DB(pcPathReadsIn, &db))
 	{
 		fprintf(stderr, "could not open database '%s'\n", pcPathReadsIn);
@@ -2884,7 +2904,11 @@ int main(int argc, char* argv[])
 	if (fctx.fileQvOut)
 	{
 		Close_QVs(&db);
+		fclose(fctx.fileQvOut);
 	}
+
+	if (fctx.fileTrimOut)
+		fclose(fctx.fileTrimOut);
 
 	Close_DB(&db);
 
