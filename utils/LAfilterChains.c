@@ -1228,7 +1228,7 @@ static void createUniqueMask(FilterContext *ctx, int read)
 	}
 	printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
 	int trim_beg, trim_end;
-	int rlen = DB_READ_LEN(ctx->db, abs(read));
+	int rlen = DB_READ_LEN(ctx->db, r);
 
 	trim_beg = 0;
 	trim_end = rlen;
@@ -1510,6 +1510,10 @@ static void createUniqueMask(FilterContext *ctx, int read)
 				}
 			}
 			printf("curItv %d >= numIntervals %d\n", *curItv, *numIntervals);
+			printf("ctx->curUniqAIntervals %d, ctx->maxUniqAIntervals %d\n", ctx->curUniqAIntervals, ctx->maxUniqAIntervals);
+				printf("ctx->curUniqBIntervals %d, ctx->maxUniqBIntervals %d\n", ctx->curUniqBIntervals, ctx->maxUniqBIntervals);
+				printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
+
 			uniqIntervals[*curItv].beg = uniqIntervals[i].beg;
 			uniqIntervals[*curItv].end = rb;
 
