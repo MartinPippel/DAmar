@@ -1226,9 +1226,9 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 		uniqIntervals = ctx->uniqBIntervals;
 	}
 	printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
-	printf("numIntervals %p, curItv %p\n", numIntervals, curItv);
-	printf("ctx->curUniqAIntervals %p, ctx->maxUniqAIntervals %p\n", &(ctx->curUniqAIntervals), &(ctx->maxUniqAIntervals));
-	printf("ctx->curUniqBIntervals %p, ctx->maxUniqBIntervals %p\n", &(ctx->curUniqBIntervals), &(ctx->maxUniqBIntervals));
+//	printf("numIntervals %p, curItv %p\n", numIntervals, curItv);
+//	printf("ctx->curUniqAIntervals %p, ctx->maxUniqAIntervals %p\n", &(ctx->curUniqAIntervals), &(ctx->maxUniqAIntervals));
+//	printf("ctx->curUniqBIntervals %p, ctx->maxUniqBIntervals %p\n", &(ctx->curUniqBIntervals), &(ctx->maxUniqBIntervals));
 
 	int trim_beg, trim_end;
 	int rlen = DB_READ_LEN(ctx->db, read);
@@ -1251,7 +1251,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	if (*numIntervals < (e - b + 1) + 4)
 	{
 		*numIntervals = (e - b + 1) + 4;
-		if(read < 0)
+		if(isAread)
 		{
 			ctx->uniqAIntervals = (anchorItv*) realloc(ctx->uniqAIntervals, *numIntervals * sizeof(anchorItv));
 			uniqIntervals = ctx->uniqAIntervals;
@@ -1500,7 +1500,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 			if (*curItv >= *numIntervals)
 			{
 				*numIntervals = 1.2 * (*numIntervals) + 10;
-				if(read < 0)
+				if(isAread)
 				{
 					ctx->uniqAIntervals = (anchorItv*) realloc(ctx->uniqAIntervals, *numIntervals * sizeof(anchorItv));
 					bzero(ctx->uniqAIntervals + (*curItv), sizeof(anchorItv) * (*numIntervals - *curItv));
