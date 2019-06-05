@@ -1775,12 +1775,12 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 		assert(k == j);
 
-		int nAnchorOvls = (ovl[j].flags & OVL_REPEAT) ? 0 : 1;
+		int nAnchorOvls = (ovl[j].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
 
 		while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
 		{
 			k++;
-			nAnchorOvls += (ovl[k].flags & (OVL_REPEAT)) ? 0 : 1;
+			nAnchorOvls += (ovl[k].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
 		}
 
 		// ignore all self alignments if those are present
