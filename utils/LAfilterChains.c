@@ -1733,8 +1733,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	j = k = 0;
 
 	// create unique mask for a-read
+	printf("-----> createUniqueMask for aread: %d\n", ovl->aread);
 	createUniqueMask(ctx, -ovl->aread);
-
+	printf("ctx->curUniqAIntervals: %d\n", ctx->curUniqAIntervals);
 	while (j < novl)
 	{
 
@@ -1788,8 +1789,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 			{
 				// create unique mask for b-read
-				printf("create uniqe mask for b_read %d\n", ovl->bread);
+				printf("-----> create unique mask for b_read %d\n", ovl->bread);
 				createUniqueMask(ctx, ovl->bread);
+				printf("ctx->curUniqBIntervals: %d\n", ctx->curUniqBIntervals);
 
 				// check for proper chain
 				for (a = 0; a < ctx->curChains; a++)
