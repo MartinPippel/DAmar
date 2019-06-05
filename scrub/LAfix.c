@@ -1851,7 +1851,7 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 	}
 
 	if(fctx->fileTrimOut)
-		fprintf(fctx->fileTrimOut,"%d %d %d" , ovl->aread, trim_ab, trim_ae);
+		fprintf(fctx->fileTrimOut,"%d %d %d\n" , ovl->aread, trim_ab, trim_ae);
 
 	// sanity check tracks
 
