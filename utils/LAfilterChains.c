@@ -1233,8 +1233,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	int trim_beg, trim_end;
 	int rlen = DB_READ_LEN(ctx->db, read);
 
-	trim_beg = 0;
-	trim_end = rlen;
+	get_trim(ctx->db, ctx->trackTrim, read, &trim_beg, &trim_end);
 
 	int MINANCHOR = 10;
 	int WINDOW =   ctx->repeatWindowLookBack;
