@@ -1957,7 +1957,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					if(numdiffs*100.0/overlapBasesA <= ctx->diff && numdiffs*100.0/overlapBasesB <= ctx->diff )
 						validDiff = 1;
 
-					printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainmen %d validAnchor %d  validDiff %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor,  validDiff);
+					printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainment %d validAnchor %d  validDiff %d numUniqABases %d numUniqBBases %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor,  validDiff, numUniqABases ,numUniqBBases );
 
 					if (!validBridge || !validContainment || !validAnchor || ! validDiff)
 					{
