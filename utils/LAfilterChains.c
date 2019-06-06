@@ -1755,18 +1755,15 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	//
 	int trim_abeg, trim_aend;
 	int trim_bbeg, trim_bend;
-	int trim_alen, trim_blen;
 
 	if(ctx->trackTrim)
 	{
 		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_abeg, &trim_aend);
-		trim_alen = trim_aend - trim_abeg;
 	}
 	else
 	{
 		 trim_abeg = 0;
 		 trim_aend = DB_READ_LEN(ctx->db, ovl->aread);
-		 trim_alen = trim_aend;
 	}
 
 	printf("ctx->curUniqAIntervals: %d\n", ctx->curUniqAIntervals);
@@ -1830,13 +1827,11 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				if(ctx->trackTrim)
 				{
 					get_trim(ctx->db, ctx->trackTrim, ovl[j].bread, &trim_bbeg, &trim_bend);
-					trim_blen = trim_bend - trim_bbeg;
 				}
 				else
 				{
 					 trim_bbeg = 0;
 					 trim_bend = DB_READ_LEN(ctx->db, ovl[j].bread);
-					 trim_blen = trim_bend;
 				}
 
 				// check for proper chain
