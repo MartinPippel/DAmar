@@ -261,6 +261,14 @@ function setLAmergeOptions()
     then
         SCRUB_LAMERGE_OPT="${SCRUB_LAMERGE_OPT} -n ${FIX_SCRUB_LAMERGE_NFILES}"
     fi
+    if [[ -n ${FIX_SCRUB_LAMERGE_SORT} && ${FIX_SCRUB_LAMERGE_SORT} -gt 0 ]]
+    then
+        SCRUB_LAMERGE_OPT="${SCRUB_LAMERGE_OPT} -s"
+    fi
+    if [[ -n ${FIX_SCRUB_LAMERGE_VERBOSE} && ${FIX_SCRUB_LAMERGE_VERBOSE} -gt 0 ]]
+    then
+        SCRUB_LAMERGE_OPT="${SCRUB_LAMERGE_OPT} -v"
+    fi
 }
 
 function setLArepeatOptions()
