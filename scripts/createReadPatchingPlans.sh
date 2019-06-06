@@ -319,8 +319,13 @@ function setLAfixOptions()
 {
 	ptype=$1
 	
-	RAW_FIX_LAFIX_PATH=patchedReads_${ptype}
-	
+	if [[ -z ${RAW_FIX_LAFIX_PATH} ]]
+	then
+		RAW_FIX_LAFIX_PATH=patchedReads_${ptype}
+	else
+		RAW_FIX_LAFIX_PATH=${RAW_FIX_LAFIX_PATH}_${ptype}
+	fi
+
 	FIX_LAFIX_OPT=""
     if [[ -n ${RAW_FIX_LAFIX_GAP} && ${RAW_FIX_LAQ_MINSEG} -ne 0 ]]
     then
