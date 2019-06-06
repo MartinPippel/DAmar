@@ -6143,6 +6143,18 @@ static int SORT_OVL(const void *x, const void *y)
 	if (pl != pr)
 		return (pl - pr);
 
+	// check check alignment beg position in bread
+	pl = l->path.bbpos;
+	pr = r->path.bbpos;
+	if (pl != pr)
+		return (pl - pr);
+
+	// check check alignment end position in bread
+	pl = l->path.bepos;
+	pr = r->path.bepos;
+	if (pl != pr)
+		return (pl - pr);
+
 	if (l < r)
 		return (-1);
 	else if (l > r)

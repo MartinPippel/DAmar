@@ -57,7 +57,13 @@ int SORT_OVL(const void *x, const void *y)
     if (l->path.abpos != r->path.abpos)
       return (l->path.abpos - r->path.abpos);
 
-    return (l->path.aepos - r->path.aepos);
+    if (l->path.aepos != r->path.aepos)
+      return (l->path.aepos - r->path.aepos);
+
+    if (l->path.bbpos != r->path.bbpos)
+      return (l->path.bbpos - r->path.bbpos);
+
+    return (l->path.bepos - r->path.bepos);
   }
 
 #define COMPARE(lp,rp)                          \
@@ -76,8 +82,12 @@ int SORT_OVL(const void *x, const void *y)
   else if (lp->path.abpos > rp->path.abpos)     \
     bigger = 1;                                 \
   else if (lp->path.aepos > rp->path.aepos)     \
-      bigger = 1;                                 \
-  else                                          \
+		bigger = 1;                                 \
+	else if (lp->path.bbpos > rp->path.bbpos)     \
+		bigger = 1;                                 \
+	else if (lp->path.bepos > rp->path.bepos)     \
+		bigger = 1;                                 \
+	else                                          \
     bigger = 0;
 
 void reheap(int s, Overlap **heap, int hsize)
