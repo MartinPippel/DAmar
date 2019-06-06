@@ -54,7 +54,10 @@ int SORT_OVL(const void *x, const void *y)
     if (COMP(l->flags) < COMP(r->flags))
       return -1;
 
-    return (l->path.abpos - r->path.abpos);
+    if (l->path.abpos != r->path.abpos)
+      return (l->path.abpos - r->path.abpos);
+
+    return (l->path.aepos - r->path.aepos);
   }
 
 #define COMPARE(lp,rp)                          \
@@ -72,6 +75,8 @@ int SORT_OVL(const void *x, const void *y)
     bigger = 0;                                 \
   else if (lp->path.abpos > rp->path.abpos)     \
     bigger = 1;                                 \
+  else if (lp->path.aepos > rp->path.aepos)     \
+      bigger = 1;                                 \
   else                                          \
     bigger = 0;
 
@@ -176,6 +181,7 @@ inline static int compare_sort(Overlap* o1, Overlap* o2, int sort)
         CMP(o1->bread, o2->bread);
         CMP(o1->flags & OVL_COMP, o2->flags & OVL_COMP);
         CMP(o1->path.abpos, o2->path.abpos);
+        CMP(o1->path.aepos, o2->path.aepos);
       }
 
     return cmp;
