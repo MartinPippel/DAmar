@@ -708,10 +708,16 @@ then
         ### find and set LAfix options 
         setLAfixOptions dalign
         mkdir -p ${RAW_FIX_LAFIX_PATH}
+		
+		addopt=""
 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+        	if [[ -n ${RAW_FIX_LAFIX_TRIMFILEPREFIX} ]]
+        	then 
+        		addopt="-T${RAW_FIX_LAFIX_TRIMFILEPREFIX}_${x}.txt "
+        	fi
+            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
         done > fix_11_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_11_LAfix_block_${RAW_DB%.db}.${slurmID}.version                 
     else 
@@ -954,9 +960,14 @@ then
         setLAfixOptions dalign
         mkdir -p ${RAW_FIX_LAFIX_PATH}
 
+		addopt=""
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+        	if [[ -n ${RAW_FIX_LAFIX_TRIMFILEPREFIX} ]]
+        	then 
+        		addopt="-T${RAW_FIX_LAFIX_TRIMFILEPREFIX}_${x}.txt "
+        	fi
+        	echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_DB%.db}.${x}.dalign.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
         done > fix_11_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_11_LAfix_block_${RAW_DB%.db}.${slurmID}.version
     #### LAseparate 
@@ -1199,10 +1210,14 @@ then
         ### find and set LAfix options 
         setLAfixOptions repcomp
         mkdir -p ${RAW_FIX_LAFIX_PATH}
-
+		addopt=""
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.repcomp.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+        	if [[ -n ${RAW_FIX_LAFIX_TRIMFILEPREFIX} ]]
+        	then 
+        		addopt="-T${RAW_FIX_LAFIX_TRIMFILEPREFIX}_${x}.txt "
+        	fi
+            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_DB%.db}.${x}.repcomp.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
     	done > fix_22_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_22_LAfix_block_${RAW_DB%.db}.${slurmID}.version                 
     #### LAseparate 
@@ -1527,10 +1542,14 @@ then
         ### find and set LAfix options 
         setLAfixOptions forcealign
         mkdir -p ${RAW_FIX_LAFIX_PATH}
-
+		addopt=""
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.forcealign.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+        	if [[ -n ${RAW_FIX_LAFIX_TRIMFILEPREFIX} ]]
+        	then 
+        		addopt="-T${RAW_FIX_LAFIX_TRIMFILEPREFIX}_${x}.txt "
+        	fi
+            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_DB%.db}.${x}.forcealign.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
     	done > fix_33_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
 	    echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_33_LAfix_block_${RAW_DB%.db}.${slurmID}.version                 
     else 
