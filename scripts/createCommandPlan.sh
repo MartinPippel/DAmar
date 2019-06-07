@@ -98,25 +98,28 @@ then
     fi
 elif [[ ${currentPhase} -eq 3 ]]    
 then 
-	if [[ ! -f ${RAW_DB%db}.db ]]
-	then 
-		if [[ ! -f ${DB_PATH}/${RAW_DB%db}.db || ! -f ${DB_PATH}/${RAW_DAZZ_DB%db}.db ]]
+	if [[ ${currentStep} -eq 1 ]]
+	then
+		if [[ ! -f ${RAW_DB%db}.db ]]
 		then 
-			(>&2 echo "Cannot find initial databases ${RAW_DB%db}.db and ${RAW_DAZZ_DB%db}.db in directory ${DB_PATH}")
-	        exit 1	
-		fi		
-		ln -s -r ${DB_PATH}/${RAW_DB%db}.db ${DB_PATH}/.${RAW_DB%db}.idx ${DB_PATH}/.${RAW_DB%db}.bps .
-		ln -s -r ${DB_PATH}/${RAW_DAZZ_DB%db}.db ${DB_PATH}/.${RAW_DAZZ_DB%db}.idx ${DB_PATH}/.${RAW_DAZZ_DB%db}.bps .
-	fi
-	if [[ ! -d "${FIX_REPMASK_USELAFIX_PATH}" ]]	
-	then 
-		if [[ ! -d "../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}" ]]
-		then
-			(>&2 echo "Cannot find patched reads in directory ../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}")
-			(>&2 echo "cwd $(pwd)")
-	        exit 1
-		fi	
-		ln -s -r ../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH} ${FIX_REPMASK_USELAFIX_PATH}
+			if [[ ! -f ${DB_PATH}/${RAW_DB%db}.db || ! -f ${DB_PATH}/${RAW_DAZZ_DB%db}.db ]]
+			then 
+				(>&2 echo "Cannot find initial databases ${RAW_DB%db}.db and ${RAW_DAZZ_DB%db}.db in directory ${DB_PATH}")
+		        exit 1	
+			fi		
+			ln -s -r ${DB_PATH}/${RAW_DB%db}.db ${DB_PATH}/.${RAW_DB%db}.idx ${DB_PATH}/.${RAW_DB%db}.bps .
+			ln -s -r ${DB_PATH}/${RAW_DAZZ_DB%db}.db ${DB_PATH}/.${RAW_DAZZ_DB%db}.idx ${DB_PATH}/.${RAW_DAZZ_DB%db}.bps .
+		fi
+		if [[ ! -d "${FIX_REPMASK_USELAFIX_PATH}" ]]	
+		then 
+			if [[ ! -d "../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}" ]]
+			then
+				(>&2 echo "Cannot find patched reads in directory ../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}")
+				(>&2 echo "cwd $(pwd)")
+		        exit 1
+			fi	
+			ln -s -r ../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH} ${FIX_REPMASK_USELAFIX_PATH}
+		fi
 	fi
     ${SUBMIT_SCRIPTS_PATH}/createRepmaskPlans2.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
