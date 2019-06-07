@@ -358,9 +358,8 @@ function setLAfilterOptions()
         				(>&2 echo "ERROR could not create desired repeat track ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!")
         				exit 1
         			fi  
-        			      
-        			tmp=${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}			 	
-        		fi 
+        		fi
+        		tmp=${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} 
         	else ## bash arroy with more than two element are not supported
         		(>&2 echo "More then two repeat tracks are nor supported yet!!")
         		exit 1
@@ -409,9 +408,8 @@ function setLAfilterOptions()
         				(>&2 echo "ERROR could not create desired repeat track ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!")
         				exit 1
         			fi  
-        			      
-        			tmp=${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}			 	
-        		fi 
+        		fi
+        		tmp=${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} 
         	else ## bash arroy with more than two element are not supported
         		(>&2 echo "More then two repeat tracks are nor supported yet!!")
         		exit 1
