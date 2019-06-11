@@ -29,7 +29,7 @@ function createSlurmStats()
     failJobs=$(echo "${runTable}" | grep -c -v -e COMPLETED)
     CumElapsedRaw=$(echo "${runTable}" | awk -F \| '{s+=$6} END {printf "%d|%.1f|%.1f\n", s, s/60, s/3600}')
     CumCPUTimeRAW=$(echo "${runTable}" | awk -F \| '{s+=$7} END {printf "%d|%.1f|%.1f\n", s, s/60, s/3600}')
-    partition=$(echo "${runTable}" |awk -F \| '{if($3 == "gpu") gpu+=1; else if ($3 == batch) batch+=1; else if ($3 == long) long+=1; else if ($3 == bigmem) bigmem+=1; else other+=1} END {printf "%d|%d|%d|%d|%d\n", batch, bigmem, gpu, long, other}')
+	partition=$(echo "${runTable}" |awk -F \| '{if($3 == "gpu") gpu+=1; else if ($3 == "batch") batch+=1; else if ($3 == "long") long+=1; else if ($3 == "bigmem") bigmem+=1; else other+=1} END {printf "%d|%d|%d|%d|%d\n", batch, bigmem, gpu, long, other}')
     ReqMem=$(echo "${runTable}" | head -n1 | awk -F \| '{print $9}')
     NCPUS=$(echo "${runTable}" | head -n1 | awk -F \| '{print $5}')
     Submit=$(echo "${runTable}" | awk -F \| '{print $10}' | xargs -i date -d {} +%s | sort -n | head -n1)
@@ -74,6 +74,10 @@ function createSlurmStats()
     fi
 
     printf "%15s %25s         %s\n" "SlurmID" 	"${slurm_id}" 
+    for x in $(echo "${runTable}" | head -n1 | awk -F \| '{print $3}' | sort -u | tail -n +2)
+    do 
+    	printf "%15s %25s         %s\n" "JobName" 	"${x}"	
+    done    
     printf "%15s %25s         %s\n" "NumJobs" 	"${numJobs}"
     printf "%15s %25s         %s\n" "NumFailedJobs" 	"${failJobs}"
     if [[ ${failJobs} -gt 0 ]]
