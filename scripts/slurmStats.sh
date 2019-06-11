@@ -74,7 +74,7 @@ function createSlurmStats()
     fi
 
     printf "%15s %25s         %s\n" "SlurmID" 	"${slurm_id}" 
-    for x in $(echo "${runTable}" | head -n1 | awk -F \| '{print $3}' | sort -u | tail -n +2)
+    for x in $(echo "${runTable}" | head -n1 | awk -F \| '{print $3}' | sort -u)
     do 
     	printf "%15s %25s         %s\n" "JobName" 	"${x}"	
     done    
@@ -99,9 +99,9 @@ function createSlurmStats()
     printf "%15s %25s         %s\n" "sittingInQueue" 	"$(echo "${Submit} ${End}" | awk '{printf "%d|%1.f|%.1f", $2-$1, ($2-$1)/60, ($2-$1)/3600}')"          "#sec|min|hours  the job is sitting in the queue"    
 }
 
-DB=(${RAW_DB} ${FIX_DB})
-marvelPhases=(mask fix scrub filt tour corr cont arrow)
-marvelJobs=(DBdust datander TANmask Catrack daligner LAmerge LArepeat TKmerge createSubDir LAfilter LAq createDB LAseparate repcomp forcealign TKcombine TKhomogenize LAstitch LAgap OGbuild OGtour tour2fasta OGlayout OGbuild OGtour tour2fasta OGlayout LAcorrect paths2rids)
+DB=(${RAW_DB} ${FIX_DB} ${COR_DB} ${CONT_DB})
+marvelPhases=(10x arrow bionano cont corr filt freebayes hic mask phase purgeHaplotigs scaff10x scrub tour)
+marvelJobs=(arksArks arksLinks arksLongranger arksPrepare arksTigmint arrow bamMerge bamseparate bamtools BNscaffold BNstatistics break10xBreak10x break10xLongrangerAlign break10xPrepare break10xPrepareIntermediate break10xStatistics Catrack createDB createMinimap2RefIndex createSubDir CTanalyze CTstatistics daligner datander DBdust FBbwa FBconsensus FBfastp FBfreebayes FBlongrangerAlign FBmarkDuplicates FBprepareInput FBstatistics forcealign HICbwa HICfilter HiChiglassBwa HiChiglassFilter HiChiglassMatrix HIChiglassPrepare HICmarkduplicates HICmerge HICprepareInput HICsalsaBwa HICsalsaFilter HICsalsaMarkduplicates HICsalsaMerge HICsalsaPrepareInput HICsalsaSalsa HICsalsaStatistics HICstatistics LAcorrect LAfilter LAgap LAmerge LAq LArepeat LAseparate LAstitch LongrangerBcftoolsConsensus LongrangerLongrangerWgs LongrangerPrepareInput LongrangerStatistics marvelStats minimap2 OGbuild OGlayout OGtour paths2rids pbalign prepDB prepInFasta readCovHist repcomp scaff10Xbreak10x scaff10xLongrangerAlign scaff10xprepare scaff10Xprepare scaff10xPrepareIntermediate scaff10xScaff10x scaff10Xscaff10x scaff10xStatistics scaff10Xstatistics statistics TANmask TKcombine TKhomogenize TKmerge tour2fasta)
 
 dbCount=0
 while [ "x${DB[dbCount]}" != "x" ]
@@ -159,7 +159,13 @@ do
 
                     if [[ ! -s stats/${phase}_${job}_${db}_${slurm_id}.txt ]]
                     then
-                        createSlurmStats $slurm_id > stats/${phase}_${job}_${db}_${slurm_id}.txt
+                        createSlurmStats ${slurm_id} > stats/${phase}_${job}_${db}_${slurm_id}.txt
+                        jobname=$(grep -e JobName stats/${phase}_${job}_${db}_${slurm_id}.txt | awk '{print $2}')
+                        fext=$(echo ${jobname} | sed -e "s: :_:g")
+                		if [[ $(echo ${fext} | wc -m) -gt 0 ]]
+                		then
+                			ln -s -f -r stats/${phase}_${job}_${db}_${slurm_id}.txt stats/${phase}_${job}_${db}_${slurm_id}_${fext}.lnk	
+                		fi
                     fi
                 done        
             fi
