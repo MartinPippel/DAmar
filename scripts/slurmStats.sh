@@ -131,6 +131,9 @@ do
                     elif [[ "${x}" =~ ^${folder}/${phase}_([0-9]*)_${db}_([0-9]*)_([0-9]*).out$ ]]
                     then
                         slurm_id=$(echo ${x%.out} | awk -F _ '{print $(NF-1)}')
+                	elif [[ "${x}" =~ ^${folder}/${phase}_([0-9]*)_${db}_([0-9]*)_([0-9]*)_([0-9]*).out$ ]] # in case: job files were splitted into multiple parts
+                    then
+                        slurm_id=$(echo ${x%.out} | awk -F _ '{print $(NF-1)}')
                     fi
 
                     stop=0
