@@ -74,7 +74,7 @@ function createSlurmStats()
     fi
 
     printf "%15s %25s         %s\n" "SlurmID" 	"${slurm_id}" 
-    for x in $(echo "${runTable}" | head -n1 | awk -F \| '{print $3}' | sort -u)
+    for x in $(echo "${runTable}" | awk -F \| '{print $3}' | sort -u)
     do 
     	printf "%15s %25s         %s\n" "JobName" 	"${x}"	
     done    
