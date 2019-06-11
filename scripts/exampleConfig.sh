@@ -50,6 +50,8 @@ export BCFTOOLS_PATH="/projects/dazzler/pippel/prog/bcftools"
 export SEQKIT_PATH="/projects/dazzler/pippel/prog/bin/seqkit"
 
 BGZIP_THREADS=6
+MARVEL_STATS=0
+SLURM_STATS=1
 
 ## general information
 PROJECT_ID=iHylVes1

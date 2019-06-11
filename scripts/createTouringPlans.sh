@@ -385,16 +385,23 @@ then
         then
             setLAfilterOptions
         fi
-        ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
-        if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
-        then 
-        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
-    	else
-        	cwd=$(pwd)
-        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
-    	fi
-        ### create assemblyStats plan
-        echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 6" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
+        
+        if [[ -n ${SLURM_STATS} && ${SLURM_STATS} -gt 0 ]]
+   		then
+	        ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+	        if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+	        then 
+	        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+	    	else
+	        	cwd=$(pwd)
+	        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+	    	fi
+		fi
+		if [[ -n ${MARVEL_STATS} && ${MARVEL_STATS} -gt 0 ]]
+   		then
+	        ### create assemblyStats plan
+	        echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 6" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.plan
+		fi
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > tour_05_marvelStats_block_${FIX_DB%.db}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in FIX_TOUR_TYPE ${FIX_TOUR_TYPE} not supported")
