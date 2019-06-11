@@ -482,6 +482,8 @@ fi
 
 myTypes=("1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix" "1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix, 12-LAseparate, 13-repcomp, 14-LAmerge, 15-LArepeat, 16-TKmerge, 17-TKcombine, 18-TKhomogenize, 19-TKcombine, 21-LAq, 21-TKmerge, 22-LAfix, 23-LAseparate, 24-forcealign, 25-LAmerge, 26-LArepeat, 27-TKmerge, 28-TKcombine, 29-TKhomogenize, 30-TKcombine, 31-LAq, 32-TKmerge, 33-LAfix")
 #type-0 - steps: 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix
+#type-1 
+#type-2 - steps: 01-patchingStats 
 if [[ ${RAW_PATCH_TYPE} -eq 0 ]]
 then 
     if [[ ${currentStep} -eq 1 ]]
@@ -1561,7 +1563,39 @@ then
         (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_PATCH_TYPE}]}")
         exit 1        
-    fi     
+    fi  
+elif [[ ${RAW_PATCH_TYPE} -eq 2 ]]
+then
+  	if [[ ${currentStep} -eq 1 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done    
+        
+        if [[ -n ${SLURM_STATS} && ${SLURM_STATS} -gt 0 ]]
+   		then
+	        ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+	        if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+	        then 
+	        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+	    	else
+	        	cwd=$(pwd)
+	        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+	    	fi
+		fi
+		if [[ -n ${MARVEL_STATS} && ${MARVEL_STATS} -gt 0 ]]
+   		then
+	        ### create assemblyStats plan
+	    	echo "${SUBMIT_SCRIPTS_PATH}/patchingStats.sh ${configFile} 1" > fix_01_patchingStats_block_${FIX_DB%.db}.${slurmID}.plan
+		fi
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_patchingStats_block_${FIX_DB%.db}.${slurmID}.version
+    else
+		(>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${RAW_PATCH_TYPE}]}")
+        exit 1        
+    fi
 else
     (>&2echo "unknown RAW_PATCH_TYPE ${RAW_PATCH_TYPE}")    
     (>&2 echo "supported types")
