@@ -431,6 +431,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 	int STRIDE_OVL_LOOKAHEAD = 2000;
 	int MIN_ANCHOR = 800;
 	int MIN_CHAIN_LEN = 3000;
+	int FUZZY = 100;
 
 	if (n < 2)
 	{
@@ -1277,9 +1278,9 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 	// todo
 	// 1. allow not fully proper chain? i.e. that start/end near the tips of the trim intervals????
 	// 2. set a minimum overlaps length to avoid 'sparse chains' (only induced by repeats) ??
-	// 3. set a minimum of non-repeat bases for a chain ???
-	if(((bestChain->ovls[0]->path.abpos <= trim_ab) || (bestChain->ovls[0]->path.bbpos <= trim_bb)) &&
-			((bestChain->ovls[bestChain->novl-1]->path.aepos >= trim_ae) || (bestChain->ovls[bestChain->novl-1]->path.bepos >= trim_be)))
+	// 3. set a minimum of non-repeat bases for a chain ???		--> DONE
+	if(((bestChain->ovls[0]->path.abpos - FUZZY < trim_ab) || (bestChain->ovls[0]->path.bbpos - FUZZY < trim_bb)) &&
+			((bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY >= trim_ae) || (bestChain->ovls[bestChain->novl-1]->path.bepos + FUZZY >= trim_be)))
 	{
 #ifdef DEBUG_CHAIN
 		printf("found spanning chain %d vs %d\n", ovls->aread, ovls->bread);
