@@ -349,9 +349,11 @@ function setLAfilterOptions()
         		then
         			echo "WARNING missing track ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!" 
         			echo "run TKcombine for tracks ${tmp1}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} and ${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} on the fly"
+        			echo "${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp1}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}"
+        			echo "${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${FIX_REPMASK_TANMASK_TRACK} dust"
         			
         			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp1}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust
+        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${FIX_REPMASK_TANMASK_TRACK} dust
         			
         			if [[ ! -f .${FIX_DB%.db}.${tmp1}_${tmp2}_dalign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ]]
         			then
@@ -400,8 +402,11 @@ function setLAfilterOptions()
         			echo "WARNING missing track ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!" 
         			echo "run TKcombine for tracks ${tmp1}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} and ${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} on the fly"
         			
+        			echo "${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp1}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}"
+        			echo "${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${FIX_REPMASK_TANMASK_TRACK} dust"
+        			        			
         			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp1}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust
+        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${FIX_REPMASK_TANMASK_TRACK} dust
         			
         			if [[ ! -f .${FIX_DB%.db}.${tmp1}_${tmp2}_repcomp_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ]]
         			then
@@ -448,9 +453,11 @@ function setLAfilterOptions()
         		then
         			echo "WARNING missing track ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}!!!" 
         			echo "run TKcombine for tracks ${tmp1}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} and ${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} on the fly"
+        			echo "${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp1}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}"
+        			echo "${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${FIX_REPMASK_TANMASK_TRACK} dust"
         			
         			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp1}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust
+        			${MARVEL_PATH}/bin/TKcombine -v ${FIX_DB%.db} ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}_${FIX_REPMASK_TANMASK_TRACK}_dust ${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${FIX_REPMASK_TANMASK_TRACK} dust
         			
         			if [[ ! -f .${FIX_DB%.db}.${tmp1}_${tmp2}_forcealign_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ]]
         			then
