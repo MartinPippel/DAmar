@@ -66,9 +66,9 @@ typedef struct
 typedef struct
 {
 	// stats counters
-	int nFilteredRepeat;
-	int nDiscardedOvls;
-	int nKeptOvls;
+	int nFiltRepeat;
+	int nFiltContained;
+	int nFiltInvalidChain;
 
 	// settings
 	int nMinNonRepeatBases;
@@ -90,8 +90,6 @@ typedef struct
 	HITS_TRACK* trackLowCompl;
 
 	ovl_header_twidth twidth;
-
-	FILE* fileOutDiscardedOverlaps;
 
 	int nkeptChains; // 0 ... only best, otherwise keep all
 	Chain *ovlChains;
@@ -275,6 +273,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 				if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos) && contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
 				{
 					ovl_j->flags |= (OVL_CONT);
+					ctx->nFiltContained++;
 				}
 			}
 		}
@@ -970,7 +969,10 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		else
 		{
 			for (i = 0; i < chain->novl; i++)
+			{
 				chain->ovls[i]->flags |= OVL_DISCARD;
+				ctx->nFiltInvalidChain++;
+			}
 
 			chain->novl = 0;
 
@@ -1030,7 +1032,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 				printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
 			}
 
-			ctx->nFilteredRepeat++;
+			ctx->nFiltRepeat++;
 			ret |= OVL_REPEAT;
 		}
 
@@ -1075,7 +1077,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 					printf("overlap %d -> %d: drop due to repeat in b\n", ovl->aread, ovl->bread);
 				}
 
-				ctx->nFilteredRepeat++;
+				ctx->nFiltRepeat++;
 
 				ret |= OVL_REPEAT;
 			}
@@ -1090,7 +1092,7 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 #ifdef VERBOSE
 	printf( ANSI_COLOR_GREEN "PASS filtering\n" ANSI_COLOR_RESET);
 
-	printf( ANSI_COLOR_RED " OPTIONS\n" ANSI_COLOR_RESET);
+	printf( ANSI_COLOR_RED "OPTIONS\n" ANSI_COLOR_RESET);
 	printf( ANSI_COLOR_RED "  keepIdentity %d\n" ANSI_COLOR_RESET, fctx->keepIdentity);
 	printf( ANSI_COLOR_RED "  mergeRepDist %d\n" ANSI_COLOR_RESET, fctx->mergeRepDist);
 	printf( ANSI_COLOR_RED "  maxUnalignedB %d\n" ANSI_COLOR_RESET, fctx->maxUnalignedB);
@@ -1125,20 +1127,21 @@ static void filter_post(FilterContext* ctx)
 {
 #ifdef VERBOSE
 
-	if (ctx->nFilteredRepeat > 0)
+	if (ctx->nFiltRepeat > 0)
 	{
-		printf("min non-repeat bases of %4d discarded     %10d\n", ctx->nMinNonRepeatBases, ctx->nFilteredRepeat);
+		printf("min non-repeat bases of %4d discarded     %10d\n", ctx->nMinNonRepeatBases, ctx->nFiltRepeat);
 	}
 
-	if (ctx->nKeptOvls > 0)
+	if (ctx->nFiltContained > 0)
 	{
-		printf("kept %d overlaps\n", ctx->nKeptOvls);
+		printf("contained LAS discarded     %10d\n", ctx->nFiltContained);
 	}
 
-	if (ctx->nDiscardedOvls > 0)
+	if (ctx->nFiltInvalidChain > 0)
 	{
-		printf("discarded %d overlaps\n", ctx->nDiscardedOvls);
+		printf("invalid LAS chains discarded     %10d\n", ctx->nFiltInvalidChain);
 	}
+
 #endif
 
 	int i;
@@ -1751,14 +1754,20 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			for (i = j; i <= k; i++)
 			{
 				if (!(ovl[i].flags & OVL_TEMP))
+				{
 					ovl[i].flags |= OVL_DISCARD;
+					ctx->nFiltInvalidChain++;
+				}
 			}
 
 			if (ctx->nkeptChains == 0)
 			{
 				for (a = 1; a < ctx->curChains; a++)
 					for (b = 0; b < ctx->ovlChains[a].novl; b++)
+					{
 						ctx->ovlChains[a].ovls[b]->flags |= OVL_DISCARD;
+						ctx->nFiltInvalidChain++;
+					}
 			}
 
 			{
@@ -1983,7 +1992,10 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						printf("   *** DISCARD chain ****\n");
 #endif
 						for (b = 0; b < chain->novl; b++)
+						{
 							chain->ovls[b]->flags |= OVL_DISCARD;
+							ctx->nFiltInvalidChain++;
+						}
 					}
 				}
 			}
@@ -1999,6 +2011,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				for (i = j; i <= k; i++)
 				{
 					ovl[i].flags |= OVL_DISCARD;
+					ctx->nFiltInvalidChain++;
 				}
 			}
 		}
@@ -2231,11 +2244,6 @@ int main(int argc, char* argv[])
 // cleanup
 
 	Close_DB(&db);
-
-	if (fctx.fileOutDiscardedOverlaps)
-	{
-		fclose(fctx.fileOutDiscardedOverlaps);
-	}
 
 	fclose(fileOvlOut);
 	fclose(fileOvlIn);
