@@ -1280,15 +1280,29 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 	// 1. allow not fully proper chain? i.e. that start/end near the tips of the trim intervals????
 	// 2. set a minimum overlaps length to avoid 'sparse chains' (only induced by repeats) ??
 	// 3. set a minimum of non-repeat bases for a chain ???		--> DONE
-	if(((bestChain->ovls[0]->path.abpos - FUZZY < trim_ab) || (bestChain->ovls[0]->path.bbpos - FUZZY < trim_bb)) &&
-			((bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY >= trim_ae) || (bestChain->ovls[bestChain->novl-1]->path.bepos + FUZZY >= trim_be)))
-	{
-#ifdef DEBUG_CHAIN
-		printf("found spanning chain %d vs %d\n", ovls->aread, ovls->bread);
-#endif
-		return 1;
-	}
 
+	if(bestChain->ovls[0]->flags & OVL_COMP)
+	{
+		if(((bestChain->ovls[0]->path.abpos - FUZZY < trim_ab) || ( (blen - bestChain->ovls[0]->path.bepos) - FUZZY < trim_bb)) &&
+				((bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY >= trim_ae) || ( (blen - bestChain->ovls[bestChain->novl-1]->path.bbpos) + FUZZY >= trim_be)))
+		{
+	#ifdef DEBUG_CHAIN
+			printf("found spanning chain %d vs %d\n", ovls->aread, ovls->bread);
+	#endif
+			return 1;
+		}
+	}
+	else
+	{
+		if(((bestChain->ovls[0]->path.abpos - FUZZY < trim_ab) || (bestChain->ovls[0]->path.bbpos - FUZZY < trim_bb)) &&
+				((bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY >= trim_ae) || (bestChain->ovls[bestChain->novl-1]->path.bepos + FUZZY >= trim_be)))
+		{
+	#ifdef DEBUG_CHAIN
+			printf("found spanning chain %d vs %d\n", ovls->aread, ovls->bread);
+	#endif
+			return 1;
+		}
+	}
 	return 0;
 }
 
