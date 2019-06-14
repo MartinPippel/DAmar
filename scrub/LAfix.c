@@ -31,6 +31,7 @@
 #define DEF_ARG_B      		 7   // border coverage
 #define DEF_ARG_C       8000   // maximum chimer length
 #define DEF_ARG_F 		     0   // allow fuzzy LAS chain begin/end
+#define DEF_ARG_R 		    70
 
 // settings
 
@@ -87,6 +88,7 @@ typedef struct
 	int maxChimerLen;
 	int minChimerBorderCov;
 	int fuzzyChain;
+	int repeatPerc;
 
 	char *qName;
 	HITS_TRACK* qtrack;
@@ -1554,7 +1556,7 @@ static int filter_chimers(FixContext* fctx, Overlap* ovls, int novl, int* trim_b
 #ifdef DEBUG_CHIMER
 			printf("getRepeatCount %d %d %d: %d\n", ovls->aread, chimBeg, chimEnd, tmpRep);
 #endif
-			if ((chimEnd - chimBeg) > 1000 && tmpRep * 1.0 / (chimEnd - chimBeg) < 0.7)
+			if ((chimEnd - chimBeg) > 1000 && tmpRep * 100.0 / (chimEnd - chimBeg) < fctx->repeatPerc)
 			{
 #ifdef DEBUG_CHIMER
 				printf("chimer interval too large [%d, %d] len %d but not repetitive %.2f%%-- IGNORED\n", chimBeg, chimEnd, (chimEnd - chimBeg),
@@ -2703,7 +2705,7 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	printf("usage: [-ladX] [-bCxQgF <int>] [-ctqr <track>] [-f <patched.quiva>] [-T <file>] <db> <in.las> <patched.fasta>\n");
+	printf("usage: [-ladX] [-bCxQgFR <int>] [-ctqr <track>] [-f <patched.quiva>] [-T <file>] <db> <in.las> <patched.fasta>\n");
 	printf("       -c ... convert track intervals (multiple -c possible)\n");
 	printf("       -f ... patch quality streams\n");
 	printf("       -x ... min length for fixed sequences (%d)\n", DEF_ARG_X);
@@ -2720,7 +2722,7 @@ static void usage()
 	printf("       -C ... maximum chimer length (default: %d)\n", DEF_ARG_C);
 	printf("       -T ... write trim interval after gap-, cross-, and chimer-detection into a file.\n");
 	printf("       -F ... allow LAS chain to have a fuzzy begin and end overlap. LAS chains are used to find spanners over putative chimeric break intervals. (default: %d)\n", DEF_ARG_F);
-
+	printf("       -R ... Fix chimers only in regions that are at least -R <int repetitive. (default: %d)\n", DEF_ARG_R);
 }
 
 int main(int argc, char* argv[])
@@ -2742,6 +2744,7 @@ int main(int argc, char* argv[])
 	fctx.maxChimerLen = DEF_ARG_C;
 	fctx.minChimerBorderCov = DEF_ARG_B;
 	fctx.fuzzyChain = DEF_ARG_F;
+	fctx->repeatPerc = DEF_ARG_R;
 	// process arguments
 
 	char* pathQvOut = NULL;
@@ -2750,7 +2753,7 @@ int main(int argc, char* argv[])
 	int lowc = 0;
 	opterr = 0;
 
-	while ((c = getopt(argc, argv, "dlXx:f:c:Q:g:t:q:r:b:C:T:F:")) != -1)
+	while ((c = getopt(argc, argv, "dlXx:f:c:Q:g:t:q:r:b:C:T:F:R:")) != -1)
 	{
 		switch (c)
 		{
@@ -2769,6 +2772,10 @@ int main(int argc, char* argv[])
 		case 'Q':
 			fctx.lowq = atoi(optarg);
 			break;
+
+		case 'R':
+				fctx.repeatPerc = atoi(optarg);
+				break;
 
 		case 'F':
  			fctx.fuzzyChain = atoi(optarg);
@@ -2875,6 +2882,13 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "could not open database '%s'\n", pcPathReadsIn);
 		exit(1);
 	}
+
+	if (fctx.repeat < 0 || fctx.repeatPerc > 100)
+	{
+		fprintf(stderr, "invalid chimer repeat percentage %d. Must be within [0, 100]\n", fctx.repeatPerc);
+		exit(1);
+	}
+
 
 	int i;
 	for (i = 0; i < fctx.curctracks; i++)
