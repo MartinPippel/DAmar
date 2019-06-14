@@ -1685,6 +1685,8 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			for (j = 0; j < novl; j++)
 			{
 				trim_overlap(ctx->trim, ovl + j);
+				if(ovl[j].flags & OVL_TRIM)
+					printf("TRIMMED %d %d [%d, %d] [%d,%d]\n", ovl[j].aread, ovl[j].bread, ovl[j].path.abpos, ovl[j].path.aepos, ovl[j].path.bbpos, ovl[j].path.bepos);
 			}
 		}
 
