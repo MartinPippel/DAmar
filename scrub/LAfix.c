@@ -1289,7 +1289,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 					bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY, trim_ae, (blen - bestChain->ovls[bestChain->novl-1]->path.bbpos) + FUZZY, trim_be);
 		}
 
-		if(((bestChain->ovls[0]->path.abpos - FUZZY < trim_ab) || ( (blen - bestChain->ovls[0]->path.bepos) - FUZZY < trim_bb)) &&
+		if(((bestChain->ovls[0]->path.abpos - FUZZY <= trim_ab) || ( (blen - bestChain->ovls[0]->path.bepos) - FUZZY <= trim_bb)) &&
 				((bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY >= trim_ae) || ( (blen - bestChain->ovls[bestChain->novl-1]->path.bbpos) + FUZZY >= trim_be)))
 		{
 	#ifdef DEBUG_CHAIN
@@ -1300,7 +1300,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 	}
 	else
 	{
-		if(((bestChain->ovls[0]->path.abpos - FUZZY < trim_ab) || (bestChain->ovls[0]->path.bbpos - FUZZY < trim_bb)) &&
+		if(((bestChain->ovls[0]->path.abpos - FUZZY <= trim_ab) || (bestChain->ovls[0]->path.bbpos - FUZZY <= trim_bb)) &&
 				((bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY >= trim_ae) || (bestChain->ovls[bestChain->novl-1]->path.bepos + FUZZY >= trim_be)))
 		{
 	#ifdef DEBUG_CHAIN
