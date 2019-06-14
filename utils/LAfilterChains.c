@@ -1225,17 +1225,15 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 		curItv = &(ctx->curUniqBIntervals);
 		uniqIntervals = ctx->uniqBIntervals;
 	}
-	printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
-//	printf("numIntervals %p, curItv %p\n", numIntervals, curItv);
-//	printf("ctx->curUniqAIntervals %p, ctx->maxUniqAIntervals %p\n", &(ctx->curUniqAIntervals), &(ctx->maxUniqAIntervals));
-//	printf("ctx->curUniqBIntervals %p, ctx->maxUniqBIntervals %p\n", &(ctx->curUniqBIntervals), &(ctx->maxUniqBIntervals));
 
 	int trim_beg, trim_end;
 	int rlen = DB_READ_LEN(ctx->db, read);
 
 	get_trim(ctx->db, ctx->trackTrim, read, &trim_beg, &trim_end);
 
+#ifdef DEBUG_CHAIN
 	printf("trim_beg %d, trim_end %d\n", trim_beg, trim_end);
+#endif
 
 	int MINANCHOR = 10;
 	int WINDOW =   ctx->repeatWindowLookBack;
@@ -1262,9 +1260,6 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 			uniqIntervals = ctx->uniqBIntervals;
 		}
 	}
-	printf("ctx->curUniqAIntervals %d, ctx->maxUniqAIntervals %d\n", ctx->curUniqAIntervals, ctx->maxUniqAIntervals);
-	printf("ctx->curUniqBIntervals %d, ctx->maxUniqBIntervals %d\n", ctx->curUniqBIntervals, ctx->maxUniqBIntervals);
-	printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
 
 	// reset current anchor interval index
 	*curItv = 0;
@@ -1312,17 +1307,14 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 		}
 
 		anchorbases = 0;
-		printf("#anchors_0 %d", read);
 		for (i = 0; i < *curItv; i++)
 		{
 			anchorItv *a = uniqIntervals + i;
 			if (a->flag & ANCHOR_INVALID)
 				continue;
 
-			printf(" %d-%d-%d", a->beg, a->end, a->flag);
 			anchorbases += a->end - a->beg;
 		}
-		printf(" sum n%d b%d\n", i, anchorbases);
 
 		// update unique intervals based on trim track
 		if (trim_beg > 0 || trim_end < rlen)
@@ -1352,17 +1344,14 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 		}
 
 		anchorbases = 0;
-		printf("#anchors_1 %d", read);
 		for (i = 0; i < *curItv; i++)
 		{
 			anchorItv *a = uniqIntervals + i;
 			if (a->flag & ANCHOR_INVALID)
 				continue;
 
-			printf(" %d-%d-%d", a->beg, a->end, a->flag);
 			anchorbases += a->end - a->beg;
 		}
-		printf(" sum n%d b%d\n", i, anchorbases);
 
 		// update unique intervals based on low complexity and tandem repeat
 		// todo hardcoded values !!!
@@ -1412,12 +1401,13 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 						checkFlanks+=100;
 				}
 			}
-
+#ifdef DEBUG_CHAIN
 			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", read, a->beg, a->end, a->flag, predust,
 					a->beg - MAX(0, a->beg - WINDOW), predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg),
 					postdust, MIN(a->end + WINDOW, rlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, rlen) - a->end), predust + dust + postdust,
 					(a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, rlen) - a->end),
 					(predust + dust + postdust) * 100.0 / ((a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, rlen) - a->end)));
+#endif
 		}
 	}
 	else // add full read interval as unique range
@@ -1428,17 +1418,14 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	}
 
 	anchorbases = 0;
-	printf("#anchors_2 %d", read);
 	for (i = 0; i < *curItv; i++)
 	{
 		anchorItv *a = uniqIntervals + i;
 		if (a->flag & ANCHOR_INVALID)
 			continue;
 
-		printf(" %d-%d-%d", a->beg, a->end, a->flag);
 		anchorbases += a->end - a->beg;
 	}
-	printf(" sum n%d b%d\n", i, anchorbases);
 
 	repeats_anno = ctx->trackLowCompl->anno;
 	repeats_data = ctx->trackLowCompl->data;
@@ -1455,22 +1442,18 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 		if (uniqIntervals[i].flag & ANCHOR_INVALID)
 			continue;
 
-		printf("check valid unique region %d, %d\n", uniqIntervals[i].beg, uniqIntervals[i].end);
 		while (b < e)
 		{
 			rb = repeats_data[b];
 			re = repeats_data[b + 1];
 
-			printf("check dust region [%d, %d]\n", rb, re);
 			if (rb > uniqIntervals[i].end)
 			{
-				printf("dust behind unique region %d, %d\n", uniqIntervals[i].beg, uniqIntervals[i].end);
 				break;
 			}
 
 			if (re < uniqIntervals[i].beg)
 			{
-				printf("dust before unique region %d, %d\n", uniqIntervals[i].beg, uniqIntervals[i].end);
 				b += 2;
 				continue;
 			}
@@ -1478,7 +1461,6 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 			// dust fully covers unique part
 			if (rb <= uniqIntervals[i].beg && re >= uniqIntervals[i].end)
 			{
-				printf("dust fully covers unique region %d, %d\n", uniqIntervals[i].beg, uniqIntervals[i].end);
 				uniqIntervals[i].flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
 				break;
 			}
@@ -1494,9 +1476,6 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 				uniqIntervals[i].end = rb;
 			}
 			// dust splits uniq part, i.e. make unique part invalid an append splits to the end of uniqueIntervals
-			printf("dust %d,%d splits unique range %d, %d\n", rb, re, uniqIntervals[i].beg, uniqIntervals[i].end);
-
-			printf("curItv %d >= numIntervals %d\n", *curItv, *numIntervals);
 			if (*curItv >= *numIntervals)
 			{
 				*numIntervals = 1.2 * (*numIntervals) + 10;
@@ -1513,35 +1492,16 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 					uniqIntervals = ctx->uniqBIntervals;
 				}
 			}
-			printf("curItv %d >= numIntervals %d\n", *curItv, *numIntervals);
-			printf("ctx->curUniqAIntervals %d, ctx->maxUniqAIntervals %d\n", ctx->curUniqAIntervals, ctx->maxUniqAIntervals);
-				printf("ctx->curUniqBIntervals %d, ctx->maxUniqBIntervals %d\n", ctx->curUniqBIntervals, ctx->maxUniqBIntervals);
-				printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
 
 			uniqIntervals[*curItv].beg = uniqIntervals[i].beg;
 			uniqIntervals[*curItv].end = rb;
 
 			uniqIntervals[i].beg = re;
-			printf(" decrease cutItv_%d: [%d, %d] append new interval %d [%d, %d] f%d\n", i, uniqIntervals[i].beg, uniqIntervals[i].end, *curItv,
-					uniqIntervals[*curItv].beg, uniqIntervals[*curItv].end, uniqIntervals[*curItv].flag);
 			(*curItv)++;
 
 			b += 2;
 		}
 	}
-
-	anchorbases = 0;
-	printf("#anchors_3 %d", read);
-	for (i = 0; i < *curItv; i++)
-	{
-		anchorItv *a = uniqIntervals + i;
-//		if (a->flag & ANCHOR_INVALID)
-//			continue;
-
-		printf(" %d-%d-%d", a->beg, a->end, a->flag);
-		anchorbases += a->end - a->beg;
-	}
-	printf(" sum n%d b%d\n", i, anchorbases);
 
 	qsort(uniqIntervals, *curItv, sizeof(anchorItv), cmp_aIvl);
 	for (i = 0; i < *curItv; i++)
@@ -1551,19 +1511,6 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 			break;
 	}
 	*curItv = i;
-
-	anchorbases = 0;
-	printf("#anchors_3s %d", read);
-	for (i = 0; i < *curItv; i++)
-	{
-		anchorItv *a = uniqIntervals + i;
-		if (a->flag & ANCHOR_INVALID)
-			break;
-
-		printf(" %d-%d-%d", a->beg, a->end, a->flag);
-		anchorbases += a->end - a->beg;
-	}
-	printf(" sum n%d b%d\n", i, anchorbases);
 
 	// merge tips if required, i.e. if there is any repeat annotation within the first/last 2k?! sequence
 	if (ctx->rp_mergeTips && *curItv > 0)
@@ -1632,9 +1579,10 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 		}
 	}
 
+#ifdef DEBUG_CHAIN
 	// report final unique anchors:
 	anchorbases = 0;
-	printf("#anchors_4 %d", read);
+	printf("#final anchors %d", read);
 	for (i = 0; i < *curItv; i++)
 	{
 		anchorItv *a = uniqIntervals + i;
@@ -1645,11 +1593,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 		anchorbases += a->end - a->beg;
 	}
 	printf(" sum n%d b%d\n", i, anchorbases);
-
-	printf("ctx->curUniqAIntervals %d, ctx->maxUniqAIntervals %d\n", ctx->curUniqAIntervals, ctx->maxUniqAIntervals);
-		printf("ctx->curUniqBIntervals %d, ctx->maxUniqBIntervals %d\n", ctx->curUniqBIntervals, ctx->maxUniqBIntervals);
-		printf("*numIntervals %d, *curItv %d\n", *numIntervals, *curItv);
-
+#endif
 }
 
 static int gapIsLowComplexity(FilterContext *ctx, int read, int beg, int end, float fraction)
@@ -1728,7 +1672,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	int i, j, k;
 
 	// set filter flags
-	printf("filter ovls read %d (novls: %d) START\n", ovl->aread, novl);
 	for (j = 0; j < novl; j++)
 	{
 		// get rid of all previous flags
@@ -1744,15 +1687,12 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 		ovl[j].flags |= filter(ctx, ovl + j);
 	}
-	printf("filter ovls read %d (novls %d) DONE\n", ovl->aread, novl);
 
 	j = k = 0;
 
 	// create unique mask for a-read
-	printf("-----> createUniqueMask for aread: %d\n", ovl->aread);
 	createUniqueMask(ctx, ovl->aread, 1);
 
-	//
 	int trim_abeg, trim_aend;
 	int trim_bbeg, trim_bend;
 
@@ -1766,7 +1706,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		 trim_aend = DB_READ_LEN(ctx->db, ovl->aread);
 	}
 
-	printf("ctx->curUniqAIntervals: %d\n", ctx->curUniqAIntervals);
 	while (j < novl)
 	{
 
@@ -1786,14 +1725,18 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 		if (nAnchorOvls)
 		{
+#ifdef CHAIN_DEBUG
 			printf("read: %8d len(%10d) | read: %8d len(%10d) novl: %10d, anchorOvl: %5d\n", ovl[j].aread, DB_READ_LEN(ctx->db, ovl[j].aread), ovl[j].bread, DB_READ_LEN(ctx->db, ovl[j].bread), k - j + 1, nAnchorOvls);
 			fflush(stdout);
+#endif
 			chain(ctx, ovl + j, k - j + 1);
-
+#ifdef CHAIN_DEBUG
 			printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
+
 			for (i = 0; i < ctx->curChains; i++)
 			{
 				printf(" CHAIN %d/%d: #novl %d\n", i + 1, ctx->curChains, ctx->ovlChains[i].novl);
+
 				int j;
 				for (j = 0; j < ctx->ovlChains[i].novl; j++)
 				{
@@ -1801,7 +1744,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							(ctx->ovlChains[i].ovls[j]->flags & OVL_COMP) ? "COMP" : "NORM");
 				}
 			}
-
+#endif
 			int a, b, c;
 
 			// discard all overlaps, that are not part of a valid chain
@@ -1820,9 +1763,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 			{
 				// create unique mask for b-read
-				printf("-----> create unique mask for b_read %d\n", ovl[j].bread);
+				// printf("-----> create unique mask for b_read %d\n", ovl[j].bread);
 				createUniqueMask(ctx, ovl[j].bread, 0);
-				printf("ctx->curUniqBIntervals: %d\n", ctx->curUniqBIntervals);
+				//printf("ctx->curUniqBIntervals: %d\n", ctx->curUniqBIntervals);
 
 				if(ctx->trackTrim)
 				{
@@ -1950,8 +1893,8 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							if (chain->ovls[b]->path.abpos - chain->ovls[b - 1]->path.aepos > fuzzy)
 							{
 								// check gap
-								printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos,chain->ovls[b]->aread, gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8),
-										badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos));
+								//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos,chain->ovls[b]->aread, gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8),
+								//		badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos));
 								if(!gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8) && !badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos))
 								{
 									properGapLen = 0;
@@ -1978,8 +1921,8 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 									bbpos = DB_READ_LEN(ctx->db, chain->ovls[b]->bread) - bepos;
 									bepos = DB_READ_LEN(ctx->db, chain->ovls[b]->bread) - tmp;
 								}
-								printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", bbpos, bepos, chain->ovls[b]->bread, gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8),
-										badQV(ctx, chain->ovls[b]->bread, bbpos, bepos));
+								//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", bbpos, bepos, chain->ovls[b]->bread, gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8),
+								//		badQV(ctx, chain->ovls[b]->bread, bbpos, bepos));
 								if(!gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8) && !badQV(ctx, chain->ovls[b]->bread, bbpos, bepos))
 								{
 									properGapLen = 0;
@@ -2031,11 +1974,14 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					if(numdiffs*100.0/overlapBasesA <= ctx->diff && numdiffs*100.0/overlapBasesB <= ctx->diff )
 						validDiff = 1;
 
+#ifdef CHAIN_DEBUG
 					printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainment %d validAnchor %d  validDiff %d numUniqABases %d numUniqBBases %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor,  validDiff, numUniqABases ,numUniqBBases );
-
+#endif
 					if ((!properBegA && !properBegB) || (!properEndA && !properEndB) || !properGapLen || !validBridge || !validContainment || !validAnchor || ! validDiff)
 					{
+#ifdef CHAIN_DEBUG
 						printf("   *** DISCARD chain ****\n");
+#endif
 						for (b = 0; b < chain->novl; b++)
 							chain->ovls[b]->flags |= OVL_DISCARD;
 					}
