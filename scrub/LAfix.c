@@ -2744,7 +2744,7 @@ int main(int argc, char* argv[])
 	fctx.maxChimerLen = DEF_ARG_C;
 	fctx.minChimerBorderCov = DEF_ARG_B;
 	fctx.fuzzyChain = DEF_ARG_F;
-	fctx->repeatPerc = DEF_ARG_R;
+	fctx.repeatPerc = DEF_ARG_R;
 	// process arguments
 
 	char* pathQvOut = NULL;
@@ -2883,7 +2883,7 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	if (fctx.repeat < 0 || fctx.repeatPerc > 100)
+	if (fctx.repeatPerc < 0 || fctx.repeatPerc > 100)
 	{
 		fprintf(stderr, "invalid chimer repeat percentage %d. Must be within [0, 100]\n", fctx.repeatPerc);
 		exit(1);
