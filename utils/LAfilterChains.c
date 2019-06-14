@@ -1674,6 +1674,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	FilterContext* ctx = (FilterContext*) _ctx;
 	int i, j, k;
 
+	int trim_abeg, trim_aend;
+	int trim_bbeg, trim_bend;
+
 	// set filter flags
 	for (j = 0; j < novl; j++)
 	{
@@ -1687,7 +1690,10 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				trim_overlap(ctx->trim, ovl + j);
 				if(ovl[j].flags & OVL_TRIM)
 					printf("TRIMMED %d %d [%d, %d] [%d,%d]\n", ovl[j].aread, ovl[j].bread, ovl[j].path.abpos, ovl[j].path.aepos, ovl[j].path.bbpos, ovl[j].path.bepos);
-			}
+				}
+			get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_abeg, &trim_aend);
+			printf("T[%d, %d]\n", trim_abeg, trim_aend);
+
 		}
 
 		ovl[j].flags |= filter(ctx, ovl + j);
@@ -1698,8 +1704,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	// create unique mask for a-read
 	createUniqueMask(ctx, ovl->aread, 1);
 
-	int trim_abeg, trim_aend;
-	int trim_bbeg, trim_bend;
 
 	if(ctx->trackTrim)
 	{
