@@ -30,6 +30,7 @@
 #define DEF_ARG_Q      		28   // low quality cutoff
 #define DEF_ARG_B      		 7   // border coverage
 #define DEF_ARG_C       8000   // maximum chimer length
+#define DEF_ARG_F 		     0   // allow fuzzy LAS chain begin/end
 
 // settings
 
@@ -85,7 +86,7 @@ typedef struct
 	int fixChimers;
 	int maxChimerLen;
 	int minChimerBorderCov;
-
+	int fuzzyChain;
 
 	char *qName;
 	HITS_TRACK* qtrack;
@@ -431,7 +432,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 	int STRIDE_OVL_LOOKAHEAD = 2000;
 	int MIN_ANCHOR = 800;
 	int MIN_CHAIN_LEN = 3000;
-	int FUZZY = 100;
+	int FUZZY = ctx->fuzzyChain;
 
 	if (n < 2)
 	{
@@ -2683,7 +2684,7 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	printf("usage: [-ladX] [-bCxQg <int>] [-ctqr <track>] [-f <patched.quiva>] [-T <file>] <db> <in.las> <patched.fasta>\n");
+	printf("usage: [-ladX] [-bCxQgF <int>] [-ctqr <track>] [-f <patched.quiva>] [-T <file>] <db> <in.las> <patched.fasta>\n");
 	printf("       -c ... convert track intervals (multiple -c possible)\n");
 	printf("       -f ... patch quality streams\n");
 	printf("       -x ... min length for fixed sequences (%d)\n", DEF_ARG_X);
@@ -2699,6 +2700,7 @@ static void usage()
 	printf("       -b ... minimum border coverage to start a chimer detection (default: %d)\n", DEF_ARG_B);
 	printf("       -C ... maximum chimer length (default: %d)\n", DEF_ARG_C);
 	printf("       -T ... write trim interval after gap-, cross-, and chimer-detection into a file.\n");
+	printf("       -F ... allow LAS chain to have a fuzzy begin and end overlap. LAS chains are used to find spanners over putative chimeric break intervals. (default: %d)\n", DEF_ARG_F);
 
 }
 
@@ -2720,6 +2722,7 @@ int main(int argc, char* argv[])
 	fctx.discardChimericReads = 0;
 	fctx.maxChimerLen = DEF_ARG_C;
 	fctx.minChimerBorderCov = DEF_ARG_B;
+	fctx.fuzzyChain = DEF_ARG_F;
 	// process arguments
 
 	char* pathQvOut = NULL;
@@ -2728,7 +2731,7 @@ int main(int argc, char* argv[])
 	int lowc = 0;
 	opterr = 0;
 
-	while ((c = getopt(argc, argv, "dlXx:f:c:Q:g:t:q:r:b:C:T:")) != -1)
+	while ((c = getopt(argc, argv, "dlXx:f:c:Q:g:t:q:r:b:C:T:F:")) != -1)
 	{
 		switch (c)
 		{
@@ -2746,6 +2749,10 @@ int main(int argc, char* argv[])
 
 		case 'Q':
 			fctx.lowq = atoi(optarg);
+			break;
+
+		case 'F':
+ 			fctx.fuzzyChain = atoi(optarg);
 			break;
 
 		case 'b':
