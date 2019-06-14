@@ -267,7 +267,7 @@ void get_trim(HITS_DB* db, HITS_TRACK* trimtrack, int rid, int* b, int* e)
     if (ob == oe)
     {
         *b = 0;
-        *e = DB_READ_LEN(db, rid);
+        *e = 0; // DB_READ_LEN(db, rid);  MODIFIED 14.06.: If a trim track is present and a read has no interval we actually do not want that read at all !!!
     }
     else
     {
