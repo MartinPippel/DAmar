@@ -1283,6 +1283,12 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 
 	if(bestChain->ovls[0]->flags & OVL_COMP)
 	{
+		if(bestChain->ovls[0]->aread == 29 && bestChain->ovls[0]->bread == 29372)
+		{
+			printf(" READ 29 29372 ab: %d < %d bb: %d < %d ae: %d < %d be: %d < %d\n", bestChain->ovls[0]->path.abpos - FUZZY, trim_ab, (blen - bestChain->ovls[0]->path.bepos) - FUZZY, trim_bb,
+					bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY, trim_ae, (blen - bestChain->ovls[bestChain->novl-1]->path.bbpos) + FUZZY, trim_be);
+		}
+
 		if(((bestChain->ovls[0]->path.abpos - FUZZY < trim_ab) || ( (blen - bestChain->ovls[0]->path.bepos) - FUZZY < trim_bb)) &&
 				((bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY >= trim_ae) || ( (blen - bestChain->ovls[bestChain->novl-1]->path.bbpos) + FUZZY >= trim_be)))
 		{
