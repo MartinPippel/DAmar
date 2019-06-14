@@ -6,7 +6,7 @@ ALL = LAcartoons LAshow LAcheck LAcount LAmerge \
       LAstats LAextract LAZtest \
       TKshow TKcombine TKtrim \
       gff2track kmers CTanalyze \
-      LAfilterMito LAfilterCTchains
+      LAfilterMito LAfilterChains
 
 have_gtk = @have_gtk@
 have_hdf5 = @have_hdf5@
