@@ -1912,7 +1912,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 								// check gap
 								//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos,chain->ovls[b]->aread, gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8),
 								//		badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos));
-								if(!gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8) && !badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos))
+								if(!gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8) /*&& !badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos)*/)
 								{
 									properGapLen = 0;
 									break;
@@ -1940,7 +1940,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 								}
 								//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", bbpos, bepos, chain->ovls[b]->bread, gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8),
 								//		badQV(ctx, chain->ovls[b]->bread, bbpos, bepos));
-								if(!gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8) && !badQV(ctx, chain->ovls[b]->bread, bbpos, bepos))
+								if(!gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8) /* && !badQV(ctx, chain->ovls[b]->bread, bbpos, bepos)*/)
 								{
 									properGapLen = 0;
 									break;
