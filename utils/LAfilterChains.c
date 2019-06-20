@@ -38,6 +38,7 @@
 #define DEF_ARG_M 2400
 #define DEF_ARG_W 600
 #define DEF_ARG_D 28
+#define DEF_ARG_O 4000
 
 #define VERBOSE
 
@@ -82,6 +83,7 @@ typedef struct
 	int mergeRepDist;
 	int repeatWindowLookBack;
 	int rp_mergeTips;
+	int minChainLen;
 
 	HITS_DB* db;
 	HITS_TRACK* trackRepeat;
@@ -1951,6 +1953,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					int validBridge = 0;
 					int validAnchor = 0;
 					int validDiff = 0;
+					int validMinLen = 0;
 
 					if(ctx->nFuzzBases || ctx->nContPerc)
 					{
@@ -1989,10 +1992,14 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					if(numdiffs*100.0/overlapBasesA <= ctx->diff && numdiffs*100.0/overlapBasesB <= ctx->diff )
 						validDiff = 1;
 
+					if((chain->ovls[chain->novl-1]->path.aepos - chain->ovls[0]->path.abpos) > ctx->minChainLen &&
+							(chain->ovls[chain->novl-1]->path.bepos - chain->ovls[0]->path.bbpos) > ctx->minChainLen)
+						validMinLen = 1;
+
 #ifdef CHAIN_DEBUG
 					printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainment %d validAnchor %d  validDiff %d numUniqABases %d numUniqBBases %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor,  validDiff, numUniqABases ,numUniqBBases );
 #endif
-					if ((!properBegA && !properBegB) || (!properEndA && !properEndB) || !properGapLen || !validBridge || !validContainment || !validAnchor || ! validDiff)
+					if ((!properBegA && !properBegB) || (!properEndA && !properEndB) || !properGapLen || !validBridge || !validContainment || !validAnchor || ! validDiff || ! validMinLen)
 					{
 #ifdef CHAIN_DEBUG
 						printf("   *** DISCARD chain ****\n");
@@ -2031,7 +2038,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vp] [-nkfcVWdY <int>] [-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vp] [-nkfcVWdYo <int>] [-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v      	verbose\n");
 	fprintf(stderr, "         -n <int>	at least one alignment of a valid chain must have n non-repetitive bases\n");
@@ -2053,6 +2060,7 @@ static void usage()
 	fprintf(stderr, "                   or at -W bases at the tips of the neighboring repeat. Those can cause a fragmented repeat mask. (default: %d)\n", DEF_ARG_W);
 	fprintf(stderr, "         -d <int>  max divergence allowed [0,100] (default: %d)\n", DEF_ARG_D);
 	fprintf(stderr, "         -Y <int>  merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
+	fprintf(stderr, "         -o <int>  minimum chain length (default: %d)\n", DEF_ARG_O);
 }
 
 int main(int argc, char* argv[])
@@ -2087,11 +2095,12 @@ int main(int argc, char* argv[])
 	fctx.mergeRepDist = DEF_ARG_M;
 	fctx.repeatWindowLookBack = DEF_ARG_W;
 	fctx.rp_mergeTips = 0;
+	fctx.minChainLen = DEF_ARG_O;
 
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:V:W:Y:I")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:V:W:Y:Io:")) != -1)
 	{
 		switch (c)
 		{
@@ -2109,6 +2118,10 @@ int main(int argc, char* argv[])
 
 			case 'n':
 				fctx.nMinNonRepeatBases = atoi(optarg);
+				break;
+
+			case 'o':
+				fctx.minChainLen = atoi(optarg);
 				break;
 
 			case 'Y':
