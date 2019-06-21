@@ -42,7 +42,6 @@
 #define MIN_SPAN      	 400   // only alignments with at least MIN_SPAN bases left and right of a segment are considering as support
 #define MIN_SPAN_REPEAT	 800   // in repeats: only alignments with at least MIN_SPAN_REPEAT bases left and right of a segment are considering as support
 
-
 // toggles
 
 #undef DEBUG
@@ -208,7 +207,6 @@ static void fix_pre(PassContext* pctx, FixContext* fctx)
 
 	fctx->apatches = malloc((maxlen / pctx->twidth + 1) * 3 * sizeof(int));
 
-
 	fctx->curChains = 0;
 	fctx->maxChains = 5;
 	fctx->ovlChains = (Chain*) malloc(sizeof(Chain) * fctx->maxChains);
@@ -221,10 +219,10 @@ static void fix_post(PassContext* pctx, FixContext* fctx)
 	printf("gaps:    %5d\n", fctx->num_gaps);
 	printf("flips:   %5d\n", fctx->num_flips);
 	printf("chimers: %5d\n", fctx->num_chimers);
-	printf("replaced %'" PRIu64 " with %'" PRIu64 " bases\n", fctx->stats_bases_before, fctx->stats_bases_after);
+printf("replaced %'" PRIu64 " with %'" PRIu64 " bases\n", fctx->stats_bases_before, fctx->stats_bases_after);
 #endif
 
-	UNUSED(pctx);
+		UNUSED(pctx);
 
 	free(fctx->reada - 1);
 	free(fctx->readb - 1);
@@ -425,7 +423,6 @@ static int getRepeatBases(FixContext *ctx, Overlap *ovl, int read)
 	return nrep;
 }
 
-
 static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, int chimerEnd, int trim_ab, int trim_ae)
 {
 	/// TODO hard coded
@@ -481,7 +478,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 	printf("nremain %d\n", nremain);
 #endif
 
-	if(nremain == 0)
+	if (nremain == 0)
 		return 0;
 
 // mark contained overlaps
@@ -504,8 +501,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 				if (ovl_j->flags & (OVL_CONT | OVL_DISCARD))
 					continue;
 
-				if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos)
-						&& contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
+				if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos) && contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
 				{
 					nremain--;
 					ovl_j->flags |= (OVL_CONT | OVL_DISCARD);
@@ -518,7 +514,6 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 	printf("nremain %d\n", nremain);
 #endif
 	assert(nremain >= 1);
-
 
 	while (nremain > 0)
 	{
@@ -756,8 +751,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 						{
 							Overlap *tmpOvl = ovls + (longestUniqOvlIdx + curBestOffset);
 
-							if ((intersect(ab1, ae1, tmpOvl->path.abpos, tmpOvl->path.aepos) < ae1 - tmpOvl->path.abpos)
-									&& (intersect(bb1, be1, tmpOvl->path.bbpos, tmpOvl->path.bepos) < be1 - tmpOvl->path.bbpos))
+							if ((intersect(ab1, ae1, tmpOvl->path.abpos, tmpOvl->path.aepos) < ae1 - tmpOvl->path.abpos) && (intersect(bb1, be1, tmpOvl->path.bbpos, tmpOvl->path.bepos) < be1 - tmpOvl->path.bbpos))
 							{
 								curBestUniqOffset = curBestOffset;
 								curBestUniqBases = 1;
@@ -971,8 +965,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 						{
 							Overlap *tmpOvl = ovls + (longestUniqOvlIdx - curBestOffset);
 
-							if ((intersect(tmpOvl->path.abpos, tmpOvl->path.aepos, ab1, ae1) < ae1 - tmpOvl->path.abpos)
-									&& (intersect(tmpOvl->path.bbpos, tmpOvl->path.bepos, bb1, be1) < be1 - tmpOvl->path.bbpos))
+							if ((intersect(tmpOvl->path.abpos, tmpOvl->path.aepos, ab1, ae1) < ae1 - tmpOvl->path.abpos) && (intersect(tmpOvl->path.bbpos, tmpOvl->path.bepos, bb1, be1) < be1 - tmpOvl->path.bbpos))
 							{
 								curBestUniqOffset = curBestOffset;
 								curBestUniqBases = 1;
@@ -1083,13 +1076,11 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 
 				for (j = chainIdx; j < chainLastIdx; j++)
 				{
-					if (chain->ovls[j]->path.aepos <= ovl->path.abpos && chain->ovls[j + 1]->path.abpos >= ovl->path.aepos
-							&& chain->ovls[j]->path.bepos <= ovl->path.bbpos && chain->ovls[j + 1]->path.bbpos >= ovl->path.bepos)
+					if (chain->ovls[j]->path.aepos <= ovl->path.abpos && chain->ovls[j + 1]->path.abpos >= ovl->path.aepos && chain->ovls[j]->path.bepos <= ovl->path.bbpos && chain->ovls[j + 1]->path.bbpos >= ovl->path.bepos)
 					{
 						Overlap *lastAddedOvl = chain->ovls[chain->novl - 1];
 
-						if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos)
-								|| intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos))
+						if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos) || intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos))
 							break;
 
 						if (chain->novl == chain->maxOvl)
@@ -1137,8 +1128,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 
 				for (j = chainIdx; j <= chainLastIdx; j++)
 				{
-					if (intersect(chain->ovls[j]->path.abpos, chain->ovls[j]->path.aepos, ovl->path.abpos, ovl->path.aepos)
-							|| intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, ovl->path.bbpos, ovl->path.bepos))
+					if (intersect(chain->ovls[j]->path.abpos, chain->ovls[j]->path.aepos, ovl->path.abpos, ovl->path.aepos) || intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, ovl->path.bbpos, ovl->path.bepos))
 					{
 						ovl->flags |= OVL_DISCARD;
 						nremain--;
@@ -1170,10 +1160,8 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 				{
 					for (j = 0; j < chain->novl; j++)
 					{
-						if ((chain->ovls[j]->path.abpos > ctx->ovlChains[i].ovls[0]->path.abpos
-								&& chain->ovls[j]->path.aepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.aepos)
-								|| (chain->ovls[j]->path.bbpos > ctx->ovlChains[i].ovls[0]->path.bbpos
-										&& chain->ovls[j]->path.bepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.bepos))
+						if ((chain->ovls[j]->path.abpos > ctx->ovlChains[i].ovls[0]->path.abpos && chain->ovls[j]->path.aepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.aepos)
+								|| (chain->ovls[j]->path.bbpos > ctx->ovlChains[i].ovls[0]->path.bbpos && chain->ovls[j]->path.bepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.bepos))
 						{
 #ifdef DEBUG_CHAIN
 							printf("CHAIN is invalid - DISCARD\n");
@@ -1243,7 +1231,7 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 	}
 
 	// cleanup all flags
-	for (i=0; i<n; i++)
+	for (i = 0; i < n; i++)
 	{
 		ovls[i].flags &= ~(OVL_DISCARD | OVL_TEMP | OVL_CONT);
 	}
@@ -1263,17 +1251,17 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 		trim_be = DB_READ_LEN(ctx->db, ovls->bread);
 	}
 
-	if(bestChain->ovls[0]->path.abpos + MIN_ANCHOR > chimerBeg)
+	if (bestChain->ovls[0]->path.abpos + MIN_ANCHOR > chimerBeg)
 		return 0;
 
-	if(bestChain->ovls[bestChain->novl-1]->path.aepos - MIN_ANCHOR < chimerEnd)
+	if (bestChain->ovls[bestChain->novl - 1]->path.aepos - MIN_ANCHOR < chimerEnd)
 		return 0;
 
 	int chainLen = 0;
-	for(i=0; i<bestChain->novl; i++)
-		chainLen+=bestChain->ovls[i]->path.aepos - bestChain->ovls[i]->path.abpos;
+	for (i = 0; i < bestChain->novl; i++)
+		chainLen += bestChain->ovls[i]->path.aepos - bestChain->ovls[i]->path.abpos;
 
-	if(chainLen < MIN_CHAIN_LEN)
+	if (chainLen < MIN_CHAIN_LEN)
 		return 0;
 
 	// chain must be proper
@@ -1283,30 +1271,28 @@ static int spanningChain(FixContext*ctx, Overlap *ovls, int n, int chimerBeg, in
 	// 2. set a minimum overlaps length to avoid 'sparse chains' (only induced by repeats) ??
 	// 3. set a minimum of non-repeat bases for a chain ???		--> DONE
 
-	if(bestChain->ovls[0]->flags & OVL_COMP)
+	if (bestChain->ovls[0]->flags & OVL_COMP)
 	{
 //		if(bestChain->ovls[0]->aread == 29 && bestChain->ovls[0]->bread == 29372)
 //		{
 //			printf(" READ 29 29372 ab: %d < %d bb: %d < %d ae: %d < %d be: %d < %d\n", bestChain->ovls[0]->path.abpos - FUZZY, trim_ab, (blen - bestChain->ovls[0]->path.bepos) - FUZZY, trim_bb,
 //					bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY, trim_ae, (blen - bestChain->ovls[bestChain->novl-1]->path.bbpos) + FUZZY, trim_be);
 //		}
-		if(((bestChain->ovls[0]->path.abpos - FUZZY <= trim_ab) || ( (blen - bestChain->ovls[0]->path.bepos) - FUZZY <= trim_bb)) &&
-				((bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY >= trim_ae) || ( (blen - bestChain->ovls[bestChain->novl-1]->path.bbpos) + FUZZY >= trim_be)))
+		if (((bestChain->ovls[0]->path.abpos - FUZZY <= trim_ab) || ((blen - bestChain->ovls[0]->path.bepos) - FUZZY <= trim_bb)) && ((bestChain->ovls[bestChain->novl - 1]->path.aepos + FUZZY >= trim_ae) || ((blen - bestChain->ovls[bestChain->novl - 1]->path.bbpos) + FUZZY >= trim_be)))
 		{
-	#ifdef DEBUG_CHAIN
+#ifdef DEBUG_CHAIN
 			printf("found spanning chain %d vs %d\n", ovls->aread, ovls->bread);
-	#endif
+#endif
 			return 1;
 		}
 	}
 	else
 	{
-		if(((bestChain->ovls[0]->path.abpos - FUZZY <= trim_ab) || (bestChain->ovls[0]->path.bbpos - FUZZY <= trim_bb)) &&
-				((bestChain->ovls[bestChain->novl-1]->path.aepos + FUZZY >= trim_ae) || (bestChain->ovls[bestChain->novl-1]->path.bepos + FUZZY >= trim_be)))
+		if (((bestChain->ovls[0]->path.abpos - FUZZY <= trim_ab) || (bestChain->ovls[0]->path.bbpos - FUZZY <= trim_bb)) && ((bestChain->ovls[bestChain->novl - 1]->path.aepos + FUZZY >= trim_ae) || (bestChain->ovls[bestChain->novl - 1]->path.bepos + FUZZY >= trim_be)))
 		{
-	#ifdef DEBUG_CHAIN
+#ifdef DEBUG_CHAIN
 			printf("found spanning chain %d vs %d\n", ovls->aread, ovls->bread);
-	#endif
+#endif
 			return 1;
 		}
 	}
@@ -1337,7 +1323,7 @@ static int oChainIntervalIntersection(FixContext *fctx, Overlap* ovls, int novl,
 
 		}
 
-		if(spanningChains)
+		if (spanningChains)
 			return spanningChains;
 
 		j = k + 1;
@@ -1353,12 +1339,12 @@ static int bReadIntersectionInterval(FixContext *fctx, Overlap* ovls, int novl, 
 
 	int i;
 	int pre = 0;
-	int post= 0;
+	int post = 0;
 	for (i = 0; i < novl; i++)
 	{
 		Overlap* ovl = ovls + i;
 
-		if (ovl->path.abpos + MIN(b/2, 1000) < b && ((ovl->path.aepos - ovl->path.abpos) - getRepeatCount(fctx, ovl->aread, ovl->path.abpos, ovl->path.aepos) >= NON_REP_BASES))
+		if (ovl->path.abpos + MIN(b / 2, 1000) < b && ((ovl->path.aepos - ovl->path.abpos) - getRepeatCount(fctx, ovl->aread, ovl->path.abpos, ovl->path.aepos) >= NON_REP_BASES))
 		{
 			ba_assign(visited, ovl->bread, TRUE);
 			++pre;
@@ -1372,7 +1358,7 @@ static int bReadIntersectionInterval(FixContext *fctx, Overlap* ovls, int novl, 
 		Overlap* ovl = ovls + i;
 		if (ovl->path.aepos - MIN((DB_READ_LEN(fctx->db, ovl->aread) - e) / 2, 1000) > e && ((ovl->path.aepos - ovl->path.abpos) - getRepeatCount(fctx, ovl->aread, ovl->path.abpos, ovl->path.aepos) >= NON_REP_BASES))
 		{
-			if(ba_value(visited, ovl->bread))
+			if (ba_value(visited, ovl->bread))
 			{
 				ba_assign(visited, ovl->bread, FALSE);
 				intersection++;
@@ -1392,14 +1378,25 @@ static int bReadIntersectionInterval(FixContext *fctx, Overlap* ovls, int novl, 
 static int spanners_interval(FixContext *fctx, Overlap* ovls, int novl, int b, int e)
 {
 	int span = 0;
-	int minSpan = (e-b-getRepeatCount(fctx, ovls->aread, b, e) < 100) ? MIN_SPAN_REPEAT : MIN_SPAN;
+	int minSpan = (e - b - getRepeatCount(fctx, ovls->aread, b, e) < 100) ? MIN_SPAN_REPEAT : MIN_SPAN;
+
+	int trim_ab, trim_ae;
+	if (fctx->trimtrack)
+	{
+		get_trim(fctx->db, fctx->trimtrack, ovls->aread, &trim_ab, &trim_ae);
+	}
+	else
+	{
+		trim_ab = 0;
+		trim_ae = DB_READ_LEN(fctx->db, ovls->aread);
+	}
 
 	int i;
 	for (i = 0; i < novl; i++)
 	{
 		Overlap* ovl = ovls + i;
 
-		if (ovl->path.abpos < b - minSpan && ovl->path.aepos > e + minSpan)
+		if (ovl->path.abpos <= MAX(trim_ab, b - minSpan) && ovl->path.aepos >= MIN(trim_ae, e + minSpan))
 		{
 			span++;
 		}
@@ -1407,7 +1404,7 @@ static int spanners_interval(FixContext *fctx, Overlap* ovls, int novl, int b, i
 
 #ifdef DEBUG
 	if (ovls->aread == 218393)
-		printf("spanners_interval %d minspan %d [%d ,%d] #span: %d\n", ovls->aread, minSpan, b, e, span);
+	printf("spanners_interval %d minspan %d [%d ,%d] #span: %d\n", ovls->aread, minSpan, b, e, span);
 #endif
 
 	return span;
@@ -1436,7 +1433,7 @@ static int spanners_point(FixContext *fctx, Overlap* ovls, int novl, int p, int 
 
 #ifdef DEBUG
 	if (ovls->aread == 218393)
-		printf("spanners_point %d minspan %d point %d #span: %d max %d\n", ovls->aread, minSpan, p, span, max);
+	printf("spanners_point %d minspan %d point %d #span: %d max %d\n", ovls->aread, minSpan, p, span, max);
 #endif
 
 	return (span > max);
@@ -1465,10 +1462,10 @@ static int filter_chimers(FixContext* fctx, Overlap* ovls, int novl, int* trim_b
 		int prematBeg = (ocur->path.bbpos > 1000) && (ocur->path.abpos > *trim_b + 1000) && (ocur->path.abpos + 100 < *trim_e);
 
 //		// check weird case first
-		if (prematBeg && prematEnd && (opre->bread != ocur->bread) && (ocur->bread != opas->bread )) // most probably a repeat
+		if (prematBeg && prematEnd && (opre->bread != ocur->bread) && (ocur->bread != opas->bread)) // most probably a repeat
 			continue;
 
-		if ((ocur->bread != opas->bread ) && prematEnd)
+		if ((ocur->bread != opas->bread) && prematEnd)
 		{
 			alnEnd[(ocur->path.aepos / fctx->twidth)] += 1;
 #ifdef DEBUG_CHIMER
@@ -1477,12 +1474,12 @@ static int filter_chimers(FixContext* fctx, Overlap* ovls, int novl, int* trim_b
 #endif
 		}
 
-		else if((opre->bread != ocur->bread) && prematBeg)
+		else if ((opre->bread != ocur->bread) && prematBeg)
 		{
 			alnBeg[(ocur->path.abpos / fctx->twidth)] += 1;
 #ifdef DEBUG_CHIMER
 			printf("found beg %d vs %d a[%d, %d] b[%d, %d] beg[%d]=%d\n", ocur->aread, ocur->bread, ocur->path.abpos, ocur->path.aepos, ocur->path.bbpos,
-									ocur->path.bepos, (ocur->path.abpos / fctx->twidth), alnBeg[(ocur->path.abpos / fctx->twidth)]);
+					ocur->path.bepos, (ocur->path.abpos / fctx->twidth), alnBeg[(ocur->path.abpos / fctx->twidth)]);
 #endif
 		}
 	}
@@ -1542,7 +1539,7 @@ static int filter_chimers(FixContext* fctx, Overlap* ovls, int novl, int* trim_b
 			printf("check putative chimer interval [%d, %d]\n", chimBeg, chimEnd);
 #endif
 
-			if((chimEnd - chimBeg) > fctx->maxChimerLen)
+			if ((chimEnd - chimBeg) > fctx->maxChimerLen)
 			{
 #ifdef DEBUG_CHIMER
 				printf("chimer interval too large [%d, %d] len %d-- IGNORED\n", chimBeg, chimEnd, (chimEnd - chimBeg));
@@ -1606,10 +1603,10 @@ static int filter_chimers(FixContext* fctx, Overlap* ovls, int novl, int* trim_b
 			}
 			chimEnd = -1;
 
-			j+=2; // don't check neighboring walls
+			j += 2; // don't check neighboring walls
 		}
 		chimBeg = -1;
-		i+=2; // don't check neighboring walls
+		i += 2; // don't check neighboring walls
 	}
 
 	if (numChim)
@@ -1617,7 +1614,7 @@ static int filter_chimers(FixContext* fctx, Overlap* ovls, int novl, int* trim_b
 		*trim_b = remainBeg;
 		*trim_e = remainEnd;
 
-		if(fctx->discardChimericReads)
+		if (fctx->discardChimericReads)
 		{
 			int tmp = *trim_b;
 			*trim_b = *trim_e;
@@ -1853,7 +1850,7 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 	}
 
 	// locate chimers
-	if(fctx->fixChimers)
+	if (fctx->fixChimers)
 	{
 		int chimer_trim_b = trim_ab;
 		int chimer_trim_e = trim_ae;
@@ -1873,8 +1870,8 @@ static int fix_process(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
-	if(fctx->fileTrimOut)
-		fprintf(fctx->fileTrimOut,"%d %d %d\n" , ovl->aread, trim_ab, trim_ae);
+	if (fctx->fileTrimOut)
+		fprintf(fctx->fileTrimOut, "%d %d %d\n", ovl->aread, trim_ab, trim_ae);
 
 	// sanity check tracks
 
@@ -2757,83 +2754,83 @@ int main(int argc, char* argv[])
 	{
 		switch (c)
 		{
-		case 'l':
-			lowc = 1;
-			break;
+			case 'l':
+				lowc = 1;
+				break;
 
-		case 'X':
-			fctx.fixChimers = 1;
-			break;
+			case 'X':
+				fctx.fixChimers = 1;
+				break;
 
-		case 'd':
-			fctx.discardChimericReads = 1;
-			break;
+			case 'd':
+				fctx.discardChimericReads = 1;
+				break;
 
-		case 'Q':
-			fctx.lowq = atoi(optarg);
-			break;
+			case 'Q':
+				fctx.lowq = atoi(optarg);
+				break;
 
-		case 'R':
+			case 'R':
 				fctx.repeatPerc = atoi(optarg);
 				break;
 
-		case 'F':
- 			fctx.fuzzyChain = atoi(optarg);
-			break;
+			case 'F':
+				fctx.fuzzyChain = atoi(optarg);
+				break;
 
-		case 'b':
-			fctx.minChimerBorderCov = atoi(optarg);
-			break;
+			case 'b':
+				fctx.minChimerBorderCov = atoi(optarg);
+				break;
 
-		case 'C':
-			fctx.maxChimerLen = atoi(optarg);
-			break;
+			case 'C':
+				fctx.maxChimerLen = atoi(optarg);
+				break;
 
-		case 'g':
-			fctx.maxgap = atoi(optarg);
-			break;
+			case 'g':
+				fctx.maxgap = atoi(optarg);
+				break;
 
-		case 'x':
-			fctx.minlen = atoi(optarg);
-			break;
+			case 'x':
+				fctx.minlen = atoi(optarg);
+				break;
 
-		case 'f':
-			pathQvOut = optarg;
-			break;
+			case 'f':
+				pathQvOut = optarg;
+				break;
 
-		case 'T':
-			pathTrimOut = optarg;
-			break;
+			case 'T':
+				pathTrimOut = optarg;
+				break;
 
-		case 'q':
-			fctx.qName = optarg;
-			break;
+			case 'q':
+				fctx.qName = optarg;
+				break;
 
-		case 't':
-			fctx.trimName = optarg;
-			break;
+			case 't':
+				fctx.trimName = optarg;
+				break;
 
-		case 'r':
-			fctx.repeatName = optarg;
-			break;
+			case 'r':
+				fctx.repeatName = optarg;
+				break;
 
-		case 'c':
-			if (fctx.curctracks >= fctx.maxctracks)
-			{
-				fctx.maxctracks += 10;
-				fctx.convertTracks = realloc(fctx.convertTracks, sizeof(HITS_TRACK*) * fctx.maxctracks);
-			}
+			case 'c':
+				if (fctx.curctracks >= fctx.maxctracks)
+				{
+					fctx.maxctracks += 10;
+					fctx.convertTracks = realloc(fctx.convertTracks, sizeof(HITS_TRACK*) * fctx.maxctracks);
+				}
 
-			// use the HITS_TRACK* array as temporary storage of the track names
+				// use the HITS_TRACK* array as temporary storage of the track names
 
-			fctx.convertTracks[fctx.curctracks] = (HITS_TRACK*) optarg;
-			fctx.curctracks++;
+				fctx.convertTracks[fctx.curctracks] = (HITS_TRACK*) optarg;
+				fctx.curctracks++;
 
-			break;
+				break;
 
-		default:
-			usage();
-			exit(1);
+			default:
+				usage();
+				exit(1);
 		}
 	}
 
@@ -2888,7 +2885,6 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "invalid chimer repeat percentage %d. Must be within [0, 100]\n", fctx.repeatPerc);
 		exit(1);
 	}
-
 
 	int i;
 	for (i = 0; i < fctx.curctracks; i++)
