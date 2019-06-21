@@ -1234,7 +1234,15 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	int trim_beg, trim_end;
 	int rlen = DB_READ_LEN(ctx->db, read);
 
-	get_trim(ctx->db, ctx->trackTrim, read, &trim_beg, &trim_end);
+	if(ctx->trackTrim)
+	{
+		get_trim(ctx->db, ctx->trackTrim, read, &trim_beg, &trim_end);
+	}
+	else
+	{
+		trim_beg = 0;
+		trim_end = rlen;
+	}
 
 #ifdef DEBUG_CHAIN
 	printf("trim_beg %d, trim_end %d\n", trim_beg, trim_end);
@@ -1621,6 +1629,9 @@ static int badQV(FilterContext *ctx, int read, int beg, int end)
 {
 	// todo hard-coded
 	int diff = 4;
+
+	if(!ctx->trackQ)
+		return 0;
 
 	track_anno* q_anno = ctx->trackQ->anno;
 	track_data* q_data = ctx->trackQ->data;
@@ -2222,9 +2233,11 @@ int main(int argc, char* argv[])
 	fctx.trackTrim = track_load(&db, pcTrackTrim);
 	if (!fctx.trackTrim)
 		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackTrim);
+
 	fctx.trackQ = track_load(&db, pcTrackQ);
 	if (!fctx.trackQ)
 		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackQ);
+
 	fctx.trackLowCompl = track_load(&db, pcTrackLowCompl);
 	if (!fctx.trackLowCompl)
 		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackLowCompl);
