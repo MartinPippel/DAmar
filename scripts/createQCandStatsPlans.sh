@@ -37,7 +37,7 @@ function setFastpOptions()
 
 function setJellyfishOptions()
 {
-	JELLYFISH_OPT="-C"
+	JELLYFISH_OPT=""
 	
 	if [[ "x$1" == "xcount" ]]
 	then 
@@ -51,6 +51,7 @@ function setJellyfishOptions()
 		then 
 			RAW_QC_JELLYFISH_SIZE=1000000000
 		fi
+		JELLYFISH_OPT="-C"
 		JELLYFISH_OPT="${JELLYFISH_OPT} -s ${RAW_QC_JELLYFISH_SIZE}"			
 	elif [[ "x$1" == "xhisto" ]]
 	then
@@ -92,14 +93,15 @@ function setGenomeScopeOptions()
 	RAW_QC_GENOMESCOPE_KMERMAX=${RAW_QC_JELLYFISH_HIGHHIST}
 }
 
-#type-0 [10x - prepare] [1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
-#type-1 [10x - de novo] [1-1]: 01_supernova
-#type-2 [10x|HiC - kmer-Gsize estimate] [1-2]: 01_genomescope
-#type-3 [allData - MASH CONTAMINATION SCREEN] [1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
+#type-0 [10x - prepare] 						[1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
+#type-1 [10x - de novo] 						[1-1]: 01_supernova
+#type-2 [10x|HiC - kmer-Gsize estimate] 		[1-2]: 01_genomescope
+#type-3 [allData - MASH CONTAMINATION SCREEN] 	[1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
+#type-4 [10x - QV]   							[1-4]:  01_QVprepareInput, 02_QVlongrangerAlign, 03_QVcoverage, 04QVqv
 
 
-myTypes=("01_longrangerBasic, 02_longrangerToScaff10Xinput",
-"01_supernova", "01_genomescope"
+myTypes=("01_longrangerBasic, 02_longrangerToScaff10Xinput"
+"01_supernova" "01_genomescope" 
 "01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen")
 
 #type-0 [10x - prepare] [1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
