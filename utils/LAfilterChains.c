@@ -90,6 +90,7 @@ typedef struct
 	int stitchLowCompPerc;
 	int stitchMaxGapSize;
 	int stitchMinChainLen;
+	int stitchMaxChainLASs;
 
 	HITS_DB* db;
 	HITS_TRACK* trackRepeat;
@@ -2188,7 +2189,16 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					}
 					else if (ctx->stitchChain)
 					{
-						stitchChain(ctx, chain);
+						int nStitch = stitchChain(ctx, chain);
+
+						if(chain->novl-nStitch > ctx->stitchMaxChainLASs)
+						{
+							for (b = 0; b < chain->novl; b++)
+							{
+								chain->ovls[b]->flags |= OVL_DISCARD;
+								ctx->nFiltInvalidChain++;
+							}
+						}
 					}
 				}
 			}
@@ -2218,7 +2228,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGO <int>] [-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOC <int>] [-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v      	verbose\n");
 	fprintf(stderr, "         -n <int>	at least one alignment of a valid chain must have n non-repetitive bases\n");
@@ -2247,6 +2257,7 @@ static void usage()
 	fprintf(stderr, "         -L <int> do not merge LAS that are -x percent contained in low complexity regions (default: 100)\n");
 	fprintf(stderr, "         -G <int> maximum merge distance (default: -1)\n");
 	fprintf(stderr, "         -O <int> minimum chain length (default: -1)\n");
+	fprintf(stderr, "         -C <int> max number of LAS in a LASchain (default: 1)\n");
 }
 
 int main(int argc, char* argv[])
@@ -2287,11 +2298,11 @@ int main(int argc, char* argv[])
 	fctx.stitchMaxGapSize = -1;  // by default stitch all valif chains
 	fctx.stitchMaxTipFuzzy = 0;
 	fctx.stitchMinChainLen = fctx.minChainLen;
-
+	fctx.stitchMaxChainLASs = 1;
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:S")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:")) != -1)
 	{
 		switch (c)
 		{
@@ -2314,6 +2325,10 @@ int main(int argc, char* argv[])
 			case 'n':
 				fctx.nMinNonRepeatBases = atoi(optarg);
 				break;
+
+			case 'C':
+					fctx.stitchMaxChainLASs = atoi(optarg);
+					break;
 
 			case 'U':
 				fctx.stitchMaxTipFuzzy = atoi(optarg);
