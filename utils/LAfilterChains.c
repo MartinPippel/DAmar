@@ -85,6 +85,12 @@ typedef struct
 	int rp_mergeTips;
 	int minChainLen;
 
+	int stitchChain;
+	int stitchMaxTipFuzzy;
+	int stitchLowCompPerc;
+	int stitchMaxGapSize;
+	int stitchMinChainLen;
+
 	HITS_DB* db;
 	HITS_TRACK* trackRepeat;
 	HITS_TRACK* trackTrim;
@@ -1682,6 +1688,165 @@ static int badQV(FilterContext *ctx, int read, int beg, int end)
 	return 0;
 }
 
+static int stitchChain(FilterContext *ctx, Chain *chain)
+{
+	int stitched = 0;
+
+	if (chain->novl < 2)
+	{
+		return stitched;
+	}
+
+	int i, k, b;
+	int ab2, ae1, ae2;
+	int bb2, be1, be2;
+
+	int trim_ab, trim_ae;
+	int trim_bb, trim_be;
+
+	int aread = chain->ovls[0]->aread;
+	int bread = chain->ovls[0]->bread;
+
+	if(ctx->trackTrim)
+	{
+		get_trim(ctx->db, ctx->trackTrim, aread, &trim_ab, &trim_ae);
+		get_trim(ctx->db, ctx->trackTrim, bread, &trim_bb, &trim_be);
+	}
+	else
+	{
+		trim_ab = 0;
+		trim_ae = DB_READ_LEN(ctx->db, aread);
+		trim_bb = 0;
+		trim_be = DB_READ_LEN(ctx->db, bread);
+	}
+
+	// sanity checks
+	// 1. check first and last overlap
+	int validABeg = (chain->ovls[0]->path.abpos > trim_ab - ctx->stitchMaxTipFuzzy) ? 0 : 1;
+	int validAEnd = (chain->ovls[chain->novl-1]->path.aepos < trim_ae - ctx->stitchMaxTipFuzzy) ? 0 : 1;
+
+	int validBBeg, validBEnd;
+	if(chain->ovls[0]->flags & OVL_COMP)
+	{
+		validBBeg = (DB_READ_LEN(ctx->db, bread) - chain->ovls[0]->path.bbpos < trim_be - ctx->stitchMaxTipFuzzy) ? 0 : 1;
+		validBEnd = (DB_READ_LEN(ctx->db, bread) - chain->ovls[chain->novl-1]->path.bepos > trim_bb + ctx->stitchMaxTipFuzzy) ? 0 : 1;
+	}
+	else
+	{
+		validBBeg = (chain->ovls[0]->path.bbpos > trim_bb - ctx->stitchMaxTipFuzzy) ? 0 : 1;
+		validBEnd = (chain->ovls[chain->novl-1]->path.bepos < trim_be - ctx->stitchMaxTipFuzzy) ? 0 : 1;
+	}
+
+	if ((validABeg == 0 && validBBeg == 0) || (validAEnd == 0 && validBEnd == 0))
+	{
+		return stitched;
+	}
+
+	// 2. check min chain length
+	if(chain->ovls[chain->novl-1]->path.aepos - chain->ovls[0]->path.abpos < ctx->stitchMinChainLen)
+	{
+		return stitched;
+	}
+
+	// 3. check if any overlap is contained in low complexity interval, if so then don't stitch at all
+	if(ctx->trackLowCompl)
+	{
+		for(i=0; i<chain->novl; i++)
+		{
+			Overlap *ovl = chain->ovls[i];
+			int repeatBases;
+			int longestRep;
+
+			// check LowComp of A-read
+			getRepeatBasesFromInterval(ctx->trackLowCompl,aread,ovl->path.abpos, ovl->path.aepos,&repeatBases, &longestRep);
+			if(repeatBases*100.0/(ovl->path.aepos-ovl->path.abpos)>=ctx->stitchLowCompPerc)
+			{
+				return stitched;
+			}
+
+			// check LowComp of B-read
+			if(ovl->flags & OVL_COMP)
+			{
+				getRepeatBasesFromInterval(ctx->trackLowCompl,bread,DB_READ_LEN(ctx->db, bread)-ovl->path.bepos, DB_READ_LEN(ctx->db, bread)-ovl->path.bbpos,&repeatBases, &longestRep);
+			}
+			else
+			{
+				getRepeatBasesFromInterval(ctx->trackLowCompl,bread,ovl->path.bbpos, ovl->path.bepos,&repeatBases, &longestRep);
+			}
+			if(repeatBases*100.0/(ovl->path.bepos-ovl->path.bbpos)>=ctx->stitchLowCompPerc)
+			{
+				return stitched;
+			}
+		}
+	}
+
+
+	Overlap* ovli = chain->ovls[0];
+	ae1 = ovli->path.aepos;
+	be1 = ovli->path.bepos;
+
+	for (i=1; i < chain->novl; i++)
+	{
+		Overlap* ovlk = chain->ovls[i];
+		assert((ovli->flags & OVL_COMP) == (ovlk->flags & OVL_COMP));
+
+		ab2 = ovlk->path.abpos;
+		ae2 = ovlk->path.aepos;
+
+		bb2 = ovlk->path.bbpos;
+		be2 = ovlk->path.bepos;
+
+		int deltaa = abs(ae1 - ab2);
+		int deltab = abs(be1 - bb2);
+
+		if(ctx->stitchMaxGapSize < 0 || (deltaa < ctx->stitchMaxGapSize && deltab < ctx->stitchMaxGapSize))
+		{
+#ifdef VERBOSE_STITCH
+			int ab1 = ovli->path.abpos;
+			int bb1 = ovli->path.bbpos;
+
+			printf("STITCH %8d @ %5d..%5d -> %8d @ %5d..%5d %c\n"
+					"                  %5d..%5d -> %8d @ %5d..%5d %c\n",
+					ovli->aread,
+					ab1, ae1, ovli->bread, bb1, be1, OVL_STRAND(ovli),
+					ab2, ae2, ovlk->bread, bb2, be2, OVL_STRAND(ovlk)));
+#endif
+
+			ovli->path.aepos = ae2;
+			ovli->path.bepos = be2;
+			ovli->path.diffs += ovlk->path.diffs;
+			ovli->path.tlen = 0;
+
+			ae1 = ae2;
+			be1 = be2;
+
+			assert(ovli->bread == ovlk->bread);
+
+			ovli->flags &= ~( OVL_DISCARD | OVL_LOCAL); // force a re-evaluation of the OVL_LOCAL flags
+
+			ovlk->flags |= OVL_DISCARD | OVL_STITCH;
+
+			stitched += 1;
+
+#ifdef VERBOSE_STITCH
+			printf( "    -> %8d @ %5d..%5d -> %8d @ %5d..%5d %c  delta a %3d b %3d\n",
+					ovli->aread,
+					ovli->path.abpos, ovli->path.aepos,
+					ovli->bread,
+					ovli->path.abpos, ovli->path.aepos,
+					OVL_STRAND( ovli ),
+					deltaa, deltab );
+#endif
+		}
+		else
+		{
+			ovli = ovlk;
+		}
+	}
+
+	return stitched;
+}
+
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 {
 	FilterContext* ctx = (FilterContext*) _ctx;
@@ -2021,6 +2186,10 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							ctx->nFiltInvalidChain++;
 						}
 					}
+					else if (ctx->stitchChain)
+					{
+						stitchChain(ctx, chain);
+					}
 				}
 			}
 			// reset chain and ovl counter
@@ -2049,11 +2218,11 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vp] [-nkfcVWdYo <int>] [-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGO <int>] [-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v      	verbose\n");
 	fprintf(stderr, "         -n <int>	at least one alignment of a valid chain must have n non-repetitive bases\n");
-	fprintf(stderr, "         -I        keep identity overlaps\n");
+	fprintf(stderr, "         -i        keep identity overlaps\n");
 	fprintf(stderr, "         -p      	purge discarded overlaps\n");
 	fprintf(stderr, "         -r <trc>	repeat track name (%s)\n", DEF_ARG_R);
 	fprintf(stderr, "         -k <int>  keep valid overlap chains: 0 ... best, 1 ... all\n");
@@ -2066,12 +2235,18 @@ static void usage()
 	fprintf(stderr, "         -t <trc>  trim-track (default: %s)\n", DEF_ARG_T);
 	fprintf(stderr, "         -u <int>  number of unaligned bases, (default: %d)\n", DEF_ARG_U);
 	fprintf(stderr, "         -n <int>  number of non-repetitive bases, (default: %d)\n", DEF_ARG_N);
-	fprintf(stderr, "         -V <int>  max merge distance of neighboring repeats (default: %d)\n", DEF_ARG_M);
-	fprintf(stderr, "         -W <int>  window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
+	fprintf(stderr, "         -m <int>  max merge distance of neighboring repeats (default: %d)\n", DEF_ARG_M);
+	fprintf(stderr, "         -w <int>  window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
 	fprintf(stderr, "                   or at -W bases at the tips of the neighboring repeat. Those can cause a fragmented repeat mask. (default: %d)\n", DEF_ARG_W);
 	fprintf(stderr, "         -d <int>  max divergence allowed [0,100] (default: %d)\n", DEF_ARG_D);
-	fprintf(stderr, "         -Y <int>  merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
+	fprintf(stderr, "         -y <int>  merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
 	fprintf(stderr, "         -o <int>  minimum chain length (default: %d)\n", DEF_ARG_O);
+	fprintf(stderr, "\n Stitch chains (optional)\n");
+	fprintf(stderr, "         -S       stitch LASchains\n");
+	fprintf(stderr, "         -U <int> maximum unaligned bases for first and last overlap of LASchain (default: 0)\n");
+	fprintf(stderr, "         -L <int> do not merge LAS that are -x percent contained in low complexity regions (default: 100)\n");
+	fprintf(stderr, "         -G <int> maximum merge distance (default: -1)\n");
+	fprintf(stderr, "         -O <int> minimum chain length (default: -1)\n");
 }
 
 int main(int argc, char* argv[])
@@ -2107,11 +2282,16 @@ int main(int argc, char* argv[])
 	fctx.repeatWindowLookBack = DEF_ARG_W;
 	fctx.rp_mergeTips = 0;
 	fctx.minChainLen = DEF_ARG_O;
+	fctx.stitchChain = 0;
+	fctx.stitchLowCompPerc = 100;
+	fctx.stitchMaxGapSize = -1;  // by default stitch all valif chains
+	fctx.stitchMaxTipFuzzy = 0;
+	fctx.stitchMinChainLen = fctx.minChainLen;
 
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:V:W:Y:Io:")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:S")) != -1)
 	{
 		switch (c)
 		{
@@ -2123,7 +2303,11 @@ int main(int argc, char* argv[])
 				arg_purge = 1;
 				break;
 
-			case 'I':
+			case 'S':
+				fctx.stitchChain = 1;
+				break;
+
+			case 'i':
 				fctx.keepIdentity = 1;
 				break;
 
@@ -2131,11 +2315,27 @@ int main(int argc, char* argv[])
 				fctx.nMinNonRepeatBases = atoi(optarg);
 				break;
 
+			case 'U':
+				fctx.stitchMaxTipFuzzy = atoi(optarg);
+				break;
+
+			case 'L':
+				fctx.stitchLowCompPerc = atoi(optarg);
+				break;
+
+			case 'G':
+				fctx.stitchMaxTipFuzzy = atoi(optarg);
+				break;
+
+			case 'O':
+				fctx.stitchMinChainLen = atoi(optarg);
+				break;
+
 			case 'o':
 				fctx.minChainLen = atoi(optarg);
 				break;
 
-			case 'Y':
+			case 'y':
 				fctx.rp_mergeTips = atoi(optarg);
 				break;
 
@@ -2175,11 +2375,11 @@ int main(int argc, char* argv[])
 				fctx.maxUnalignedB = atoi(optarg);
 				break;
 
-			case 'V':
+			case 'm':
 				fctx.mergeRepDist = atoi(optarg);
 				break;
 
-			case 'W':
+			case 'w':
 				fctx.repeatWindowLookBack = atoi(optarg);
 				break;
 
