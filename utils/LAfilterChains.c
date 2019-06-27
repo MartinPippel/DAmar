@@ -91,7 +91,7 @@ typedef struct
 
 	int stitchChain;
 	int stitchMaxTipFuzzy;
-	int stitchLowCompPerc;
+	int stitchNonLowCompAnchorBases;
 	int stitchMaxGapSize;
 	int stitchMinChainLen;
 	int stitchMaxChainLASs;
@@ -1785,7 +1785,7 @@ static int stitchChain(FilterContext *ctx, Chain *chain)
 
 			// check LowComp of A-read
 			getRepeatBasesFromInterval(ctx->trackLowCompl, aread, ovl->path.abpos, ovl->path.aepos, &repeatBases, &longestRep);
-			if (repeatBases * 100.0 / (ovl->path.aepos - ovl->path.abpos) >= ctx->stitchLowCompPerc)
+			if ((ovl->path.aepos - ovl->path.abpos) - repeatBases < ctx->stitchNonLowCompAnchorBases)
 			{
 				return stitched;
 			}
@@ -1799,7 +1799,7 @@ static int stitchChain(FilterContext *ctx, Chain *chain)
 			{
 				getRepeatBasesFromInterval(ctx->trackLowCompl, bread, ovl->path.bbpos, ovl->path.bepos, &repeatBases, &longestRep);
 			}
-			if (repeatBases * 100.0 / (ovl->path.bepos - ovl->path.bbpos) >= ctx->stitchLowCompPerc)
+			if ((ovl->path.bepos - ovl->path.bbpos) - repeatBases < ctx->stitchNonLowCompAnchorBases)
 			{
 				return 0;
 			}
@@ -2504,7 +2504,7 @@ static void usage()
 	fprintf(stderr, "\n 2. Stitch chains (optional)\n");
 	fprintf(stderr, "         -S       stitch LASchains\n");
 	fprintf(stderr, "         -U <int> maximum unaligned bases for first and last overlap of LASchain (default: 0)\n");
-	fprintf(stderr, "         -L <int> do not merge LAS that are -x percent contained in low complexity regions (default: 100)\n");
+	fprintf(stderr, "         -L <int> do not merge LAS that cover low complexity regions and have less than -L \"unique\" anchor bases (default: 1000)\n");
 	fprintf(stderr, "         -G <int> maximum merge distance (default: -1)\n");
 	fprintf(stderr, "         -O <int> minimum chain length (default: -1)\n");
 	fprintf(stderr, "         -C <int> max number of LAS in a LASchain (default: 1)\n");
@@ -2549,7 +2549,7 @@ int main(int argc, char* argv[])
 	fctx.rp_mergeTips = 0;
 	fctx.minChainLen = DEF_ARG_O;
 	fctx.stitchChain = 0;
-	fctx.stitchLowCompPerc = 100;
+	fctx.stitchNonLowCompAnchorBases = 1000;
 	fctx.stitchMaxGapSize = -1;  // by default stitch all valif chains
 	fctx.stitchMaxTipFuzzy = 0;
 	fctx.stitchMinChainLen = fctx.minChainLen;
@@ -2601,7 +2601,7 @@ int main(int argc, char* argv[])
 				break;
 
 			case 'L':
-				fctx.stitchLowCompPerc = atoi(optarg);
+				fctx.stitchNonLowCompAnchorBases = atoi(optarg);
 				break;
 
 			case 'G':
