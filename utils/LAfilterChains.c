@@ -44,6 +44,7 @@
 
 #undef DEBUG_CHAIN
 #define DEBUG_GAPS
+#define DEBUG_FILTER
 
 #define ANCHOR_INVALID 	(1 << 0)
 #define ANCHOR_TRIM 		(1 << 1)
