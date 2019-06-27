@@ -1894,7 +1894,7 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 	int i, j, k, l;
 #ifdef DEBUG_GAPS
 	printf("find gaps: ");
-
+#endif
 	int count = 0;
 	for (i = 0; i < novl; i++)
 	{
@@ -1903,7 +1903,10 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 			count++;
 		}
 	}
+	if(count == 0)
+		return;
 
+#ifdef DEBUG_GAPS
 	printf("ovl: %d/%d\n", count, novl);
 #endif
 
@@ -1982,6 +1985,18 @@ static void checkTipCoverage(FilterContext *ctx, Overlap *ovl, int novl)
 
 	if (ctx->trackTrim)
 		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimBeg, &trimEnd);
+
+	int i;
+	int count = 0;
+	for (i = 0; i < novl; i++)
+	{
+		if (!(ovl[i].flags & OVL_DISCARD))
+		{
+			count++;
+		}
+	}
+	if(count == 0)
+		return;
 
 	if (trimEnd - trimBeg)
 	{
