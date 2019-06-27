@@ -67,9 +67,11 @@ typedef struct
 typedef struct
 {
 	// stats counters
-	int nFiltRepeat;
-	int nFiltContained;
-	int nFiltInvalidChain;
+	int statsFiltRepeat;
+	int statsFiltContained;
+	int statsFiltInvalidChain;
+	int statsLowCovALn;
+	int statsGapAlns;
 
 	// settings
 	int nMinNonRepeatBases;
@@ -91,6 +93,9 @@ typedef struct
 	int stitchMaxGapSize;
 	int stitchMinChainLen;
 	int stitchMaxChainLASs;
+
+	int findGaps;
+	int minTipCoverage;
 
 	HITS_DB* db;
 	HITS_TRACK* trackRepeat;
@@ -282,7 +287,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 				if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos) && contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
 				{
 					ovl_j->flags |= (OVL_CONT);
-					ctx->nFiltContained++;
+					ctx->statsFiltContained++;
 				}
 			}
 		}
@@ -980,7 +985,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 			for (i = 0; i < chain->novl; i++)
 			{
 				chain->ovls[i]->flags |= OVL_DISCARD;
-				ctx->nFiltInvalidChain++;
+				ctx->statsFiltInvalidChain++;
 			}
 
 			chain->novl = 0;
@@ -1041,7 +1046,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 				printf("overlap %d -> %d: drop due to repeat in a\n", ovl->aread, ovl->bread);
 			}
 
-			ctx->nFiltRepeat++;
+			ctx->statsFiltRepeat++;
 			ret |= OVL_REPEAT;
 		}
 
@@ -1086,7 +1091,7 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 					printf("overlap %d -> %d: drop due to repeat in b\n", ovl->aread, ovl->bread);
 				}
 
-				ctx->nFiltRepeat++;
+				ctx->statsFiltRepeat++;
 
 				ret |= OVL_REPEAT;
 			}
@@ -1118,7 +1123,6 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 	fctx->ovlChains = (Chain*) malloc(sizeof(Chain) * MAX(fctx->maxChains, fctx->nkeptChains));
 	bzero(fctx->ovlChains, sizeof(Chain) * MAX(fctx->maxChains, fctx->nkeptChains));
 
-
 	fctx->maxUniqAIntervals = 20;
 	fctx->uniqAIntervals = malloc(sizeof(anchorItv) * fctx->maxUniqAIntervals);
 	bzero(fctx->uniqAIntervals, sizeof(anchorItv) * fctx->maxUniqAIntervals);
@@ -1136,19 +1140,29 @@ static void filter_post(FilterContext* ctx)
 {
 #ifdef VERBOSE
 
-	if (ctx->nFiltRepeat > 0)
+	if (ctx->statsFiltRepeat > 0)
 	{
-		printf("min non-repeat bases of %4d discarded     %10d\n", ctx->nMinNonRepeatBases, ctx->nFiltRepeat);
+		printf("min non-repeat bases of %4d discarded     %10d\n", ctx->nMinNonRepeatBases, ctx->statsFiltRepeat);
 	}
 
-	if (ctx->nFiltContained > 0)
+	if (ctx->statsFiltContained > 0)
 	{
-		printf("contained LAS discarded     %10d\n", ctx->nFiltContained);
+		printf("contained LAS discarded     %10d\n", ctx->statsFiltContained);
 	}
 
-	if (ctx->nFiltInvalidChain > 0)
+	if (ctx->statsFiltInvalidChain > 0)
 	{
-		printf("invalid LAS chains discarded     %10d\n", ctx->nFiltInvalidChain);
+		printf("invalid LAS chains discarded     %10d\n", ctx->statsFiltInvalidChain);
+	}
+
+	if (ctx->statsGapAlns > 0)
+	{
+		printf("gap LAS discarded     %10d\n", ctx->statsGapAlns );
+	}
+
+	if (ctx->statsLowCovALn > 0)
+	{
+		printf("low coverage LAS discarded     %10d\n", ctx->statsLowCovALn);
 	}
 
 #endif
@@ -1225,7 +1239,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	int *curItv;
 	anchorItv *uniqIntervals;
 
-	if(isAread)
+	if (isAread)
 	{
 		numIntervals = &(ctx->maxUniqAIntervals);
 		curItv = &(ctx->curUniqAIntervals);
@@ -1241,7 +1255,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	int trim_beg, trim_end;
 	int rlen = DB_READ_LEN(ctx->db, read);
 
-	if(ctx->trackTrim)
+	if (ctx->trackTrim)
 	{
 		get_trim(ctx->db, ctx->trackTrim, read, &trim_beg, &trim_end);
 	}
@@ -1256,7 +1270,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 #endif
 
 	int MINANCHOR = 10;
-	int WINDOW =   ctx->repeatWindowLookBack;
+	int WINDOW = ctx->repeatWindowLookBack;
 	int MAXMERGE = ctx->mergeRepDist;
 	int i, b, e;
 
@@ -1269,7 +1283,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	if (*numIntervals < (e - b + 1) + 4)
 	{
 		*numIntervals = (e - b + 1) + 4;
-		if(isAread)
+		if (isAread)
 		{
 			ctx->uniqAIntervals = (anchorItv*) realloc(ctx->uniqAIntervals, *numIntervals * sizeof(anchorItv));
 			uniqIntervals = ctx->uniqAIntervals;
@@ -1409,16 +1423,16 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 					getRepeatBasesFromInterval(ctx->trackLowCompl, read, MAX(0, a->beg - checkFlanks), a->beg, &predust, &longestDustl);
 					getRepeatBasesFromInterval(ctx->trackLowCompl, read, a->end, MIN(a->end + checkFlanks, rlen), &postdust, &longestDustr);
 
-					if ((predust*100.0/checkFlanks > 20.0 && longestDustl > 30) || (postdust*100/checkFlanks > 20.0 && longestDustr > 30))
+					if ((predust * 100.0 / checkFlanks > 20.0 && longestDustl > 30) || (postdust * 100 / checkFlanks > 20.0 && longestDustr > 30))
 					{
-							a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
-							break;
+						a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+						break;
 					}
 
-					if(checkFlanks < WINDOW && checkFlanks + 100 > WINDOW)
+					if (checkFlanks < WINDOW && checkFlanks + 100 > WINDOW)
 						checkFlanks = WINDOW;
 					else
-						checkFlanks+=100;
+						checkFlanks += 100;
 				}
 			}
 #ifdef DEBUG_CHAIN
@@ -1499,7 +1513,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 			if (*curItv >= *numIntervals)
 			{
 				*numIntervals = 1.2 * (*numIntervals) + 10;
-				if(isAread)
+				if (isAread)
 				{
 					ctx->uniqAIntervals = (anchorItv*) realloc(ctx->uniqAIntervals, *numIntervals * sizeof(anchorItv));
 					bzero(ctx->uniqAIntervals + (*curItv), sizeof(anchorItv) * (*numIntervals - *curItv));
@@ -1607,7 +1621,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	{
 		anchorItv *a = uniqIntervals + i;
 		if (a->flag & ANCHOR_INVALID)
-			break;
+		break;
 
 		printf(" %d-%d-%d", a->beg, a->end, a->flag);
 		anchorbases += a->end - a->beg;
@@ -1618,7 +1632,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 
 static int gapIsLowComplexity(FilterContext *ctx, int read, int beg, int end, float fraction)
 {
-	if(!ctx->trackLowCompl)
+	if (!ctx->trackLowCompl)
 		return 0;
 
 	int longest;
@@ -1626,7 +1640,7 @@ static int gapIsLowComplexity(FilterContext *ctx, int read, int beg, int end, fl
 
 	getRepeatBasesFromInterval(ctx->trackLowCompl, read, beg, end, &cumLC, &longest);
 
-	if((cumLC*1.0)/(end - beg) < fraction)
+	if ((cumLC * 1.0) / (end - beg) < fraction)
 		return 0;
 
 	return 1;
@@ -1637,7 +1651,7 @@ static int badQV(FilterContext *ctx, int read, int beg, int end)
 	// todo hard-coded
 	int diff = 4;
 
-	if(!ctx->trackQ)
+	if (!ctx->trackQ)
 		return 0;
 
 	track_anno* q_anno = ctx->trackQ->anno;
@@ -1651,24 +1665,24 @@ static int badQV(FilterContext *ctx, int read, int beg, int end)
 
 	int gapSize = end - beg;
 
-	int leftStart =  MAX( 0, beg - MAX(1000, 2*gapSize)) / ctx->twidth;
-	int rightEnd  =  MIN(end + MAX(1000, 2*gapSize), DB_READ_LEN(ctx->db, read)) / ctx->twidth + 1;
+	int leftStart = MAX(0, beg - MAX(1000, 2 * gapSize)) / ctx->twidth;
+	int rightEnd = MIN(end + MAX(1000, 2 * gapSize), DB_READ_LEN(ctx->db, read)) / ctx->twidth + 1;
 
 	int cumGapQV = 0;
 	int numGapQV = 0;
 	int cumFlankQV = 0;
 	int numFlankQV = 0;
 
-	int c=0;
+	int c = 0;
 	int qv;
 	while (qb < qe)
 	{
 		if (c >= leftStart && c <= rightEnd)
 		{
 			qv = q_data[qb];
-			if(qv == 0)
+			if (qv == 0)
 				qv = 50;
-			if(c < beg/ctx->twidth || c > end/ctx->twidth)
+			if (c < beg / ctx->twidth || c > end / ctx->twidth)
 			{
 				cumFlankQV += qv;
 				numFlankQV++;
@@ -1679,28 +1693,18 @@ static int badQV(FilterContext *ctx, int read, int beg, int end)
 				numGapQV++;
 			}
 		}
-	  qb++;
+		qb++;
 		c++;
 	}
 
-	if(cumGapQV*1.0/numGapQV - diff > cumFlankQV*1.0/numFlankQV)
+	if (cumGapQV * 1.0 / numGapQV - diff > cumFlankQV * 1.0 / numFlankQV)
 		return 1;
 
 	return 0;
 }
 
-static int stitchChain(FilterContext *ctx, Chain *chain)
+static int filterChain(FilterContext *ctx, Chain *chain)
 {
-	int stitched = 0;
-
-	if (chain->novl < 2)
-	{
-		return stitched;
-	}
-
-	int i, k, b;
-	int ab2, ae1, ae2;
-	int bb2, be1, be2;
 
 	int trim_ab, trim_ae;
 	int trim_bb, trim_be;
@@ -1708,7 +1712,7 @@ static int stitchChain(FilterContext *ctx, Chain *chain)
 	int aread = chain->ovls[0]->aread;
 	int bread = chain->ovls[0]->bread;
 
-	if(ctx->trackTrim)
+	if (ctx->trackTrim)
 	{
 		get_trim(ctx->db, ctx->trackTrim, aread, &trim_ab, &trim_ae);
 		get_trim(ctx->db, ctx->trackTrim, bread, &trim_bb, &trim_be);
@@ -1724,69 +1728,87 @@ static int stitchChain(FilterContext *ctx, Chain *chain)
 	// sanity checks
 	// 1. check first and last overlap
 	int validABeg = (chain->ovls[0]->path.abpos > trim_ab - ctx->stitchMaxTipFuzzy) ? 0 : 1;
-	int validAEnd = (chain->ovls[chain->novl-1]->path.aepos < trim_ae - ctx->stitchMaxTipFuzzy) ? 0 : 1;
+	int validAEnd = (chain->ovls[chain->novl - 1]->path.aepos < trim_ae - ctx->stitchMaxTipFuzzy) ? 0 : 1;
 
 	int validBBeg, validBEnd;
-	if(chain->ovls[0]->flags & OVL_COMP)
+	if (chain->ovls[0]->flags & OVL_COMP)
 	{
 		validBBeg = (DB_READ_LEN(ctx->db, bread) - chain->ovls[0]->path.bbpos < trim_be - ctx->stitchMaxTipFuzzy) ? 0 : 1;
-		validBEnd = (DB_READ_LEN(ctx->db, bread) - chain->ovls[chain->novl-1]->path.bepos > trim_bb + ctx->stitchMaxTipFuzzy) ? 0 : 1;
+		validBEnd = (DB_READ_LEN(ctx->db, bread) - chain->ovls[chain->novl - 1]->path.bepos > trim_bb + ctx->stitchMaxTipFuzzy) ? 0 : 1;
 	}
 	else
 	{
 		validBBeg = (chain->ovls[0]->path.bbpos > trim_bb - ctx->stitchMaxTipFuzzy) ? 0 : 1;
-		validBEnd = (chain->ovls[chain->novl-1]->path.bepos < trim_be - ctx->stitchMaxTipFuzzy) ? 0 : 1;
+		validBEnd = (chain->ovls[chain->novl - 1]->path.bepos < trim_be - ctx->stitchMaxTipFuzzy) ? 0 : 1;
 	}
 
 	if ((validABeg == 0 && validBBeg == 0) || (validAEnd == 0 && validBEnd == 0))
 	{
-		return stitched;
+		return 0;
 	}
 
 	// 2. check min chain length
-	if(chain->ovls[chain->novl-1]->path.aepos - chain->ovls[0]->path.abpos < ctx->stitchMinChainLen)
+	if (chain->ovls[chain->novl - 1]->path.aepos - chain->ovls[0]->path.abpos < ctx->stitchMinChainLen)
+	{
+		return 0;
+	}
+
+	return 1;
+}
+
+static int stitchChain(FilterContext *ctx, Chain *chain)
+{
+	int stitched = 0;
+
+	if (chain->novl < 2)
 	{
 		return stitched;
 	}
 
-	// 3. check if any overlap is contained in low complexity interval, if so then don't stitch at all
-	if(ctx->trackLowCompl)
+	int i, k, b;
+	int ab2, ae1, ae2;
+	int bb2, be1, be2;
+
+	int aread = chain->ovls[0]->aread;
+	int bread = chain->ovls[0]->bread;
+
+	// check if any overlap is contained in low complexity interval, if so then don't stitch at all
+	if (ctx->trackLowCompl)
 	{
-		for(i=0; i<chain->novl; i++)
+		for (i = 0; i < chain->novl; i++)
 		{
 			Overlap *ovl = chain->ovls[i];
 			int repeatBases;
 			int longestRep;
 
 			// check LowComp of A-read
-			getRepeatBasesFromInterval(ctx->trackLowCompl,aread,ovl->path.abpos, ovl->path.aepos,&repeatBases, &longestRep);
-			if(repeatBases*100.0/(ovl->path.aepos-ovl->path.abpos)>=ctx->stitchLowCompPerc)
+			getRepeatBasesFromInterval(ctx->trackLowCompl, aread, ovl->path.abpos, ovl->path.aepos, &repeatBases, &longestRep);
+			if (repeatBases * 100.0 / (ovl->path.aepos - ovl->path.abpos) >= ctx->stitchLowCompPerc)
 			{
 				return stitched;
 			}
 
 			// check LowComp of B-read
-			if(ovl->flags & OVL_COMP)
+			if (ovl->flags & OVL_COMP)
 			{
-				getRepeatBasesFromInterval(ctx->trackLowCompl,bread,DB_READ_LEN(ctx->db, bread)-ovl->path.bepos, DB_READ_LEN(ctx->db, bread)-ovl->path.bbpos,&repeatBases, &longestRep);
+				getRepeatBasesFromInterval(ctx->trackLowCompl, bread, DB_READ_LEN(ctx->db, bread) - ovl->path.bepos, DB_READ_LEN(ctx->db, bread) - ovl->path.bbpos, &repeatBases, &longestRep);
 			}
 			else
 			{
-				getRepeatBasesFromInterval(ctx->trackLowCompl,bread,ovl->path.bbpos, ovl->path.bepos,&repeatBases, &longestRep);
+				getRepeatBasesFromInterval(ctx->trackLowCompl, bread, ovl->path.bbpos, ovl->path.bepos, &repeatBases, &longestRep);
 			}
-			if(repeatBases*100.0/(ovl->path.bepos-ovl->path.bbpos)>=ctx->stitchLowCompPerc)
+			if (repeatBases * 100.0 / (ovl->path.bepos - ovl->path.bbpos) >= ctx->stitchLowCompPerc)
 			{
-				return stitched;
+				return 0;
 			}
 		}
 	}
-
 
 	Overlap* ovli = chain->ovls[0];
 	ae1 = ovli->path.aepos;
 	be1 = ovli->path.bepos;
 
-	for (i=1; i < chain->novl; i++)
+	for (i = 1; i < chain->novl; i++)
 	{
 		Overlap* ovlk = chain->ovls[i];
 		assert((ovli->flags & OVL_COMP) == (ovlk->flags & OVL_COMP));
@@ -1800,7 +1822,7 @@ static int stitchChain(FilterContext *ctx, Chain *chain)
 		int deltaa = abs(ae1 - ab2);
 		int deltab = abs(be1 - bb2);
 
-		if(ctx->stitchMaxGapSize < 0 || (deltaa < ctx->stitchMaxGapSize && deltab < ctx->stitchMaxGapSize))
+		if (ctx->stitchMaxGapSize < 0 || (deltaa < ctx->stitchMaxGapSize && deltab < ctx->stitchMaxGapSize))
 		{
 #ifdef VERBOSE_STITCH
 			int ab1 = ovli->path.abpos;
@@ -1848,652 +1870,827 @@ static int stitchChain(FilterContext *ctx, Chain *chain)
 	return stitched;
 }
 
-static int filter_handler(void* _ctx, Overlap* ovl, int novl)
+static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 {
-	FilterContext* ctx = (FilterContext*) _ctx;
-	int i, j, k;
+
+	// todo hard coded: use a dynamic window dependent on repeat track ?
+	int SWINDOW = 1000;
+	int ANCHOR = MAX(ctx->minChainLen / 2, 1 + SWINDOW / 2);
+	int MINSPANNER = 1;
 
 	int trim_abeg, trim_aend;
-	int trim_bbeg, trim_bend;
 
-	// set filter flags
-	for (j = 0; j < novl; j++)
-	{
-		// get rid of all previous flags
-		ovl[j].flags &= ~(OVL_CONT | OVL_TEMP | OVL_REPEAT);
-
-		if (ctx->trackTrim)
-		{
-			for (j = 0; j < novl; j++)
-			{
-				trim_overlap(ctx->trim, ovl + j);
-//				if(ovl[j].flags & OVL_TRIM)
-//					printf("TRIMMED %d %d [%d, %d] [%d,%d]\n", ovl[j].aread, ovl[j].bread, ovl[j].path.abpos, ovl[j].path.aepos, ovl[j].path.bbpos, ovl[j].path.bepos);
-				}
-//			get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_abeg, &trim_aend);
-//			printf("T[%d, %d]\n", trim_abeg, trim_aend);
-
-		}
-
-		ovl[j].flags |= filter(ctx, ovl + j);
-	}
-
-	j = k = 0;
-
-	// create unique mask for a-read
-	createUniqueMask(ctx, ovl->aread, 1);
-
-
-	if(ctx->trackTrim)
+	if (ctx->trackTrim)
 	{
 		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_abeg, &trim_aend);
 	}
 	else
 	{
-		 trim_abeg = 0;
-		 trim_aend = DB_READ_LEN(ctx->db, ovl->aread);
+		trim_abeg = 0;
+		trim_aend = DB_READ_LEN(ctx->db, ovl->aread);
 	}
 
-	while (j < novl)
+	int foundGap = 0;
+	int i, j, k, l;
+
+	for (i = trim_abeg; i < trim_aend && foundGap == 0; i += SWINDOW)
 	{
+		int nspanner = 0;
 
-		assert(k == j);
-
-		int nAnchorOvls = (ovl[j].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
-
-		while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
+		while (j < novl)
 		{
+			while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
+			{
+				k++;
+			}
+
+			if (ovl[j].aread != ovl[j].bread)
+			{
+				int abpos = DB_READ_LEN(ctx->db, ovl[j].aread);
+				int aepos = 0;
+
+				for (l = j; l < k - j + 1; l++)
+				{
+					Overlap * o = ovl + l;
+					if (o->flags & OVL_DISCARD)
+						continue;
+
+					if (o->path.abpos < abpos)
+						abpos = o->path.abpos;
+
+					if (o->path.aepos > aepos)
+						aepos = o->path.aepos;
+				}
+
+				if (abpos < aepos)
+				{
+					if (abpos <= MAX(trim_abeg, i - ANCHOR) && aepos >= MIN(i + ANCHOR, trim_aend))
+					{
+						nspanner++;
+					}
+				}
+			}
 			k++;
-			nAnchorOvls += (ovl[k].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
+			j = k;
 		}
 
-		// ignore all self alignments if those are present
-		if (ovl[j].aread == ovl[j].bread)
-			nAnchorOvls = 0;
-
-		if (nAnchorOvls)
+		if (nspanner < MINSPANNER)
 		{
+			printf("FOUND GAP in READ %d in range [%d, %d]\n", ovl->aread, MAX(trim_abeg, i - ANCHOR), MIN(i + ANCHOR, trim_aend));
+
+			for (j = 0; j < novl; j++)
+			{
+				ovl[j].flags |= (OVL_DISCARD | OVL_GAP);
+				ctx->statsGapAlns++;
+			}
+			return;
+		}
+	}
+}
+
+static void checkTipCoverage(FilterContext *ctx, Overlap *ovl, int novl)
+{
+
+	int trimBeg, trimEnd;
+	trimBeg = 0;
+	trimEnd = DB_READ_LEN(ctx->db, ovl->aread);
+
+	if (ctx->trackTrim)
+		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimBeg, &trimEnd);
+
+	if (trimEnd - trimBeg)
+	{
+		int entercov = 0;
+		int leavecov = 0;
+		int bases = 0;
+
+		char * cov_read_active = malloc(DB_READ_MAXLEN(ctx->db));
+		bzero(cov_read_active, DB_READ_MAXLEN(ctx->db));
+
+		int j;
+		for (j = 0; j < novl; j++)
+		{
+			Overlap* ovl_j = ovl + j;
+
+			if (ovl_j->flags & OVL_DISCARD)
+				continue;
+
+			if (ovl_j->path.abpos <= trimBeg)
+				entercov++;
+
+			if (ovl_j->path.aepos >= trimEnd)
+				leavecov++;
+
+			bases += ovl_j->path.aepos - ovl_j->path.abpos;
+			memset(cov_read_active + ovl_j->path.abpos, 1, ovl_j->path.aepos - ovl_j->path.abpos);
+		}
+
+		int active = 0;
+		for (j = trimBeg; j < trimEnd; j++)
+		{
+			active += cov_read_active[j];
+		}
+
+		if (bases / (trimEnd - trimBeg) <= ctx->minTipCoverage || (leavecov < ctx->minTipCoverage || entercov < ctx->minTipCoverage) || ((trimEnd - trimBeg) - active > ctx->minTipCoverage))
+		{
+			for (j = 0; j < novl; j++)
+			{
+				Overlap* ovl_j = ovl + j;
+
+				if (ovl_j->flags & OVL_DISCARD)
+					continue;
+
+				ovl_j->flags |= OVL_DISCARD;
+				ctx->statsLowCovALn++;
+			}
+			fprint("DROP LOWCOV AREAD %d\n", ovl->aread);
+		}
+		free(cov_read_active);
+	}
+}
+
+static int filter_handler(void* _ctx, Overlap* ovl, int novl)
+{
+FilterContext* ctx = (FilterContext*) _ctx;
+int i, j, k;
+
+int trim_abeg, trim_aend;
+int trim_bbeg, trim_bend;
+
+// set filter flags
+for (j = 0; j < novl; j++)
+{
+	// get rid of all previous flags
+	ovl[j].flags &= ~(OVL_CONT | OVL_TEMP | OVL_REPEAT);
+
+	if (ctx->trackTrim)
+	{
+		for (j = 0; j < novl; j++)
+		{
+			trim_overlap(ctx->trim, ovl + j);
+//				if(ovl[j].flags & OVL_TRIM)
+//					printf("TRIMMED %d %d [%d, %d] [%d,%d]\n", ovl[j].aread, ovl[j].bread, ovl[j].path.abpos, ovl[j].path.aepos, ovl[j].path.bbpos, ovl[j].path.bepos);
+		}
+//			get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_abeg, &trim_aend);
+//			printf("T[%d, %d]\n", trim_abeg, trim_aend);
+
+	}
+
+	ovl[j].flags |= filter(ctx, ovl + j);
+}
+
+j = k = 0;
+
+// create unique mask for a-read
+createUniqueMask(ctx, ovl->aread, 1);
+
+if (ctx->trackTrim)
+{
+	get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_abeg, &trim_aend);
+}
+else
+{
+	trim_abeg = 0;
+	trim_aend = DB_READ_LEN(ctx->db, ovl->aread);
+}
+
+while (j < novl)
+{
+
+	assert(k == j);
+
+	int nAnchorOvls = (ovl[j].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
+
+	while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
+	{
+		k++;
+		nAnchorOvls += (ovl[k].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
+	}
+
+	// ignore all self alignments if those are present
+	if (ovl[j].aread == ovl[j].bread)
+		nAnchorOvls = 0;
+
+	if (nAnchorOvls)
+	{
 #ifdef CHAIN_DEBUG
-			printf("read: %8d len(%10d) | read: %8d len(%10d) novl: %10d, anchorOvl: %5d\n", ovl[j].aread, DB_READ_LEN(ctx->db, ovl[j].aread), ovl[j].bread, DB_READ_LEN(ctx->db, ovl[j].bread), k - j + 1, nAnchorOvls);
-			fflush(stdout);
+		printf("read: %8d len(%10d) | read: %8d len(%10d) novl: %10d, anchorOvl: %5d\n", ovl[j].aread, DB_READ_LEN(ctx->db, ovl[j].aread), ovl[j].bread, DB_READ_LEN(ctx->db, ovl[j].bread), k - j + 1, nAnchorOvls);
+		fflush(stdout);
 #endif
-			chain(ctx, ovl + j, k - j + 1);
+		chain(ctx, ovl + j, k - j + 1);
 #ifdef CHAIN_DEBUG
-			printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
+		printf("FINAL CHAINS: %d %7d vs %7d\n", ctx->curChains, ctx->ovlChains[0].ovls[0]->aread, ctx->ovlChains[0].ovls[0]->bread);
 
-			for (i = 0; i < ctx->curChains; i++)
+		for (i = 0; i < ctx->curChains; i++)
+		{
+			printf(" CHAIN %d/%d: #novl %d\n", i + 1, ctx->curChains, ctx->ovlChains[i].novl);
+
+			int j;
+			for (j = 0; j < ctx->ovlChains[i].novl; j++)
 			{
-				printf(" CHAIN %d/%d: #novl %d\n", i + 1, ctx->curChains, ctx->ovlChains[i].novl);
-
-				int j;
-				for (j = 0; j < ctx->ovlChains[i].novl; j++)
-				{
-					printf("  OVL %d/%d: a[%7d, %7d] b[%7d, %7d] %s\n", j + 1, ctx->ovlChains[i].novl, ctx->ovlChains[i].ovls[j]->path.abpos, ctx->ovlChains[i].ovls[j]->path.aepos, ctx->ovlChains[i].ovls[j]->path.bbpos, ctx->ovlChains[i].ovls[j]->path.bepos,
-							(ctx->ovlChains[i].ovls[j]->flags & OVL_COMP) ? "COMP" : "NORM");
-				}
+				printf("  OVL %d/%d: a[%7d, %7d] b[%7d, %7d] %s\n", j + 1, ctx->ovlChains[i].novl, ctx->ovlChains[i].ovls[j]->path.abpos, ctx->ovlChains[i].ovls[j]->path.aepos, ctx->ovlChains[i].ovls[j]->path.bbpos, ctx->ovlChains[i].ovls[j]->path.bepos,
+						(ctx->ovlChains[i].ovls[j]->flags & OVL_COMP) ? "COMP" : "NORM");
 			}
+		}
 #endif
-			int a, b, c;
+		int a, b, c;
 
-			// discard all overlaps, that are not part of a valid chain
-			for (i = j; i <= k; i++)
+		// discard all overlaps, that are not part of a valid chain
+		for (i = j; i <= k; i++)
+		{
+			if (!(ovl[i].flags & OVL_TEMP))
 			{
-				if (!(ovl[i].flags & OVL_TEMP))
+				ovl[i].flags |= OVL_DISCARD;
+				ctx->statsFiltInvalidChain++;
+			}
+		}
+
+		if (ctx->nkeptChains == 0)
+		{
+			for (a = 1; a < ctx->curChains; a++)
+				for (b = 0; b < ctx->ovlChains[a].novl; b++)
 				{
-					ovl[i].flags |= OVL_DISCARD;
-					ctx->nFiltInvalidChain++;
+					ctx->ovlChains[a].ovls[b]->flags |= OVL_DISCARD;
+					ctx->statsFiltInvalidChain++;
 				}
+		}
+
+		{
+			// create unique mask for b-read
+			// printf("-----> create unique mask for b_read %d\n", ovl[j].bread);
+			createUniqueMask(ctx, ovl[j].bread, 0);
+			//printf("ctx->curUniqBIntervals: %d\n", ctx->curUniqBIntervals);
+
+			if (ctx->trackTrim)
+			{
+				get_trim(ctx->db, ctx->trackTrim, ovl[j].bread, &trim_bbeg, &trim_bend);
+			}
+			else
+			{
+				trim_bbeg = 0;
+				trim_bend = DB_READ_LEN(ctx->db, ovl[j].bread);
 			}
 
-			if (ctx->nkeptChains == 0)
+			// check for proper chain
+			for (a = 0; a < ctx->curChains; a++)
 			{
-				for (a = 1; a < ctx->curChains; a++)
-					for (b = 0; b < ctx->ovlChains[a].novl; b++)
-					{
-						ctx->ovlChains[a].ovls[b]->flags |= OVL_DISCARD;
-						ctx->nFiltInvalidChain++;
-					}
-			}
+				if (ctx->nkeptChains == 0 && a > 0) // do not check, they are already discarded
+					break;
 
-			{
-				// create unique mask for b-read
-				// printf("-----> create unique mask for b_read %d\n", ovl[j].bread);
-				createUniqueMask(ctx, ovl[j].bread, 0);
-				//printf("ctx->curUniqBIntervals: %d\n", ctx->curUniqBIntervals);
+				Chain *chain = ctx->ovlChains + a;
 
-				if(ctx->trackTrim)
+				int properBegA = 0;
+				int properEndA = 0;
+				int properBegB = 0;
+				int properEndB = 0;
+				int coveredBasesInAread = 0;
+				int coveredBasesInBread = 0;
+				int properGapLen = 1;
+
+				int numUniqABases = 0;
+				int numUniqBBases = 0;
+
+				int overlapBasesA;
+				int overlapBasesB;
+				int numdiffs = 0;
+
+				int fuzzy = (ctx->nFuzzBases) ? ctx->nFuzzBases : ctx->maxUnalignedB;
+
+				// check for proper begin
+				if (chain->ovls[0]->path.abpos <= trim_abeg + fuzzy)
+					properBegA = 1;
+
+				if (chain->ovls[0]->flags & OVL_COMP)
 				{
-					get_trim(ctx->db, ctx->trackTrim, ovl[j].bread, &trim_bbeg, &trim_bend);
+					if (DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[0]->path.bbpos + fuzzy >= trim_bend)
+						properBegB = 1;
 				}
 				else
 				{
-					 trim_bbeg = 0;
-					 trim_bend = DB_READ_LEN(ctx->db, ovl[j].bread);
+					if (chain->ovls[0]->path.bbpos <= trim_bbeg + fuzzy)
+						properBegB = 1;
 				}
 
-				// check for proper chain
-				for (a = 0; a < ctx->curChains; a++)
+				// check for proper end
+				if (chain->ovls[chain->novl - 1]->path.aepos + fuzzy >= trim_aend)
+					properEndA = 1;
+
+				if (chain->ovls[0]->flags & OVL_COMP)
 				{
-					if (ctx->nkeptChains == 0 && a > 0) // do not check, they are already discarded
-						break;
+					if (DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[chain->novl - 1]->path.bepos - fuzzy <= trim_bbeg)
+						properEndB = 1;
+				}
+				else
+				{
+					if (chain->ovls[chain->novl - 1]->path.bepos + fuzzy >= trim_bend)
+						properEndB = 1;
+				}
 
-					Chain *chain = ctx->ovlChains + a;
+				coveredBasesInAread = chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos;
+				coveredBasesInBread = chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos;
 
-					int properBegA = 0;
-					int properEndA = 0;
-					int properBegB = 0;
-					int properEndB = 0;
-					int coveredBasesInAread = 0;
-					int coveredBasesInBread = 0;
-					int properGapLen = 1;
+				overlapBasesA = chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos;
+				overlapBasesB = chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos;
 
-					int numUniqABases = 0;
-					int numUniqBBases = 0;
+				numdiffs = chain->ovls[0]->path.diffs;
 
-					int overlapBasesA;
-					int overlapBasesB;
-					int numdiffs = 0;
+				// add up unique bases
+				for (c = 0; c < ctx->curUniqAIntervals; c++)
+					numUniqABases += intersect(chain->ovls[0]->path.abpos, chain->ovls[0]->path.aepos, ctx->uniqAIntervals[c].beg, ctx->uniqAIntervals[c].end);
 
-					int fuzzy = (ctx->nFuzzBases) ? ctx->nFuzzBases : ctx->maxUnalignedB;
-
-					// check for proper begin
-					if (chain->ovls[0]->path.abpos <= trim_abeg + fuzzy)
-						properBegA = 1;
-
-					if(chain->ovls[0]->flags & OVL_COMP)
+				for (c = 0; c < ctx->curUniqBIntervals; c++)
+				{
+					if (chain->ovls[0]->flags & OVL_COMP)
 					{
-						if (DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[0]->path.bbpos + fuzzy >= trim_bend)
-							properBegB = 1;
+						numUniqBBases += intersect(DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[0]->path.bepos, DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[0]->path.bbpos, ctx->uniqBIntervals[c].beg, ctx->uniqBIntervals[c].end);
 					}
 					else
 					{
-						if (chain->ovls[0]->path.bbpos <= trim_bbeg + fuzzy)
-							properBegB = 1;
+						numUniqBBases += intersect(chain->ovls[0]->path.bbpos, chain->ovls[0]->path.bepos, ctx->uniqBIntervals[c].beg, ctx->uniqBIntervals[c].end);
 					}
+				}
 
-					// check for proper end
-					if (chain->ovls[chain->novl - 1]->path.aepos + fuzzy >= trim_aend)
-						properEndA = 1;
+				for (b = 1; b < chain->novl; b++)
+				{
+					coveredBasesInAread += chain->ovls[b]->path.aepos - chain->ovls[b]->path.abpos;
+					coveredBasesInBread += chain->ovls[b]->path.bepos - chain->ovls[b]->path.bbpos;
 
-					if(chain->ovls[0]->flags & OVL_COMP)
-					{
-						if (DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[chain->novl-1]->path.bepos - fuzzy <= trim_bbeg)
-							properEndB = 1;
-					}
-					else
-					{
-						if (chain->ovls[chain->novl - 1]->path.bepos + fuzzy >= trim_bend)
-							properEndB = 1;
-					}
+					overlapBasesA += chain->ovls[b]->path.aepos - chain->ovls[b]->path.abpos;
+					overlapBasesB += chain->ovls[b]->path.bepos - chain->ovls[b]->path.bbpos;
 
-					coveredBasesInAread = chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos;
-					coveredBasesInBread = chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos;
-
-					overlapBasesA = chain->ovls[0]->path.aepos - chain->ovls[0]->path.abpos;
-					overlapBasesB = chain->ovls[0]->path.bepos - chain->ovls[0]->path.bbpos;
-
-					numdiffs = chain->ovls[0]->path.diffs;
+					numdiffs += chain->ovls[b]->path.diffs;
 
 					// add up unique bases
 					for (c = 0; c < ctx->curUniqAIntervals; c++)
-						numUniqABases += intersect(chain->ovls[0]->path.abpos, chain->ovls[0]->path.aepos, ctx->uniqAIntervals[c].beg, ctx->uniqAIntervals[c].end);
+						numUniqABases += intersect(chain->ovls[b]->path.abpos, chain->ovls[b]->path.aepos, ctx->uniqAIntervals[c].beg, ctx->uniqAIntervals[c].end);
 
 					for (c = 0; c < ctx->curUniqBIntervals; c++)
 					{
-						if(chain->ovls[0]->flags & OVL_COMP)
+						if (chain->ovls[0]->flags & OVL_COMP)
 						{
-							numUniqBBases += intersect(DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[0]->path.bepos, DB_READ_LEN(ctx->db,chain->ovls[0]->bread) - chain->ovls[0]->path.bbpos, ctx->uniqBIntervals[c].beg, ctx->uniqBIntervals[c].end);
+							numUniqBBases += intersect(DB_READ_LEN(ctx->db,chain->ovls[b]->bread) - chain->ovls[b]->path.bepos, DB_READ_LEN(ctx->db,chain->ovls[b]->bread) - chain->ovls[b]->path.bbpos, ctx->uniqBIntervals[c].beg, ctx->uniqBIntervals[c].end);
 						}
 						else
 						{
-							numUniqBBases += intersect(chain->ovls[0]->path.bbpos, chain->ovls[0]->path.bepos, ctx->uniqBIntervals[c].beg, ctx->uniqBIntervals[c].end);
+							numUniqBBases += intersect(chain->ovls[b]->path.bbpos, chain->ovls[b]->path.bepos, ctx->uniqBIntervals[c].beg, ctx->uniqBIntervals[c].end);
 						}
 					}
 
-					for (b = 1; b < chain->novl; b++)
+					// check for intersection in A
+					if (chain->ovls[b]->path.abpos < chain->ovls[b - 1]->path.aepos)
 					{
-						coveredBasesInAread += chain->ovls[b]->path.aepos - chain->ovls[b]->path.abpos;
-						coveredBasesInBread += chain->ovls[b]->path.bepos - chain->ovls[b]->path.bbpos;
-
-						overlapBasesA += chain->ovls[b]->path.aepos - chain->ovls[b]->path.abpos;
-						overlapBasesB += chain->ovls[b]->path.bepos - chain->ovls[b]->path.bbpos;
-
-						numdiffs += chain->ovls[b]->path.diffs;
-
-						// add up unique bases
-						for (c = 0; c < ctx->curUniqAIntervals; c++)
-							numUniqABases += intersect(chain->ovls[b]->path.abpos, chain->ovls[b]->path.aepos, ctx->uniqAIntervals[c].beg, ctx->uniqAIntervals[c].end);
-
-						for (c = 0; c < ctx->curUniqBIntervals; c++)
-						{
-							if(chain->ovls[0]->flags & OVL_COMP)
-							{
-								numUniqBBases += intersect(DB_READ_LEN(ctx->db,chain->ovls[b]->bread) - chain->ovls[b]->path.bepos, DB_READ_LEN(ctx->db,chain->ovls[b]->bread) - chain->ovls[b]->path.bbpos, ctx->uniqBIntervals[c].beg, ctx->uniqBIntervals[c].end);
-							}
-							else
-							{
-								numUniqBBases += intersect(chain->ovls[b]->path.bbpos, chain->ovls[b]->path.bepos, ctx->uniqBIntervals[c].beg, ctx->uniqBIntervals[c].end);
-							}
-						}
-
-						// check for intersection in A
-						if (chain->ovls[b]->path.abpos < chain->ovls[b - 1]->path.aepos)
-						{
-							coveredBasesInAread -= chain->ovls[b - 1]->path.aepos - chain->ovls[b]->path.abpos;
-						}
-						// check for gap in A
-						else
-						{
-							if (chain->ovls[b]->path.abpos - chain->ovls[b - 1]->path.aepos > fuzzy)
-							{
-								// check gap
-								//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos,chain->ovls[b]->aread, gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8),
-								//		badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos));
-								if(!gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8) /*&& !badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos)*/)
-								{
-									properGapLen = 0;
-									break;
-								}
-							}
-						}
-						// check for intersection in B
-						if (chain->ovls[b]->path.bbpos < chain->ovls[b - 1]->path.bepos)
-						{
-							coveredBasesInBread -= chain->ovls[b - 1]->path.bepos - chain->ovls[b]->path.bbpos;
-						}
-						// check for gap in B
-						else
-						{
-							if (chain->ovls[b]->path.bbpos - chain->ovls[b - 1]->path.bepos > fuzzy)
-							{
-								int bbpos = chain->ovls[b - 1]->path.bepos;
-								int bepos = chain->ovls[b]->path.bbpos;
-
-								if(chain->ovls[b]->flags & OVL_COMP)
-								{
-									int tmp = bbpos;
-									bbpos = DB_READ_LEN(ctx->db, chain->ovls[b]->bread) - bepos;
-									bepos = DB_READ_LEN(ctx->db, chain->ovls[b]->bread) - tmp;
-								}
-								//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", bbpos, bepos, chain->ovls[b]->bread, gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8),
-								//		badQV(ctx, chain->ovls[b]->bread, bbpos, bepos));
-								if(!gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8) /* && !badQV(ctx, chain->ovls[b]->bread, bbpos, bepos)*/)
-								{
-									properGapLen = 0;
-									break;
-								}
-							}
-						}
+						coveredBasesInAread -= chain->ovls[b - 1]->path.aepos - chain->ovls[b]->path.abpos;
 					}
-
-					int validContainment = 0;
-					int validBridge = 0;
-					int validAnchor = 0;
-					int validDiff = 0;
-					int validMinLen = 0;
-
-					if(ctx->nFuzzBases || ctx->nContPerc)
+					// check for gap in A
+					else
 					{
-						if (properGapLen && ((properBegA || properBegB) && (properEndA || properEndB)))
+						if (chain->ovls[b]->path.abpos - chain->ovls[b - 1]->path.aepos > fuzzy)
 						{
-							if (MAX(coveredBasesInAread, coveredBasesInBread) >= (int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))))
+							// check gap
+							//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos,chain->ovls[b]->aread, gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8),
+							//		badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos));
+							if (!gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8) /*&& !badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos)*/)
 							{
-								validContainment = 1;
-							}
-
-							//      contigA         ----------------
-							//      contigB	---------
-							//			min 50Kb overlap, both overhangs min 100Kb
-							else if (properBegA && !properEndA && properEndB && !properBegB && MAX(coveredBasesInAread, coveredBasesInBread) >= MIN(50000, 3 * ctx->nFuzzBases) && chain->ovls[chain->novl - 1]->path.aepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->aread) && chain->ovls[0]->path.bbpos - 100000 > 0)
-							{
-								validBridge = 1;
-							}
-							//      contigA         ----------------
-							//      								contigB			------------
-							//			min 50Kb overlap, both overhangs min 100Kb
-							else if (!properBegA && properEndA && !properEndB && properBegB && MAX(coveredBasesInAread, coveredBasesInBread) >= MIN(50000, 3 * ctx->nFuzzBases) && chain->ovls[0]->path.abpos - 100000 > 0 && chain->ovls[chain->novl - 1]->path.bepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->bread))
-							{
-								validBridge = 1;
+								properGapLen = 0;
+								break;
 							}
 						}
 					}
-					else // contig bridges or containments are irrelevant
+					// check for intersection in B
+					if (chain->ovls[b]->path.bbpos < chain->ovls[b - 1]->path.bepos)
 					{
-						validBridge = 1;
-						validContainment = 1;
+						coveredBasesInBread -= chain->ovls[b - 1]->path.bepos - chain->ovls[b]->path.bbpos;
 					}
+					// check for gap in B
+					else
+					{
+						if (chain->ovls[b]->path.bbpos - chain->ovls[b - 1]->path.bepos > fuzzy)
+						{
+							int bbpos = chain->ovls[b - 1]->path.bepos;
+							int bepos = chain->ovls[b]->path.bbpos;
 
-					if(numUniqABases >= ctx->nMinNonRepeatBases && numUniqBBases >= ctx->nMinNonRepeatBases)
-						validAnchor = 1;
+							if (chain->ovls[b]->flags & OVL_COMP)
+							{
+								int tmp = bbpos;
+								bbpos = DB_READ_LEN(ctx->db, chain->ovls[b]->bread) - bepos;
+								bepos = DB_READ_LEN(ctx->db, chain->ovls[b]->bread) - tmp;
+							}
+							//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", bbpos, bepos, chain->ovls[b]->bread, gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8),
+							//		badQV(ctx, chain->ovls[b]->bread, bbpos, bepos));
+							if (!gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8) /* && !badQV(ctx, chain->ovls[b]->bread, bbpos, bepos)*/)
+							{
+								properGapLen = 0;
+								break;
+							}
+						}
+					}
+				}
 
-					if(numdiffs*100.0/overlapBasesA <= ctx->diff && numdiffs*100.0/overlapBasesB <= ctx->diff )
-						validDiff = 1;
+				int validContainment = 0;
+				int validBridge = 0;
+				int validAnchor = 0;
+				int validDiff = 0;
+				int validMinLen = 0;
 
-					if((chain->ovls[chain->novl-1]->path.aepos - chain->ovls[0]->path.abpos) > ctx->minChainLen &&
-							(chain->ovls[chain->novl-1]->path.bepos - chain->ovls[0]->path.bbpos) > ctx->minChainLen)
-						validMinLen = 1;
+				if (ctx->nFuzzBases || ctx->nContPerc)
+				{
+					if (properGapLen && ((properBegA || properBegB) && (properEndA || properEndB)))
+					{
+						if (MAX(coveredBasesInAread, coveredBasesInBread) >= (int) (ctx->nContPerc / 100.0 * MIN(DB_READ_LEN(ctx->db, chain->ovls[0]->aread), DB_READ_LEN(ctx->db, chain->ovls[0]->bread))))
+						{
+							validContainment = 1;
+						}
+
+						//      contigA         ----------------
+						//      contigB	---------
+						//			min 50Kb overlap, both overhangs min 100Kb
+						else if (properBegA && !properEndA && properEndB && !properBegB && MAX(coveredBasesInAread, coveredBasesInBread) >= MIN(50000, 3 * ctx->nFuzzBases) && chain->ovls[chain->novl - 1]->path.aepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->aread)
+								&& chain->ovls[0]->path.bbpos - 100000 > 0)
+						{
+							validBridge = 1;
+						}
+						//      contigA         ----------------
+						//      								contigB			------------
+						//			min 50Kb overlap, both overhangs min 100Kb
+						else if (!properBegA && properEndA && !properEndB && properBegB
+								&& MAX(coveredBasesInAread, coveredBasesInBread) >= MIN(50000, 3 * ctx->nFuzzBases) && chain->ovls[0]->path.abpos - 100000 > 0 && chain->ovls[chain->novl - 1]->path.bepos + 100000 < DB_READ_LEN(ctx->db, chain->ovls[0]->bread))
+						{
+							validBridge = 1;
+						}
+					}
+				}
+				else // contig bridges or containments are irrelevant
+				{
+					validBridge = 1;
+					validContainment = 1;
+				}
+
+				if (numUniqABases >= ctx->nMinNonRepeatBases && numUniqBBases >= ctx->nMinNonRepeatBases)
+					validAnchor = 1;
+
+				if (numdiffs * 100.0 / overlapBasesA <= ctx->diff && numdiffs * 100.0 / overlapBasesB <= ctx->diff)
+					validDiff = 1;
+
+				if ((chain->ovls[chain->novl - 1]->path.aepos - chain->ovls[0]->path.abpos) > ctx->minChainLen && (chain->ovls[chain->novl - 1]->path.bepos - chain->ovls[0]->path.bbpos) > ctx->minChainLen)
+					validMinLen = 1;
 
 #ifdef CHAIN_DEBUG
-					printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainment %d validAnchor %d  validDiff %d numUniqABases %d numUniqBBases %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor,  validDiff, numUniqABases ,numUniqBBases );
+				printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainment %d validAnchor %d  validDiff %d numUniqABases %d numUniqBBases %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor, validDiff, numUniqABases ,numUniqBBases );
 #endif
-					if ((!properBegA && !properBegB) || (!properEndA && !properEndB) || !properGapLen || !validBridge || !validContainment || !validAnchor || ! validDiff || ! validMinLen)
-					{
+				if ((!properBegA && !properBegB) || (!properEndA && !properEndB) || !properGapLen || !validBridge || !validContainment || !validAnchor || !validDiff || !validMinLen)
+				{
 #ifdef CHAIN_DEBUG
-						printf("   *** DISCARD chain ****\n");
+					printf("   *** DISCARD chain ****\n");
 #endif
-						for (b = 0; b < chain->novl; b++)
-						{
-							chain->ovls[b]->flags |= OVL_DISCARD;
-							ctx->nFiltInvalidChain++;
-						}
+					for (b = 0; b < chain->novl; b++)
+					{
+						chain->ovls[b]->flags |= OVL_DISCARD;
+						ctx->statsFiltInvalidChain++;
 					}
-					else if (ctx->stitchChain)
+				}
+				else
+				{
+					int stitch = 1;
+					int filter = filterChain(ctx, chain);
+
+					if (filter && ctx->stitchChain)
 					{
 						int nStitch = stitchChain(ctx, chain);
 
-						if(chain->novl-nStitch > ctx->stitchMaxChainLASs)
+						if (chain->novl - nStitch > ctx->stitchMaxChainLASs)
 						{
-							for (b = 0; b < chain->novl; b++)
-							{
-								chain->ovls[b]->flags |= OVL_DISCARD;
-								ctx->nFiltInvalidChain++;
-							}
+							stitch = 0;
+						}
+					}
+					if (!filter || !stitch)
+					{
+						for (b = 0; b < chain->novl; b++)
+						{
+							chain->ovls[b]->flags |= OVL_DISCARD;
+							ctx->statsFiltInvalidChain++;
 						}
 					}
 				}
 			}
-			// reset chain and ovl counter
-			for (a = 0; a < ctx->curChains; a++)
-				ctx->ovlChains[a].novl = 0;
-			ctx->curChains = 0;
 		}
-		else
-		{
-			if (ovl->aread != ovl->bread || (ovl->aread == ovl->bread && ctx->keepIdentity == 0))
-			{					// discard all overlaps
-				for (i = j; i <= k; i++)
-				{
-					ovl[i].flags |= OVL_DISCARD;
-					ctx->nFiltInvalidChain++;
-				}
+		// reset chain and ovl counter
+		for (a = 0; a < ctx->curChains; a++)
+			ctx->ovlChains[a].novl = 0;
+		ctx->curChains = 0;
+	}
+	else
+	{
+		if (ovl->aread != ovl->bread || (ovl->aread == ovl->bread && ctx->keepIdentity == 0))
+		{					// discard all overlaps
+			for (i = j; i <= k; i++)
+			{
+				ovl[i].flags |= OVL_DISCARD;
+				ctx->statsFiltInvalidChain++;
 			}
 		}
-
-		k++;
-		j = k;
 	}
 
-	return 1;
+	k++;
+	j = k;
+}
+
+if (ctx->findGaps)
+{
+	findGaps(ctx, ovl, novl);
+}
+
+if (ctx->minTipCoverage)
+{
+	checkTipCoverage(ctx, ovl, novl);
+}
+
+return 1;
 }
 
 static void usage()
 {
-	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOC <int>] [-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
+fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOC <int>] [-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
 
-	fprintf(stderr, "options: -v      	verbose\n");
-	fprintf(stderr, "         -n <int>	at least one alignment of a valid chain must have n non-repetitive bases\n");
-	fprintf(stderr, "         -i        keep identity overlaps\n");
-	fprintf(stderr, "         -p      	purge discarded overlaps\n");
-	fprintf(stderr, "         -r <trc>	repeat track name (%s)\n", DEF_ARG_R);
-	fprintf(stderr, "         -k <int>  keep valid overlap chains: 0 ... best, 1 ... all\n");
-	fprintf(stderr, "\nFor CTanalyze (Contigs vs Contigs):\n");
-	fprintf(stderr, "         -f <int>  Bridge:      allow maximum of -f bases of structural variations between two neighboring overlaps of a chain, (default %d)\n", DEF_ARG_F);
-	fprintf(stderr, "         -c <int>  Containment: chain alignment must cover at least -p percent of the shorter read. p=[1,100], (default: %d)\n", DEF_ARG_C);
-	fprintf(stderr, "\nEXPERIMENTAL (Read vs Reads):\n");
-	fprintf(stderr, "         -l <trc>  low complexity track (e.g. tan, dust, tan_dust, default: %s)\n", DEF_ARG_L);
-	fprintf(stderr, "         -q <trc>  q-track (default: %s)\n", DEF_ARG_Q);
-	fprintf(stderr, "         -t <trc>  trim-track (default: %s)\n", DEF_ARG_T);
-	fprintf(stderr, "         -u <int>  number of unaligned bases, (default: %d)\n", DEF_ARG_U);
-	fprintf(stderr, "         -n <int>  number of non-repetitive bases, (default: %d)\n", DEF_ARG_N);
-	fprintf(stderr, "         -m <int>  max merge distance of neighboring repeats (default: %d)\n", DEF_ARG_M);
-	fprintf(stderr, "         -w <int>  window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
-	fprintf(stderr, "                   or at -W bases at the tips of the neighboring repeat. Those can cause a fragmented repeat mask. (default: %d)\n", DEF_ARG_W);
-	fprintf(stderr, "         -d <int>  max divergence allowed [0,100] (default: %d)\n", DEF_ARG_D);
-	fprintf(stderr, "         -y <int>  merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
-	fprintf(stderr, "         -o <int>  minimum chain length (default: %d)\n", DEF_ARG_O);
-	fprintf(stderr, "\n Stitch chains (optional)\n");
-	fprintf(stderr, "         -S       stitch LASchains\n");
-	fprintf(stderr, "         -U <int> maximum unaligned bases for first and last overlap of LASchain (default: 0)\n");
-	fprintf(stderr, "         -L <int> do not merge LAS that are -x percent contained in low complexity regions (default: 100)\n");
-	fprintf(stderr, "         -G <int> maximum merge distance (default: -1)\n");
-	fprintf(stderr, "         -O <int> minimum chain length (default: -1)\n");
-	fprintf(stderr, "         -C <int> max number of LAS in a LASchain (default: 1)\n");
+fprintf(stderr, "options: -v      	verbose\n");
+fprintf(stderr, "         -n <int>	at least one alignment of a valid chain must have n non-repetitive bases\n");
+fprintf(stderr, "         -i        keep identity overlaps\n");
+fprintf(stderr, "         -p      	purge discarded overlaps\n");
+fprintf(stderr, "         -r <trc>	repeat track name (%s)\n", DEF_ARG_R);
+fprintf(stderr, "         -k <int>  keep valid overlap chains: 0 ... best, 1 ... all\n");
+fprintf(stderr, "\nFor CTanalyze (Contigs vs Contigs):\n");
+fprintf(stderr, "         -f <int>  Bridge:      allow maximum of -f bases of structural variations between two neighboring overlaps of a chain, (default %d)\n", DEF_ARG_F);
+fprintf(stderr, "         -c <int>  Containment: chain alignment must cover at least -p percent of the shorter read. p=[1,100], (default: %d)\n", DEF_ARG_C);
+fprintf(stderr, "\n 1. Chain raw overlaps (Read vs Reads):\n");
+fprintf(stderr, "         -l <trc>  low complexity track (e.g. tan, dust, tan_dust, default: %s)\n", DEF_ARG_L);
+fprintf(stderr, "         -q <trc>  q-track (default: %s)\n", DEF_ARG_Q);
+fprintf(stderr, "         -t <trc>  trim-track (default: %s)\n", DEF_ARG_T);
+fprintf(stderr, "         -u <int>  number of unaligned bases, (default: %d)\n", DEF_ARG_U);
+fprintf(stderr, "         -n <int>  number of non-repetitive bases, (default: %d)\n", DEF_ARG_N);
+fprintf(stderr, "         -m <int>  max merge distance of neighboring repeats (default: %d)\n", DEF_ARG_M);
+fprintf(stderr, "         -w <int>  window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
+fprintf(stderr, "                   or at -W bases at the tips of the neighboring repeat. Those can cause a fragmented repeat mask. (default: %d)\n", DEF_ARG_W);
+fprintf(stderr, "         -d <int>  max divergence allowed [0,100] (default: %d)\n", DEF_ARG_D);
+fprintf(stderr, "         -y <int>  merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
+fprintf(stderr, "         -o <int>  minimum chain length (default: %d)\n", DEF_ARG_O);
+fprintf(stderr, "\n 2. Stitch chains (optional)\n");
+fprintf(stderr, "         -S       stitch LASchains\n");
+fprintf(stderr, "         -U <int> maximum unaligned bases for first and last overlap of LASchain (default: 0)\n");
+fprintf(stderr, "         -L <int> do not merge LAS that are -x percent contained in low complexity regions (default: 100)\n");
+fprintf(stderr, "         -G <int> maximum merge distance (default: -1)\n");
+fprintf(stderr, "         -O <int> minimum chain length (default: -1)\n");
+fprintf(stderr, "         -C <int> max number of LAS in a LASchain (default: 1)\n");
+fprintf(stderr, "\n 3. find Gaps and exclude all those reads (optional)\n");
+fprintf(stderr, "         -G       find gaps\n");
+fprintf(stderr, "\n 4. further Filter parameter (optional)\n");
+fprintf(stderr, "         -E <int> minimum leaving/entering coverage (default: 0). If coverage is less then -E, than all overlaps are discarded.\n");
+
 }
 
 int main(int argc, char* argv[])
 {
-	HITS_DB db;
-	FilterContext fctx;
-	PassContext* pctx;
-	FILE* fileOvlIn;
-	FILE* fileOvlOut;
+HITS_DB db;
+FilterContext fctx;
+PassContext* pctx;
+FILE* fileOvlIn;
+FILE* fileOvlOut;
 
-	bzero(&fctx, sizeof(FilterContext));
+bzero(&fctx, sizeof(FilterContext));
 
-	fctx.db = &db;
+fctx.db = &db;
 
 // args
 
-	char* pcTrackRepeats = DEF_ARG_R;
-	char* pcTrackQ = DEF_ARG_Q;
-	char* pcTrackTrim = DEF_ARG_T;
-	char* pcTrackLowCompl = DEF_ARG_L;
+char* pcTrackRepeats = DEF_ARG_R;
+char* pcTrackQ = DEF_ARG_Q;
+char* pcTrackTrim = DEF_ARG_T;
+char* pcTrackLowCompl = DEF_ARG_L;
 
-	int arg_purge = 0;
+int arg_purge = 0;
 
-	fctx.nMinNonRepeatBases = -1;
-	fctx.nVerbose = 0;
-	fctx.nkeptChains = 0;
-	fctx.nFuzzBases = DEF_ARG_F;
-	fctx.nContPerc = DEF_ARG_C;
-	fctx.keepIdentity = 0;
-	fctx.diff = DEF_ARG_D;
-	fctx.maxUnalignedB = DEF_ARG_U;
-	fctx.mergeRepDist = DEF_ARG_M;
-	fctx.repeatWindowLookBack = DEF_ARG_W;
-	fctx.rp_mergeTips = 0;
-	fctx.minChainLen = DEF_ARG_O;
-	fctx.stitchChain = 0;
-	fctx.stitchLowCompPerc = 100;
-	fctx.stitchMaxGapSize = -1;  // by default stitch all valif chains
-	fctx.stitchMaxTipFuzzy = 0;
-	fctx.stitchMinChainLen = fctx.minChainLen;
-	fctx.stitchMaxChainLASs = 1;
-	int c;
+fctx.nMinNonRepeatBases = -1;
+fctx.nVerbose = 0;
+fctx.nkeptChains = 0;
+fctx.nFuzzBases = DEF_ARG_F;
+fctx.nContPerc = DEF_ARG_C;
+fctx.keepIdentity = 0;
+fctx.diff = DEF_ARG_D;
+fctx.maxUnalignedB = DEF_ARG_U;
+fctx.mergeRepDist = DEF_ARG_M;
+fctx.repeatWindowLookBack = DEF_ARG_W;
+fctx.rp_mergeTips = 0;
+fctx.minChainLen = DEF_ARG_O;
+fctx.stitchChain = 0;
+fctx.stitchLowCompPerc = 100;
+fctx.stitchMaxGapSize = -1;  // by default stitch all valif chains
+fctx.stitchMaxTipFuzzy = 0;
+fctx.stitchMinChainLen = fctx.minChainLen;
+fctx.stitchMaxChainLASs = 1;
+fctx.findGaps = 0;
+fctx.minTipCoverage = 0;
 
-	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:")) != -1)
+int c;
+
+opterr = 0;
+while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:GE:")) != -1)
+{
+	switch (c)
 	{
-		switch (c)
-		{
-			case 'v':
-				fctx.nVerbose = 1;
-				break;
+		case 'v':
+			fctx.nVerbose = 1;
+			break;
 
-			case 'p':
-				arg_purge = 1;
-				break;
+		case 'p':
+			arg_purge = 1;
+			break;
 
-			case 'S':
-				fctx.stitchChain = 1;
-				break;
+		case 'S':
+			fctx.stitchChain = 1;
+			break;
 
-			case 'i':
-				fctx.keepIdentity = 1;
-				break;
+		case 'i':
+			fctx.keepIdentity = 1;
+			break;
 
-			case 'n':
-				fctx.nMinNonRepeatBases = atoi(optarg);
-				break;
+		case 'n':
+			fctx.nMinNonRepeatBases = atoi(optarg);
+			break;
 
-			case 'C':
-					fctx.stitchMaxChainLASs = atoi(optarg);
-					break;
+		case 'G':
+			fctx.findGaps = 1;
+			break;
 
-			case 'U':
-				fctx.stitchMaxTipFuzzy = atoi(optarg);
-				break;
+		case 'E':
+			fctx.minTipCoverage = atoi(optarg);
+			break;
 
-			case 'L':
-				fctx.stitchLowCompPerc = atoi(optarg);
-				break;
+		case 'C':
+			fctx.stitchMaxChainLASs = atoi(optarg);
+			break;
 
-			case 'G':
-				fctx.stitchMaxTipFuzzy = atoi(optarg);
-				break;
+		case 'U':
+			fctx.stitchMaxTipFuzzy = atoi(optarg);
+			break;
 
-			case 'O':
-				fctx.stitchMinChainLen = atoi(optarg);
-				break;
+		case 'L':
+			fctx.stitchLowCompPerc = atoi(optarg);
+			break;
 
-			case 'o':
-				fctx.minChainLen = atoi(optarg);
-				break;
+		case 'G':
+			fctx.stitchMaxTipFuzzy = atoi(optarg);
+			break;
 
-			case 'y':
-				fctx.rp_mergeTips = atoi(optarg);
-				break;
+		case 'O':
+			fctx.stitchMinChainLen = atoi(optarg);
+			break;
 
-			case 'f':
-				fctx.nFuzzBases = atoi(optarg);
-				break;
+		case 'o':
+			fctx.minChainLen = atoi(optarg);
+			break;
 
-			case 'c':
-				fctx.nContPerc = atoi(optarg);
-				break;
+		case 'y':
+			fctx.rp_mergeTips = atoi(optarg);
+			break;
 
-			case 'r':
-				pcTrackRepeats = optarg;
-				break;
+		case 'f':
+			fctx.nFuzzBases = atoi(optarg);
+			break;
 
-			case 'q':
-				pcTrackQ = optarg;
-				break;
+		case 'c':
+			fctx.nContPerc = atoi(optarg);
+			break;
 
-			case 'l':
-				pcTrackLowCompl = optarg;
-				break;
+		case 'r':
+			pcTrackRepeats = optarg;
+			break;
 
-			case 't':
-				pcTrackTrim = optarg;
-				break;
+		case 'q':
+			pcTrackQ = optarg;
+			break;
 
-			case 'd':
-				fctx.diff = atoi(optarg);
-				break;
+		case 'l':
+			pcTrackLowCompl = optarg;
+			break;
 
-			case 'k':
-				fctx.nkeptChains = atoi(optarg);
-				break;
+		case 't':
+			pcTrackTrim = optarg;
+			break;
 
-			case 'u':
-				fctx.maxUnalignedB = atoi(optarg);
-				break;
+		case 'd':
+			fctx.diff = atoi(optarg);
+			break;
 
-			case 'm':
-				fctx.mergeRepDist = atoi(optarg);
-				break;
+		case 'k':
+			fctx.nkeptChains = atoi(optarg);
+			break;
 
-			case 'w':
-				fctx.repeatWindowLookBack = atoi(optarg);
-				break;
+		case 'u':
+			fctx.maxUnalignedB = atoi(optarg);
+			break;
 
-			default:
-				fprintf(stderr, "unknown option %c\n", optopt);
-				usage();
-				exit(1);
-		}
-	}
+		case 'm':
+			fctx.mergeRepDist = atoi(optarg);
+			break;
 
-	if (argc - optind != 3)
-	{
-		usage();
-		exit(1);
-	}
+		case 'w':
+			fctx.repeatWindowLookBack = atoi(optarg);
+			break;
 
-	char* pcPathReadsIn = argv[optind++];
-	char* pcPathOverlapsIn = argv[optind++];
-	char* pcPathOverlapsOut = argv[optind++];
-
-	if ((fileOvlIn = fopen(pcPathOverlapsIn, "r")) == NULL)
-	{
-		fprintf(stderr, "could not open %s\n", pcPathOverlapsIn);
-		exit(1);
-	}
-
-	if ((fileOvlOut = fopen(pcPathOverlapsOut, "w")) == NULL)
-	{
-		fprintf(stderr, "could not open %s\n", pcPathOverlapsOut);
-		exit(1);
-	}
-
-	if (Open_DB(pcPathReadsIn, &db))
-	{
-		fprintf(stderr, "could not open %s\n", pcPathReadsIn);
-		exit(1);
-	}
-
-	if (fctx.nMinNonRepeatBases != -1)
-	{
-		fctx.trackRepeat = track_load(&db, pcTrackRepeats);
-
-		if (!fctx.trackRepeat)
-		{
-			fprintf(stderr, "could not load track %s\n", pcTrackRepeats);
+		default:
+			fprintf(stderr, "unknown option %c\n", optopt);
+			usage();
 			exit(1);
-		}
 	}
+}
 
-	// try to load further non-mandatory tracks
-	fctx.trackTrim = track_load(&db, pcTrackTrim);
-	if (!fctx.trackTrim)
-		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackTrim);
+if (argc - optind != 3)
+{
+	usage();
+	exit(1);
+}
 
-	fctx.trackQ = track_load(&db, pcTrackQ);
-	if (!fctx.trackQ)
-		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackQ);
+char* pcPathReadsIn = argv[optind++];
+char* pcPathOverlapsIn = argv[optind++];
+char* pcPathOverlapsOut = argv[optind++];
 
-	fctx.trackLowCompl = track_load(&db, pcTrackLowCompl);
-	if (!fctx.trackLowCompl)
-		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackLowCompl);
+if ((fileOvlIn = fopen(pcPathOverlapsIn, "r")) == NULL)
+{
+	fprintf(stderr, "could not open %s\n", pcPathOverlapsIn);
+	exit(1);
+}
 
-	if (fctx.nContPerc < 0 || fctx.nContPerc > 100)
+if ((fileOvlOut = fopen(pcPathOverlapsOut, "w")) == NULL)
+{
+	fprintf(stderr, "could not open %s\n", pcPathOverlapsOut);
+	exit(1);
+}
+
+if (Open_DB(pcPathReadsIn, &db))
+{
+	fprintf(stderr, "could not open %s\n", pcPathReadsIn);
+	exit(1);
+}
+
+if (fctx.nMinNonRepeatBases != -1)
+{
+	fctx.trackRepeat = track_load(&db, pcTrackRepeats);
+
+	if (!fctx.trackRepeat)
 	{
-		fprintf(stderr, "[ERROR] Invalid range for minimum percent of chain alignments %d. Must be in [1,100]\n", fctx.nContPerc);
+		fprintf(stderr, "could not load track %s\n", pcTrackRepeats);
 		exit(1);
 	}
+}
 
-	if (fctx.nFuzzBases < 0)
-	{
-		fprintf(stderr, "[ERROR] -c fuzzy SV bases must be positive! (%d)\n", fctx.nFuzzBases);
-		exit(1);
-	}
+// try to load further non-mandatory tracks
+fctx.trackTrim = track_load(&db, pcTrackTrim);
+if (!fctx.trackTrim)
+	fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackTrim);
+
+fctx.trackQ = track_load(&db, pcTrackQ);
+if (!fctx.trackQ)
+	fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackQ);
+
+fctx.trackLowCompl = track_load(&db, pcTrackLowCompl);
+if (!fctx.trackLowCompl)
+	fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackLowCompl);
+
+if (fctx.nContPerc < 0 || fctx.nContPerc > 100)
+{
+	fprintf(stderr, "[ERROR] Invalid range for minimum percent of chain alignments %d. Must be in [1,100]\n", fctx.nContPerc);
+	exit(1);
+}
+
+if (fctx.nFuzzBases < 0)
+{
+	fprintf(stderr, "[ERROR] -c fuzzy SV bases must be positive! (%d)\n", fctx.nFuzzBases);
+	exit(1);
+}
 
 // passes
 
-	pctx = pass_init(fileOvlIn, fileOvlOut);
+pctx = pass_init(fileOvlIn, fileOvlOut);
 
-	pctx->split_b = 0;
-	pctx->load_trace = 1;
-	pctx->unpack_trace = 1;
-	pctx->data = &fctx;
-	pctx->write_overlaps = 1;
-	pctx->purge_discarded = arg_purge;
+pctx->split_b = 0;
+pctx->load_trace = 1;
+pctx->unpack_trace = 1;
+pctx->data = &fctx;
+pctx->write_overlaps = 1;
+pctx->purge_discarded = arg_purge;
 
-	filter_pre(pctx, &fctx);
+filter_pre(pctx, &fctx);
 
-	pass(pctx, filter_handler);
+pass(pctx, filter_handler);
 
-	filter_post(&fctx);
+filter_post(&fctx);
 
-	pass_free(pctx);
+pass_free(pctx);
 
 // cleanup
 
-	Close_DB(&db);
+Close_DB(&db);
 
-	fclose(fileOvlOut);
-	fclose(fileOvlIn);
+fclose(fileOvlOut);
+fclose(fileOvlIn);
 
-	return 0;
+return 0;
 }
