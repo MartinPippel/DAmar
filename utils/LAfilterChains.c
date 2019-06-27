@@ -2368,6 +2368,8 @@ while (j < novl)
 					int stitch = 1;
 					int filter = filterChain(ctx, chain);
 
+					printf("filter : %d\n", filter);
+
 					if (filter && ctx->stitchChain)
 					{
 						int nStitch = stitchChain(ctx, chain);
@@ -2377,6 +2379,7 @@ while (j < novl)
 							stitch = 0;
 						}
 					}
+					printf("stitch : %d\n", stitch);
 					if (!filter || !stitch)
 					{
 						for (b = 0; b < chain->novl; b++)
