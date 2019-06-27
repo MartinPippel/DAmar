@@ -2365,6 +2365,15 @@ while (j < novl)
 				}
 				else
 				{
+					int count = 0;
+					for (b = 0; b < chain->novl; b++)
+					{
+						if (!(chain->ovls[b]->flags | OVL_DISCARD))
+							count++;
+					}
+					printf(" validLAS %d\n",count);
+
+
 					int stitch = 1;
 					int filter = filterChain(ctx, chain);
 
@@ -2377,7 +2386,7 @@ while (j < novl)
 							stitch = 0;
 						}
 					}
-					int count = 0;
+					count = 0;
 					printf("%d %d filter %d stitch : %d", chain->ovls[0]->aread, chain->ovls[0]->bread, filter, stitch);
 					if (!filter || !stitch)
 					{
