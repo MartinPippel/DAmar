@@ -1893,6 +1893,18 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 	int foundGap = 0;
 	int i, j, k, l;
 
+	printf("find gaps: ");
+	int count = 0;
+	for(i=0; i<novl; i++)
+	{
+		if(!(ovl->flags & OVL_DISCARD))
+		{
+			count++;
+		}
+	}
+	printf("ovl: %d/%d\n", count, novl);
+
+
 	for (i = trim_abeg; i < trim_aend && foundGap == 0; i += SWINDOW)
 	{
 		int nspanner = 0;
