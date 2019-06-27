@@ -2003,7 +2003,7 @@ static void checkTipCoverage(FilterContext *ctx, Overlap *ovl, int novl)
 				ovl_j->flags |= OVL_DISCARD;
 				ctx->statsLowCovALn++;
 			}
-			fprint("DROP LOWCOV AREAD %d\n", ovl->aread);
+			fprintf("DROP LOWCOV AREAD %d\n", ovl->aread);
 		}
 		free(cov_read_active);
 	}
