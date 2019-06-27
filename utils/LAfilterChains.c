@@ -1942,8 +1942,9 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 					{
 						nspanner++;
 					}
+					printf(" ---> nspanner: %d\n", nspanner);
 				}
-				printf(" ---> nspanner: %d\n", nspanner);
+
 			}
 			k++;
 			j = k;
