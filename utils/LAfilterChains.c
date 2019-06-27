@@ -42,7 +42,8 @@
 
 #define VERBOSE
 
-#define DEBUG_CHAIN
+#undef DEBUG_CHAIN
+#define CHAIN_DEBUG
 #define DEBUG_GAPS
 #define DEBUG_FILTER
 
