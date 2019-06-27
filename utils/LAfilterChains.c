@@ -2559,7 +2559,6 @@ int main(int argc, char* argv[])
 	fctx.stitchMaxTipFuzzy = 0;
 	fctx.stitchMinChainLen = fctx.minChainLen;
 	fctx.stitchMaxChainLASs = 1;
-	fctx.findGaps = 0;
 	fctx.minTipCoverage = 0;
 	fctx.fileOutDiscardedReads = NULL;
 
