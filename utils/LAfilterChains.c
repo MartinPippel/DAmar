@@ -43,9 +43,9 @@
 #define VERBOSE
 
 #undef DEBUG_CHAIN
-#define CHAIN_DEBUG
-#define DEBUG_GAPS
-#define DEBUG_FILTER
+#undef CHAIN_DEBUG
+#undef DEBUG_GAPS
+#undef DEBUG_FILTER
 
 #define ANCHOR_INVALID 	(1 << 0)
 #define ANCHOR_TRIM 		(1 << 1)
