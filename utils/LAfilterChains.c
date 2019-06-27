@@ -97,7 +97,6 @@ typedef struct
 	int stitchMinChainLen;
 	int stitchMaxChainLASs;
 
-	int findGaps;
 	int minTipCoverage;
 
 	HITS_DB* db;
@@ -105,6 +104,8 @@ typedef struct
 	HITS_TRACK* trackTrim;
 	HITS_TRACK* trackQ;
 	HITS_TRACK* trackLowCompl;
+
+	FILE* fileOutDiscardedReads;
 
 	ovl_header_twidth twidth;
 
@@ -1974,6 +1975,7 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 				ovl[j].flags |= (OVL_DISCARD | OVL_GAP);
 				ctx->statsGapAlns++;
 			}
+			fprintf(ctx->fileOutDiscardedReads, "%d GAP\n", ovl->aread);
 			return;
 		}
 	}
@@ -2048,6 +2050,7 @@ static void checkTipCoverage(FilterContext *ctx, Overlap *ovl, int novl)
 				ctx->statsLowCovALn++;
 			}
 			printf("DROP LOWCOV AREAD %d (b: %d, e: %d, avgCov %d, gapBases: %d)\n", ovl->aread, entercov, leavecov, bases / (trimEnd - trimBeg), (trimEnd - trimBeg) - active);
+			fprintf(ctx->fileOutDiscardedReads, "%d LCOV\n", ovl->aread);
 		}
 		free(cov_read_active);
 	}
@@ -2464,7 +2467,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		j = k;
 	}
 
-	if (ctx->findGaps)
+	if (ctx->fileOutDiscardedReads)
 	{
 		findGaps(ctx, ovl, novl);
 	}
@@ -2479,7 +2482,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOC <int>] [-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOC <int>] [-B <file>][-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v      	verbose\n");
 	fprintf(stderr, "         -n <int>	at least one alignment of a valid chain must have n non-repetitive bases\n");
@@ -2503,16 +2506,16 @@ static void usage()
 	fprintf(stderr, "         -y <int>  merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
 	fprintf(stderr, "         -o <int>  minimum chain length (default: %d)\n", DEF_ARG_O);
 	fprintf(stderr, "\n 2. Stitch chains (optional)\n");
-	fprintf(stderr, "         -S       stitch LASchains\n");
-	fprintf(stderr, "         -U <int> maximum unaligned bases for first and last overlap of LASchain (default: 0)\n");
-	fprintf(stderr, "         -L <int> do not merge LAS that cover low complexity regions and have less than -L \"unique\" anchor bases (default: 1000)\n");
-	fprintf(stderr, "         -G <int> maximum merge distance (default: -1)\n");
-	fprintf(stderr, "         -O <int> minimum chain length (default: -1)\n");
-	fprintf(stderr, "         -C <int> max number of LAS in a LASchain (default: 1)\n");
+	fprintf(stderr, "         -S        stitch LASchains\n");
+	fprintf(stderr, "         -U <int>  maximum unaligned bases for first and last overlap of LASchain (default: 0)\n");
+	fprintf(stderr, "         -L <int>  do not merge LAS that cover low complexity regions and have less than -L \"unique\" anchor bases (default: 1000)\n");
+	fprintf(stderr, "         -G <int>  maximum merge distance (default: -1)\n");
+	fprintf(stderr, "         -O <int>  minimum chain length (default: -1)\n");
+	fprintf(stderr, "         -C <int>  max number of LAS in a LASchain (default: 1)\n");
 	fprintf(stderr, "\n 3. find Gaps and exclude all those reads (optional)\n");
-	fprintf(stderr, "         -B       find break and gaps\n");
+	fprintf(stderr, "         -B <file> find breaks and gaps and write corresponding read ID into <file>\n");
 	fprintf(stderr, "\n 4. further Filter parameter (optional)\n");
-	fprintf(stderr, "         -E <int> minimum leaving/entering coverage (default: 0). If coverage is less then -E, than all overlaps are discarded.\n");
+	fprintf(stderr, "         -E <int>  minimum leaving/entering coverage (default: 0). If coverage is less then -E, than all overlaps are discarded.\n");
 
 }
 
@@ -2534,6 +2537,7 @@ int main(int argc, char* argv[])
 	char* pcTrackQ = DEF_ARG_Q;
 	char* pcTrackTrim = DEF_ARG_T;
 	char* pcTrackLowCompl = DEF_ARG_L;
+	char* pathOutDiscardReads = NULL;
 
 	int arg_purge = 0;
 
@@ -2557,11 +2561,12 @@ int main(int argc, char* argv[])
 	fctx.stitchMaxChainLASs = 1;
 	fctx.findGaps = 0;
 	fctx.minTipCoverage = 0;
+	fctx.fileOutDiscardedReads = NULL;
 
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:BE:")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:B:E:")) != -1)
 	{
 		switch (c)
 		{
@@ -2586,7 +2591,7 @@ int main(int argc, char* argv[])
 				break;
 
 			case 'B':
-				fctx.findGaps = 1;
+				pathOutDiscardReads = optarg;
 				break;
 
 			case 'E':
@@ -2736,6 +2741,18 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
+	if (pathOutDiscardReads)
+	{
+		FILE* fileOut = fopen(pathOutDiscardReads, "w");
+
+		if (fileOut == NULL)
+		{
+			fprintf(stderr, "could not open %s\n", pathOutDiscardReads);
+			exit(1);
+		}
+		fctx.fileOutDiscardedReads = fileOut;
+	}
+
 // passes
 
 	pctx = pass_init(fileOvlIn, fileOvlOut);
@@ -2758,7 +2775,10 @@ int main(int argc, char* argv[])
 // cleanup
 
 	Close_DB(&db);
-
+	if (fctx.fileOutDiscardedReads)
+	{
+		fclose(fctx.fileOutDiscardedReads);
+	}
 	fclose(fileOvlOut);
 	fclose(fileOvlIn);
 
