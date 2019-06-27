@@ -2368,7 +2368,7 @@ while (j < novl)
 					int count = 0;
 					for (b = 0; b < chain->novl; b++)
 					{
-						if (!(chain->ovls[b]->flags | OVL_DISCARD))
+						if (!(chain->ovls[b]->flags & OVL_DISCARD))
 							count++;
 					}
 					printf(" validLAS %d\n",count);
@@ -2401,7 +2401,7 @@ while (j < novl)
 
 						for (b = 0; b < chain->novl; b++)
 						{
-							if (!(chain->ovls[b]->flags | OVL_DISCARD))
+							if (!(chain->ovls[b]->flags & OVL_DISCARD))
 								count++;
 						}
 					}
