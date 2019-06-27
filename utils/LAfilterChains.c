@@ -43,6 +43,7 @@
 #define VERBOSE
 
 #undef DEBUG_CHAIN
+#define DEBUG_GAP
 
 #define ANCHOR_INVALID 	(1 << 0)
 #define ANCHOR_TRIM 		(1 << 1)
