@@ -1946,7 +1946,9 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 					{
 						nspanner++;
 					}
+#ifdef DEBUG_GAPS
 					printf(" ---> nspanner: %d\n", nspanner);
+#endif
 				}
 
 				if(nspanner >= MINSPANNER)
@@ -2379,8 +2381,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							if (!(chain->ovls[b]->flags & OVL_DISCARD))
 								count++;
 						}
+#ifdef DEBUG_FILTER
 						printf(" validLAS %d\n", count);
-
+#endif
 						int stitch = 1;
 						int filter = filterChain(ctx, chain);
 
@@ -2394,7 +2397,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							}
 						}
 						count = 0;
+#ifdef DEBUG_FILTER
 						printf("%d %d filter %d stitch : %d", chain->ovls[0]->aread, chain->ovls[0]->bread, filter, stitch);
+#endif
 						if (!filter || !stitch)
 						{
 							for (b = 0; b < chain->novl; b++)
@@ -2403,6 +2408,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 								ctx->statsFiltInvalidChain++;
 							}
 						}
+#ifdef DEBUG_FILTER
 						else
 						{
 
@@ -2412,7 +2418,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 									count++;
 							}
 						}
+
 						printf(" validLAS %d\n", count);
+#endif
 					}
 				}
 			}
