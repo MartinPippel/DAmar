@@ -1995,6 +1995,7 @@ static void checkTipCoverage(FilterContext *ctx, Overlap *ovl, int novl)
 			count++;
 		}
 	}
+
 	if(count == 0)
 		return;
 
@@ -2043,7 +2044,7 @@ static void checkTipCoverage(FilterContext *ctx, Overlap *ovl, int novl)
 				ovl_j->flags |= OVL_DISCARD;
 				ctx->statsLowCovALn++;
 			}
-			printf("DROP LOWCOV AREAD %d\n", ovl->aread);
+			printf("DROP LOWCOV AREAD %d (b: %d, e: %d, avgCov %d, gapBases: %d)\n", ovl->aread, entercov, leavecov, bases / (trimEnd - trimBeg), (trimEnd - trimBeg) - active);
 		}
 		free(cov_read_active);
 	}
