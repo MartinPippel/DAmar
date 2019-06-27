@@ -1897,6 +1897,7 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 	{
 		int nspanner = 0;
 
+		j = k = 0;
 		while (j < novl)
 		{
 			while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
