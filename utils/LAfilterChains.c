@@ -1938,7 +1938,7 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 
 				if (abpos < aepos)
 				{
-					if (abpos <= MAX(trim_abeg, i - ANCHOR) && aepos >= MIN(i + ANCHOR, trim_aend))
+					if ((abpos <= MAX(trim_abeg, i - ANCHOR)) && (aepos >= MIN(i + ANCHOR, trim_aend)))
 					{
 						nspanner++;
 					}
