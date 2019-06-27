@@ -2440,7 +2440,7 @@ fprintf(stderr, "         -G <int> maximum merge distance (default: -1)\n");
 fprintf(stderr, "         -O <int> minimum chain length (default: -1)\n");
 fprintf(stderr, "         -C <int> max number of LAS in a LASchain (default: 1)\n");
 fprintf(stderr, "\n 3. find Gaps and exclude all those reads (optional)\n");
-fprintf(stderr, "         -G       find gaps\n");
+fprintf(stderr, "         -B       find break and gaps\n");
 fprintf(stderr, "\n 4. further Filter parameter (optional)\n");
 fprintf(stderr, "         -E <int> minimum leaving/entering coverage (default: 0). If coverage is less then -E, than all overlaps are discarded.\n");
 
@@ -2491,7 +2491,7 @@ fctx.minTipCoverage = 0;
 int c;
 
 opterr = 0;
-while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:GE:")) != -1)
+while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:BE:")) != -1)
 {
 	switch (c)
 	{
@@ -2515,7 +2515,7 @@ while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:GE:"
 			fctx.nMinNonRepeatBases = atoi(optarg);
 			break;
 
-		case 'G':
+		case 'B':
 			fctx.findGaps = 1;
 			break;
 
