@@ -1892,8 +1892,9 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 
 	int foundGap = 0;
 	int i, j, k, l;
-
+#ifdef DEBUG_GAPS
 	printf("find gaps: ");
+
 	int count = 0;
 	for (i = 0; i < novl; i++)
 	{
@@ -1902,7 +1903,9 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 			count++;
 		}
 	}
+
 	printf("ovl: %d/%d\n", count, novl);
+#endif
 
 	for (i = trim_abeg; i < trim_aend && foundGap == 0; i += SWINDOW)
 	{
@@ -1932,8 +1935,9 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 
 					if (o->path.aepos > aepos)
 						aepos = o->path.aepos;
-
+#ifdef DEBUG_GAPS
 					printf("t|%d,%d| i|%d,%d| [%d, %d] {%d %d} (%d %d)\n", trim_abeg, trim_aend, i - ANCHOR, i + ANCHOR, o->aread, o->bread, abpos, aepos, o->path.abpos, o->path.aepos);
+#endif
 				}
 
 				if (abpos < aepos)
@@ -1945,6 +1949,8 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 					printf(" ---> nspanner: %d\n", nspanner);
 				}
 
+				if(nspanner >= MINSPANNER)
+					break;
 			}
 			k++;
 			j = k;
@@ -1952,6 +1958,7 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 
 		if (nspanner < MINSPANNER)
 		{
+
 			printf("FOUND GAP in READ %d in range [%d, %d]\n", ovl->aread, MAX(trim_abeg, i - ANCHOR), MIN(i + ANCHOR, trim_aend));
 
 			for (j = 0; j < novl; j++)
