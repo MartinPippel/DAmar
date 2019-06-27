@@ -1920,6 +1920,8 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 
 					if (o->path.aepos > aepos)
 						aepos = o->path.aepos;
+
+					printf("[%d, %d] {%d %d} (%d %d)\n", o->aread, o->bread, abpos, aepos, o->path,abpos, o->path,abpos);
 				}
 
 				if (abpos < aepos)
