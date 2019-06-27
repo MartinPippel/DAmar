@@ -1909,7 +1909,7 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 				int abpos = DB_READ_LEN(ctx->db, ovl[j].aread);
 				int aepos = 0;
 
-				for (l = j; l < k - j + 1; l++)
+				for (l = j; l < k; l++)
 				{
 					Overlap * o = ovl + l;
 					if (o->flags & OVL_DISCARD)
