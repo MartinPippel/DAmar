@@ -94,9 +94,11 @@ typedef struct
 	int stitchMaxTipFuzzy;
 	int stitchNonLowCompAnchorBases;
 	int stitchMaxGapSize;
+	int stitchMaxGapSizeInLowCompl;
 	int stitchMinChainLen;
 	int stitchMaxChainLASs;
 
+	int gapMinSpanners;
 	int minTipCoverage;
 
 	HITS_DB* db;
@@ -1826,7 +1828,63 @@ static int stitchChain(FilterContext *ctx, Chain *chain)
 		int deltaa = abs(ae1 - ab2);
 		int deltab = abs(be1 - bb2);
 
-		if (ctx->stitchMaxGapSize < 0 || (deltaa < ctx->stitchMaxGapSize && deltab < ctx->stitchMaxGapSize))
+		float LOWCOMPFRACTION = 0.8;
+
+		int isLowCompl = 0;
+		int cumLowCompBases = 0;
+		int longestLowCompBases = 0;
+		if(ae1 <= ab2)
+		{
+			getRepeatBasesFromInterval(ctx->trackLowCompl, ovli->aread, ae1, ab2, &cumLowCompBases, &longestLowCompBases);
+		}
+		else
+		{
+			getRepeatBasesFromInterval(ctx->trackLowCompl, ovli->aread, ab2, ae1, &cumLowCompBases, &longestLowCompBases);
+		}
+
+		if(deltaa*LOWCOMPFRACTION <= cumLowCompBases)
+		{
+			isLowCompl = 1;
+		}
+		else	// check b-read
+		{
+			cumLowCompBases = 0;
+			longestLowCompBases = 0;
+			if(ovli->flags & OVL_COMP)
+			{
+				assert(ovlk->flags & OVL_COMP);
+				int cbe1 = DB_READ_LEN(ctx->db, ovli->bread) - be1;
+				int cbb2 = DB_READ_LEN(ctx->db, ovli->bread) - bb2;
+
+				if(cbe1 <= cbb2)
+				{
+					getRepeatBasesFromInterval(ctx->trackLowCompl, ovli->bread, cbe1, cbb2, &cumLowCompBases, &longestLowCompBases);
+				}
+				else
+				{
+					getRepeatBasesFromInterval(ctx->trackLowCompl, ovli->bread, cbb2, cbe1, &cumLowCompBases, &longestLowCompBases);
+				}
+			}
+			else
+			{
+				if(be1 <= bb2)
+				{
+					getRepeatBasesFromInterval(ctx->trackLowCompl, ovli->bread, be1, bb2, &cumLowCompBases, &longestLowCompBases);
+				}
+				else
+				{
+					getRepeatBasesFromInterval(ctx->trackLowCompl, ovli->bread, bb2, be1, &cumLowCompBases, &longestLowCompBases);
+				}
+			}
+
+			if(deltab*LOWCOMPFRACTION <= cumLowCompBases)
+			{
+				isLowCompl = 1;
+			}
+		}
+
+		if (ctx->stitchMaxGapSize < 0 || (deltaa < ctx->stitchMaxGapSize && deltab < ctx->stitchMaxGapSize)
+				|| (isLowCompl && (deltaa < ctx->stitchMaxGapSizeInLowCompl && deltab < ctx->stitchMaxGapSizeInLowCompl)))
 		{
 #ifdef VERBOSE_STITCH
 			int ab1 = ovli->path.abpos;
@@ -1880,7 +1938,7 @@ static void findGaps(FilterContext *ctx, Overlap *ovl, int novl)
 	// todo hard coded: use a dynamic window dependent on repeat track ?
 	int SWINDOW = 1000;
 	int ANCHOR = MAX(ctx->minChainLen / 2, 1 + SWINDOW / 2);
-	int MINSPANNER = 1;
+	int MINSPANNER = ctx->gapMinSpanners;
 
 	int trim_abeg, trim_aend;
 
@@ -2482,7 +2540,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOC <int>] [-B <file>][-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOCM <int>] [-B <file>][-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v      	verbose\n");
 	fprintf(stderr, "         -n <int>	at least one alignment of a valid chain must have n non-repetitive bases\n");
@@ -2510,10 +2568,12 @@ static void usage()
 	fprintf(stderr, "         -U <int>  maximum unaligned bases for first and last overlap of LASchain (default: 0)\n");
 	fprintf(stderr, "         -L <int>  do not merge LAS that cover low complexity regions and have less than -L \"unique\" anchor bases (default: 1000)\n");
 	fprintf(stderr, "         -G <int>  maximum merge distance (default: -1)\n");
+	fprintf(stderr, "         -M <int>  maximum merge distance in low complexity regions (default: -1)\n");
 	fprintf(stderr, "         -O <int>  minimum chain length (default: -1)\n");
 	fprintf(stderr, "         -C <int>  max number of LAS in a LASchain (default: 1)\n");
 	fprintf(stderr, "\n 3. find Gaps and exclude all those reads (optional)\n");
 	fprintf(stderr, "         -B <file> find breaks and gaps and write corresponding read ID into <file>\n");
+	fprintf(stderr, "         -N <int>  min number of spanning alignments, to be not a gap (default: 1)\n");
 	fprintf(stderr, "\n 4. further Filter parameter (optional)\n");
 	fprintf(stderr, "         -E <int>  minimum leaving/entering coverage (default: 0). If coverage is less then -E, than all overlaps are discarded.\n");
 
@@ -2555,17 +2615,18 @@ int main(int argc, char* argv[])
 	fctx.minChainLen = DEF_ARG_O;
 	fctx.stitchChain = 0;
 	fctx.stitchNonLowCompAnchorBases = 1000;
-	fctx.stitchMaxGapSize = -1;  // by default stitch all valif chains
+	fctx.stitchMaxGapSize = -1;  // by default stitch all valid chains
+	fctx.stitchMaxGapSizeInLowCompl = -1;  // by default stitch all valid chains
 	fctx.stitchMaxTipFuzzy = 0;
 	fctx.stitchMinChainLen = fctx.minChainLen;
 	fctx.stitchMaxChainLASs = 1;
 	fctx.minTipCoverage = 0;
 	fctx.fileOutDiscardedReads = NULL;
-
+	fctx.gapMinSpanners = 1;
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:B:E:")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:B:E:M:N:")) != -1)
 	{
 		switch (c)
 		{
@@ -2610,7 +2671,15 @@ int main(int argc, char* argv[])
 				break;
 
 			case 'G':
-				fctx.stitchMaxTipFuzzy = atoi(optarg);
+				fctx.stitchMaxGapSize = atoi(optarg);
+				break;
+
+			case 'M':
+				fctx.stitchMaxGapSizeInLowCompl = atoi(optarg);
+				break;
+
+			case 'N':
+				fctx.gapMinSpanners = atoi(optarg);
 				break;
 
 			case 'O':
