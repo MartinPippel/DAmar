@@ -575,7 +575,7 @@ then
         	exit 1
    		fi
    		
-   		echo "if [[ -d ${QV_OUTDIR}/qv_${QV_RUNID} ]]; then mv ${QV_OUTDIR}/qv_${QV_RUNID} ${QV_RUNID}/qv_${QV_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${QV_OUTDIR}/qv_${QV_RUNID}" > qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
+   		echo "if [[ -d ${QV_OUTDIR}/qv_${QV_RUNID} ]]; then mv ${QV_OUTDIR}/qv_${QV_RUNID} ${QV_RUNID}/qv_${QV_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p \"${QV_OUTDIR}/qv_${QV_RUNID}\"" > qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
 		echo "mkdir -p ${QV_OUTDIR}/qv_${QV_RUNID}/bams" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
 		echo "mkdir -p ${QV_OUTDIR}/qv_${QV_RUNID}/ref" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan		
 		# get rid of any colon's, as those will cause a crash of longranger		
