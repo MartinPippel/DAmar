@@ -604,11 +604,11 @@ then
     	 
         if [[ ! -d ${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME%.fasta} ]]
         then
-        	echo "cd ${QV_OUTDIR}_${QV_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../../ " 
-        	echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+        	echo "cd ${QV_OUTDIR}_${QV_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../ " 
+        	echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../"
     	else 
     		(>&2 echo "[WARNING] Using previously created reference file ${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME}. Please remove that folder to rerun longranger mkref" )
-    		echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+    		echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../"
     	fi > qc_02_QVlongrangerAlign_single_${RAW_DB}.${slurmID}.plan                
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version)" > qc_02_QVlongrangerAlign_single_${RAW_DB}.${slurmID}.version
@@ -621,6 +621,46 @@ then
         do            
             rm $x
         done
+        
+        REFNAME=$(basename ${QV_REFFASTA})
+        
+        if [[ ! -f "${QV_OUTDIR}_${QV_RUNID}/ref/${REFNAME}" ]]
+        then
+    		(>&2 echo "ERROR - cannot find reference fasta file \"${REFNAME}\" in dir \"${QV_OUTDIR}_${QV_RUNID}/ref\"")
+        	exit 1
+   		fi
+   		
+   		if [[ ! -d "${QV_OUTDIR}_${QV_RUNID}/bams" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${QV_OUTDIR}_${QV_RUNID}/bams!")
+        	exit 1
+   		fi
+        
+        outdir="${QV_OUTDIR}_${QV_RUNID}/"
+   		if [[ ! -d "${outdir}" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${outdir}!")
+        	exit 1
+   		fi
+   	
+   	
+   		ref=${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa
+   		
+   		if [[ ! -f "${ref}.fai" ]]
+        then
+        	(>&2 echo "ERROR - cannot reference fasta index file ${ref}.fai!")
+        	exit 1
+   		fi
+   		
+   		bam=${QV_OUTDIR}_${QV_RUNID}/bams/10x_${PROJECT_ID}_longrangerAlign/outs/possorted_bam.bam
+   		if [[ ! -f ${bam} ]]
+   		then 
+   		(>&2 echo "ERROR - cannot find longranger bam file: ${bam}!")
+        	exit 1
+   		fi 
+   		
+   		echo "samtools view -F 0x100 -u $bam | bedtools genomecov -ibam - -split > aligned.genomecov" > qc_03_QVcoverage_single_${RAW_DB}.${slurmID}.plan
+		echo "$(samtools --version | head -n2 | tr "\n" "-" && echo)" > qc_03_QVcoverage_single_${RAW_DB}.${slurmID}.version        
     ### 04QVqv
     elif [[ ${currentStep} -eq 4 ]]
     then
