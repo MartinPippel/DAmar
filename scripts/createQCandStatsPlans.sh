@@ -97,12 +97,12 @@ function setGenomeScopeOptions()
 #type-1 [10x - de novo] 						[1-1]: 01_supernova
 #type-2 [10x|HiC - kmer-Gsize estimate] 		[1-2]: 01_genomescope
 #type-3 [allData - MASH CONTAMINATION SCREEN] 	[1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
-#type-4 [10x - QV]   							[1-4]:  01_QVprepareInput, 02_QVlongrangerAlign, 03_QVcoverage, 04QVqv
+#type-4 [10x - QV]   							[1-4]: 01_QVprepareInput, 02_QVlongrangerAlign, 03_QVcoverage, 04QVqv
 
 
 myTypes=("01_longrangerBasic, 02_longrangerToScaff10Xinput"
 "01_supernova" "01_genomescope" 
-"01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen")
+"01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen", "01_QVprepareInput, 02_QVlongrangerAlign, 03_QVcoverage, 04QVqv")
 
 #type-0 [10x - prepare] [1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
 if [[ ${RAW_QC_TYPE} -eq 0 ]]
@@ -558,7 +558,82 @@ then
         (>&2 echo "step ${currentStep} in RAW_QC_TYPE ${RAW_QC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_QC_TYPE}]}")
         exit 1            
-    fi        
+    fi  
+elif [[ ${RAW_QC_TYPE} -eq 4 ]]
+then 
+	### 01_QVprepareInput
+	if [[ ${currentStep} -eq 1 ]]
+    then
+        ### clean up plans 
+        for x in $(ls qv_01_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+                if [[ ! -f "${CT_QV_REFFASTA}" ]]
+        then
+        	(>&2 echo "ERROR - set CT_QV_REFFASTA to reference fasta file")
+        	exit 1
+   		fi
+   		
+   		echo "if [[ -d ${CT_QV_OUTDIR}/qv_${CT_QV_RUNID} ]]; then mv ${CT_QV_OUTDIR}/qv_${CT_QV_RUNID} ${CT_QV_RUNID}/qv_${CT_QV_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_QV_OUTDIR}/qv_${CT_QV_RUNID}" > qv_01_QVprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_QV_OUTDIR}/qv_${CT_QV_RUNID}/bams" >> qv_01_QVprepareInput_single_${CONT_DB}.${slurmID}.plan
+		echo "mkdir -p ${CT_QV_OUTDIR}/qv_${CT_QV_RUNID}/ref" >> qv_01_QVprepareInput_single_${CONT_DB}.${slurmID}.plan		
+		# get rid of any colon's, as those will cause a crash of longranger		
+		echo "sed -e \"s/:/-/g\" ${CT_QV_REFFASTA} > ${CT_QV_OUTDIR}/freebayes_${CT_QV_RUNID}/ref/$(basename ${CT_QV_REFFASTA})" >> qv_01_QVprepareInput_single_${CONT_DB}.${slurmID}.plan		                
+    ### 02_QVlongrangerAlign
+    elif [[ ${currentStep} -eq 2 ]]
+    then
+        ### clean up plans 
+        for x in $(ls qv_02_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        REFNAME=$(basename ${CT_QV_REFFASTA})
+        
+        if [[ ! -f "${CT_QV_OUTDIR}/freebayes_${CT_QV_RUNID}/ref/${REFNAME}" ]]
+        then
+    		(>&2 echo "ERROR - cannot find reference fasta file \"${REFNAME}\" in dir \"${CT_QV_OUTDIR}/freebayes_${CT_QV_RUNID}/ref\"")
+        	exit 1
+   		fi
+        
+		if [[ ! -d ${TENX_PATH} ]]
+        then 
+        	(>&2 echo "ERROR - cannot find 10x reads. Variable TENX_PATH has to be set to a directoty containing 10x reads.")
+        	exit 1
+    	fi
+    	 
+        if [[ ! -d ${CT_QV_OUTDIR}/freebayes_${CT_QV_RUNID}/ref/refdata-${REFNAME%.fasta} ]]
+        then
+        	echo "cd ${CT_QV_OUTDIR}/freebayes_${CT_QV_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../../ " 
+        	echo "cd ${CT_QV_OUTDIR}/freebayes_${CT_QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+    	else 
+    		(>&2 echo "[WARNING] Using previously created reference file ${CT_QV_OUTDIR}/freebayes_${CT_QV_RUNID}/ref/refdata-${REFNAME}. Please remove that folder to rerun longranger mkref" )
+    		echo "cd ${CT_QV_OUTDIR}/freebayes_${CT_QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+    	fi > qv_02_QVlongrangerAlign_single_${CONT_DB}.${slurmID}.plan                
+        
+        echo "$(${LONGRANGER_PATH}/longranger mkref --version)" > qv_02_QVlongrangerAlign_single_${CONT_DB}.${slurmID}.version
+        echo "$(${LONGRANGER_PATH}/longranger align --version)" >> qv_02_QVlongrangerAlign_single_${CONT_DB}.${slurmID}.version
+    ### 03_QVcoverage
+    elif [[ ${currentStep} -eq 3 ]]
+    then
+        ### clean up plans 
+        for x in $(ls qv_03_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+    ### 04QVqv
+    if [[ ${currentStep} -eq 4 ]]
+    then
+        ### clean up plans 
+        for x in $(ls qv_04_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+    else
+        (>&2 echo "step ${currentStep} in RAW_QC_TYPE ${RAW_QC_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${RAW_QC_TYPE}]}")
+        exit 1            
+    fi
 else
     (>&2 echo "unknown RAW_QC_TYPE ${RAW_QC_TYPE}")
     (>&2 echo "supported types")
