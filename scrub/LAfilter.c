@@ -2401,7 +2401,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				active += cov_read_active[j];
 			}
 
-			if (bases / (trimEnd - trimBeg) <= ctx->removeLowCoverageOverlaps || (leavecov && entercov && (trimEnd - trimBeg) - active > ctx->nMaxUnalignedBases))
+			if (bases / (trimEnd - trimBeg) <= ctx->removeLowCoverageOverlaps || (leavecov < ctx->removeLowCoverageOverlaps || entercov < ctx->removeLowCoverageOverlaps) || ((trimEnd - trimBeg) - active > ctx->nMaxUnalignedBases))
 			{
 				for (j = 0; j < novl; j++)
 				{
