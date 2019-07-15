@@ -575,11 +575,11 @@ then
         	exit 1
    		fi
    		
-   		echo "if [[ -d ${QV_OUTDIR}/qv_${QV_RUNID} ]]; then mv ${QV_OUTDIR}/qv_${QV_RUNID} ${QV_RUNID}/qv_${QV_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p \"${QV_OUTDIR}/qv_${QV_RUNID}\"" > qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
-		echo "mkdir -p ${QV_OUTDIR}/qv_${QV_RUNID}/bams" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
-		echo "mkdir -p ${QV_OUTDIR}/qv_${QV_RUNID}/ref" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan		
+   		echo "if [[ -d ${QV_OUTDIR}_${QV_RUNID} ]]; then mv ${QV_OUTDIR}_${QV_RUNID} ${QV_RUNID}/qv_${QV_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p \"${QV_OUTDIR}_${QV_RUNID}\"" > qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
+		echo "mkdir -p ${QV_OUTDIR}_${QV_RUNID}/bams" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
+		echo "mkdir -p ${QV_OUTDIR}_${QV_RUNID}/ref" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan		
 		# get rid of any colon's, as those will cause a crash of longranger		
-		echo "sed -e \"s/:/-/g\" ${QV_REFFASTA} > ${QV_OUTDIR}/qv_${QV_RUNID}/ref/$(basename ${QV_REFFASTA})" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan		                
+		echo "sed -e \"s/:/-/g\" ${QV_REFFASTA} > ${QV_OUTDIR}_${QV_RUNID}/ref/$(basename ${QV_REFFASTA})" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan		                
     ### 02_QVlongrangerAlign
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -590,9 +590,9 @@ then
         done
         REFNAME=$(basename ${QV_REFFASTA})
         
-        if [[ ! -f "${QV_OUTDIR}/qv_${QV_RUNID}/ref/${REFNAME}" ]]
+        if [[ ! -f "${QV_OUTDIR}_${QV_RUNID}/ref/${REFNAME}" ]]
         then
-    		(>&2 echo "ERROR - cannot find reference fasta file \"${REFNAME}\" in dir \"${QV_OUTDIR}/qv_${QV_RUNID}/ref\"")
+    		(>&2 echo "ERROR - cannot find reference fasta file \"${REFNAME}\" in dir \"${QV_OUTDIR}_${QV_RUNID}/ref\"")
         	exit 1
    		fi
         
@@ -602,13 +602,13 @@ then
         	exit 1
     	fi
     	 
-        if [[ ! -d ${QV_OUTDIR}/qv_${QV_RUNID}/ref/refdata-${REFNAME%.fasta} ]]
+        if [[ ! -d ${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME%.fasta} ]]
         then
-        	echo "cd ${QV_OUTDIR}/qv_${QV_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../../ " 
-        	echo "cd ${QV_OUTDIR}/qv_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+        	echo "cd ${QV_OUTDIR}_${QV_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../../ " 
+        	echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	else 
-    		(>&2 echo "[WARNING] Using previously created reference file ${QV_OUTDIR}/qv_${QV_RUNID}/ref/refdata-${REFNAME}. Please remove that folder to rerun longranger mkref" )
-    		echo "cd ${QV_OUTDIR}/qv_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
+    		(>&2 echo "[WARNING] Using previously created reference file ${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME}. Please remove that folder to rerun longranger mkref" )
+    		echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../../"
     	fi > qc_02_QVlongrangerAlign_single_${RAW_DB}.${slurmID}.plan                
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version)" > qc_02_QVlongrangerAlign_single_${RAW_DB}.${slurmID}.version
