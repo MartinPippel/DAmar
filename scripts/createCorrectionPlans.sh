@@ -350,7 +350,7 @@ then
 	        	cwd=$(pwd)
 	        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
 	    	fi
-	    then
+		fi
 	    	
 	    if [[ -n ${MARVEL_STATS} && ${MARVEL_STATS} -gt 0 ]]
    		then
