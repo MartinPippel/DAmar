@@ -708,10 +708,10 @@ then
         	exit 1
    		fi 
    		
-   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} -v condaIN="${CONDA_BASE_ENV}" '{print condaIN" && freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ou -o "out$1":1-"$2".bcf && conda deactivate"}' ${ref}.fai)" > qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.plan
+   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} -v condaIN="${CONDA_BASE_ENV}" '{print condaIN" && freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ou -o "out$1":1-"$2".bcf && conda deactivate"}' ${ref}.fai)" > qc_04_QVfreebayes_block_${RAW_DB}.${slurmID}.plan
 
-		echo "freebayes $(${CONDA_BASE_ENV} && freebayes --version && conda deactivate)" > qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.version
-		echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" >> qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.version
+		echo "freebayes $(${CONDA_BASE_ENV} && freebayes --version && conda deactivate)" > qc_04_QVfreebayes_block_${RAW_DB}.${slurmID}.version
+		echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" >> qc_04_QVfreebayes_block_${RAW_DB}.${slurmID}.version
     ### 05_QVbcftools 
     elif [[ ${currentStep} -eq 5 ]]
     then
@@ -741,14 +741,14 @@ then
    		outdir="${QV_OUTDIR}_${QV_RUNID}/"
         
     	# create list of bcf files, same order as in ref.fai
-        echo "awk -v d=\"${QV_OUTDIR}_${QV_RUNID}/freebayes/\" '{print d\$1\":1-\"\$2\".bcf\"}' ${ref}.fai > ${outdir}/${PROJECT_ID}_10x_concatList.txt" > qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
-        echo "${CONDA_BASE_ENV} && bcftools concat -Ou -f ${outdir}/${PROJECT_ID}_10x_concatList.txt | bcftools view -Ou -e'type=\"ref\"' | bcftools norm -Ob -f $ref -o ${outdir}/${PROJECT_ID}_10x.bcf && conda deactivate" >> qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
-        echo "${CONDA_BASE_ENV} && bcftools index ${outdir}/${PROJECT_ID}_10x.bcf && conda deactivate" >> qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
+        echo "awk -v d=\"${QV_OUTDIR}_${QV_RUNID}/freebayes/\" '{print d\$1\":1-\"\$2\".bcf\"}' ${ref}.fai > ${outdir}/${PROJECT_ID}_10x_concatList.txt" > qc_05_QVbcftools_single_${RAW_DB}.${slurmID}.plan
+        echo "${CONDA_BASE_ENV} && bcftools concat -Ou -f ${outdir}/${PROJECT_ID}_10x_concatList.txt | bcftools view -Ou -e'type=\"ref\"' | bcftools norm -Ob -f $ref -o ${outdir}/${PROJECT_ID}_10x.bcf && conda deactivate" >> qc_05_QVbcftools_single_${RAW_DB}.${slurmID}.plan
+        echo "${CONDA_BASE_ENV} && bcftools index ${outdir}/${PROJECT_ID}_10x.bcf && conda deactivate" >> qc_05_QVbcftools_single_${RAW_DB}.${slurmID}.plan
       
-		echo "echo \"Num. bases affected \$(${CONDA_BASE_ENV} && bcftools view -H -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Ov ${outdir}/${PROJECT_ID}_10x.bcf | awk -F \"\\t\" '{print \$4\"\\t\"\$5}' | awk '{lenA=length(\$1); lenB=length(\$2); if (lenA < lenB ) {sum+=lenB-lenA} else if ( lenA > lenB ) { sum+=lenA-lenB } else {sum+=lenA}} END {print sum}')\" > ${outdir}/${PROJECT_ID}_10x.numvar && conda deactivate" >> qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
-		echo "${CONDA_BASE_ENV} && bcftools view -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Oz  ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.changes.vcf.gz && conda deactivate" >> qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
+		echo "echo \"Num. bases affected \$(${CONDA_BASE_ENV} && bcftools view -H -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Ov ${outdir}/${PROJECT_ID}_10x.bcf | awk -F \"\\t\" '{print \$4\"\\t\"\$5}' | awk '{lenA=length(\$1); lenB=length(\$2); if (lenA < lenB ) {sum+=lenB-lenA} else if ( lenA > lenB ) { sum+=lenA-lenB } else {sum+=lenA}} END {print sum}')\" > ${outdir}/${PROJECT_ID}_10x.numvar && conda deactivate" >> qc_05_QVbcftools_single_${RAW_DB}.${slurmID}.plan
+		echo "${CONDA_BASE_ENV} && bcftools view -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Oz  ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.changes.vcf.gz && conda deactivate" >> qc_05_QVbcftools_single_${RAW_DB}.${slurmID}.plan
             
-      	echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.version
+      	echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > qc_05_QVbcftools_single_${RAW_DB}.${slurmID}.version
         
     ### 06_QVqv
     elif [[ ${currentStep} -eq 6 ]]
