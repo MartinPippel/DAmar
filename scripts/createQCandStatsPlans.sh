@@ -97,12 +97,12 @@ function setGenomeScopeOptions()
 #type-1 [10x - de novo] 						[1-1]: 01_supernova
 #type-2 [10x|HiC - kmer-Gsize estimate] 		[1-2]: 01_genomescope
 #type-3 [allData - MASH CONTAMINATION SCREEN] 	[1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
-#type-4 [10x - QV]   							[1-4]: 01_QVprepareInput, 02_QVlongrangerAlign, 03_QVcoverage, 04QVqv
+#type-4 [10x - QV]   							[1-6]: 01_QVprepareInput, 02_QVlongrangerAlign, 03_QVcoverage, 04_QVfreebayes, 05_QVbcftools, 06_QVqv
 
 
 myTypes=("01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck"
 "01_supernova" "01_genomescope" 
-"01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen", "01_QVprepareInput, 02_QVlongrangerAlign, 03_QVcoverage, 04QVqv")
+"01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen", "01_QVprepareInput, 02_QVlongrangerAlign, 03_QVcoverage, 04_QVfreebayes, 05_QVbcftools, 06_QVqv")
 
 #type-0 [10x - prepare] [1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
 if [[ ${RAW_QC_TYPE} -eq 0 ]]
@@ -577,7 +577,8 @@ then
    		
    		echo "if [[ -d ${QV_OUTDIR}_${QV_RUNID} ]]; then mv ${QV_OUTDIR}_${QV_RUNID} ${QV_RUNID}/qv_${QV_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir -p \"${QV_OUTDIR}_${QV_RUNID}\"" > qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
 		echo "mkdir -p ${QV_OUTDIR}_${QV_RUNID}/bams" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
-		echo "mkdir -p ${QV_OUTDIR}_${QV_RUNID}/ref" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan		
+		echo "mkdir -p ${QV_OUTDIR}_${QV_RUNID}/ref" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan
+		echo "mkdir -p ${QV_OUTDIR}_${QV_RUNID}/freebayes" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan		
 		# get rid of any colon's, as those will cause a crash of longranger		
 		echo "sed -e \"s/:/-/g\" ${QV_REFFASTA} > ${QV_OUTDIR}_${QV_RUNID}/ref/$(basename ${QV_REFFASTA})" >> qc_01_QVprepareInput_single_${RAW_DB}.${slurmID}.plan		                
     ### 02_QVlongrangerAlign
@@ -661,7 +662,7 @@ then
    		
    		echo "samtools view -F 0x100 -u $bam | bedtools genomecov -ibam - -split > aligned.genomecov" > qc_03_QVcoverage_single_${RAW_DB}.${slurmID}.plan
 		echo "$(samtools --version | head -n2 | tr "\n" "-" && echo)" > qc_03_QVcoverage_single_${RAW_DB}.${slurmID}.version        
-    ### 04QVqv
+    ### 04_QVfreebayes 
     elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
@@ -669,6 +670,155 @@ then
         do            
             rm $x
         done
+        
+        REFNAME=$(basename ${QV_REFFASTA})
+        
+        if [[ ! -f "${QV_OUTDIR}_${QV_RUNID}/ref/${REFNAME}" ]]
+        then
+    		(>&2 echo "ERROR - cannot find reference fasta file \"${REFNAME}\" in dir \"${QV_OUTDIR}_${QV_RUNID}/ref\"")
+        	exit 1
+   		fi
+   		
+   		if [[ ! -d "${QV_OUTDIR}_${QV_RUNID}/bams" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${QV_OUTDIR}_${QV_RUNID}/bams!")
+        	exit 1
+   		fi
+        
+        outdir="${QV_OUTDIR}_${QV_RUNID}/"
+   		if [[ ! -d "${outdir}" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${outdir}!")
+        	exit 1
+   		fi
+   	
+   	
+   		ref=${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa
+   		
+   		if [[ ! -f "${ref}.fai" ]]
+        then
+        	(>&2 echo "ERROR - cannot reference fasta index file ${ref}.fai!")
+        	exit 1
+   		fi
+   		
+   		bam=${QV_OUTDIR}_${QV_RUNID}/bams/10x_${PROJECT_ID}_longrangerAlign/outs/possorted_bam.bam
+   		if [[ ! -f ${bam} ]]
+   		then 
+   			(>&2 echo "ERROR - cannot final duplicate marked bam file: ${QV_OUTDIR}_${QV_RUNID}/bams/${PROJECT_ID}_final10x.bam!")
+        	exit 1
+   		fi 
+   		
+   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} -v condaIN=${CONDA_BASE_ENV} '{print condaIN" && freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ou -o "out$1":1-"$2".bcf && conda deactivate"}' ${ref}.fai)" > qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.plan
+
+		echo "freebayes $(${CONDA_BASE_ENV} && freebayes --version && conda deactivate)" > qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.version
+		echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" >> qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.version
+    ### 05_QVbcftools 
+    elif [[ ${currentStep} -eq 5 ]]
+    then
+        ### clean up plans 
+        for x in $(ls qc_05_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        REFNAME=$(basename ${QV_REFFASTA})
+        
+		ref=${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa
+   		
+   		if [[ ! -f "${ref}.fai" ]]
+        then
+        (>&2 echo "ERROR - cannot find reference fasta index file ${ref}.fai!")
+        	exit 1
+   		fi
+   		
+   		indir="${QV_OUTDIR}_${QV_RUNID}/freebayes/"
+   		if [[ ! -d "${indir}" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${indir}!")
+        	exit 1
+   		fi
+   		
+   		outdir="${QV_OUTDIR}_${QV_RUNID}/"
+        
+    	# create list of bcf files, same order as in ref.fai
+        echo "awk -v d=\"${QV_OUTDIR}_${QV_RUNID}/freebayes/\" '{print d\$1\":1-\"\$2\".bcf\"}' ${ref}.fai > ${outdir}/${PROJECT_ID}_10x_concatList.txt" > qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
+        echo "${CONDA_BASE_ENV} && bcftools concat -Ou -f ${outdir}/${PROJECT_ID}_10x_concatList.txt | bcftools view -Ou -e'type=\"ref\"' | bcftools norm -Ob -f $ref -o ${outdir}/${PROJECT_ID}_10x.bcf && conda deactivate" >> qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
+        echo "${CONDA_BASE_ENV} && bcftools index ${outdir}/${PROJECT_ID}_10x.bcf && conda deactivate" >> qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
+      
+		echo "echo \"Num. bases affected \$(${CONDA_BASE_ENV} && bcftools view -H -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Ov ${outdir}/${PROJECT_ID}_10x.bcf | awk -F \"\\t\" '{print \$4\"\\t\"\$5}' | awk '{lenA=length(\$1); lenB=length(\$2); if (lenA < lenB ) {sum+=lenB-lenA} else if ( lenA > lenB ) { sum+=lenA-lenB } else {sum+=lenA}} END {print sum}')\" > ${outdir}/${PROJECT_ID}_10x.numvar && conda deactivate" >> qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
+		echo "${CONDA_BASE_ENV} && bcftools view -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\")' -Oz  ${outdir}/${PROJECT_ID}_10x.bcf > ${outdir}/${PROJECT_ID}_10x.changes.vcf.gz && conda deactivate" >> qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.plan
+            
+      	echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" > qc_05_QVbcftools_single_${CONT_DB}.${slurmID}.version
+        
+    ### 06_QVqv
+    elif [[ ${currentStep} -eq 6 ]]
+    then
+        ### clean up plans 
+        for x in $(ls qc_06_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        REFNAME=$(basename ${QV_REFFASTA})
+        
+        if [[ ! -f "${QV_OUTDIR}_${QV_RUNID}/ref/${REFNAME}" ]]
+        then
+    		(>&2 echo "ERROR - cannot find reference fasta file \"${REFNAME}\" in dir \"${QV_OUTDIR}_${QV_RUNID}/ref\"")
+        	exit 1
+   		fi
+   		
+   		if [[ ! -d "${QV_OUTDIR}_${QV_RUNID}/bams" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${QV_OUTDIR}_${QV_RUNID}/bams!")
+        	exit 1
+   		fi
+        
+        outdir="${QV_OUTDIR}_${QV_RUNID}/"
+   		if [[ ! -d "${outdir}" ]]
+        then
+        	(>&2 echo "ERROR - cannot access directory ${outdir}!")
+        	exit 1
+   		fi
+   	
+   	
+   		ref=${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME%.fasta}/fasta/genome.fa
+   		
+   		if [[ ! -f "${ref}.fai" ]]
+        then
+        	(>&2 echo "ERROR - cannot reference fasta index file ${ref}.fai!")
+        	exit 1
+   		fi
+   		
+   		bam=${QV_OUTDIR}_${QV_RUNID}/bams/10x_${PROJECT_ID}_longrangerAlign/outs/possorted_bam.bam
+   		if [[ ! -f ${bam} ]]
+   		then 
+   			(>&2 echo "ERROR - cannot find longranger bam file: ${bam}!")
+        	exit 1
+   		fi
+        
+        if [[ ! -f ${bam}.bai ]]
+   		then 
+   			(>&2 echo "ERROR - cannot find longranger bam file: ${bam}.bai!")
+        	exit 1
+   		fi
+        
+        summary=${QV_OUTDIR}_${QV_RUNID}/bams/10x_${PROJECT_ID}_longrangerAlign/outs/summary.csv
+   		if [[ ! -f ${summary} ]]
+   		then 
+   			(>&2 echo "ERROR - cannot find longranger bam file: ${summary}!")
+        	exit 1
+   		fi
+        
+        echo "mean_cov=$(tail -n1 ${summary} | awk -F \",\" '{printf \"%.0f\n\", \$17}')	# parse out the mean_cov from summary.csv" > qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
+		echo "h_filter=$((mean_cov*12))	# exclude any sites >12x" >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
+		echo "l_filter=3			# exclude any sites <3x" >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
+		echo "echo \"Get numbp between $l_filter ~ $h_filter x\" > qv_${PROJECT_ID}.log" >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
+		
+		echo "awk -v l=\$l_filter -v h=\$h_filter '{if (\$1==\"genome\" && \$2>l && \$2<h) {numbp += \$3}} END {print numbp}' aligned.genomecov > $genome.numbp"
+		
+		
+		
+		
     else
         (>&2 echo "step ${currentStep} in RAW_QC_TYPE ${RAW_QC_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_QC_TYPE}]}")
