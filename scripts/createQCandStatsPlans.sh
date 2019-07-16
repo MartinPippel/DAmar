@@ -708,7 +708,7 @@ then
         	exit 1
    		fi 
    		
-   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} -v condaIN=${CONDA_BASE_ENV} '{print condaIN" && freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ou -o "out$1":1-"$2".bcf && conda deactivate"}' ${ref}.fai)" > qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.plan
+   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} -v condaIN=\"${CONDA_BASE_ENV}\" '{print condaIN" && freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ou -o "out$1":1-"$2".bcf && conda deactivate"}' ${ref}.fai)" > qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.plan
 
 		echo "freebayes $(${CONDA_BASE_ENV} && freebayes --version && conda deactivate)" > qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.version
 		echo "bcftools $(${CONDA_BASE_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" >> qc_04_QVfreebayes_block_${CONT_DB}.${slurmID}.version
