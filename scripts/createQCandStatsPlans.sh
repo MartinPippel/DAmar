@@ -818,8 +818,8 @@ then
 		
 		echo "${CONDA_BASE_ENV} && bcftools view -H -i 'QUAL>1 && (GT=\"AA\" || GT=\"Aa\") && INFO/DP>5 && (FORMAT/AD[:1]) / (FORMAT/AD[:1]+FORMAT/AD[:0]) > 0.5' -Ov ${outdir}/${PROJECT_ID}_10x.changes.vcf.gz | awk -F \"\\t\" '{print \$4\"\\t\"\$5}' | awk '{lenA=length(\$1); lenB=length(\$2); if (lenA < lenB ) {sum+=lenB-lenA} else if ( lenA > lenB ) { sum+=lenA-lenB } else {sum+=lenA}} END {print sum}' > ${outdir}/${PROJECT_ID}.numvar && conda deactivate" >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
 		echo "NUM_VAR=\$(cat ${outdir}/${PROJECT_ID}.numvar)" >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
-		echo "echo \"Total num. bases subject to change: $NUM_VAR\" > ${outdir}/qv_${PROJECT_ID}.log" >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
-		echo "QV=\$(echo "$NUM_VAR $NUM_BP" | awk '{print (-10*log(\$1/\$2)/log(10))}')"  >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
+		echo "echo \"Total num. bases subject to change: \$NUM_VAR\" > ${outdir}/qv_${PROJECT_ID}.log" >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
+		echo "QV=\$(echo "\$NUM_VAR \$NUM_BP" | awk '{print (-10*log(\$1/\$2)/log(10))}')"  >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
 		echo "echo \$QV > ${outdir}/${PROJECT_ID}.qv" >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
 		echo "echo \"QV of this genome ${PROJECT_ID}: \$QV\"" >> qc_06_QVqv_single_${RAW_DB}.${slurmID}.plan
 		
