@@ -602,14 +602,29 @@ then
         	(>&2 echo "ERROR - cannot find 10x reads. Variable TENX_PATH has to be set to a directoty containing 10x reads.")
         	exit 1
     	fi
-    	 
+    	
+    	slurmOpt=""
+    	if [[ ${SLURM_PARTITION} == "gpu" ]]
+    	then
+    		slurmOpt="--jobmode=slurmGPU --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight"
+    	elif [[ ${SLURM_PARTITION} == "long" ||  ${SLURM_PARTITION} == "batch" ]]
+    	then
+    		slurmOpt="--jobmode=slurmBATCH --localcores=24 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight"
+    	elif [[ ${SLURM_PARTITION} == "bigmem" ]]
+    	then
+    		slurmOpt="--jobmode=slurmBIGMEM --localcores=48 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight"
+    	else
+    		(>&2 echo "ERROR - SLUM PARTITION: ${SLURM_PARTITION} not supported!")
+        	exit 1
+    	fi
+    	   
         if [[ ! -d ${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME%.fasta} ]]
         then
         	echo "cd ${QV_OUTDIR}_${QV_RUNID}/ref && ${LONGRANGER_PATH}/longranger mkref ${REFNAME} && cd ../../ " 
-        	echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../"
+        	echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} ${slurmOpt} && cd ../../"
     	else 
     		(>&2 echo "[WARNING] Using previously created reference file ${QV_OUTDIR}_${QV_RUNID}/ref/refdata-${REFNAME}. Please remove that folder to rerun longranger mkref" )
-    		echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} --jobmode=slurm --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight && cd ../../"
+    		echo "cd ${QV_OUTDIR}_${QV_RUNID}/bams && ${LONGRANGER_PATH}/longranger align --id=10x_${PROJECT_ID}_longrangerAlign --fastqs=${TENX_PATH} --sample=${PROJECT_ID} --reference=../ref/refdata-${REFNAME%.fasta} ${slurmOpt} && cd ../../"
     	fi > qc_02_QVlongrangerAlign_single_${RAW_DB}.${slurmID}.plan                
         
         echo "$(${LONGRANGER_PATH}/longranger mkref --version)" > qc_02_QVlongrangerAlign_single_${RAW_DB}.${slurmID}.version
