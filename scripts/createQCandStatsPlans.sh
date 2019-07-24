@@ -456,7 +456,7 @@ then
     		do
     			if [[ -f ${x} ]]
     			then 
-    				echo "$(CONDA_BASE_ENV) && mash sketch -k 21 -s 10000 -r -m 1 -o ${x%.fasta.gz}.msh ${x} && conda deactivate"
+    				echo "${CONDA_BASE_ENV} && mash sketch -k 21 -s 10000 -r -m 1 -o ${x%.fasta.gz}.msh ${x} && conda deactivate"
     			fi	
     		done	
 		fi > qc_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.plan
@@ -466,7 +466,7 @@ then
     	then 
     		for x in 10x/${PROJECT_ID}_S*_L[0-9][0-9][0-9]_R1_[0-9][0-9][0-9].fastq.gz
     		do
-    			echo "$(CONDA_BASE_ENV) && zcat ${x} $(echo ${x} | sed -e "s:_R1_:_R2_:") | mash sketch -k 21 -s 10000 -r -m 2 -o $(echo ${x%.fastq.gz}.msh | sed -e "s:_R1::") - && conda deactivate"
+    			echo "${CONDA_BASE_ENV} && zcat ${x} $(echo ${x} | sed -e "s:_R1_:_R2_:") | mash sketch -k 21 -s 10000 -r -m 2 -o $(echo ${x%.fastq.gz}.msh | sed -e "s:_R1::") - && conda deactivate"
     		done
     	fi >> qc_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.plan
     	
@@ -475,7 +475,7 @@ then
     	then
     		for x in hic/${PROJECT_ID}_*_*_R1.fastq.gz
 			do
-				echo "$(CONDA_BASE_ENV) && zcat ${x} ${x%_R1.fastq.gz}_R2.fastq.gz | mash sketch -k 21 -s 10000 -r -m 2 -o ${x%_R1.fastq.gz}.msh - && conda deactivate"
+				echo "${CONDA_BASE_ENV} && zcat ${x} ${x%_R1.fastq.gz}_R2.fastq.gz | mash sketch -k 21 -s 10000 -r -m 2 -o ${x%_R1.fastq.gz}.msh - && conda deactivate"
 			done    		
     	fi >> qc_02_mashSketch_block_${RAW_DB%.db}.${slurmID}.plan
     	
@@ -504,8 +504,8 @@ then
         	ls hic/*.msh >> ${PROJECT_ID}_mash.files
     	fi
     	        
-        echo "$(CONDA_BASE_ENV) && mash paste -l ${PROJECT_ID}.msh ${PROJECT_ID}_mash.files && conda deactivate" > qc_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "$(CONDA_BASE_ENV) && mash dist -t ${PROJECT_ID}.msh ${PROJECT_ID}.msh > ${PROJECT_ID}.tbl && conda deactivate" >> qc_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${CONDA_BASE_ENV} && mash paste -l ${PROJECT_ID}.msh ${PROJECT_ID}_mash.files && conda deactivate" > qc_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${CONDA_BASE_ENV} && mash dist -t ${PROJECT_ID}.msh ${PROJECT_ID}.msh > ${PROJECT_ID}.tbl && conda deactivate" >> qc_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.plan
         echo "mash $(${CONDA_BASE_ENV} && mash --version && conda deactivate)" > qc_03_mashCombine_single_${RAW_DB%.db}.${slurmID}.version
 	### 04_mashPlot
     elif [[ ${currentStep} -eq 4 ]]
@@ -550,7 +550,7 @@ then
         	if [[ -f ${x} ]]
         	then
         		out=screen/$(basename ${x%.fast[aq].gz}).conta
-        		echo "$(CONDA_BASE_ENV) && mash screen -p ${threads} -w ${MASH_REF_GENOMES} ${x} > ${out} && conda deactivate"
+        		echo "${CONDA_BASE_ENV} && mash screen -p ${threads} -w ${MASH_REF_GENOMES} ${x} > ${out} && conda deactivate"
         	fi
 		done > qc_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.plan   
 		echo "mash $(${CONDA_BASE_ENV} && mash --version && conda deactivate)" > qc_05_mashScreen_block_${RAW_DB%.db}.${slurmID}.version     
