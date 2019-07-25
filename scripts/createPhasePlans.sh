@@ -403,17 +403,23 @@ then
             rm $x
         done
         
-        ### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
-    	if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
-        then 
-        	bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
-    	else
-        	cwd=$(pwd)
-        	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+        if [[ -n ${SLURM_STATS} && ${SLURM_STATS} -ne 0 ]]
+        then
+        	### run slurm stats - on the master node !!! Because sacct is not available on compute nodes
+    		if [[ $(hostname) == "falcon1" || $(hostname) == "falcon2" ]]
+        	then 
+        		bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}
+    		else
+        		cwd=$(pwd)
+        		ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
+    		fi
+    	if
+    	if [[ -n ${MARVEL_STATS} && ${MARVEL_STATS} -ne 0 ]]
+        then
+    		### create assemblyStats plan 
+    		echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 15" > phase_04_LongrangerStatistics_single_${CONT_DB}.${slurmID}.plan
+    		git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > phase_04_LongrangerStatistics_single_${CONT_DB}.${slurmID}.version
     	fi
-    	### create assemblyStats plan 
-    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 15" > phase_04_LongrangerStatistics_single_${CONT_DB}.${slurmID}.plan
-    	git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD > phase_04_LongrangerStatistics_single_${CONT_DB}.${slurmID}.version
 	else
         (>&2 echo "step ${currentStep} in CT_PHASE_TYPE ${CT_PHASE_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PHASE_TYPE}]}")
