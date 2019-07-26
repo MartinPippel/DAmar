@@ -217,16 +217,21 @@ function setTourToFastaOptions()
         COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -s"
     fi
     
-    if [[ ${FIX_FILT_SCRUB_TYPE} -eq 1 ]]
-    then
-        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign"
-    elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
-    then
-        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp"
-    elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
-    then
-        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign"
-    fi
+    if [[ -n ${FIX_CORR_2FASTA_TRIM} ]]
+    then 
+    	COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t ${FIX_CORR_2FASTA_TRIM}"
+	else
+	    if [[ ${FIX_FILT_SCRUB_TYPE} -eq 1 ]]
+	    then
+	        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign"
+	    elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 2 ]]
+	    then
+	        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp"
+	    elif [[ ${FIX_FILT_SCRUB_TYPE} -eq 3 ]]
+	    then
+	        COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign"
+	    fi
+	fi
 }
 
 fixblocks=$(getNumOfDbBlocks ${FIX_DB%.db}.db)
