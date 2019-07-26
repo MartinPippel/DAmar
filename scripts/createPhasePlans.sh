@@ -413,7 +413,7 @@ then
         		cwd=$(pwd)
         		ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
     		fi
-    	if
+    	fi
     	if [[ -n ${MARVEL_STATS} && ${MARVEL_STATS} -ne 0 ]]
         then
     		### create assemblyStats plan 
