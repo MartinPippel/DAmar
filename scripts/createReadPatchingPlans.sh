@@ -1044,7 +1044,7 @@ then
                     else
                         NUMACTL=""
                     fi
-                    echo -n "${NUMACTL}${REPCOMP_PATH}/bin/repcomp${FIX_REPCOMP_OPT} -T/tmp/${RAW_DB%.db}.${x}.${y} ${desDir}/${RAW_DB%.db}.repcomp.${x}.${y} ${RAW_DAZZ_DB%.db} ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"
+                    echo -n "${NUMACTL}LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${REPCOMP_PATH}/bin/repcomp${FIX_REPCOMP_OPT} -T/tmp/${RAW_DB%.db}.${x}.${y} ${desDir}/${RAW_DB%.db}.repcomp.${x}.${y} ${RAW_DAZZ_DB%.db} ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"
                     cmdLine=$((${cmdLine}+1))
                     if [[ $x -eq $y ]]
                     then
