@@ -51,7 +51,7 @@ function setJellyfishOptions()
 		then 
 			RAW_QC_JELLYFISH_SIZE=1000000000
 		fi
-		JELLYFISH_OPT="-C"
+		JELLYFISH_OPT="${JELLYFISH_OPT} -C"
 		JELLYFISH_OPT="${JELLYFISH_OPT} -s ${RAW_QC_JELLYFISH_SIZE}"			
 	elif [[ "x$1" == "xhisto" ]]
 	then
