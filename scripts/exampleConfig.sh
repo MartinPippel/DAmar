@@ -48,7 +48,7 @@ export GENOMESCOPE_PATH="/projects/dazzler/pippel/prog/genomescope/"
 export GATK_PATH="/projects/dazzler/pippel/prog/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar"
 export BCFTOOLS_PATH="/projects/dazzler/pippel/prog/bcftools"
 export SEQKIT_PATH="/projects/dazzler/pippel/prog/bin/seqkit"
-export FASTP_PATH="/projects/dazzler/pippel/prog/"
+export FASTP_PATH="/projects/dazzler/pippel/prog/fastp/"
 
 BGZIP_THREADS=6
 MARVEL_STATS=1
