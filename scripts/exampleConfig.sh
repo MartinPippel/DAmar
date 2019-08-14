@@ -48,9 +48,10 @@ export GENOMESCOPE_PATH="/projects/dazzler/pippel/prog/genomescope/"
 export GATK_PATH="/projects/dazzler/pippel/prog/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar"
 export BCFTOOLS_PATH="/projects/dazzler/pippel/prog/bcftools"
 export SEQKIT_PATH="/projects/dazzler/pippel/prog/bin/seqkit"
+export FASTP_PATH="/projects/dazzler/pippel/prog/"
 
 BGZIP_THREADS=6
-MARVEL_STATS=0
+MARVEL_STATS=1
 SLURM_STATS=1
 
 ## general information
@@ -88,12 +89,12 @@ QC_DATA_DIR="processedData"
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -2 - data QC and statistics and format conversion <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-#type-0 [10x - prepare] [1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
-#type-1 [10x - de novo] [1-1]: 01_supernova
-#type-2 [allData - MASH CONTAMINATION SCREEN] [1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
-#type-3 [10x|HiC - kmer-Gsize estimate] [1-2]: 01_jellyfish, 02_genomescope
+#type-0 [10x - prepare] 						[1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
+#type-1 [10x - de novo] 						[1-1]: 01_supernova
+#type-2 [10x|HiC - kmer-Gsize estimate] 		[1-2]: 01_genomescope
+#type-3 [allData - MASH CONTAMINATION SCREEN] 	[1-5]: 01_mashPrepare, 02_mashSketch, 03_mashCombine, 04_mashPlot, 05_mashScreen
+#type-4 [10x - QV]   							[1-4]:  01_QVprepareInput, 02_QVlongrangerAlign, 03_QVcoverage, 04QVqv
 RAW_QC_TYPE=0
-
 RAW_QC_SUBMIT_SCRIPTS_FROM=1
 RAW_QC_SUBMIT_SCRIPTS_TO=2
 
