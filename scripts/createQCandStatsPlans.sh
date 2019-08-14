@@ -376,7 +376,7 @@ then
 				f2=$(echo "${f1}" | sed -e "s:_R1_:_R2_:")
 				o="${f1%_R1_???.fastq.gz}"											
 				
-				echo "fastp -i ${id}/${f1} -I ${id}/${f2} -f 23 -G -Q -j 10x/${o}.json -h 10x/${o}.html -w ${RAW_MASH_FASTP_THREADS} -o 10x/${f1} -O 10x/${f2}"				 
+				echo "${FASTP_PATH}fastp -i ${id}/${f1} -I ${id}/${f2} -f 23 -G -Q -j 10x/${o}.json -h 10x/${o}.html -w ${RAW_MASH_FASTP_THREADS} -o 10x/${f1} -O 10x/${f2}"				 
 			done 
     	fi >> qc_01_mashPrepare_block_${RAW_DB%.db}.${slurmID}.plan
     	
