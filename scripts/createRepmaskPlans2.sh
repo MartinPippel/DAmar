@@ -281,7 +281,7 @@ function setDatanderOptions()
 
 function setDBsplitOptions()
 {
-    REPMASK_DBSPLIT_OPT=""
+    SCRUB_DBSPLIT_OPT=""
 
     FIX_REPMASK_DBSPLIT_S=$(grep size ${RAW_DB%.db}.db | awk '{print $3}')
 
@@ -291,7 +291,7 @@ function setDBsplitOptions()
         exit 1
     fi
 
-    REPMASK_DBSPLIT_OPT="${REPMASK_DBSPLIT_OPT} -s${FIX_REPMASK_DBSPLIT_S}"
+    SCRUB_DBSPLIT_OPT="${SCRUB_DBSPLIT_OPT} -s${FIX_REPMASK_DBSPLIT_S}"
 }
 
 
