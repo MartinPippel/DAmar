@@ -511,7 +511,7 @@ then
     exit 1
 fi
 
-myTypes=("1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge", "01-createSubdir, 02-lassort2, 03-computeIntrinsicQV, 04_Catrack, 05_lasdetectsimplerepeats, 06_mergeAndSortRepeats, 07_lasfilteralignments, 08_mergesym2, 09_filtersym, 10_lasfilteralignmentsborderrepeats, 11_mergesym2, 12_filtersym, 13_filterchainsraw, 14_LAfilter, 15_LAmerge")
+myTypes=("1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge", "01-createSubdir, 02-lassort, 03-computeIntrinsicQV, 04_Catrack, 05_lasdetectsimplerepeats, 06_mergeAndSortRepeats, 07_lasfilteralignments, 08_mergesym2, 09_filtersym, 10_lasfilteralignmentsborderrepeats, 11_mergesym2, 12_filtersym, 13_filterchainsraw, 14_LAfilter, 15_LAmerge")
 #type-0 steps: 1-createSubdirFILT_FSUFFIX, 2-LAfilter, 3-LAmerge
 if [[ ${FIX_FILT_TYPE} -eq 0 ]]
 then 
@@ -639,7 +639,7 @@ then
         (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
         exit 1            
     fi  
-#type-1 steps [1-15]: 01-createSubdir, 02-lassort2, 03-computeIntrinsicQV, 04_Catrack, 05_lasdetectsimplerepeats, 06_mergeAndSortRepeats, 07_lasfilteralignments, 08_mergesym2, 09_filtersym, 10_lasfilteralignmentsborderrepeats, 11_mergesym2, 12_filtersym, 13_filterchainsraw, 14_LAfilter, 15_LAmerge    
+#type-1 steps [1-15]: 01-createSubdir, 02-lassort, 03-computeIntrinsicQV, 04_Catrack, 05_lasdetectsimplerepeats, 06_mergeAndSortRepeats, 07_lasfilteralignments, 08_mergesym2, 09_filtersym, 10_lasfilteralignmentsborderrepeats, 11_mergesym2, 12_filtersym, 13_filterchainsraw, 14_LAfilter, 15_LAmerge    
 elif [[ ${FIX_FILT_TYPE} -eq 1 ]]
 then 
     ### create sub-directory and link relevant DB and Track files
@@ -655,7 +655,7 @@ then
 
         echo "if [[ -d ${FIX_FILT_OUTDIR} ]]; then mv ${FIX_FILT_OUTDIR} ${FIX_FILT_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_FILT_OUTDIR} && ln -s -r .${FIX_DB%.db}.* ${FIX_DB%.db}.db .${FIX_DAZZ_DB%.db}.* ${FIX_DAZZ_DB%.db}.db ${FIX_FILT_OUTDIR}" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_01_createSubDir_single_${FIX_DB%.db}.${slurmID}.version
- 	### 02-lassort2
+ 	### 02-lassort
 	elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
@@ -688,9 +688,9 @@ then
 		
 		for x in $(seq 1 ${fixblocks})
         do
-        	echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${LASTOOLS_PATH}/bin/lassort2 ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}sort.las ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las"
-		done > filt_02_lassort2_block_${FIX_DB%.db}.${slurmID}.plan    	         
-        echo "LASTOOLS lassort2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_02_lassort2_block_${FIX_DB%.db}.${slurmID}.version
+        	echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${LASTOOLS_PATH}/bin/lassort ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}sort.las ${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}.las"
+		done > filt_02_lassort_block_${FIX_DB%.db}.${slurmID}.plan    	         
+        echo "LASTOOLS lassort $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_02_lassort_block_${FIX_DB%.db}.${slurmID}.version
     ### 03-computeIntrinsicQV
 	elif [[ ${currentStep} -eq 3 ]]
     then
