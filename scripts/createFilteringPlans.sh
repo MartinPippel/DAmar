@@ -666,7 +666,7 @@ then
 
 		setLAfilterOptions
 		
-		OPT="-T${FIX_FILT_OUTDIR}"
+		OPT=""
 		
 		if [[ -z ${FIX_FILT_LASSORT_THREADS} ]]
 		then 
@@ -730,7 +730,7 @@ then
         
         setLAfilterOptions
         
-        OPT="-T${FIX_FILT_OUTDIR}"
+        OPT=""
         if [[ -z "${FIX_FILT_LASDETECTSIMPLEREPEATS_ERATE}" ]]
         then 
         	FIX_FILT_LASDETECTSIMPLEREPEATS_ERATE=0.35
@@ -785,7 +785,7 @@ then
         
         setLAfilterOptions
         
-        OPT="-T${FIX_FILT_OUTDIR}"
+        OPT=""
         
         if [[ -z "${FIX_FILT_LASFILTERALIGNMENTS_ERATE}" ]]
         then 
@@ -809,7 +809,7 @@ then
         done
         
         setLAfilterOptions
-        OPT="-T${FIX_FILT_OUTDIR}"
+        OPT=""
         echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${FIX_FILT_ENDING}LasFiltAln.las.sym ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltAln.las.sym" > filt_08_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
         echo "rm ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltAln.las.sym" >> filt_08_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
         echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_08_mergesym2_single_${FIX_DB%.db}.${slurmID}.version        
@@ -823,7 +823,7 @@ then
         done
         
         setLAfilterOptions
-        OPT="-T${FIX_FILT_OUTDIR}"        
+        OPT=""        
         
 		if [[ -z "${FIX_FILT_FILTERSYM_VERBOSE}" ]]
         then
@@ -851,7 +851,7 @@ then
         
         setLAfilterOptions
         
-		OPT="-T${FIX_FILT_OUTDIR}"
+		OPT=""
         
 		if [[ -z "${FIX_FILT_LASFILTERALIGNMENTSBORDERREPEATS_THREADS}" ]]
         then
@@ -882,7 +882,7 @@ then
         done
         
         setLAfilterOptions
-        OPT="-T${FIX_FILT_OUTDIR}"        
+        OPT=""        
         echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${FIX_FILT_ENDING}LasFiltBrd.las.sym ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltBrd.las.sym" > filt_11_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
         echo "rm ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltBrd.las.sym" >> filt_11_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
         echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_11_mergesym2_single_${FIX_DB%.db}.${slurmID}.version        
@@ -896,7 +896,7 @@ then
         done
         
         setLAfilterOptions
-        OPT="-T${FIX_FILT_OUTDIR}"
+        OPT=""
         
 		if [[ -z "${FIX_FILT_FILTERSYM_VERBOSE}" ]]
         then
@@ -924,7 +924,7 @@ then
         
         setLAfilterOptions
         
-        OPT="-T${FIX_FILT_OUTDIR}"
+        OPT=""
         
 		if [[ -z "${FIX_FILT_FILTERCHAINSRAW_LEN}" ]]
         then
