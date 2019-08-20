@@ -12,6 +12,11 @@ REPCOMP_PATH="/projects/dazzler/pippel/prog/repcomp-build"
 DACCORD_SOURCE_PATH="/projects/dazzler/pippel/prog/daccord/"
 DACCORD_PATH="/projects/dazzler/pippel/prog/daccord-build/"
 
+### LASTOOL PATH - used progs: lassort2
+LASTOOLS_SOURCE_PATH="/projects/dazzler/pippel/prog/lastools"
+LASTOOLS_PATH="/projects/dazzler/pippel/prog/lastools-build"
+
+
 ### DZZLER PATH
 DAZZLER_SOURCE_PATH="/projects/dazzler/pippel/prog/dazzler/"
 DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzler/"
@@ -157,7 +162,7 @@ FIX_SCRUB_SUBMIT_SCRIPTS_TO=41
 
 FIX_FILT_TYPE=0
 #type-0 steps [1-3]: 01-createSubdir, 02-LAfilter, 03-LAmerge          ## old pipeline
-#type-1 steps [1-14]: 01-createSubdir, 02-computeIntrinsicQV, 03_Catrack, 04_lasdetectsimplerepeats, 05_mergeAndSortRepeats, 06_lasfilteralignments, 07_mergesym2, 08_filtersym, 09_lasfilteralignmentsborderrepeats, 10_mergesym2, 11_filtersym, 12_filterchainsraw, 13_LAfilter, 14_LAmerge
+#type-1 steps [1-15]: 01-createSubdir, 02-lassort2, 03-computeIntrinsicQV, 04_Catrack, 05_lasdetectsimplerepeats, 06_mergeAndSortRepeats, 07_lasfilteralignments, 08_mergesym2, 09_filtersym, 10_lasfilteralignmentsborderrepeats, 11_mergesym2, 12_filtersym, 13_filterchainsraw, 14_LAfilter, 15_LAmerge
 FIX_FILT_SUBMIT_SCRIPTS_FROM=1
 FIX_FILT_SUBMIT_SCRIPTS_TO=3
 
