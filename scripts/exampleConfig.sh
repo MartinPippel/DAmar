@@ -156,8 +156,8 @@ FIX_SCRUB_SUBMIT_SCRIPTS_TO=41
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 5 - overlap filtering <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 FIX_FILT_TYPE=0
-#type-1 steps: 1-createSubdir, 2-LAfilter, 3-LAmerge
-
+#type-0 steps [1-3]: 01-createSubdir, 02-LAfilter, 03-LAmerge          ## old pipeline
+#type-1 steps [1-14]: 01-createSubdir, 02-computeIntrinsicQV, 03_Catrack, 04_lasdetectsimplerepeats, 05_mergeAndSortRepeats, 06_lasfilteralignments, 07_mergesym2, 08_filtersym, 09_lasfilteralignmentsborderrepeats, 10_mergesym2, 11_filtersym, 12_filterchainsraw, 13_LAfilter, 14_LAmerge
 FIX_FILT_SUBMIT_SCRIPTS_FROM=1
 FIX_FILT_SUBMIT_SCRIPTS_TO=3
 
