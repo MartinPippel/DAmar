@@ -183,7 +183,8 @@ static void print_trace(Overlap* ovl, int tspace)
         printf("%d %5d (%3d %3d) ", a, b, trace[i], trace[i+1]);
 
         b += trace[i+1];
-        a += tspace;
+        a = a/tspace*tspace + tspace;
+        //a += tspace;
         if (a > ovl->path.aepos)
         		a = ovl->path.aepos;
     }
@@ -458,6 +459,16 @@ void trim_overlap(TRIM* trim, Overlap* ovl)
                 trace[j+2] = diffs_left;
                 trace[j+3] = bet - bbpos;
 
+		if (trace[j+2] == trace[j+3] && stop_a%trim->twidth == 0)
+            	{   
+                  //ovl->path.bepos+=1;
+                  trace[j] += trace[j+2];
+                  trace[j+1] += trace[j+3];
+                  ovl->path.tlen = j + 2;
+                }
+		else
+		 ovl->path.tlen = j + 4;
+
 #ifdef DEBUG_TRIM
                 printf("STOP @ %5d %5d DIFFS %2d %2d\n", stop_a, bet, diffs_left, diffs_right);
 #endif
@@ -468,9 +479,10 @@ void trim_overlap(TRIM* trim, Overlap* ovl)
 
                 ovl->path.aepos = aepos;
                 ovl->path.bepos = bepos;
-            }
 
-            ovl->path.tlen = j + 4;
+		 ovl->path.tlen = j + 4;
+            }
+		 
 #ifdef DEBUG_TRIM
             print_trace(ovl, trim->twidth);
 #endif
@@ -523,7 +535,7 @@ void trim_overlap(TRIM* trim, Overlap* ovl)
             cura = (cura/trim->twidth + 1) * trim->twidth;
             curb += trace[j+1];
         }
-
+        printf("curb %d== ovl->path.bepos %d\n", curb,ovl->path.bepos);
         assert(curb == ovl->path.bepos);
     }
 #endif
