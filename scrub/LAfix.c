@@ -1403,7 +1403,7 @@ static int spanners_interval(FixContext *fctx, Overlap* ovls, int novl, int b, i
 	}
 
 #ifdef DEBUG
-	if (ovls->aread == 218393)
+	if (ovls->aread == 344566)
 	printf("spanners_interval %d minspan %d [%d ,%d] #span: %d\n", ovls->aread, minSpan, b, e, span);
 #endif
 
@@ -1712,7 +1712,7 @@ static int filter_flips(FixContext* fctx, Overlap* ovls, int novl, int* trim_b, 
 				for (j = 2; j < ovl->path.tlen - 2; j += 2)
 				{
 					//if (intersect(sab, sae, alen - sbe, alen - sbb)) // && spanners(ovls, novl, sab, sae) <= 1 )
-					if (intersect(sab, sae + 1, alen - sbe, alen - sbb - 1)) // && spanners(ovls, novl, sab, sae) <= 1 ) // modified 25.06.18 change interval from [ ) to [ ]
+					if (intersect(sab, sae + 1, alen - sbe, alen - sbb - 1)  && spanners_interval(fctx, ovls, novl, sab, sae) <= 1 ) // modified 25.06.18 change interval from [ ) to [ ]
 					{
 #ifdef DEBUG_FLIP
 						printf("%8d CROSS @ %5d..%5d x %5d..%5d\n", aread, sab, sae, alen - sbe, alen - sbb);
