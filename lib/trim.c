@@ -183,7 +183,7 @@ static void print_trace(Overlap* ovl, int tspace)
         printf("%d %5d (%3d %3d) ", a, b, trace[i], trace[i+1]);
 
         b += trace[i+1];
-        a += tspace;
+        a = a/tspace*tspace + tspace;
         if (a > ovl->path.aepos)
         		a = ovl->path.aepos;
     }
