@@ -810,7 +810,7 @@ then
         
         setLAfilterOptions
         OPT=""
-        echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${FIX_FILT_ENDING}LasFiltAln.las.sym ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltAln.las.sym" > filt_08_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${FIX_FILT_ENDING}LasFiltAln.las.sym ${FIX_FILT_OUTDIR}/${FIX_DAZZ_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltAln.las.sym" > filt_08_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
         echo "rm ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltAln.las.sym" >> filt_08_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
         echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_08_mergesym2_single_${FIX_DB%.db}.${slurmID}.version        
 	### 09_filtersym
@@ -869,7 +869,7 @@ then
    	 	            	
     	for x in $(seq 1 ${fixblocks})
         do
-    		echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/lasfilteralignmentsborderrepeats ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltBrd.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltAln.las" 
+    		echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/lasfilteralignmentsborderrepeats ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltBrd.las ${FIX_FILT_OUTDIR}/${FIX_DAZZ_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltAln.las" 
 		done > filt_10_lasfilteralignmentsborderrepeats_block_${FIX_DB%.db}.${slurmID}.plan
       	echo "DACCORD lasfilteralignmentsborderrepeats $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_10_lasfilteralignmentsborderrepeats_block_${FIX_DB%.db}.${slurmID}.version
   	### 11_mergesym2
@@ -883,7 +883,7 @@ then
         
         setLAfilterOptions
         OPT=""        
-        echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${FIX_FILT_ENDING}LasFiltBrd.las.sym ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltBrd.las.sym" > filt_11_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${FIX_FILT_ENDING}LasFiltBrd.las.sym ${FIX_FILT_OUTDIR}/${FIX_DAZZ_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltBrd.las.sym" > filt_11_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
         echo "rm ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.*.${FIX_FILT_ENDING}LasFiltBrd.las.sym" >> filt_11_mergesym2_single_${FIX_DB%.db}.${slurmID}.plan
         echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_11_mergesym2_single_${FIX_DB%.db}.${slurmID}.version        
 	### 12_filtersym
@@ -934,7 +934,7 @@ then
    	 	OPT="-l${FIX_FILT_FILTERCHAINSRAW_LEN}"
         for x in $(seq 1 ${fixblocks})
         do
-    		echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/filterchainsraw ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltChain.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${FIX_FILT_ENDING}LasFiltBrd.las" 
+    		echo "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${DACCORD_PATH}/bin/filterchainsraw ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltChain.las ${FIX_FILT_OUTDIR}/${FIX_DAZZ_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${FIX_FILT_ENDING}LasFiltBrd.las" 
 		done > filt_13_filterchainsraw_block_${FIX_DB%.db}.${slurmID}.plan
         echo "DACCORD filterchainsraw $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_13_filterchainsraw_block_${FIX_DB%.db}.${slurmID}.version
     ### 14_LAfilter
