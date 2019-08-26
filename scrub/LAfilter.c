@@ -156,6 +156,8 @@ typedef struct
 
 	int mergeRepeatsWindow;
 	int mergeRepeatsMaxLen;
+
+	int maxSegmentErrorRate;
 } FilterContext;
 
 extern char* optarg;
@@ -311,6 +313,27 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 			j = k + 1;
 		}
 	}
+}
+
+static int filterMaxSegmentErrorRate(Overlap *ovl, int maxSegmentErrorRate)
+{
+	ovl_trace* trace = ovl->path.trace;
+	int tlen = ovl->path.tlen;
+
+//	printf("o[%d, %d] %c a[%d, %d] b[%d, %d]", ovl->aread, ovl->bread, ovl->flags & OVL_COMP ? 'C' : 'N', ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos);
+	int i;
+	for (i = 2; i < tlen - 2; i += 2)
+	{
+		// ignore substitutions for now // TODO
+		if((trace[i])*100.0/(trace[i+1]) > maxSegmentErrorRate)
+		{
+			ovl->flags |= (OVL_DISCARD | OVL_DIFF);
+//			printf(" (%3d %3d) erate: %f DISCARD\n", trace[i], trace[i+1], (trace[i])*100.0/(trace[i+1]));
+			return 1;
+		}
+	}
+//	printf("\n");
+	return 0;
 }
 
 static int stitch(Overlap* ovls, int n, int fuzz, int aggressive)
@@ -2253,6 +2276,17 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
+	if(ctx->maxSegmentErrorRate >= 0 && ctx->maxSegmentErrorRate <=100)
+	{
+		for (j = 0; j < novl; j++)
+		{
+			if(filterMaxSegmentErrorRate(ovl + j, ctx->maxSegmentErrorRate))
+			{
+				ctx->nFilteredDiffs++;
+			}
+		}
+	}
+
 	if (ctx->trim)
 	{
 		for (j = 0; j < novl; j++)
@@ -2478,7 +2512,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpLqTwZ] [-dnolRsSumMfyYzZVW <int>] [-rtD <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpLqTwZ] [-dnolRsSumMfyYzZVWb <int>] [-rtD <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v ... verbose\n");
 	fprintf(stderr, "         -d ... max divergence allowed [0,100]\n");
@@ -2522,6 +2556,7 @@ static void usage()
 	fprintf(stderr, "         -V ... max merge distance of neighboring repeats (default: 2400)\n");
 	fprintf(stderr, "         -W ... window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
 	fprintf(stderr, "                or at -W bases at the tips of the neighboring repeat. Those can cause a fragmented repeat mask. (default: 600)\n");
+	fprintf(stderr, "         -b ... remove alignments which have segments error rates above -b <int>%% (default: not set)\n");
 }
 
 static int opt_repeat_count(int argc, char** argv, char opt)
@@ -2594,6 +2629,7 @@ int main(int argc, char* argv[])
 	fctx.downsample = 0;
 	fctx.includeReadFlag = 0;
 	fctx.removeLowCoverageOverlaps = 0;
+	fctx.maxSegmentErrorRate = -1;
 
 	fctx.stitch_aggressively = 0;
 	fctx.removeFlags = 0;
@@ -2616,7 +2652,7 @@ int main(int argc, char* argv[])
 	}
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "TvLpwy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:V:W:")) != -1)
+	while ((c = getopt(argc, argv, "TvLpwy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:V:W:b:")) != -1)
 	{
 		switch (c)
 		{
@@ -2634,6 +2670,10 @@ int main(int argc, char* argv[])
 
 		case 'Z':
 			fctx.remUpToXPercAln = atoi(optarg);
+			break;
+
+		case 'b':
+			fctx.maxSegmentErrorRate = atoi(optarg);
 			break;
 
 		case 'I':
@@ -3017,6 +3057,13 @@ int main(int argc, char* argv[])
 		fctx.discardedAreadList = discardedAreadList;
 		fctx.discardedBreads = discardedBreads;
 		fclose(fileIn);
+	}
+
+	if(fctx.maxSegmentErrorRate < -1 && fctx.maxSegmentErrorRate > 100)
+	{
+		printf("[ERROR]: invalid maxSegmentErrorRate %d! Must be within [0,100]\n", fctx.maxSegmentErrorRate);
+		usage();
+		exit(1);
 	}
 
 	// passes
