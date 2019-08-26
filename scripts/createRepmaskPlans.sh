@@ -121,7 +121,7 @@ function setTANmaskOptions()
     fi
     if [[ -n ${RAW_REPMASK_TANMASK_TRACK} ]]
     then
-        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -m${RAW_REPMASK_TANMASK_TRACK}"
+        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -n${RAW_REPMASK_TANMASK_TRACK}"
     fi
 }
 
