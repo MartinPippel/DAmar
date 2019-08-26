@@ -280,39 +280,58 @@ then
     exit 1
 fi
 
-myTypes=("1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LAmerge, 8-LArepeat, 9-TKmerge, 10-daligner, 11-LAmerge, 12-LArepeat, 13-TKmerge")
-# type_0 - steps: 1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LAmerge, 8-LArepeat, 9-TKmerge, 10-daligner, 11-LAmerge, 12-LArepeat, 13-TKmerge
+if [[ -z "${RAW_REPAMSK_OUTDIR}" ]]
+then
+	RAW_REPAMSK_OUTDIR=repmask	
+fi
+
+myTypes=("01_createSubdir, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge")
+# type_0 - stepsp[1-14}: 01_createSubdir, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge
 if [[ ${RAW_REPMASK_TYPE} -eq 0 ]]
-then 
-    if [[ ${currentStep} -eq 1 ]]
+then
+	if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
         for x in $(ls mask_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
-        done 
-        ### find and set DBdust options 
-        setDBdustOptions
-        ### create DBdust commands 
-        for x in $(seq 1 ${nblocks})
-        do 
-            echo "${MARVEL_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DB%.db}.${x}"
-            echo "${DAZZLER_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DAZZ_DB%.db}.${x}"
-        done > mask_01_DBdust_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_01_DBdust_block_${RAW_DB%.db}.${slurmID}.version
-        echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_01_DBdust_block_${RAW_DB%.db}.${slurmID}.version
+        done
+        
+        echo "if [[ -d ${RAW_REPAMSK_OUTDIR} ]]; then mv ${RAW_REPAMSK_OUTDIR} ${RAW_REPAMSK_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPAMSK_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_REPAMSK_OUTDIR}" > mask_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.version         
     elif [[ ${currentStep} -eq 2 ]]
-    then 
+    then
         ### clean up plans 
         for x in $(ls mask_02_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
+        ### find and set DBdust options 
+        setDBdustOptions
+        
+        myCWD=$(pwd)
+        ### create DBdust commands 
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DB%.db}.${x} && cd ${myCWD}"
+            echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DAZZ_DB%.db}.${x} && cd ${myCWD}"
+    	done > mask_02_DBdust_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_02_DBdust_block_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_02_DBdust_block_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 3 ]]
+    then 
+        ### clean up plans 
+        for x in $(ls mask_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        myCWD=$(pwd)
         ### find and set Catrack options 
         setCatrackOptions
         ### create Catrack command
-        echo "${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} dust" > mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} dust" >> mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.plan         
+        echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} dust && cp .${RAW_DB%.db}.dust.anno .${RAW_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" > mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} dust && cp .${RAW_DAZZ_DB%.db}.dust.anno .${RAW_DAZZ_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" >> mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+                 
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 3 ]]
