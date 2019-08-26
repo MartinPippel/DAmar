@@ -342,7 +342,7 @@ then
         do 
             echo "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${RAW_DAZZ_DB%.db}.${x} && cd ${myCWD}"
     	done > mask_04_datander_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DAZZLER datander $(git --git-dir=${DAZZLER_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_04_datander_block_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER datander $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > mask_04_datander_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 5 ]]
     then 
         ### clean up plans 
@@ -358,7 +358,7 @@ then
         do 
             echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/TANmask${REPMASK_TANMASK_OPT} ${RAW_DAZZ_DB%.db} TAN.${RAW_DAZZ_DB%.db}.${x}.las && cd ${myCWD}" 
     	done > mask_05_TANmask_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DAZZLER TANmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_05_TANmask_block_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER TANmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > mask_05_TANmask_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 6 ]]
     then 
         ### clean up plans 
@@ -377,8 +377,8 @@ then
         echo "cd ${RAW_REPAMSK_OUTDIR} && ${LASTOOLS_PATH}/bin/viewmasks ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} > ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
       	echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt ${RAW_REPMASK_TANMASK_TRACK} && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan 
         
-        echo "DAZZLER Catrack $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
-        echo "LASTOOLS viewmasks $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version    
+        echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
+        echo "LASTOOLS viewmasks $(git --git-dir=${LASTOOLS_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version    
         echo "DAMAR txt2track $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 6 ]]
     then
