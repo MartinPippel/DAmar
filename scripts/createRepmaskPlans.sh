@@ -336,6 +336,7 @@ then
         done     
         ### find and set datander options 
         setDatanderOptions
+        myCWD=$(pwd)
         ### create datander commands
         for x in $(seq 1 ${nblocks})
         do 
