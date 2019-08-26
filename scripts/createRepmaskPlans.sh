@@ -375,7 +375,7 @@ then
         ### create Catrack command
         echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.data ${myCWD}/ && cd ${myCWD}" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
         echo "cd ${RAW_REPAMSK_OUTDIR} && ${LASTOOLS_PATH}/bin/viewmasks ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} > ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-      	echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt ${RAW_REPMASK_TANMASK_TRACK} && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan 
+      	echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.d2 && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan 
         
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
         echo "LASTOOLS viewmasks $(git --git-dir=${LASTOOLS_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version    
