@@ -5,7 +5,6 @@
  *      Author: pippelmn
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -31,181 +30,209 @@
 extern char* optarg;
 extern int optind, opterr, optopt;
 
+extern int SORT
+
 static void usage()
 {
-    printf("<db> <txt> <track>\n");
+	printf("<db> <txt> <track>\n");
 }
 
 static int cmp_ints(const void* x, const void* y)
 {
-    int* a = (int*)x;
-    int* b = (int*)y;
+	int* a = (int*) x;
+	int* b = (int*) y;
 
-    // compare areads
-    int l = a[0];
-    int r = b[0];
+	// compare areads
+	int l = a[0];
+	int r = b[0];
 
-    // compare breads
-    if (l == r)
-    {
-        l = a[1];
-        r = b[1];
-    }
-/*
-    // compare abpos
-    if (l == r)
-    {
-        l = a[2];
-        r = b[2];
-    }
-*/
-    return l - r;
+	// compare breads
+	if (SORT == 2 && l == r)
+	{
+		l = a[1];
+		r = b[1];
+	}
+
+	// compare abpos
+	if (SORT > 2 && l == r)
+	{
+		l = a[2];
+		r = b[2];
+	}
+
+	return l - r;
+}
+
+// get maximum number of fields and do sanity checks
+static int getMaxColumnNumber(File* f, char delim, HITS_DB *db, int isMask)
+{
+
 }
 
 int main(int argc, char* argv[])
 {
-    HITS_DB db;
+	HITS_DB db;
 
-    // process arguments
+	// process arguments
 
-    int c;
+	int c;
 
-    opterr = 0;
+	opterr = 0;
+	char delim = ' ';
 
-    while ((c = getopt(argc, argv, "")) != -1)
-    {
-        switch (c)
-        {
+	char* argDelim = NULL;
+	int isMask = 0;
+	SORT = 0;
 
-            default:
-                printf("Unknow option: %s\n", argv[optind - 1]);
-                usage();
-                exit(1);
-        }
-    }
+	while ((c = getopt(argc, argv, "dms:")) != -1)
+	{
+		switch (c)
+		{
+			case 'd':
+				argDelim = optarg;
+				break;
+			case 'm':
+				isMask = 1;
+				break;
+			case 's':
+				SORT = atoi(optarg);
+				break;
+			default:
+				printf("Unknow option: %s\n", argv[optind - 1]);
+				usage();
+				exit(1);
+		}
+	}
 
-    if (argc - optind < 3)
-    {
-        usage();
-        exit(1);
-    }
+	if (argc - optind < 3)
+	{
+		usage();
+		exit(1);
+	}
 
-    char* pathDb = argv[optind++];
-    char* pathTxt = argv[optind++];
-    char* nameTrack = argv[optind++];
+	char* pathDb = argv[optind++];
+	char* pathTxt = argv[optind++];
+	char* nameTrack = argv[optind++];
 
-    if (Open_DB(pathDb, &db))
-    {
-        printf("could not open '%s'\n", pathDb);
-        return 1;
-    }
+	if (Open_DB(pathDb, &db))
+	{
+		printf("could not open '%s'\n", pathDb);
+		return 1;
+	}
 
-    FILE* fileIn;
+	FILE* fileIn;
 
-    if (strcmp(pathTxt, "-") == 0)
-    {
-        fileIn = stdin;
-    }
-    else
-    {
-        fileIn = fopen(pathTxt, "r");
+	if (strcmp(pathTxt, "-") == 0)
+	{
+		fileIn = stdin;
+	}
+	else
+	{
+		fileIn = fopen(pathTxt, "r");
 
-        if (fileIn == NULL)
-        {
-            fprintf(stderr, "failed to open '%s'\n", pathTxt);
-            exit(1);
-        }
-    }
+		if (fileIn == NULL)
+		{
+			fprintf(stderr, "failed to open '%s'\n", pathTxt);
+			exit(1);
+		}
+	}
 
-    int aRead;
-    int beg;
-    int end;
+	if(argDelim)
+	{
+		if(strlen(argDelim >1))
+		{
+			printf("[WARNING] - Multi-char separator '%s' not supported! Use first character only!\n", argDelim);
+		}
+		delim = argDelim[0];
+	}
 
-    int* ints = NULL;
-    int nints = 0;
-    int maxints = 0;
+	int field1;
+	int field2;
+	int field3;
 
-    // todo dynamically read number of fields from first lines
-    // for now: 3 columns, aread, abpos, aepos
+	int* ints = NULL;
+	int nints = 0;
+	int maxints = 0;
 
-    while ( 1 )
-    {
-        int count = fscanf(fileIn, "%d %d\n", &aRead, &beg);//, &end);
+	// todo dynamically read number of fields from first lines
+	// for now: 3 columns, aread, abpos, aepos
 
-        if (count != 2)
-        {
-            break;
-        }
+	while (1)
+	{
+		int count = fscanf(fileIn, "%d%*c%d%*c%d\n", &field1, delim, &field2, delim, &field3);
 
-        if (nints + 2 >= maxints)
-        {
-            maxints = 1.2 * maxints + 1000;
-            ints = realloc(ints, maxints * sizeof(int));
-        }
+		if (count != 3)
+		{
+			break;
+		}
 
-        ints[nints + 0] = aRead;
-        ints[nints + 1] = beg;
-        //ints[nints + 2] = end;
+		if (nints + 3 >= maxints)
+		{
+			maxints = 1.2 * maxints + 1000;
+			ints = realloc(ints, maxints * sizeof(int));
+		}
 
+		ints[nints + 0] = field1;
+		ints[nints + 1] = field2;
+		ints[nints + 2] = field3;
 
+		if (isMask)
+		{
+			int rlen = DB_READ_LEN(&db, field1);
 
-/**
-        int rlen = DB_READ_LEN(&db, aRead);
+			if (field1 < 0 || field2 > rlen || field2 < field3 || field3 > rlen)
+			{
+				printf("interval out of bounds %d %d..%d (%d)\n", field1, field2, field3, rlen);
+			}
+		}
 
-        if ( beg < 0 || beg > rlen || end < beg || end > rlen )
-        {
-            printf("interval out of bounds %d %d..%d (%d)\n", aRead, beg, end, rlen);
-        }
-**/
+		nints += 3;
+	}
 
-        nints += 2;
-    }
+	if (SORT)
+		qsort(ints, nints / 3, sizeof(int) * 3, cmp_ints);
 
-    qsort(ints, nints/2, sizeof(int) * 2, cmp_ints);
+	track_anno* anno = malloc(sizeof(track_anno) * (DB_NREADS(&db) + 1));
+	track_data* data = NULL;
+	int ndata = 0;
+	int maxdata = 0;
 
-    track_anno* anno = malloc( sizeof(track_anno) * (DB_NREADS(&db) + 1) );
-    track_data* data = NULL;
-    int ndata = 0;
-    int maxdata = 0;
+	bzero(anno, sizeof(track_anno) * (DB_NREADS(&db) + 1));
 
-    bzero(anno, sizeof(track_anno) * (DB_NREADS(&db) + 1));
+	int i;
+	for (i = 0; i < nints; i += 3)
+	{
+		if (ndata + 1 >= maxdata)
+		{
+			maxdata = maxdata * 1.2 + 1000;
+			data = realloc(data, sizeof(track_data) * maxdata);
+		}
 
-    int i;
-    for (i = 0; i < nints; i += 2)
-    {
-        if (ndata + 1 >= maxdata)
-        {
-            maxdata = maxdata * 1.2 + 1000;
-            data = realloc( data, sizeof(track_data) * maxdata );
-        }
+		anno[ints[i + 0]] += 2 * sizeof(track_data);
+		data[ndata + 0] = ints[i + 1];
+		data[ndata + 1] = ints[i + 2];
 
-        anno[ ints[i + 0] ] += 1 * sizeof(track_data);
-        data[ ndata + 0 ] = ints[ i + 1 ];
-        //data[ ndata + 1 ] = ints[ i + 2 ];
+		ndata += 2;
+	}
 
-        ndata += 1;
-    }
+	track_anno coff, off;
+	off = 0;
 
-    track_anno coff, off;
-    off = 0;
+	for (i = 0; i <= DB_NREADS(&db); i++)
+	{
+		coff = anno[i];
+		anno[i] = off;
+		off += coff;
+	}
 
-    for (i = 0; i <= DB_NREADS(&db); i++)
-    {
-        coff = anno[i];
-        anno[i] = off;
-        off += coff;
-    }
+	track_write(&db, nameTrack, 0, anno, data, ndata);
 
-    track_write(&db, nameTrack, 0, anno, data, ndata);
+	free(anno);
+	free(data);
 
-    free(anno);
-    free(data);
+	Close_DB(&db);
 
-    Close_DB(&db);
-
-    return 0;
+	return 0;
 }
-
-
 
 
