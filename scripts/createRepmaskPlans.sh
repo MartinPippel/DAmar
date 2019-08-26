@@ -117,11 +117,11 @@ function setTANmaskOptions()
     fi
     if [[ -n ${RAW_REPMASK_TANMASK_MINLEN} && ${RAW_REPMASK_TANMASK_MINLEN} -ge 1 ]]
     then
-        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -l ${RAW_REPMASK_TANMASK_MINLEN}"
+        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -l${RAW_REPMASK_TANMASK_MINLEN}"
     fi
     if [[ -n ${RAW_REPMASK_TANMASK_TRACK} ]]
     then
-        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -m ${RAW_REPMASK_TANMASK_TRACK}"
+        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -m${RAW_REPMASK_TANMASK_TRACK}"
     fi
 }
 
@@ -252,18 +252,11 @@ function setDatanderOptions()
     REPMASK_DATANDER_OPT=""
     if [[ -n ${RAW_REPMASK_DATANDER_THREADS} ]]
     then
-        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -j ${RAW_REPMASK_DATANDER_THREADS}"
+        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -T${RAW_REPMASK_DATANDER_THREADS}"
     fi
     if [[ -n ${RAW_REPMASK_DATANDER_MINLEN} ]]
     then
-        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -l ${RAW_REPMASK_DATANDER_MINLEN}"
-    fi
-    if [[ -n ${RAW_REPMASK_DATANDER_FOLDER} ]]
-    then
-        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -o ${RAW_REPMASK_DATANDER_FOLDER}"
-    else
-        RAW_REPMASK_DATANDER_FOLDER="tan"
-        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -o ${RAW_REPMASK_DATANDER_FOLDER}"
+        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -l${RAW_REPMASK_DATANDER_MINLEN}"
     fi
 }
 
@@ -329,15 +322,15 @@ then
         ### find and set Catrack options 
         setCatrackOptions
         ### create Catrack command
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} dust && cp .${RAW_DB%.db}.dust.anno .${RAW_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" > mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} dust && cp .${RAW_DAZZ_DB%.db}.dust.anno .${RAW_DAZZ_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" >> mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} dust && cp .${RAW_DB%.db}.dust.anno .${RAW_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" > mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} dust && cp .${RAW_DAZZ_DB%.db}.dust.anno .${RAW_DAZZ_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" >> mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
                  
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.version
-        echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_02_Catrack_single_${RAW_DB%.db}.${slurmID}.version
-    elif [[ ${currentStep} -eq 3 ]]
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 4 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -346,13 +339,13 @@ then
         ### create datander commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${RAW_DB%.db}.${x}"
-        done > mask_03_datander_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_03_datander_block_${RAW_DB%.db}.${slurmID}.version
-    elif [[ ${currentStep} -eq 4 ]]
+            echo "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${RAW_DAZZ_DB%.db}.${x} && cd ${myCWD}"
+    	done > mask_04_datander_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DAZZLER datander $(git --git-dir=${DAZZLER_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_04_datander_block_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 5 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -361,9 +354,9 @@ then
         ### create TANmask commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/TANmask${REPMASK_TANMASK_OPT} ${RAW_DB%.db} ${RAW_REPMASK_DATANDER_FOLDER}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${x}.las" 
-        done > mask_04_TANmask_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_04_TANmask_block_${RAW_DB%.db}.${slurmID}.version
+            echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/TANmask${REPMASK_TANMASK_OPT} ${RAW_DAZZ_DB%.db} TAN.${RAW_DAZZ_DB%.db}.${x}.las && cd ${myCWD}" 
+    	done > mask_05_TANmask_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DAZZLER TANmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_05_TANmask_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 5 ]]
     then 
         ### clean up plans 
