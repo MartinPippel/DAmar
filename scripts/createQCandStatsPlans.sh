@@ -383,7 +383,7 @@ then
     	if [[ -n ${HIC_PATH} && -d "${HIC_PATH}" ]]
         then
         	numR1Files=0
-			for x in ${HIC_PATH}/${PROJECT_ID}_*_*_R1.fastq.gz
+			for x in ${HIC_PATH}/${PROJECT_ID}_*_R1.fastq.gz
 			do
 				if [[ -f ${x} ]]
 				then	
@@ -393,12 +393,12 @@ then
 			
 			if [[ ${numR1Files} -eq 0 ]]
 	        then
-	        	(>&2 echo "ERROR - cannot read HiC R1 files with following pattern: ${HIC_PATH}/${PROJECT_ID}_*_*_R1.fastq.gz")
+	        	(>&2 echo "ERROR - cannot read HiC R1 files with following pattern: ${HIC_PATH}/${PROJECT_ID}_*_R1.fastq.gz")
 	        	exit 1
 	   		fi
 			
 			numR2Files=0
-			for x in ${HIC_PATH}/${PROJECT_ID}_*_*_R2.fastq.gz
+			for x in ${HIC_PATH}/${PROJECT_ID}_*_R2.fastq.gz
 			do
 				if [[ -f ${x} ]]
 				then	
@@ -408,7 +408,7 @@ then
 			
 			if [[ ${numR2Files} -eq 0 ]]
 	        then
-	        	(>&2 echo "ERROR - cannot read HiC R2 files with following pattern: ${HIC_PATH}/${PROJECT_ID}_*_*_R2.fastq.gz")
+	        	(>&2 echo "ERROR - cannot read HiC R2 files with following pattern: ${HIC_PATH}/${PROJECT_ID}_*_R2.fastq.gz")
 	        	exit 1
 	   		fi
 	   		
@@ -419,7 +419,7 @@ then
 	   		fi
 	   		
 	   		doHic=${numR1Files}
-	   		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_*_R[12].fastq.gz
+	   		for x in ${SC_HIC_READS}/${PROJECT_ID}_*_R[12].fastq.gz
 			do
 				echo "ln -s -r -f ${x} hic/"  
 			done 
@@ -473,7 +473,7 @@ then
     	# hic
     	if [[ -n ${HIC_PATH} && -d "${HIC_PATH}" && -d hic ]]
     	then
-    		for x in hic/${PROJECT_ID}_*_*_R1.fastq.gz
+    		for x in hic/${PROJECT_ID}_*_R1.fastq.gz
 			do
 				echo "${CONDA_BASE_ENV} && zcat ${x} ${x%_R1.fastq.gz}_R2.fastq.gz | mash sketch -k 21 -s 10000 -r -m 2 -o ${x%_R1.fastq.gz}.msh - && conda deactivate"
 			done    		
