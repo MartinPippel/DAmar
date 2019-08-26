@@ -349,8 +349,9 @@ then
         for x in $(ls mask_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
-        done     
-        ### find and set TANmask options 
+        done
+        myCWD=$(pwd)     
+        ### find and set TANmask options         
         setTANmaskOptions
         ### create TANmask commands
         for x in $(seq 1 ${nblocks})
@@ -358,21 +359,27 @@ then
             echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/TANmask${REPMASK_TANMASK_OPT} ${RAW_DAZZ_DB%.db} TAN.${RAW_DAZZ_DB%.db}.${x}.las && cd ${myCWD}" 
     	done > mask_05_TANmask_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DAZZLER TANmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_05_TANmask_block_${RAW_DB%.db}.${slurmID}.version
-    elif [[ ${currentStep} -eq 5 ]]
+    elif [[ ${currentStep} -eq 6 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
+        myCWD=$(pwd)
         ### find and set Catrack options
         if [[ -z ${REPMASK_CATRACK_OPT} ]] 
         then
             setCatrackOptions
         fi
         ### create Catrack command
-        echo "${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} ${RAW_REPMASK_TANMASK_TRACK}" > mask_05_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_05_Catrack_single_${RAW_DB%.db}.${slurmID}.version    
+        echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.anno .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.data ${myCWD}/ && cd ${myCWD}" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPAMSK_OUTDIR} && ${LASTOOLS_PATH}/bin/viewmasks ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} > ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+      	echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt ${RAW_REPMASK_TANMASK_TRACK} && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan 
+        
+        echo "DAZZLER Catrack $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
+        echo "LASTOOLS viewmasks $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version    
+        echo "DAMAR txt2track $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 6 ]]
     then
         for x in $(ls mask_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
