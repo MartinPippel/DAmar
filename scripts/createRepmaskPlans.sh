@@ -461,8 +461,8 @@ then
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las"
-            echo "${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[0]} -n${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db}${flist}"
+            echo "${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las"
+            echo "${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[0]} -n${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las"
     	done > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
