@@ -427,7 +427,7 @@ then
                 then
                     break
                 fi
-                echo -n " && mv ${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
+                echo -n " && mv ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
             done 
             
             n=$((${n}-1))
@@ -446,7 +446,7 @@ then
         ### create LAmerge commands 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
+            echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
     	done > mask_08_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan      
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_08_LAmerge_block_${RAW_DB%.db}.${slurmID}.version  
     elif [[ ${currentStep} -eq 9 ]]
