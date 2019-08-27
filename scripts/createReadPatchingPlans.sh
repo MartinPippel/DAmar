@@ -538,7 +538,7 @@ then
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_02_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -562,7 +562,7 @@ then
             else
                 NUMACTL=""
             fi
-            cmd="cd ${RAW_DALIGN_OUTDIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DB%.db}.${x}"
+            cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
             cmdLine=$((${cmdLine}+1))
             count=0
 
@@ -570,10 +570,9 @@ then
             do  
                 if [[ $count -lt ${RAW_FIX_DALIGNER_DAL} ]]
                 then
-                    cmd="${cmd} ${RAW_DB%.db}.${y}"
                     count=$((${count}+1))
                 else    
-                    echo "${cmd} && cd ${myCWD}"
+                    echo "${cmd}-${y} && cd ${myCWD}"
                     if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
@@ -585,14 +584,14 @@ then
                     else
                         NUMACTL=""
                     fi
-                    cmd="cd ${RAW_DALIGN_OUTDIR} && ${NUMACTL}${MARVEL_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DB%.db}.${x} ${RAW_DB%.db}.${y}"
+                    cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${MARVEL_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DB%.db}.${x} ${RAW_DB%.db}.@${y}"
                     cmdLine=$((${cmdLine}+1))
                     count=1
                 fi
             done
-            echo "${cmd} && cd ${myCWD}"
-        done > fix_01_daligner_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_daligner_block_${RAW_DB%.db}.${slurmID}.version
+            echo "${cmd}-${y} && cd ${myCWD}"
+    	done > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
