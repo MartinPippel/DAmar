@@ -520,7 +520,7 @@ then
                 NUMACTL=""
             fi
 
-            echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.@${x}"
+            echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
             for y in $(seq ${x} $((${x}+${n}-1)))
             do
                 if [[ ${y} -gt ${nblocks} ]]
