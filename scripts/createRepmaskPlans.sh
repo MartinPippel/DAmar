@@ -134,50 +134,46 @@ function setDaligerOptions()
     fi
     if [[ -n ${RAW_REPMASK_DALIGNER_KMER} && ${RAW_REPMASK_DALIGNER_KMER} -gt 0 ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -k ${RAW_REPMASK_DALIGNER_KMER}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -k${RAW_REPMASK_DALIGNER_KMER}"
     fi
     if [[ -n ${RAW_REPMASK_DALIGNER_ERR} ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -e ${RAW_REPMASK_DALIGNER_ERR}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -e${RAW_REPMASK_DALIGNER_ERR}"
     fi
     if [[ -n ${RAW_REPMASK_DALIGNER_BIAS} && ${RAW_REPMASK_DALIGNER_BIAS} -eq 1 ]]
     then
         REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -b"
     fi
-    if [[ -n ${RAW_REPMASK_DALIGNER_RUNID} ]]
-    then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -r ${RAW_REPMASK_DALIGNER_RUNID}"
-    fi
     if [[ -n ${RAW_REPMASK_DALIGNER_OLEN} ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -l ${RAW_REPMASK_DALIGNER_OLEN}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -l${RAW_REPMASK_DALIGNER_OLEN}"
     fi    
     if [[ -n ${RAW_REPMASK_DALIGNER_MEM} && ${RAW_REPMASK_DALIGNER_MEM} -gt 0 ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -M ${RAW_REPMASK_DALIGNER_MEM}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -M${RAW_REPMASK_DALIGNER_MEM}"
     fi    
     if [[ -n ${RAW_REPMASK_DALIGNER_HITS} ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -h ${RAW_REPMASK_DALIGNER_HITS}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -h${RAW_REPMASK_DALIGNER_HITS}"
     fi        
     if [[ -n ${RAW_REPMASK_DALIGNER_T} ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -t ${RAW_REPMASK_DALIGNER_T}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -t${RAW_REPMASK_DALIGNER_T}"
     fi  
     if [[ -n ${RAW_REPMASK_DALIGNER_MASK} ]]
     then
         for x in ${RAW_REPMASK_DALIGNER_MASK}
         do 
-            REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -m ${x}"
+            REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -m${x}"
         done
     fi
     if [[ -n ${RAW_REPMASK_DALIGNER_TRACESPACE} && ${RAW_REPMASK_DALIGNER_TRACESPACE} -gt 0 ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -s ${RAW_REPMASK_DALIGNER_TRACESPACE}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -s${RAW_REPMASK_DALIGNER_TRACESPACE}"
     fi
     if [[ -n ${THREADS_daligner} ]]
     then 
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -j ${THREADS_daligner}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -T${THREADS_daligner}"
     fi
 }
 
@@ -380,9 +376,9 @@ then
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
         echo "LASTOOLS viewmasks $(git --git-dir=${LASTOOLS_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version    
         echo "DAMAR txt2track $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
-    elif [[ ${currentStep} -eq 6 ]]
+    elif [[ ${currentStep} -eq 7 ]]
     then
-        for x in $(ls mask_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -390,7 +386,7 @@ then
         setDaligerOptions
 
         bcmp=${RAW_REPMASK_BLOCKCMP[0]}
-
+		myCWD=$(pwd)
         ### create daligner commands
         n=${bcmp}
         for x in $(seq 1 ${nblocks})
@@ -414,20 +410,31 @@ then
             else
                 NUMACTL=""
             fi
-            echo -n "${NUMACTL}${MARVEL_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DB%.db}.${x}"
+            echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x}"
             for y in $(seq ${x} $((${x}+${n}-1)))
             do
                 if [[ ${y} -gt ${nblocks} ]]
                 then
                     break
                 fi
-                echo -n " ${RAW_DB%.db}.${y}"
+                echo -n " ${RAW_DAZZ_DB%.db}.${y}"
             done 
+
+			echo -n " && mkdir -p mask_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
+            for y in $(seq ${x} $((${x}+${n}-1)))
+            do
+                if [[ ${y} -gt ${nblocks} ]]
+                then
+                    break
+                fi
+                echo -n " && mv ${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las mask_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
+            done 
+            
             n=$((${n}-1))
 
-            echo ""
-        done > mask_06_daligner_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_06_daligner_block_${RAW_DB%.db}.${slurmID}.version
+            echo " && cd ${myCWD}"
+   		done > mask_07_daligner_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DAZZLER daligner $(git --git-dir=${MARVEL_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_07_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
