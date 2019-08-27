@@ -165,8 +165,8 @@ int main(int argc, char* argv[])
                 if (isMask)
                 {
                         int rlen = DB_READ_LEN(&db, field1);
-
-                        if (field1 < 0 || field2 > rlen || field2 < field3 || field3 > rlen)
+                        int nReads = DB_NREADS(db);
+                        if (field1 < 0 || field1 >= nReads|| field2 > rlen || field2 > field3 || field3 > rlen)
                         {
                                 printf("interval out of bounds %d %d..%d (%d)\n", field1, field2, field3, rlen);
                         }
