@@ -529,7 +529,7 @@ then
                     break
                 fi                
             done 
-            echo -n "-${y} && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
+            echo -n "-${y} && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && mv"
             
             for y in $(seq ${x} $((${x}+${n}-1)))
             do
@@ -537,43 +537,29 @@ then
                 then
                     break
                 fi
-                echo -n " && mv ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
+                echo -n " ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las"
             done
             
             n=$((${n}-1))
 
-            echo ""
+            echo " mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && cd ${myCWD}"
     	done > mask_11_daligner_block_${RAW_DB%.db}.${slurmID}.plan 
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_11_daligner_block_${RAW_DB%.db}.${slurmID}.version
-    elif [[ ${currentStep} -eq 11 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
+        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_11_daligner_block_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 12 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
     then
         ### clean up plans 
-        for x in $(ls mask_11_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_12_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
 
+        myCWD=$(pwd)
         ### create LAmerge commands 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${x}.mask2.las $(getSubDirName ${RAW_REPMASK_DALIGNER_RUNID} ${x})"
-        done > mask_11_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_11_LAmerge_block_${RAW_DB%.db}.${slurmID}.version
-    elif [[ ${currentStep} -eq 12 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
-    then 
-        ### clean up plans 
-        for x in $(ls mask_12_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
-        ### find and set LArepeat options 
-        setLArepeatOptions 1
-        ### create LArepeat commands
-        for x in $(seq 1 ${nblocks})
-        do 
-            echo "${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.mask2.las"
-        done > mask_12_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_12_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
+            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && cd ${myCWD}"            
+    	done > mask_12_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL LAmerge  $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_11_LAmerge_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 13 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
     then 
         ### clean up plans 
@@ -581,12 +567,35 @@ then
         do            
             rm $x
         done 
+        
+        myCWD=$(pwd)
+        ### find and set LArepeat options 
+        setLArepeatOptions 1
+        ### create LArepeat commands
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.las && cd ${myCWD}/" 
+            echo "cd ${RAW_REPAMSK_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.las ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.${x}.las && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[1]} -n${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.${x}.las && unlink ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.${x}.las && cd ${myCWD}/"
+    	done > mask_13_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_13_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> mask_13_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 14 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
+    then 
+        ### clean up plans 
+        for x in $(ls mask_14_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        
+        myCWD=$(pwd)
         ### find and set TKmerge options 
         setTKmergeOptions
         setLArepeatOptions 1
         ### create TKmerge commands
-        echo "${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK}" > mask_13_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_13_TKmerge_single_${RAW_DB%.db}.${slurmID}.version    
+        echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.d2 ${myCWD}/ && cd ${myCWD}/" > mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
     else 
         (>&2 echo "step ${currentStep} in RAW_REPMASK_TYPE ${RAW_REPMASK_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_REPMASK_TYPE}]}")
