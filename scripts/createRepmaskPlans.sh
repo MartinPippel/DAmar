@@ -446,7 +446,7 @@ then
         ### create LAmerge commands 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} && cd ${myCWD}"
+            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} && cd ${myCWD}"            
     	done > mask_08_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_08_LAmerge_block_${RAW_DB%.db}.${slurmID}.version  
     elif [[ ${currentStep} -eq 9 ]]
@@ -462,8 +462,10 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las"
-    done > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
+            echo "${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[0]} -n${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db}${flist}"
+    	done > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 10 ]]
     then 
         ### clean up plans 
@@ -475,8 +477,10 @@ then
         setTKmergeOptions
         setLArepeatOptions 0
         ### create TKmerge commands
-        echo "${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK}" > mask_09_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_09_TKmerge_single_${RAW_DB%.db}.${slurmID}.version    
+        echo "${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK}" > mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${DAZZLER_PATH}/bin/Catrack${REPMASK_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_REPEATTRACK}" >> mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.version    
     elif [[ ${currentStep} -eq 10 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
     then
         ### clean up plans 
