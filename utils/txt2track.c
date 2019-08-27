@@ -64,7 +64,7 @@ static int cmp_ints(const void* x, const void* y)
 }
 
 // get maximum number of fields and do sanity checks
-static int getMaxColumnNumber(File* f, char delim, HITS_DB *db, int isMask)
+static int getMaxColumnNumber(FILE* f, char delim, HITS_DB *db, int isMask)
 {
 
 }
