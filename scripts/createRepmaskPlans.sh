@@ -463,7 +463,7 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las && cd ${myCWD}/" 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[0]} -n${x}.${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las && cd ${myCWD}/"
+            echo "cd ${RAW_REPAMSK_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.${x}.las && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[0]} -n${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.${x}las && unlink ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.${x}.las && cd ${myCWD}/"
     	done > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
@@ -492,7 +492,7 @@ then
         done 
         ### find and set daligner options 
         setDaligerOptions
-
+		myCWD=$(pwd)
         setLArepeatOptions 0
         bcmp=${RAW_REPMASK_BLOCKCMP[1]}
 
@@ -520,15 +520,26 @@ then
                 NUMACTL=""
             fi
 
-            echo -n "${NUMACTL}${MARVEL_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DB%.db}.${x}"
+            echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.@${x}"
+            for y in $(seq ${x} $((${x}+${n}-1)))
+            do
+                if [[ ${y} -gt ${nblocks} ]]
+                then
+                	y=$((y-1))
+                    break
+                fi                
+            done 
+            echo -n "-${y} && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
+            
             for y in $(seq ${x} $((${x}+${n}-1)))
             do
                 if [[ ${y} -gt ${nblocks} ]]
                 then
                     break
                 fi
-                echo -n " ${RAW_DB%.db}.${y}"
-            done 
+                echo -n " && mv ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
+            done
+            
             n=$((${n}-1))
 
             echo ""
