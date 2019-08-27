@@ -30,7 +30,7 @@
 extern char* optarg;
 extern int optind, opterr, optopt;
 
-extern int SORT;
+int SORT;
 
 static void usage()
 {
