@@ -95,11 +95,11 @@ function setDalignerOptions()
     fi
     if [[ -n ${RAW_FIX_DALIGNER_KMER} && ${RAW_FIX_DALIGNER_KMER} -gt 0 ]]
     then
-        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -k ${RAW_FIX_DALIGNER_KMER}"
+        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -k${RAW_FIX_DALIGNER_KMER}"
     fi
     if [[ -n ${RAW_FIX_DALIGNER_ERR} ]]
     then
-        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -e ${RAW_FIX_DALIGNER_ERR}"
+        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -e${RAW_FIX_DALIGNER_ERR}"
     fi
     if [[ -n ${RAW_FIX_DALIGNER_BIAS} && ${RAW_FIX_DALIGNER_BIAS} -eq 1 ]]
     then
@@ -111,11 +111,7 @@ function setDalignerOptions()
     fi
     if [[ -n ${RAW_FIX_DALIGNER_TRACESPACE} && ${RAW_FIX_DALIGNER_TRACESPACE} -gt 0 ]]
     then
-        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -s ${RAW_FIX_DALIGNER_TRACESPACE}"
-    fi
-    if [[ -n ${RAW_FIX_DALIGNER_RUNID} ]]
-    then
-        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -r ${RAW_FIX_DALIGNER_RUNID}"
+        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -s${RAW_FIX_DALIGNER_TRACESPACE}"
     fi
     if [[ -n ${RAW_FIX_DALIGNER_ASYMMETRIC} && ${RAW_FIX_DALIGNER_ASYMMETRIC} -ne 0 ]]
     then
@@ -123,18 +119,18 @@ function setDalignerOptions()
     fi    
     if [[ -n ${RAW_FIX_DALIGNER_T} ]]
     then
-        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -t ${RAW_FIX_DALIGNER_T}"
+        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -t${RAW_FIX_DALIGNER_T}"
     fi  
     if [[ -n ${RAW_FIX_DALIGNER_MASK} ]]
     then
         for x in ${RAW_FIX_DALIGNER_MASK}
         do 
-            FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -m ${x}"
+            FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -m${x}"
         done
     fi
     if [[ -n ${THREADS_daligner} ]]
     then 
-        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -j ${THREADS_daligner}"
+        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -T${THREADS_daligner}"
     fi
     if [ ! -n ${RAW_FIX_DALIGNER_DAL} ]
     then
@@ -534,6 +530,10 @@ then
         done 
         
         echo "if [[ -d ${RAW_DALIGN_OUTDIR} ]]; then mv ${RAW_DALIGN_OUTDIR} ${RAW_DALIGN_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_DALIGN_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_DALIGN_OUTDIR}" > fix_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
+	for x in $(seq 1 ${nblocks})
+        do
+		echo "mkdir -p ${RAW_DALIGN_OUTDIR}/d${x}"
+	done >> fix_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -572,7 +572,27 @@ then
                 then
                     count=$((${count}+1))
                 else    
-                    echo "${cmd}-${y} && cd ${myCWD}"
+                    echo -n "${cmd}-$((y-1)) && mv"
+                    z=${count}
+		    while [[ $z -ge 1 ]]
+		    do
+			echo -n " ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.$((y-z)).las"
+			z=$((z-1))
+		    done
+		    echo -n " d${x}"
+		    if [[ -z "${RAW_FIX_DALIGNER_ASYMMETRIC}" ]]
+		    then
+			z=${count}
+	                while [[ $z -ge 1 ]]
+        	        do
+				if [[ ${x} -ne $((y-z)) ]]
+				then
+                       		   echo -n " && mv ${RAW_DAZZ_DB%.db}.$((y-z)).${RAW_DAZZ_DB%.db}.${x}.las d$((y-z))"
+				fi
+                        	z=$((z-1)) 
+                    	done   
+		    fi
+		    echo " && cd ${myCWD}"
                     if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
@@ -584,12 +604,32 @@ then
                     else
                         NUMACTL=""
                     fi
-                    cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${MARVEL_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DB%.db}.${x} ${RAW_DB%.db}.@${y}"
+                    cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${y}"
                     cmdLine=$((${cmdLine}+1))
                     count=1
                 fi
             done
-            echo "${cmd}-${y} && cd ${myCWD}"
+            echo -n "${cmd}-${y} && mv"
+            z=$((count-1))
+                    while [[ $z -ge 0 ]]
+                    do
+                        echo -n " ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.$((y-z)).las"
+                        z=$((z-1))
+                    done
+                    echo -n " d${x}"
+                    if [[ -z "${RAW_FIX_DALIGNER_ASYMMETRIC}" ]]
+                    then
+                        z=$((count-1))
+                        while [[ $z -ge 0 ]]
+                        do
+                                if [[ ${x} -ne $((y-z)) ]]
+                                then
+                                   echo -n " && mv ${RAW_DAZZ_DB%.db}.$((y-z)).${RAW_DAZZ_DB%.db}.${x}.las d$((y-z))"
+                                fi
+                                z=$((z-1))
+                        done
+                    fi
+                    echo " && cd ${myCWD}"
     	done > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 2 ]]
