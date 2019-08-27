@@ -49,6 +49,9 @@ kmers: kmers.c $(PATH_LIB)/lasidx.h $(PATH_LIB)/lasidx.c $(PATH_LIB)/tracks.h $(
 gff2track: gff2track.c $(PATH_LIB)/lasidx.h $(PATH_LIB)/lasidx.c $(PATH_LIB)/tracks.h $(PATH_LIB)/tracks.c $(PATH_DALIGN)/align.c $(PATH_DALIGN)/align.h $(PATH_DB)/DB.c $(PATH_DB)/DB.h $(PATH_LIB)/oflags.h $(PATH_LIB)/oflags.c $(PATH_LIB)/compression.c
 	$(CC) $(CFLAGS) -o gff2track gff2track.c $(PATH_LIB)/lasidx.c $(PATH_LIB)/utils.c $(PATH_DB)/QV.c $(PATH_LIB)/pass.c $(PATH_LIB)/tracks.c $(PATH_DALIGN)/align.c $(PATH_LIB)/oflags.c $(PATH_DB)/DB.c $(PATH_LIB)/compression.c $(CLIBS)
 
+txt2track: txt2track.c $(PATH_LIB)/lasidx.h $(PATH_LIB)/lasidx.c $(PATH_LIB)/tracks.h $(PATH_LIB)/tracks.c $(PATH_DALIGN)/align.c $(PATH_DALIGN)/align.h $(PATH_DB)/DB.c $(PATH_DB)/DB.h $(PATH_LIB)/oflags.h $(PATH_LIB)/oflags.c $(PATH_LIB)/compression.c
+	$(CC) $(CFLAGS) -o txt2track txt2track.c $(PATH_LIB)/lasidx.c $(PATH_LIB)/utils.c $(PATH_DB)/QV.c $(PATH_LIB)/pass.c $(PATH_LIB)/tracks.c $(PATH_DALIGN)/align.c $(PATH_LIB)/oflags.c $(PATH_DB)/DB.c $(PATH_LIB)/compression.c $(CLIBS)
+
 LAneighbors: LAneighbors.c $(PATH_DALIGN)/align.c $(PATH_DALIGN)/align.h $(PATH_DB)/DB.c $(PATH_DB)/DB.h $(PATH_LIB)/tracks.c $(PATH_LIB)/compression.c
 	$(CC) $(CFLAGS) -o LAneighbors LAneighbors.c $(PATH_LIB)/utils.c $(PATH_DB)/QV.c $(PATH_DALIGN)/align.c $(PATH_DB)/DB.c $(PATH_LIB)/tracks.c $(PATH_LIB)/compression.c $(CLIBS)
 
