@@ -371,7 +371,7 @@ then
         ### create Catrack command
         echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.data ${myCWD}/ && cd ${myCWD}" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
         echo "cd ${RAW_REPAMSK_OUTDIR} && ${LASTOOLS_PATH}/bin/viewmasks ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} > ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-      	echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.d2 && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan 
+      	echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.d2 ${myCWD}/ && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan 
         
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
         echo "LASTOOLS viewmasks $(git --git-dir=${LASTOOLS_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version    
@@ -420,14 +420,14 @@ then
                 echo -n " ${RAW_DAZZ_DB%.db}.${y}"
             done 
 
-			echo -n " && mkdir -p mask_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
+			echo -n " && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
             for y in $(seq ${x} $((${x}+${n}-1)))
             do
                 if [[ ${y} -gt ${nblocks} ]]
                 then
                     break
                 fi
-                echo -n " && mv ${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las mask_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
+                echo -n " && mv ${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
             done 
             
             n=$((${n}-1))
@@ -435,10 +435,10 @@ then
             echo " && cd ${myCWD}"
    		done > mask_07_daligner_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DAZZLER daligner $(git --git-dir=${MARVEL_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_07_daligner_block_${RAW_DB%.db}.${slurmID}.version
-    elif [[ ${currentStep} -eq 7 ]]
+    elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
-        for x in $(ls mask_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -446,13 +446,13 @@ then
         ### create LAmerge commands 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${x}.mask1.las $(getSubDirName ${RAW_REPMASK_DALIGNER_RUNID} ${x})"
-        done > mask_07_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan      
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_07_LAmerge_block_${RAW_DB%.db}.${slurmID}.version  
-    elif [[ ${currentStep} -eq 8 ]]
+            echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
+    	done > mask_08_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan      
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_08_LAmerge_block_${RAW_DB%.db}.${slurmID}.version  
+    elif [[ ${currentStep} -eq 9 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -461,13 +461,13 @@ then
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.mask1.las"
-        done > mask_08_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_08_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
-    elif [[ ${currentStep} -eq 9 ]]
+            echo "${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las"
+    done > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
+    elif [[ ${currentStep} -eq 10 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_10_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
