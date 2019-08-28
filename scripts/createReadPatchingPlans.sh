@@ -1176,7 +1176,7 @@ then
         	exit 1	
     	fi
     
-    	echo "cd ${RAW_DACCORD_OUTDIR} && if [[ $(ls ${files} | wc -l) -ne ${nblocks) ]]; then exit 1; fi && cd ${myCWD}" > fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "cd ${RAW_DACCORD_OUTDIR} && if [[ $(ls ${files} | wc -l) -ne ${nblocks} ]]; then exit 1; fi && cd ${myCWD}" > fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} | ${DACCORD_PATH}/bin/repsort ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.rep.data && cd ${myCWD}" >> fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD repsort $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.version
     ### 07_lasfilteralignments 
@@ -1450,19 +1450,7 @@ then
         (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
         exit 1            
     fi
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    elif [[ ${RAW_PATCH_TYPE} -eq 3 ]]
+elif [[ ${RAW_PATCH_TYPE} -eq 3 ]]
 then
   	if [[ ${currentStep} -eq 1 ]]
     then
@@ -1494,26 +1482,6 @@ then
         (>&2 echo "valid steps are: ${myTypes[${RAW_PATCH_TYPE}]}")
         exit 1        
     fi
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 else
     (>&2echo "unknown RAW_PATCH_TYPE ${RAW_PATCH_TYPE}")    
     (>&2 echo "supported types")
