@@ -52,6 +52,7 @@
 #define REMOVE_NONID_OVL ( 1 << 3 )
 #define REMOVE_SPECREP_OVL ( 1 << 4 )
 #define REMOVE_ID_OVL ( 1 << 5 )
+#define REMOVE_CONT_OVL ( 1 << 6 )
 
 #define ANCHOR_INVALID 	(1 << 0)
 #define ANCHOR_TRIM 		(1 << 1)
@@ -101,6 +102,7 @@ typedef struct
 	// 1 << 4 .. remove B-read repeat overlaps, if a proper overlap between A and B exist i.e A ------------ or A ------------ or A ------------ or A   ------------
 	//  																					   B -----E|B				B     E|B-----    B   E|B---E|B		  B ------------------
 	// 1 << 5 .. identity overlaps,
+	// 1 << 6 .. contained overlaps (this includes duplicates)
 	int includeReadFlag;
 
 	int removeLowCoverageOverlaps;
@@ -240,6 +242,16 @@ static int loader_handler(void* _ctx, Overlap* ovl, int novl)
 	return 1;
 }
 
+static int contained(int ab, int ae, int bb, int be)
+{
+	if (ab >= bb && ae <= be)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag)
 {
 	int i;
@@ -308,6 +320,45 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 					Overlap *ovl = ovls + j + l;
 					if (!((ovl->path.abpos == 0 || ovl->path.bbpos == 0) && (ovl->path.aepos == alen || ovl->path.bepos == blen)))
 						ovl->flags |= OVL_DISCARD;
+				}
+			}
+			j = k + 1;
+		}
+	}
+
+	if(rmFlag & REMOVE_CONT_OVL)
+	{
+		int j, k, l, m;
+		j = k = 0;
+
+		while (j < novls)
+		{
+			while (k < novls - 1 && ovls[j].bread == ovls[k + 1].bread)
+			{
+				k++;
+			}
+
+			int num = k - j + 1;
+			if(num > 1)
+			{
+				for(l=j; l<=k; ++l)
+				{
+					Overlap *o1 = ovls + l;
+					if(o1->flags & OVL_CONT)
+						continue;
+
+					for(m=l+1; m<=k; ++m)
+					{
+						Overlap *o2 = ovls + m;
+						if(o2->flags & OVL_CONT)
+							continue;
+
+						if(contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) &&
+								contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos))
+						{
+							o2->flags |= (OVL_DISCARD | OVL_CONT);
+						}
+					}
 				}
 			}
 			j = k + 1;
@@ -2248,15 +2299,6 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	printf(" sum n%d b%d\n", i, anchorbases);
 }
 
-static int contained(int ab, int ae, int bb, int be)
-{
-	if (ab >= bb && ae <= be)
-	{
-		return 1;
-	}
-
-	return 0;
-}
 static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 {
 	FilterContext* ctx = (FilterContext*) _ctx;
@@ -2533,6 +2575,7 @@ static void usage()
 	fprintf(stderr, "                3 non-identity overlaps\n");
 	fprintf(stderr, "                4 remove B-read repeat overlaps, if a proper overlap between A and B exists \n");
 	fprintf(stderr, "                5 identity overlaps\n");
+	fprintf(stderr, "                6 contained overlaps (includes duplicates)\n");
 	fprintf(stderr, "         -L ... two pass processing with read caching\n");
 	fprintf(stderr, "experimental features:\n");
 	fprintf(stderr, "         -f ... percentage of overlaps to keep (downsampling)\n");
@@ -2724,7 +2767,7 @@ int main(int argc, char* argv[])
 		case 'R':
 		{
 			int flag = atoi(optarg);
-			if (flag < 0 || flag > 5)
+			if (flag < 0 || flag > 6)
 			{
 				fprintf(stderr, "[ERROR]: Unsupported -R [%d] option.\n", flag);
 				usage();
