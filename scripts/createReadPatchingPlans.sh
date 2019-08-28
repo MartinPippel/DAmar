@@ -686,7 +686,7 @@ then
                
         ### create TKmerge command
         echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 ${myCWD} && cd ${myCWD}" > fix_05_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan      
-        echo "cd ${RAW_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${FIX_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> fix_05_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${FIX_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> fix_05_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_05_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> fix_05_TKmerge_single_${RAW_DB%.db}.${slurmID}.version   
     elif [[ ${currentStep} -eq 6 ]]
