@@ -1001,7 +1001,7 @@ then
         ### create LAmerge commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las r${x} d${x}_ForRepComp d${x}_NoRepComp identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}"                                                                                                                     
+            echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las r${x} d${x}_ForRepComp d${x}_NoRepComp ${myCWD}/identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}"                                                                                                                     
     	done > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.version      
     ### 05_LArepeat
