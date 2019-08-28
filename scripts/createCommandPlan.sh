@@ -55,7 +55,7 @@ then
     fi
 elif [[ ${currentPhase} -eq 0 ]]
 then	 
-	if [[ ! -f ${RAW_DB%db}.db ]]
+	if [[ ! -f ${RAW_DAZZ_DB%db}.db ]]
 	then 
 		if [[ ! -f ${DB_PATH}/${RAW_DB%db}.db || ! -f ${DB_PATH}/${RAW_DAZZ_DB%db}.db ]]
 		then 
