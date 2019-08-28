@@ -1288,7 +1288,7 @@ then
         myCWD=$(pwd)        
         OPT=""        
         echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.sym ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" > fix_11_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_DACCORD_OUTDIR} && rm ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD" >> fix_11_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_DACCORD_OUTDIR} && rm ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" >> fix_11_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_11_mergesym2_single_${RAW_DB%.db}.${slurmID}.version        
 	### 12_filtersym
     elif [[ ${currentStep} -eq 12 ]]
