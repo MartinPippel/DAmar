@@ -72,6 +72,7 @@ typedef struct
 	int nFilteredDiffs;
 	int nFilteredDiffsSegments;
 	int nFilteredUnalignedBases;
+	int nFilteredContainedOvls;
 	int nFilteredLength;
 	int nFilteredRepeat;
 	int nFilteredReadLength;
@@ -357,6 +358,7 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 								contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos))
 						{
 							o2->flags |= (OVL_DISCARD | OVL_CONT);
+							fctx->nFiltertedContainedOvls++;
 							if(fctx->nVerbose)
 							{
 								printf("found contained OVL: %d vs %d a[%d,%d] b[%d,%d] in a[%d,%d] b[%d,%d]\n", o2->aread, o2->bread, o2->path.abpos, o2->path.aepos, o2->path.bbpos, o2->path.bepos, o1->path.abpos, o1->path.aepos,o1->path.bbpos, o1->path.bepos);
@@ -1682,6 +1684,11 @@ static void filter_post(FilterContext* ctx)
 	{
 		printf("trimmed %'lld of %'lld overlaps\n", ctx->trim->nTrimmedOvls, ctx->trim->nOvls);
 		printf("trimmed %'lld of %'lld bases\n", ctx->trim->nTrimmedBases, ctx->trim->nOvlBases);
+	}
+
+	if (ctx->nFilteredContainedOvls > 0)
+	{
+		printf("contained overlaps discarded         %10d\n", ctx->nFilteredContainedOvls);
 	}
 
 	if (ctx->nFilteredReadLength > 0)
