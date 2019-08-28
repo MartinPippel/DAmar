@@ -835,20 +835,20 @@ then
         do 
             for y in $(seq 1 ${nblocks}); 
             do 
-                if [[ ! -f ${sdir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ]]
+                if [[ ! -f ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ]]
                 then
-                    (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE}: File missing ${sdir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las!!")
+                    (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE}: File missing ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las!!")
                     exit 1                    
                 fi
-                echo "${MARVEL_PATH}/bin/LAseparate${FIX_LASEPARATE_OPT} ${RAW_DB%.db} ${sdir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${sdir}_ForRepComp/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${sdir}_NoRepComp/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"                
+                echo "${MARVEL_PATH}/bin/LAseparate${FIX_LASEPARATE_OPT} ${RAW_DB%.db} ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"                
             done 
-    	done > fix_12_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_12_LAseparate_block_${RAW_DB%.db}.${slurmID}.version
+    	done > fix_02_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_02_LAseparate_block_${RAW_DB%.db}.${slurmID}.version
     #### repcomp 
-    elif [[ ${currentStep} -eq 13 ]]
+    elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_13_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -858,8 +858,8 @@ then
         cmdLine=1
         for x in $(seq 1 ${nblocks}); 
         do 
-            srcDir=$(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})_ForRepComp
-            desDir=$(getSubDirName ${RAW_FIX_REPCOMP_RUNID} ${x})
+            srcDir=${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp
+            desDir=${RAW_REPCOMP_OUTDIR}/r${x}
 
             if [[ ! -d ${desDir} ]]
             then
@@ -869,7 +869,7 @@ then
 
             for y in $(seq ${start} ${nblocks}); 
             do 
-                movDir=$(getSubDirName ${RAW_FIX_REPCOMP_RUNID} ${y})
+                movDir=${RAW_REPCOMP_OUTDIR}/r${y}
                 if [[ -f ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ]]
                 then 
                     if [[ -n ${RAW_FIX_REPCOMP_NUMACTL} && ${RAW_FIX_REPCOMP_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
@@ -883,7 +883,7 @@ then
                     else
                         NUMACTL=""
                     fi
-                    echo -n "LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 ${NUMACTL}${REPCOMP_PATH}/bin/repcomp${FIX_REPCOMP_OPT} -T/tmp/${RAW_DB%.db}.${x}.${y} ${desDir}/${RAW_DB%.db}.repcomp.${x}.${y} ${RAW_DAZZ_DB%.db} ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"
+                    echo -n "${NUMACTL}${REPCOMP_PATH}/bin/repcomp${FIX_REPCOMP_OPT} -T/tmp/${RAW_DB%.db}.${x}.${y} ${desDir}/${RAW_DB%.db}.repcomp.${x}.${y} ${RAW_DAZZ_DB%.db} ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"
                     cmdLine=$((${cmdLine}+1))
                     if [[ $x -eq $y ]]
                     then
@@ -896,8 +896,8 @@ then
                     exit 1
                 fi
             done 
-    	done > fix_13_repcomp_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "repcomp $(git --git-dir=${REPCOMP_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_13_repcomp_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_03_repcomp_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "repcomp $(git --git-dir=${REPCOMP_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_repcomp_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 14 ]]
     then
         ### clean up plans 
