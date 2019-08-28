@@ -835,12 +835,12 @@ then
         do 
             for y in $(seq 1 ${nblocks}); 
             do 
-                if [[ ! -f ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ]]
+                if [[ ! -f ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las ]]
                 then
-                    (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE}: File missing ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las!!")
+                    (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE}: File missing ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las!!")
                     exit 1                    
                 fi
-                echo "${MARVEL_PATH}/bin/LAseparate${FIX_LASEPARATE_OPT} ${RAW_DB%.db} ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"                
+                echo "${MARVEL_PATH}/bin/LAseparate${FIX_LASEPARATE_OPT} ${RAW_DB%.db} ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las"                
             done 
     	done > fix_02_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_02_LAseparate_block_${RAW_DB%.db}.${slurmID}.version
@@ -870,7 +870,7 @@ then
             for y in $(seq ${start} ${nblocks}); 
             do 
                 movDir=${RAW_REPCOMP_OUTDIR}/r${y}
-                if [[ -f ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las ]]
+                if [[ -f ${srcDir}/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las ]]
                 then 
                     if [[ -n ${RAW_FIX_REPCOMP_NUMACTL} && ${RAW_FIX_REPCOMP_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
@@ -883,16 +883,16 @@ then
                     else
                         NUMACTL=""
                     fi
-                    echo -n "${NUMACTL}${REPCOMP_PATH}/bin/repcomp${FIX_REPCOMP_OPT} -T/tmp/${RAW_DB%.db}.${x}.${y} ${desDir}/${RAW_DB%.db}.repcomp.${x}.${y} ${RAW_DAZZ_DB%.db} ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las"
+                    echo -n "${NUMACTL}${REPCOMP_PATH}/bin/repcomp${FIX_REPCOMP_OPT} -T/tmp/${RAW_DAZZ_DB%.db}.${x}.${y} ${desDir}/${RAW_DAZZ_DB%.db}.repcomp.${x}.${y} ${RAW_DAZZ_DB%.db} ${srcDir}/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las"
                     cmdLine=$((${cmdLine}+1))
                     if [[ $x -eq $y ]]
                     then
                         echo ""
                     else    
-                        echo " && mv ${desDir}/${RAW_DB%.db}.repcomp.${x}.${y}_r.las ${movDir}/"
+                        echo " && mv ${desDir}/${RAW_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las ${movDir}/"
                     fi
                 else
-                    (>&2 echo "step ${currentStep} in RAW_FIX_TYPE ${RAW_FIX_TYPE}: File missing ${srcDir}/${RAW_DB%.db}.${x}.${RAW_DB%.db}.${y}.las!!")
+                    (>&2 echo "step ${currentStep} in RAW_FIX_TYPE ${RAW_FIX_TYPE}: File missing ${srcDir}/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las!!")
                     exit 1
                 fi
             done 
