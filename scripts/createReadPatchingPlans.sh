@@ -898,7 +898,7 @@ then
             done 
 		done > fix_03_repcomp_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "repcomp $(git --git-dir=${REPCOMP_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_repcomp_block_${RAW_DB%.db}.${slurmID}.version
-    ### 04_LAmerge
+	### 04_LAmergeLAfilter
     elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
@@ -913,12 +913,10 @@ then
         ### create LAmerge commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las r${x} ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp ${RAW_REPCOMP_OUTDIR}/d${x}_NoRepComp identity/${RAW_DAZZ_DB%.db}.identity.${x}.las"   
-        && ${MARVEL_PATH}/bin/LAfilter ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las"
+            echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las r${x} ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp ${RAW_REPCOMP_OUTDIR}/d${x}_NoRepComp identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}"           "
                                                                                                                      
     	done > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.version
-      
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.version      
     elif [[ ${currentStep} -eq 15 ]]
     then
         ### clean up plans 
