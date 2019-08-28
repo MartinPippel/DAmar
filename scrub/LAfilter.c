@@ -358,7 +358,7 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 								contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos))
 						{
 							o2->flags |= (OVL_DISCARD | OVL_CONT);
-							fctx->nFiltertedContainedOvls++;
+							fctx->nFilteredContainedOvls++;
 							if(fctx->nVerbose)
 							{
 								printf("found contained OVL: %d vs %d a[%d,%d] b[%d,%d] in a[%d,%d] b[%d,%d]\n", o2->aread, o2->bread, o2->path.abpos, o2->path.aepos, o2->path.bbpos, o2->path.bepos, o1->path.abpos, o1->path.aepos,o1->path.bbpos, o1->path.bepos);
