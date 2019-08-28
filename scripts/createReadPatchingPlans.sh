@@ -233,7 +233,7 @@ function setLArepeatOptions()
         fi 
         
         RAW_DAZZ_FIX_LAREPEAT_THRESHOLD=$(echo "${RAW_COV} ${RAW_FIX_LAREPEAT_ENTER_COV}" | awk '{printf "%d", $1*$2}')
-        RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK=repeats_c${RAW_DAZZ_FIX_LAREPEAT_THRESHOLD}_${ptype}      
+        RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK=repeats_c${RAW_DAZZ_FIX_LAREPEAT_THRESHOLD}${ptype}      
 
         if [[ -n ${RAW_FIX_LAREPEAT_COV} ]]
         then
@@ -664,7 +664,7 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${FIX_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DB%.db}.dalign.${x}.las && cd ${myCWD}/"
-            echo "cd ${RAW_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_DAZZ_FIX_LAREPEAT_THRESHOLD} -n${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DB%.db} ${RAW_DB%.db}.dalign.${x}.las && cd ${myCWD}/"
+            echo "cd ${RAW_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_DAZZ_FIX_LAREPEAT_THRESHOLD} -n${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DB%.db}.dalign.${x}.las && cd ${myCWD}/"
     	done > fix_04_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan 
         echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> fix_04_LArepeat_block_${RAW_DB%.db}.${slurmID}.version        
