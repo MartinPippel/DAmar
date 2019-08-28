@@ -474,6 +474,92 @@ function setlassortOptions()
 	FIX_LASSORT_OPT="${FIX_LASSORT_OPT} -s${RAW_FIX_LASSORT_SORT}"
 }
 
+function setDaccordOptions()
+{
+	FIX_DACCORD_OPT=""
+	
+	if [[ -z ${RAW_FIX_DACCORD_THREADS} ]]
+	then 
+		RAW_FIX_DACCORD_THREADS=8
+	fi
+	FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -t${RAW_FIX_DACCORD_THREADS}"
+	
+	if [[ -n ${RAW_FIX_DACCORD_WINDOW} && ${RAW_FIX_DACCORD_WINDOW} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -w${RAW_FIX_DACCORD_WINDOW}"
+	fi
+
+	if [[ -n ${RAW_FIX_DACCORD_ADVANCESIZE} && ${RAW_FIX_DACCORD_ADVANCESIZE} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -a${RAW_FIX_DACCORD_ADVANCESIZE}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_MAXDEPTH} && ${RAW_FIX_DACCORD_MAXDEPTH} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -d${RAW_FIX_DACCORD_MAXDEPTH}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_FULLSEQ} && ${RAW_FIX_DACCORD_FULLSEQ} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -f1"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_VEBOSE} && ${RAW_FIX_DACCORD_VEBOSE} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -V${RAW_FIX_DACCORD_VEBOSE}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_READITVL} ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -I${RAW_FIX_DACCORD_READITVL}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_READPART} ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -J${RAW_FIX_DACCORD_READPART}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_MINWINDOWCOV} && ${RAW_FIX_DACCORD_MINWINDOWCOV} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -m${RAW_FIX_DACCORD_MINWINDOWCOV}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_MINWINDOWERR} && ${RAW_FIX_DACCORD_MINWINDOWERR} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -e${RAW_FIX_DACCORD_MINWINDOWERR}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_MINOUTLEN} && ${RAW_FIX_DACCORD_MINOUTLEN} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -l${RAW_FIX_DACCORD_MINOUTLEN}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_MINKFREQ} && ${RAW_FIX_DACCORD_MINKFREQ} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} --minfilterfreq${RAW_FIX_DACCORD_MINKFREQ}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_MAXKFREQ} && ${RAW_FIX_DACCORD_MAXKFREQ} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} --maxfilterfreq${RAW_FIX_DACCORD_MAXKFREQ}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_MAXOVLS} && ${RAW_FIX_DACCORD_MAXOVLS} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -D${RAW_FIX_DACCORD_MAXOVLS}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_VARD} && ${RAW_FIX_DACCORD_VARD} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} --vard${RAW_FIX_DACCORD_VARD}"
+	fi
+	
+	if [[ -n ${RAW_FIX_DACCORD_KMER} && ${RAW_FIX_DACCORD_KMER} -gt 0 ]]
+	then 
+		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -k${RAW_FIX_DACCORD_KMER}"
+	fi
+}
+
 nblocks=$(getNumOfDbBlocks)
 
 ## ensure some paths
@@ -915,7 +1001,7 @@ then
         ### create LAmerge commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las r${x} ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp ${RAW_REPCOMP_OUTDIR}/d${x}_NoRepComp identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}"                                                                                                                     
+            echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las r${x} d${x}_ForRepComp d${x}_NoRepComp identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}"                                                                                                                     
     	done > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.version      
     ### 05_LArepeat
@@ -1336,115 +1422,40 @@ then
    	 	OPT="-l${RAW_FILT_FILTERCHAINSRAW_LEN}"
         for x in $(seq 1 ${nblocks})
         do
-    		echo "${DACCORD_PATH}/bin/filterchainsraw ${OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltChain.las ${FIX_FILT_OUTDIR}/${FIX_DAZZ_DB%.db}.db ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltBrd.las" 
-		done > filt_13_filterchainsraw_block_${FIX_DB%.db}.${slurmID}.plan
-        echo "DACCORD filterchainsraw $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_13_filterchainsraw_block_${FIX_DB%.db}.${slurmID}.version
-    ### 14_LAfilter
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/filterchainsraw ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las && cd ${myCWD}" 
+		done > fix_13_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD filterchainsraw $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_13_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.version
+    ### 14_daccord
     elif [[ ${currentStep} -eq 14 ]]
     then
         ### clean up plans 
-        for x in $(ls filt_14_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+    	for x in $(ls fix_14_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
- 
-        if [[ -z ${FILT_LAFILTER_OPT} ]]
-        then 
-            setLAfilterOptions
-        fi
-
-        if [[ -n ${FIX_FILT_LAFILTER_RMSYMROUNDS} && ${FIX_FILT_LAFILTER_RMSYMROUNDS} -gt 0 ]]
-        then
-            ## check what is the current round
-            for rnd in $(seq ${FIX_FILT_LAFILTER_RMSYMROUNDS} -1 0)
-            do
-                if [[ -f filt.round${rnd}_14_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan ]]
-                then
-                    break;
-                fi
-            done
-
-            echo "stop at round $rnd of ${FIX_FILT_LAFILTER_RMSYMROUNDS}"
-            ### initial filter job 
-            if [[ $rnd -eq 0 ]]
-            then
-
-                ### create LAfilter commands
-                for x in $(seq 1 ${fixblocks})
-                do 
-                    addOpt=""
-                    if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
-                    then
-                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round1.${x}.txt"
-                    fi
-                    if [[ -n ${FIX_FILT_LAFILTER_REMPERCWORSTALN} && ${FIX_FILT_LAFILTER_REMPERCWORSTALN} -gt 0 ]]
-					then
-    					addOpt="${addOpt} -Z ${FIX_FILT_LAFILTER_REMPERCWORSTALN}"
-					fi
-                    
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltChain.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R1.las"
-        		done > filt.round1_14_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
-            # last filter job
-            elif [[ $rnd -eq ${FIX_FILT_LAFILTER_RMSYMROUNDS} ]]
-            then
-                # create merged set of discarded ovls 
-                cat ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt
-					
-                for x in $(seq 1 ${fixblocks})
-                do 
-                	addOpt=""
-                    if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
-                    then
-                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt"
-                    fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
-    			done > filt_14_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
-            # intermediate filter round
-            else
-                # create merged set of discarded ovls 
-                cat ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.*.txt | awk '{if ($1>$2) print $2" "$1; else print $1" "$2}' | sort -k1,1n -k2,2n  -u > ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt
-
-                for x in $(seq 1 ${fixblocks})
-                do 
-                    addOpt=""
-                    if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
-                    then
-                        addOpt=" -a ${FIX_FILT_OUTDIR}/symDiscardOvl.round$((${rnd}+1)).${x}.txt -A ${FIX_FILT_OUTDIR}/symDiscardOvl.round${rnd}.txt"
-                    fi
-                    echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R${rnd}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt_R$((${rnd}+1)).las"
-    		done > filt.round$((${rnd}+1))_14_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
-            fi  
-        else 
-            ### create LAfilter commands
-            for x in $(seq 1 ${fixblocks})
-            do 
-                addOpt=""
-                if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
-                then
-                addOpt=" -a ${FIX_FILT_OUTDIR}/discardOvlTipCov${FIX_FILT_LAFILTER_MINTIPCOV}.${x}.txt"
-                fi
-                echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.${FIX_FILT_ENDING}LasFiltChain.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${x}.filt.las"
-			done > filt_14_LAfilter_block_${FIX_DB%.db}.${slurmID}.plan 
-        fi    
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_14_LAfilter_block_${FIX_DB%.db}.${slurmID}.version
-    #### 15_LAmerge
+	
+		setDaccordOptions        
+		myCWD=$(pwd)
+		for x in $(seq 1 ${nblocks})
+		do
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} --eprofonly -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.dac.fasta && cd ${myCWD}"
+		done > fix_14_daccord_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD daccord $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_14_daccord_block_${RAW_DB%.db}.${slurmID}.version
+   	### 15_computeextrinsicqv
     elif [[ ${currentStep} -eq 15 ]]
     then
         ### clean up plans 
-        for x in $(ls filt_15_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+    	for x in $(ls fix_15_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
+	
+		for x in $(seq 1 ${nblocks})
+		do
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/computeextrinsicqv -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.dac.fasta && cd ${myCWD}"
+		done > fix_15_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_15_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.version
         
-        if [[ -z ${FILT_LAFILTER_OPT} ]]
-        then 
-            setLAfilterOptions
-        fi
-        ### find and set LAmerge options 
-        setLAmergeOptions
-        
-        echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} -S filt ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las" > filt_15_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_15_LAmerge_single_${FIX_DB%.db}.${slurmID}.version
     else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
