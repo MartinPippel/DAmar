@@ -443,7 +443,7 @@ function setLAseparateOptions()
     	then 
     		ptype="repcomp"
     	fi
-    	RAW_FIX_LASEPARATE_REPEAT="frepeats_c${RAW_COV}_l${RAW_FIX_LAREPEAT_LEAVE_COV}h${RAW_FIX_LAREPEAT_ENTER_COV}_${ptype}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust"
+    	RAW_FIX_LASEPARATE_REPEAT="repeats_c${RAW_COV}_l${RAW_FIX_LAREPEAT_LEAVE_COV}h${RAW_FIX_LAREPEAT_ENTER_COV}_${ptype}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust"
         FIX_LASEPARATE_OPT="${FIX_LASEPARATE_OPT} -r${RAW_FIX_LASEPARATE_REPEAT}"
     fi 
 
@@ -898,22 +898,27 @@ then
             done 
 		done > fix_03_repcomp_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "repcomp $(git --git-dir=${REPCOMP_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_repcomp_block_${RAW_DB%.db}.${slurmID}.version
-    elif [[ ${currentStep} -eq 14 ]]
+    ### 04_LAmerge
+    elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_14_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
+        myCWD=$(pwd)
         ### find and set LAmerge options 
         setLAmergeOptions
         setRepcompOptions
         ### create LAmerge commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DB%.db}.${x}.repcomp.las $(getSubDirName ${RAW_FIX_REPCOMP_RUNID} ${x}) $(getSubDirName ${RAW_FIX_DALIGNER_RUNID} ${x})_NoRepComp identity/${RAW_DB%.db}.${x}.identity.las"                                                                                                            
-    	done > fix_14_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_14_LAmerge_block_${RAW_DB%.db}.${slurmID}.version  
+            echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las r${x} ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp ${RAW_REPCOMP_OUTDIR}/d${x}_NoRepComp identity/${RAW_DAZZ_DB%.db}.identity.${x}.las"   
+        && ${MARVEL_PATH}/bin/LAfilter ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las"
+                                                                                                                     
+    	done > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.version
+      
     elif [[ ${currentStep} -eq 15 ]]
     then
         ### clean up plans 
