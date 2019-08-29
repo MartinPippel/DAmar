@@ -1390,7 +1390,6 @@ then
             rm $x
         done
         
-        setLAfilterOptions
         OPT=""
         
 		if [[ -z "${RAW_FILT_FILTERSYM_VERBOSE}" ]]
