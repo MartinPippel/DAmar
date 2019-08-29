@@ -1198,7 +1198,7 @@ then
 		
 		for x in $(seq 1 ${nblocks})
         do
-        	echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/computeintrinsicqv2 -d${RAW_COV} ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las && cd ${myCWD}"
+        	echo "cd ${RAW_DACCORD_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && ${DACCORD_PATH}/bin/computeintrinsicqv2 -d${RAW_COV} ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && cd ${myCWD}"
 		done > fix_03_computeintrinsicqv2_block_${RAW_DB%.db}.${slurmID}.plan    	         
         echo "DACCORD computeintrinsicqv2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_computeintrinsicqv2_block_${RAW_DB%.db}.${slurmID}.version
 	### 04_Catrack
@@ -1403,11 +1403,52 @@ then
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/filtersym ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.sym && cd ${myCWD}" 
 		done > fix_12_filtsym_block_${RAW_DB%.db}.${slurmID}.plan
       	echo "DACCORD filtsym $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_12_filtsym_block_${RAW_DB%.db}.${slurmID}.version
-   	### 13_filterchainsraw
+    ### 13_daccord
     elif [[ ${currentStep} -eq 13 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_13_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+    	for x in $(ls fix_13_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+	
+		setDaccordOptions        
+		myCWD=$(pwd)
+		for x in $(seq 1 ${nblocks})
+		do
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} --eprofonly -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.dac.fasta && cd ${myCWD}"
+		done > fix_13_daccord_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD daccord $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_13_daccord_block_${RAW_DB%.db}.${slurmID}.version
+   	### 14_computeextrinsicqv
+    elif [[ ${currentStep} -eq 14 ]]
+    then
+        ### clean up plans 
+    	for x in $(ls fix_14_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+	
+		for x in $(seq 1 ${nblocks})
+		do
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ln -s ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las && ${DACCORD_PATH}/bin/computeextrinsicqv -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las && cd ${myCWD}"
+		done > fix_14_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_14_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.version
+    ### 15_Catrack
+	elif [[ ${currentStep} -eq 15 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_15_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        myCWD=$(pwd)
+        echo "cd ${RAW_DACCORD_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${RAW_DAZZ_DB%.db}.db exqual && cp .${RAW_DAZZ_DB%.db}.exqual.anno .${RAW_DAZZ_DB%.db}.exqual.data ${myCWD}/ && cd ${myCWD}" > fix_15_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "DAZZ_DB Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > fix_15_Catrack_single_${RAW_DB%.db}.${slurmID}.version                       
+   	### 16_filterchainsraw
+    elif [[ ${currentStep} -eq 16 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_16_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1423,39 +1464,8 @@ then
         for x in $(seq 1 ${nblocks})
         do
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/filterchainsraw ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las && cd ${myCWD}" 
-		done > fix_13_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD filterchainsraw $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_13_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.version
-    ### 14_daccord
-    elif [[ ${currentStep} -eq 14 ]]
-    then
-        ### clean up plans 
-    	for x in $(ls fix_14_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
-	
-		setDaccordOptions        
-		myCWD=$(pwd)
-		for x in $(seq 1 ${nblocks})
-		do
-    		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} --eprofonly -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.dac.fasta && cd ${myCWD}"
-		done > fix_14_daccord_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD daccord $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_14_daccord_block_${RAW_DB%.db}.${slurmID}.version
-   	### 15_computeextrinsicqv
-    elif [[ ${currentStep} -eq 15 ]]
-    then
-        ### clean up plans 
-    	for x in $(ls fix_15_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done 
-	
-		for x in $(seq 1 ${nblocks})
-		do
-    		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/computeextrinsicqv -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.dac.fasta && cd ${myCWD}"
-		done > fix_15_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_15_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.version
-        
+	done > fix_16_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD filterchainsraw $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_16_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.version        
     else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
