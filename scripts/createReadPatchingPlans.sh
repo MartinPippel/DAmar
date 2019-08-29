@@ -734,7 +734,7 @@ then
         ### create LAmerge commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.dalign.${x}.las d${x} && cd ${myCWD}"
+            echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.dalign.${x}.las d${x} && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.dalign.${x}.las ${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}"
     	done > fix_03_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan  
         echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_LAmerge_block_${RAW_DB%.db}.${slurmID}.version       
     elif [[ ${currentStep} -eq 4 ]]
@@ -749,8 +749,8 @@ then
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${FIX_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.dalign.${x}.las && cd ${myCWD}/"
-            echo "cd ${RAW_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_DAZZ_FIX_LAREPEAT_THRESHOLD} -n${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.dalign.${x}.las && cd ${myCWD}/"
+            echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${FIX_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}/"
+            echo "cd ${RAW_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_DAZZ_FIX_LAREPEAT_THRESHOLD} -n${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}/"
     	done > fix_04_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan 
         echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> fix_04_LArepeat_block_${RAW_DB%.db}.${slurmID}.version        
@@ -836,7 +836,7 @@ then
         ### create LAq commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign ${RAW_DB%.db} -b ${x} ${RAW_DALIGN_OUTDIR}/${RAW_DAZZ_DB%.db}.dalign.${x}.las && cd ${myCWD}"
+            echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign ${RAW_DB%.db} -b ${x} ${RAW_DALIGN_OUTDIR}/${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}"
     	done > fix_08_LAq_block_${RAW_DB%.db}.${slurmID}.plan 
         echo "MARVEL LAq $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_08_LAq_block_${RAW_DB%.db}.${slurmID}.version                
     elif [[ ${currentStep} -eq 9 ]]
@@ -880,7 +880,7 @@ then
         	then 
         		addopt="-T${RAW_FIX_LAFIX_TRIMFILEPREFIX}_${x}.txt "
         	fi
-            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_DALIGN_OUTDIR}/${RAW_DAZZ_DB%.db}.dalign.${x}.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_DALIGN_OUTDIR}/${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
     	done > fix_10_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
     echo "MARVEL LAfix $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_10_LAfix_block_${RAW_DB%.db}.${slurmID}.version                 
     else 
@@ -1151,7 +1151,7 @@ then
 		RAW_DACCORD_INDIR=${RAW_DALIGN_OUTDIR}	
 	fi
 	
-	fsuffix="dalign"
+	fsuffix="dalignFilt"
 	if [[ "${RAW_DACCORD_INDIR}" == "${RAW_REPCOMP_OUTDIR}" ]]
 	then
 		fsuffix="repcompFilt"
