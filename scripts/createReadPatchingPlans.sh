@@ -1244,25 +1244,30 @@ then
         done
         
         myCWD=$(pwd)
-    	files="{RAW_DAZZ_DB%.db}.rep.[0-9].data"
-        if [[ ${nblocks} -gt 9 ]]
+		files="${RAW_DAZZ_DB%.db}.rep.[0-9].data"
+		if [[ ${nblocks} -gt 9 ]]
+		then
+			files="${files} ${RAW_DAZZ_DB%.db}.rep.[0-9][0-9].data"
+		fi
+		if [[ ${nblocks} -gt 99 ]]
+		then
+			files="${files} ${RAW_DAZZ_DB%.db}.rep.[0-9][0-9][0-9].data"
+		fi
+		if [[ ${nblocks} -gt 999 ]]
+		then
+			files="${files} ${RAW_DAZZ_DB%.db}.rep.[0-9][0-9][0-9][0-9].data"
+		fi
+		if [[ ${nblocks} -gt 9999 ]]
+		then
+			files="${files} ${RAW_DAZZ_DB%.db}.rep.[0-9][0-9][0-9][0-9][0-9].data"
+		fi
+    	if [[ ${nblocks} -gt 99999 ]]
         then
-        	files="${files} ${RAW_DAZZ_DB%.db}.rep.[0-9][0-9].data"
-        elif [[ ${nblocks} -gt 99 ]]
-        then
-        	files="${files} ${RAW_DAZZ_DB%.db}.rep.[0-9][0-9][0-9].data"
-        elif [[ ${nblocks} -gt 999 ]]
-        then
-        	files="${files} ${RAW_DAZZ_DB%.db}.rep.[0-9][0-9][0-9][0-9].data"
-        elif [[ ${nblocks} -gt 9999 ]]
-        then
-        	files="${files} ${RAW_DAZZ_DB%.db}.rep.[0-9][0-9][0-9][0-9][0-9].data"
-    	else
-    	(>&2 echo "fix_06_mergeAndSortRepeats: more than 99999 db blocks are not supported!!!")
+    		(>&2 echo "fix_06_mergeAndSortRepeats: more than 99999 db blocks are not supported!!!")
         	exit 1	
     	fi
     
-    	echo "cd ${RAW_DACCORD_OUTDIR} && if [[ $(ls ${files} | wc -l) -ne ${nblocks} ]]; then exit 1; fi && cd ${myCWD}" > fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "cd ${RAW_DACCORD_OUTDIR} && if [[ $(echo \"${files}\" | wc -l) -ne ${nblocks} ]]; then exit 1; fi && cd ${myCWD}" > fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} | ${DACCORD_PATH}/bin/repsort ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.rep.data && cd ${myCWD}" >> fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD repsort $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.version
     ### 07_lasfilteralignments 
