@@ -253,6 +253,16 @@ static int contained(int ab, int ae, int bb, int be)
 	return 0;
 }
 
+static int duplicated(int ab, int ae, int bb, int be)
+{
+	if (ab == bb && ae == be)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag)
 {
 	int i;
@@ -340,7 +350,7 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 			}
 
 			int num = k - j + 1;
-			if(num > 1 && ovls[j].aread != ovls[j].bread) // ignore identity overlaps, as they can be removed with another -R option
+			if(num > 1)
 			{
 				for(l=j; l<=k; ++l)
 				{
@@ -354,8 +364,19 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 						if(o2->flags & OVL_CONT)
 							continue;
 
-						if(contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) &&
-								contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos))
+						int RM=0;
+						if(ovls[j].aread != ovls[j].bread) // ignore identity overlaps, as they can be removed with another -R option
+						{
+							RM=(contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) &&
+									contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos));
+						}
+						else // identity overlaps, remove duplicates
+						{
+							RM=(duplicated(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) &&
+									duplicated(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos));
+						}
+
+						if(RM)
 						{
 							o2->flags |= (OVL_DISCARD | OVL_CONT);
 							fctx->nFilteredContainedOvls++;
@@ -364,6 +385,7 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 								printf("found contained OVL: %d vs %d a[%d,%d] b[%d,%d] in a[%d,%d] b[%d,%d]\n", o2->aread, o2->bread, o2->path.abpos, o2->path.aepos, o2->path.bbpos, o2->path.bepos, o1->path.abpos, o1->path.aepos,o1->path.bbpos, o1->path.bepos);
 							}
 						}
+
 					}
 				}
 			}
