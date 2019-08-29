@@ -1189,7 +1189,7 @@ then
 	elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_03_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1205,7 +1205,7 @@ then
 	elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_04_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1216,7 +1216,7 @@ then
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_05_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1238,7 +1238,7 @@ then
     elif [[ ${currentStep} -eq 6 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_06_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1274,7 +1274,7 @@ then
     elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_07_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1300,7 +1300,7 @@ then
     elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_08_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1314,7 +1314,7 @@ then
     elif [[ ${currentStep} -eq 9 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_09_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1341,7 +1341,7 @@ then
     elif [[ ${currentStep} -eq 10 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_10_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_10_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1371,7 +1371,7 @@ then
     elif [[ ${currentStep} -eq 11 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_10_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_10_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1385,7 +1385,7 @@ then
     elif [[ ${currentStep} -eq 12 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_12_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_12_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1412,7 +1412,7 @@ then
     elif [[ ${currentStep} -eq 13 ]]
     then
         ### clean up plans 
-    	for x in $(ls fix_13_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+    	for x in $(ls fix_13_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1428,7 +1428,7 @@ then
     elif [[ ${currentStep} -eq 14 ]]
     then
         ### clean up plans 
-    	for x in $(ls fix_14_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+    	for x in $(ls fix_14_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1442,7 +1442,7 @@ then
 	elif [[ ${currentStep} -eq 15 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_15_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_15_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1453,7 +1453,7 @@ then
     elif [[ ${currentStep} -eq 16 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_16_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_16_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1500,9 +1500,9 @@ then
 		if [[ -n ${MARVEL_STATS} && ${MARVEL_STATS} -gt 0 ]]
    		then
 	        ### create assemblyStats plan
-	    	echo "${SUBMIT_SCRIPTS_PATH}/patchingStats.sh ${configFile} 1" > fix_01_patchingStats_block_${FIX_DB%.db}.${slurmID}.plan
+	    	echo "${SUBMIT_SCRIPTS_PATH}/patchingStats.sh ${configFile} 1" > fix_01_patchingStats_block_${RAW_DB%.db}.${slurmID}.plan
 		fi
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_patchingStats_block_${FIX_DB%.db}.${slurmID}.version
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_patchingStats_block_${RAW_DB%.db}.${slurmID}.version
     else
 		(>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_PATCH_TYPE}]}")
