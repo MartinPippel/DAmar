@@ -1420,7 +1420,7 @@ then
 		myCWD=$(pwd)
 		for x in $(seq 1 ${nblocks})
 		do
-    		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} --eprofonly -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.dac.fasta && cd ${myCWD}"
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} --eprofonly -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.dac.fasta && cd ${myCWD}"
 		done > fix_13_daccord_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD daccord $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_13_daccord_block_${RAW_DB%.db}.${slurmID}.version
    	### 14_computeextrinsicqv
@@ -1434,7 +1434,7 @@ then
 	
 		for x in $(seq 1 ${nblocks})
 		do
-    		echo "cd ${RAW_DACCORD_OUTDIR} && ln -s ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las && ${DACCORD_PATH}/bin/computeextrinsicqv -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las ${RAW_DAZZ_DB%.db}.db && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las && cd ${myCWD}"
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ln -s ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2.las && ${DACCORD_PATH}/bin/computeextrinsicqv -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.eprof ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2.las ${RAW_DAZZ_DB%.db}.db && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2.las && cd ${myCWD}"
 		done > fix_14_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_14_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.version
     ### 15_Catrack
