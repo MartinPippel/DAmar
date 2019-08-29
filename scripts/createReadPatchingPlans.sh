@@ -1198,7 +1198,7 @@ then
 		
 		for x in $(seq 1 ${nblocks})
         do
-        	echo "cd ${RAW_DACCORD_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && ${DACCORD_PATH}/bin/computeintrinsicqv2 -d${RAW_COV} ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && cd ${myCWD}"
+        	echo "cd ${RAW_DACCORD_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && ${DACCORD_PATH}/bin/computeintrinsicqv2 -d${RAW_COV} ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && cd ${myCWD}"
 		done > fix_03_computeintrinsicqv2_block_${RAW_DB%.db}.${slurmID}.plan    	         
         echo "DACCORD computeintrinsicqv2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_computeintrinsicqv2_block_${RAW_DB%.db}.${slurmID}.version
 	### 04_Catrack
@@ -1430,7 +1430,7 @@ then
 	
 		for x in $(seq 1 ${nblocks})
 		do
-    		echo "cd ${RAW_DACCORD_OUTDIR} && ln -s ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las && ${DACCORD_PATH}/bin/computeextrinsicqv -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las && cd ${myCWD}"
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ln -s ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las && ${DACCORD_PATH}/bin/computeextrinsicqv -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las ${RAW_DAZZ_DB%.db}.db && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain.las && cd ${myCWD}"
 		done > fix_14_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_14_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.version
     ### 15_Catrack
