@@ -478,7 +478,7 @@ function setLAfilterChainsOptions()
 {
 	FIX_LAFILTERCHAINS_OPT=""
 	
-	if [[ -n ${RAW_FIX_LAFILTERCHAINS_ANCHOR} && ${RAW_FIX_DACCORD_ANCHOR} -gt 0 ]]
+	if [[ -n ${RAW_FIX_LAFILTERCHAINS_ANCHOR} && ${RAW_FIX_LAFILTERCHAINS_ANCHOR} -gt 0 ]]
 	then 
 		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -n ${RAW_FIX_LAFILTERCHAINS_ANCHOR}"
 	fi
@@ -1535,10 +1535,16 @@ then
         done
                 
     	setLAfilterChainsOptions
+    	if [[ "${fsuffix}" == "dalignFilt" ]]
+    	then 
+    		setLArepeatOptions 1
+    	else  
+    		setLArepeatOptions 2
+    	fi
    	 	myCWD=$(pwd)
    	 	for x in $(seq 1 ${nblocks})
         do
-    		echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAfilterChains ${FIX_LAFILTERCHAINS_OPT} -R ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.goneLongReads.txt ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las && cd ${myCWD}" 
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAfilterChains ${FIX_LAFILTERCHAINS_OPT} -r ${RAW_FIX_LAREPEAT_REPEATTRACK} -R ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.goneLongReads.txt ${RAW_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las && cd ${myCWD}" 
 		done > fix_${currentStep}_LAfilterChains_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL LAfilterChains $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAfilterChains_block_${RAW_DB%.db}.${slurmID}.version
     ### 15_daccord
