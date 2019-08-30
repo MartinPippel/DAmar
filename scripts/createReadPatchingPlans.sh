@@ -622,7 +622,7 @@ function setHaploSplitOptions()
 	
 	FIX_SPLIT_OPT="${RAW_FIX_SPLIT_TYPE}"
 	
-	if [[ -z "${RAW_FIX_SPLIT_THREADS}"]]
+	if [[ -z "${RAW_FIX_SPLIT_THREADS}" ]]
 	then
 		RAW_FIX_SPLIT_THREADS=8
 	fi
