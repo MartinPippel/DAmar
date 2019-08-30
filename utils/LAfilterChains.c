@@ -2540,18 +2540,17 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 	if(ctx->fileOutFullyDiscardedAreads)
 	{
-		if(trim_aend -  trim_abeg > ctx->minLenOfFullyDiscardedAreads)
+		if(trim_aend - trim_abeg > ctx->minLenOfFullyDiscardedAreads)
 		{
 			int count=0;
 			for (i = 0; i < novl; i++)
 				{
-					if (!(ovl[i].flags & OVL_DISCARD))
+					if (ovl[i].flags & OVL_DISCARD)
 					{
 						count++;
-						break;
 					}
 				}
-			if(count)
+			if(count == novl)
 			{
 				fprintf(ctx->fileOutFullyDiscardedAreads, "%d\n", ovl->aread);
 			}
