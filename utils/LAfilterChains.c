@@ -39,6 +39,7 @@
 #define DEF_ARG_W 600
 #define DEF_ARG_D 28
 #define DEF_ARG_O 4000
+#define DEF_ARG_Z 20000
 
 #define VERBOSE
 
@@ -108,6 +109,8 @@ typedef struct
 	HITS_TRACK* trackLowCompl;
 
 	FILE* fileOutDiscardedReads;
+	FILE* fileOutFullyDiscardedAreads;
+	int   minLenOfFullyDiscardedAreads;
 
 	ovl_header_twidth twidth;
 
@@ -2535,12 +2538,33 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		checkTipCoverage(ctx, ovl, novl);
 	}
 
+	if(ctx->fileOutFullyDiscardedAreads)
+	{
+		if(trim_aend -  trim_abeg > ctx->minLenOfFullyDiscardedAreads)
+		{
+			int count=0;
+			for (i = 0; i < novl; i++)
+				{
+					if (!(ovl[i].flags & OVL_DISCARD))
+					{
+						count++;
+						break;
+					}
+				}
+			if(count)
+			{
+				fprintf(ctx->fileOutFullyDiscardedAreads, "%d\n", ovl->aread);
+			}
+		}
+
+	}
+
 	return 1;
 }
 
 static void usage()
 {
-	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOCM <int>] [-B <file>][-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOCMZ <int>] [-BR <file>][-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v      	verbose\n");
 	fprintf(stderr, "         -n <int>	at least one alignment of a valid chain must have n non-repetitive bases\n");
@@ -2576,6 +2600,8 @@ static void usage()
 	fprintf(stderr, "         -N <int>  min number of spanning alignments, to be not a gap (default: 1)\n");
 	fprintf(stderr, "\n 4. further Filter parameter (optional)\n");
 	fprintf(stderr, "         -E <int>  minimum leaving/entering coverage (default: 0). If coverage is less then -E, than all overlaps are discarded.\n");
+	fprintf(stderr, "         -R <file> Write out Aread ids, that are at least Z-bases <int> long and were fully filtered with LAfilterChains.\n");
+	fprintf(stderr, "         -Z <int>  minimum A-read length for repeatitive reads (default: %d)\n", DEF_ARG_Z);
 
 }
 
@@ -2598,6 +2624,7 @@ int main(int argc, char* argv[])
 	char* pcTrackTrim = DEF_ARG_T;
 	char* pcTrackLowCompl = DEF_ARG_L;
 	char* pathOutDiscardReads = NULL;
+	char* pathOutFullyDiscardAReads = NULL;
 
 	int arg_purge = 0;
 
@@ -2623,10 +2650,12 @@ int main(int argc, char* argv[])
 	fctx.minTipCoverage = 0;
 	fctx.fileOutDiscardedReads = NULL;
 	fctx.gapMinSpanners = 1;
+	fctx.fileOutFullyDiscardedAreads = NULL;
+	fctx.minLenOfFullyDiscardedAreads = DEF_ARG_Z;
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:B:E:M:N:")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:B:E:M:N:R:Z:")) != -1)
 	{
 		switch (c)
 		{
@@ -2652,6 +2681,14 @@ int main(int argc, char* argv[])
 
 			case 'B':
 				pathOutDiscardReads = optarg;
+				break;
+
+			case 'R':
+				pathOutFullyDiscardAReads = optarg;
+				break;
+
+			case 'Z':
+				fctx.minLenOfFullyDiscardedAreads = atoi(optarg);
 				break;
 
 			case 'E':
@@ -2821,6 +2858,19 @@ int main(int argc, char* argv[])
 		fctx.fileOutDiscardedReads = fileOut;
 	}
 
+	if (pathOutFullyDiscardAReads)
+	{
+		FILE* fileOut = fopen(pathOutFullyDiscardAReads, "w");
+
+		if (fileOut == NULL)
+		{
+			fprintf(stderr, "could not open %s\n", pathOutFullyDiscardAReads);
+			exit(1);
+		}
+		fctx.fileOutFullyDiscardedAreads = fileOut;
+	}
+
+
 // passes
 
 	pctx = pass_init(fileOvlIn, fileOvlOut);
@@ -2846,6 +2896,10 @@ int main(int argc, char* argv[])
 	if (fctx.fileOutDiscardedReads)
 	{
 		fclose(fctx.fileOutDiscardedReads);
+	}
+	if (fctx.fileOutFullyDiscardedAreads)
+	{
+		fclose(fctx.fileOutFullyDiscardedAreads);
 	}
 	fclose(fileOvlOut);
 	fclose(fileOvlIn);
