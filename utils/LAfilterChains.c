@@ -2552,7 +2552,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				}
 			if(count == novl)
 			{
-				fprintf(ctx->fileOutFullyDiscardedAreads, "%d\n", ovl->aread);
+				fprintf(ctx->fileOutFullyDiscardedAreads, "%d %d %d\n", ovl->aread, trim_abeg, trim_aend);
 			}
 		}
 
