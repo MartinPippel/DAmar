@@ -474,6 +474,61 @@ function setlassortOptions()
 	FIX_LASSORT_OPT="${FIX_LASSORT_OPT} -s${RAW_FIX_LASSORT_SORT}"
 }
 
+function setLAfilterChainsOptions()
+{
+	FIX_LAFILTERCHAINS_OPT=""
+	
+	if [[ -n ${RAW_FIX_LAFILTERCHAINS_ANCHOR} && ${RAW_FIX_DACCORD_ANCHOR} -gt 0 ]]
+	then 
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -n ${RAW_FIX_LAFILTERCHAINS_ANCHOR}"
+	fi
+	
+	if [[ -n ${RAW_FIX_LAFILTERCHAINS_PURGE} && ${RAW_FIX_LAFILTERCHAINS_PURGE} -gt 0 ]]
+	then 
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -p"
+	fi
+	
+	if [[ -n ${RAW_FIX_LAFILTERCHAINS_NKEEPCHAINS} ]]
+	then 
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -k ${RAW_FIX_LAFILTERCHAINS_NKEEPCHAINS}"
+	fi
+	
+	if [[ -n ${RAW_FIX_LAFILTERCHAINS_LOWCOMP} ]]
+	then 
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -l ${RAW_FIX_LAFILTERCHAINS_LOWCOMP}"
+	fi
+	
+	# add default trim and q tracks
+	
+	if [[ "${RAW_DACCORD_INDIR}" == "${RAW_REPCOMP_OUTDIR}" ]]
+	then
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -t trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp -q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp"	
+	else
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -t trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign -q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign"
+	fi
+	
+	if [[ -n ${RAW_FIX_LAFILTERCHAINS_UNALIGNBASES} && ${RAW_FIX_LAFILTERCHAINS_UNALIGNBASES} -gt 0 ]]
+	then 
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -u ${RAW_FIX_LAFILTERCHAINS_UNALIGNBASES}"
+	fi
+	
+	if [[ -n ${RAW_FIX_LAFILTERCHAINS_DIFF} && ${RAW_FIX_LAFILTERCHAINS_DIFF} -gt 0 ]]
+	then 
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -d ${RAW_FIX_LAFILTERCHAINS_DIFF}"
+	fi
+	
+	if [[ -n ${RAW_FIX_LAFILTERCHAINS_CHAINLEN} && ${RAW_FIX_LAFILTERCHAINS_CHAINLEN} -gt 0 ]]
+	then 
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -o ${RAW_FIX_LAFILTERCHAINS_CHAINLEN}"
+	fi
+	
+	if [[ -n ${RAW_FIX_LAFILTERCHAINS_FULLDISCAREADLEN} && ${RAW_FIX_LAFILTERCHAINS_FULLDISCAREADLEN} -gt 0 ]]
+	then 
+		FIX_LAFILTERCHAINS_OPT="${FIX_LAFILTERCHAINS_OPT} -Z ${RAW_FIX_LAFILTERCHAINS_FULLDISCAREADLEN}"
+	fi
+	
+}
+
 function setDaccordOptions()
 {
 	FIX_DACCORD_OPT=""
@@ -1470,8 +1525,24 @@ then
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/filterchainsraw ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las && cd ${myCWD}" 
 		done > fix_${currentStep}_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "DACCORD filterchainsraw $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.version      	
-    ### 14_daccord
+	### 14_LAfilterChains
     elif [[ ${currentStep} -eq 14 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+                
+    	setLAfilterChainsOptions
+   	 	myCWD=$(pwd)
+   	 	for x in $(seq 1 ${nblocks})
+        do
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAfilterChains ${FIX_LAFILTERCHAINS_OPT} -R ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.goneLongReads.txt ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las && cd ${myCWD}" 
+		done > fix_${currentStep}_LAfilterChains_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL LAfilterChains $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAfilterChains_block_${RAW_DB%.db}.${slurmID}.version
+    ### 15_daccord
+    elif [[ ${currentStep} -eq 15 ]]
     then
         ### clean up plans 
     	for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1486,8 +1557,8 @@ then
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} --eprofonly -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.dac.fasta && cd ${myCWD}"
 		done > fix_${currentStep}_daccord_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD daccord $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_daccord_block_${RAW_DB%.db}.${slurmID}.version
-   	### 15_computeextrinsicqv
-    elif [[ ${currentStep} -eq 15 ]]
+   	### 16_computeextrinsicqv
+    elif [[ ${currentStep} -eq 16 ]]
     then
         ### clean up plans 
     	for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1501,18 +1572,18 @@ then
 		done > fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.version
     ### 16_Catrack
-	elif [[ ${currentStep} -eq 16 ]]
+	elif [[ ${currentStep} -eq 17 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_16_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_17_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
         myCWD=$(pwd)
         echo "cd ${RAW_DACCORD_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${RAW_DAZZ_DB%.db}.db exqual && cp .${RAW_DAZZ_DB%.db}.exqual.anno .${RAW_DAZZ_DB%.db}.exqual.data ${myCWD}/ && cd ${myCWD}" > fix_16_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "DAZZ_DB Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > fix_16_Catrack_single_${RAW_DB%.db}.${slurmID}.version                       
-    ### 17_split
-    elif [[ ${currentStep} -eq 17 ]]
+    ### 18_split
+    elif [[ ${currentStep} -eq 18 ]]
     then
         ### clean up plans 
         for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
