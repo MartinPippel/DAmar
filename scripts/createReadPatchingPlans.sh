@@ -508,17 +508,7 @@ function setDaccordOptions()
 	then 
 		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -V${RAW_FIX_DACCORD_VEBOSE}"
 	fi
-	
-	if [[ -n ${RAW_FIX_DACCORD_READITVL} ]]
-	then 
-		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -I${RAW_FIX_DACCORD_READITVL}"
-	fi
-	
-	if [[ -n ${RAW_FIX_DACCORD_READPART} ]]
-	then 
-		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -J${RAW_FIX_DACCORD_READPART}"
-	fi
-	
+		
 	if [[ -n ${RAW_FIX_DACCORD_MINWINDOWCOV} && ${RAW_FIX_DACCORD_MINWINDOWCOV} -gt 0 ]]
 	then 
 		FIX_DACCORD_OPT="${FIX_DACCORD_OPT} -m${RAW_FIX_DACCORD_MINWINDOWCOV}"
@@ -564,18 +554,51 @@ function setHaploSplitOptions()
 {
 	FIX_SPLIT_OPT=""
 	
-	if [[ -z "${RAW_FIX_SPLITTYPE}" ]]
+	if [[ -z "${RAW_FIX_SPLIT_TYPE}" ]]
 	then 
-		RAW_FIX_SPLITTYPE=split_agr		
+		RAW_FIX_SPLIT_TYPE=split_agr		
 	fi
 	
-	if [[ "${RAW_FIX_SPLITTYPE}" != "split_agr" && "${RAW_FIX_SPLITTYPE}" != "split_dis" ]]
+	if [[ "${RAW_FIX_SPLIT_TYPE}" != "split_agr" && "${RAW_FIX_SPLIT_TYPE}" != "split_dis" ]]
 	then
 		(>&2 echo "ERROR - Split type not supported. (split_agr or split_dis)")
     	exit 1
 	fi
 	
-	FIX_SPLIT_OPT="${RAW_FIX_SPLITTYPE}"
+	FIX_SPLIT_OPT="${RAW_FIX_SPLIT_TYPE}"
+	
+	if [[ -z "${RAW_FIX_SPLIT_THREADS}"]]
+	then
+		RAW_FIX_SPLIT_THREADS=8
+	fi
+	
+	FIX_SPLIT_OPT="${FIX_SPLIT_OPT} -t${RAW_FIX_SPLIT_THREADS}"	
+	
+	if [[ -n "${RAW_FIX_SPLIT_SEQDEPTH}" && ${RAW_FIX_SPLIT_SEQDEPTH} -gt 0 ]]
+	then
+		FIX_SPLIT_OPT="${FIX_SPLIT_OPT} -d${RAW_FIX_SPLIT_SEQDEPTH}"
+	fi
+	
+	if [[ -n "${RAW_FIX_SPLIT_PHASETHRESHOLD}" ]]
+	then
+		FIX_SPLIT_OPT="${FIX_SPLIT_OPT} -p${RAW_FIX_SPLIT_PHASETHRESHOLD}"
+	fi
+	
+	if [[ -n "${RAW_FIX_SPLIT_MAXALNS}" && ${RAW_FIX_SPLIT_MAXALNS} -gt 0 ]]
+	then
+		FIX_SPLIT_OPT="${FIX_SPLIT_OPT} -D${RAW_FIX_SPLIT_MAXALNS}"
+	fi
+		
+	### for split split_dis there are further options available
+	if [[ -n ${RAW_FIX_SPLIT_DIFFRATE} ]]
+	then 
+		FIX_SPLIT_OPT="${FIX_SPLIT_OPT} --drate${RAW_FIX_SPLIT_DIFFRATE}"
+	fi
+	
+	if [[ -n ${RAW_FIX_SPLIT_NUMVARS} ]]
+	then 
+		FIX_SPLIT_OPT="${FIX_SPLIT_OPT} --kv${RAW_FIX_SPLIT_NUMVARS}"
+	fi
 }
 
 nblocks=$(getNumOfDbBlocks)
@@ -1389,16 +1412,16 @@ then
     elif [[ ${currentStep} -eq 11 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_10_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
         
         myCWD=$(pwd)        
         OPT=""        
-        echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.sym ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" > fix_11_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_DACCORD_OUTDIR} && rm ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" >> fix_11_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_11_mergesym2_single_${RAW_DB%.db}.${slurmID}.version        
+        echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.sym ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" > fix_${currentStep}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_DACCORD_OUTDIR} && rm ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" >> fix_${currentStep}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_mergesym2_single_${RAW_DB%.db}.${slurmID}.version        
 	### 12_filtersym
     elif [[ ${currentStep} -eq 12 ]]
     then
@@ -1489,18 +1512,41 @@ then
         echo "cd ${RAW_DACCORD_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${RAW_DAZZ_DB%.db}.db exqual && cp .${RAW_DAZZ_DB%.db}.exqual.anno .${RAW_DAZZ_DB%.db}.exqual.data ${myCWD}/ && cd ${myCWD}" > fix_16_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "DAZZ_DB Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > fix_16_Catrack_single_${RAW_DB%.db}.${slurmID}.version                       
     ### 17_split
-    elif [[ ${currentStep} -eq 16 ]]
+    elif [[ ${currentStep} -eq 17 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_17_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
+        
+		if [[ -z "${RAW_FIX_SPLIT_DIVIDEBLOCK}" ]]
+		then 
+			RAW_FIX_SPLIT_DIVIDEBLOCK=10
+		fi
+		
+		# create folder structure
+		for x in $(seq 1 ${nblocks})
+		do
+			directory="${RAW_DACCORD_OUTDIR}/${RAW_FIX_SPLIT_TYPE}_s${x}"
+			if [[ -d "${directory}" ]]
+			then
+					mv ${directory} ${directory}_$(date '+%Y-%m-%d_%H-%M-%S'); 
+			fi
+			
+			mkdir -p ${directory}			
+		done 
                 
         setHaploSplitOptions
-        
-        
-             
+        myCWD=$(pwd)
+        for x in $(seq 1 ${nblocks})
+		do
+			for y in $(seq 0 $((RAW_FIX_SPLIT_DIVIDEBLOCK-1)))
+			do
+				echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/${FIX_SPLIT_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.eprof -J${y},${RAW_FIX_SPLIT_DIVIDEBLOCK} ${RAW_FIX_SPLIT_TYPE}_s${x}/${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2ChainSplit.${y}.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}"		
+			done	    		
+		done > fix_${currentStep}_${RAW_FIX_SPLIT_TYPE}_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD ${RAW_FIX_SPLIT_TYPE} $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_${RAW_FIX_SPLIT_TYPE}_block_${RAW_DB%.db}.${slurmID}.version
 	else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
