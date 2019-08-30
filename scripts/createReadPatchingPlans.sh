@@ -1544,7 +1544,7 @@ then
    	 	myCWD=$(pwd)
    	 	for x in $(seq 1 ${nblocks})
         do
-    		echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAfilterChains ${FIX_LAFILTERCHAINS_OPT} -r ${RAW_FIX_LAREPEAT_REPEATTRACK} -R ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.goneLongReads.txt ${RAW_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las && cd ${myCWD}" 
+    		echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAfilterChains ${FIX_LAFILTERCHAINS_OPT} -r ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -R ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.goneLongReads.txt ${RAW_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las && cd ${myCWD}" 
 		done > fix_${currentStep}_LAfilterChains_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL LAfilterChains $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAfilterChains_block_${RAW_DB%.db}.${slurmID}.version
     ### 15_daccord
