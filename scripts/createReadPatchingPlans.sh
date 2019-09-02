@@ -1599,21 +1599,18 @@ then
 		elif [[ ${nblocks} -lt 100 ]]
 		then
 			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9].dac.fasta"
-		elif [[ ${nblocks} -gt 1000 ]]
+		elif [[ ${nblocks} -lt 1000 ]]
 		then
 			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9].dac.fasta"
 		elif [[ ${nblocks} -lt 10000 ]]
 		then
-			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9].dac.fasta"
+			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9][0-9].dac.fasta"
 		else
     		(>&2 echo "fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.: more than 99999 db blocks are not supported!!!")
         	exit 1	
     	fi
 	
-		for x in $(seq 1 ${nblocks})
-		do
-    		echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta && ${DACCORD_PATH}/bin/computeextrinsicqv ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}"
-		done > fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
+		echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta && ${DACCORD_PATH}/bin/computeextrinsicqv ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}" > fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.version
     ### 17_split
     elif [[ ${currentStep} -eq 17 ]]
