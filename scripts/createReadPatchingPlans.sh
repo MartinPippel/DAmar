@@ -1613,7 +1613,7 @@ then
     	OPT=""
 		if [[ -n "${RAW_FILT_COMPUTEEXTRINSICQ_THREADS}" ]]
         then
-        	OPT="${OPT} -t${RAW_FILT_COMPUTEEXTRINSICQ_THREADS}
+        	OPT="${OPT} -t${RAW_FILT_COMPUTEEXTRINSICQ_THREADS}"
    	 	fi
 		echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta && ${DACCORD_PATH}/bin/computeextrinsicqv${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}" > fix_${currentStep}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.version
