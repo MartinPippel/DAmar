@@ -1606,12 +1606,17 @@ then
 		then
 			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9][0-9].dac.fasta"
 		else
-    		(>&2 echo "fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.: more than 99999 db blocks are not supported!!!")
+    		(>&2 echo "fix_${currentStep}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.: more than 99999 db blocks are not supported!!!")
         	exit 1	
     	fi
-	
-		echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta && ${DACCORD_PATH}/bin/computeextrinsicqv ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}" > fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.version
+    	myCWD=$(pwd)
+    	OPT=""
+		if [[ -n "${RAW_FILT_COMPUTEEXTRINSICQ_THREADS}" ]]
+        then
+        	OPT="${OPT} -t${RAW_FILT_COMPUTEEXTRINSICQ_THREADS}
+   	 	fi
+		echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta && ${DACCORD_PATH}/bin/computeextrinsicqv${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}" > fix_${currentStep}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.version
     ### 17_split
     elif [[ ${currentStep} -eq 17 ]]
     then
