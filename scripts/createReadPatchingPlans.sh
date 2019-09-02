@@ -1592,25 +1592,31 @@ then
         do            
             rm $x
         done 
+        
+        if [[ ${nblocks} -lt 10 ]]
+		then
+			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9].dac.fasta"
+		elif [[ ${nblocks} -lt 100 ]]
+		then
+			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9].dac.fasta"
+		elif [[ ${nblocks} -gt 1000 ]]
+		then
+			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9].dac.fasta"
+		elif [[ ${nblocks} -lt 10000 ]]
+		then
+			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.[0-9][0-9][0-9].dac.fasta"
+		else
+    		(>&2 echo "fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.: more than 99999 db blocks are not supported!!!")
+        	exit 1	
+    	fi
 	
 		for x in $(seq 1 ${nblocks})
 		do
-    		echo "cd ${RAW_DACCORD_OUTDIR} && ln -s ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain3.las && ${DACCORD_PATH}/bin/computeextrinsicqv -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.${x}.eprof ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain3.las ${RAW_DAZZ_DB%.db}.db && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}SortFilt2Chain3j.las && cd ${myCWD}"
+    		echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta && ${DACCORD_PATH}/bin/computeextrinsicqv ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain3.dac.fasta ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}"
 		done > fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_computeextrinsicqv_block_${RAW_DB%.db}.${slurmID}.version
-    ### 16_Catrack
-	elif [[ ${currentStep} -eq 17 ]]
-    then
-        ### clean up plans 
-        for x in $(ls fix_17_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done
-        myCWD=$(pwd)
-        echo "cd ${RAW_DACCORD_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${RAW_DAZZ_DB%.db}.db exqual && cp .${RAW_DAZZ_DB%.db}.exqual.anno .${RAW_DAZZ_DB%.db}.exqual.data ${myCWD}/ && cd ${myCWD}" > fix_16_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-		echo "DAZZ_DB Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > fix_16_Catrack_single_${RAW_DB%.db}.${slurmID}.version                       
-    ### 18_split
-    elif [[ ${currentStep} -eq 18 ]]
+    ### 17_split
+    elif [[ ${currentStep} -eq 17 ]]
     then
         ### clean up plans 
         for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
