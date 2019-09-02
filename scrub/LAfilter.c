@@ -401,7 +401,7 @@ static int filterMaxSegmentErrorRate(Overlap *ovl, int maxSegmentErrorRate)
 
 //	printf("o[%d, %d] %c a[%d, %d] b[%d, %d]", ovl->aread, ovl->bread, ovl->flags & OVL_COMP ? 'C' : 'N', ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos);
 	int i;
-	for (i = 2; i < tlen - 2; i += 2)
+	for (i = 0; i < tlen - 2; i += 2)
 	{
 		// ignore substitutions for now // TODO
 		if((trace[i])*100.0/(trace[i+1]) > maxSegmentErrorRate)
