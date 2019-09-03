@@ -34,10 +34,11 @@ int SORT;
 
 static void usage(FILE* out, char *name)
 {
-	fprintf(out, "Usage  %s [-mr] [-S<int>] <db> <txt> <track>\n", name);
+	fprintf(out, "Usage:\n         %s [-vmr] [-s <int>] <db> <txt> <track>\n", name);
 	fprintf(out, "Options:	-m       track is mask track and has the format readid pos pos\n");
 	fprintf(out, "	        -r       track is read pair track and has the format: readID readID\n");
-	fprintf(out, "	        -S <int> sort columns from 0. to -S <int> \n");
+	fprintf(out, "	        -s <int> sort fields from 0. to -s <int> \n");
+	fprintf(out, "	        -v       verbose mode\n");
 }
 
 static int cmp_ints(const void* x, const void* y)
@@ -76,11 +77,12 @@ int main(int argc, char* argv[])
 
 	opterr = 0;
 
+	int verbose = 1;
 	int isMask = 0;
 	int isReadPair = 0;
 	SORT = -1;
 
-	while ((c = getopt(argc, argv, "mrs:")) != -1)
+	while ((c = getopt(argc, argv, "vmrs:")) != -1)
 	{
 		switch (c)
 		{
@@ -94,8 +96,11 @@ int main(int argc, char* argv[])
 			case 's':
 				SORT = atoi(optarg);
 				break;
+			case 'v':
+                                verbose = 1; 
+                                break;
 			default:
-				printf("Unknow option: %s\n", argv[optind - 1]);
+				printf("Unknow option: %s\n", argv[optind]);
 				usage(stderr, argv[0]);
 				exit(1);
 		}
@@ -138,19 +143,19 @@ int main(int argc, char* argv[])
 	{
 		if(isMask && SORT > 2)
 		{
-			fprintf(stderr, "[WARNING]: Sort columns cannot be greater then 2, if isMask is set!\n");
+			fprintf(stderr, "[WARNING]: Sort fields cannot be greater then 2, if isMask is set!\n");
 			exit(1);
 		}
 
 		if(isReadPair && SORT > 1)
 		{
-			fprintf(stderr, "[WARNING]: Sort columns cannot be greater then 1, if isReadPair is set!\n");
+			fprintf(stderr, "[WARNING]: Sort fields cannot be greater then 1, if isReadPair is set!\n");
 			exit(1);
 		}
 
 		if(SORT > 2)
 		{
-			fprintf(stderr, "[WARNING]: Unsupported number for sort columns(%d). (isMask [0,1,2], isReadPair [0,1])\n", SORT);
+			fprintf(stderr, "[WARNING]: Unsupported number for sort fields(%d). (isMask [0,1,2], isReadPair [0,1])\n", SORT);
 				exit(1);
 		}
 	}
@@ -164,17 +169,24 @@ int main(int argc, char* argv[])
 	int maxints = 0;
 
 	// todo dynamically read number of fields from first lines
-	// for now: if isMask: 3 columns, aread, abpos, aepos
-	// 				  if isReadPair: 2 columns, aread, bread
+	// for now: if isMask: 3 fields, aread, abpos, aepos
+	// 				  if isReadPair: 2 fields, aread, bread
 
 	int count;
+        int nLines=0;
+
+	if(verbose)
+	  printf("read file %s:", pathTxt);
 	while (1)
 	{
+		nLines++;
 		if(isMask)
 		{
 			count = fscanf(fileIn, "%d%*c%d%*c%d\n", &field1, &field2, &field3);
 			if (count != 3)
 			{
+				if(count != EOF)
+ 					fprintf(stderr, "[WARNING] - Line %d does not have proper mask format. Count is %d. Stop!\n", nLines, count);
 				break;
 			}
 		}
@@ -183,9 +195,10 @@ int main(int argc, char* argv[])
 			count = fscanf(fileIn, "%d%*c%d\n", &field1, &field2);
 			if (count != 2)
 			{
+				if(count !=EOF)
+					fprintf(stderr, "[WARNING] - Line %d does not have proper read pair format. Count is %d. Stop!\n", nLines, count);
 				break;
 			}
-
 		}
 
 		if (nints + count >= maxints)
@@ -219,32 +232,37 @@ int main(int argc, char* argv[])
 
 		nints += count;
 	}
+        if(verbose)
+		printf(" found %d lines\n", nLines);
 
+	int fields = (isMask) ? 3 : 2;
 	if (SORT>=0)
-		qsort(ints, nints / count, sizeof(int) * count, cmp_ints);
-
+	{
+		if(verbose)
+			printf("Sort by: %d columns\n", SORT);
+		qsort(ints, nints / fields, sizeof(int) * fields, cmp_ints);
+	}
 	track_anno* anno = malloc(sizeof(track_anno) * (DB_NREADS(&db) + 1));
 	track_data* data = NULL;
 	int ndata = 0;
 	int maxdata = 0;
 
 	bzero(anno, sizeof(track_anno) * (DB_NREADS(&db) + 1));
-
 	int i;
-	for (i = 0; i < nints; i += count)
+	for (i = 0; i < nints; i += fields)
 	{
-		if (ndata + 1 >= maxdata)
+		if (ndata + fields >= maxdata)
 		{
 			maxdata = maxdata * 1.2 + 1000;
 			data = realloc(data, sizeof(track_data) * maxdata);
 		}
 
-		anno[ints[i + 0]] += (count - 1) * sizeof(track_data);
-		data[ndata + 0] = ints[i + 1];
+		anno[ints[i]] += (fields - 1) * sizeof(track_data);
+		data[ndata] = ints[i + 1];
 		if(isMask)
 			data[ndata + 1] = ints[i + 2];
 
-		ndata += count - 1;
+		ndata += fields - 1;
 	}
 
 	track_anno coff, off;
@@ -257,12 +275,16 @@ int main(int argc, char* argv[])
 		off += coff;
 	}
 
+	if(verbose)
+		printf("write track: %s\n", nameTrack);
 	track_write(&db, nameTrack, 0, anno, data, ndata);
 
 	free(anno);
 	free(data);
-
+	free(ints);
 	Close_DB(&db);
 
+	if(verbose)
+		printf("DONE\n");
 	return 0;
 }
