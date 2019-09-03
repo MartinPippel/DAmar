@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <sys/param.h>
 #include <assert.h>
+#include <string.h>
 
 #include "trim.h"
 #include "lib/oflags.h"
@@ -71,507 +72,437 @@ static void align(TRIM* trim, Overlap* ovl, int ab, int ae, int bb, int be)
 
 static void eval_trace(TRIM* trim, int stop_b, int* stop_a, int* diff_left, int* diff_right)
 {
-	// int twidth = trim->twidth;
-	int a = trim->align.path->abpos;
-	int b = trim->align.path->bbpos;
-	int p, t;
-	int diffs = 0;
-	int matches = 0;
+    // int twidth = trim->twidth;
+    int a = trim->align.path->abpos;
+    int b = trim->align.path->bbpos;
+    int p, t;
+    int diffs = 0;
+    int matches = 0;
 
-	// int aprev = a;
-	// int bprev = b;
-	// int tcur = 0;
+    // int aprev = a;
+    // int bprev = b;
+    // int tcur = 0;
 
-	for (t = 0; t < trim->align.path->tlen; t++)
-	{
-		if ((p = ((int*) (trim->align.path->trace))[t]) < 0)
-		{
-			p = -p - 1;
-			while (a < p)
-			{
-				if (trim->align.aseq[a] != trim->align.bseq[b])
-					diffs++;
-				else
-					matches++;
+    for (t = 0; t < trim->align.path->tlen; t++)
+    {
+        if ((p = ((int*)(trim->align.path->trace))[t]) < 0)
+        {
+            p = -p - 1;
+            while (a < p)
+            {
+                if (trim->align.aseq[a] != trim->align.bseq[b]) diffs++;
+                else matches++;
 
-				a += 1;
-				b += 1;
+                a += 1;
+                b += 1;
 
-				if (b == stop_b)
-				{
-					*stop_a = a;
-					*diff_left = diffs;
-					diffs = 0;
-				}
-			}
+                if (b == stop_b)
+                {
+                    *stop_a = a;
+                    *diff_left = diffs;
+                    diffs = 0;
+                }
+            }
 
-			diffs++;
-			b += 1;
+            diffs++;
+            b += 1;
 
-			if (b == stop_b)
-			{
-				*stop_a = a;
-				*diff_left = diffs;
-				diffs = 0;
-			}
-		}
-		else
-		{
-			p--;
+            if (b == stop_b)
+            {
+                *stop_a = a;
+                *diff_left = diffs;
+                diffs = 0;
+            }
+        }
+        else
+        {
+            p--;
 
-			while (b < p)
-			{
-				if (trim->align.aseq[a] != trim->align.bseq[b])
-					diffs++;
-				else
-					matches++;
+            while (b < p)
+            {
+                if (trim->align.aseq[a] != trim->align.bseq[b]) diffs++;
+                else matches++;
 
-				a += 1;
-				b += 1;
+                a += 1;
+                b += 1;
 
-				if (b == stop_b)
-				{
-					*stop_a = a;
-					*diff_left = diffs;
-					diffs = 0;
-				}
-			}
+                if (b == stop_b)
+                {
+                    *stop_a = a;
+                    *diff_left = diffs;
+                    diffs = 0;
+                }
+            }
 
-			diffs++;
-			a += 1;
-		}
-	}
+            diffs++;
+            a += 1;
+        }
+    }
 
-	p = trim->align.path->aepos;
-	while (a < p)
-	{
-		if (trim->align.aseq[a] != trim->align.bseq[b])
-			diffs++;
-		else
-			matches++;
+    p = trim->align.path->aepos;
+    while (a < p)
+    {
+        if (trim->align.aseq[a] != trim->align.bseq[b]) diffs++;
+        else matches++;
 
-		a += 1;
-		b += 1;
+        a += 1;
+        b += 1;
 
-		if (b == stop_b)
-		{
-			*stop_a = a;
-			*diff_left = diffs;
-			diffs = 0;
-		}
-	}
+        if (b == stop_b)
+        {
+            *stop_a = a;
+            *diff_left = diffs;
+            diffs = 0;
+        }
+    }
 
-	*diff_right = diffs;
+    *diff_right = diffs;
 }
+
 
 #ifdef DEBUG_TRIM
 
-static void print_trace(Overlap* ovl, int tspace)
+static void print_trace(Overlap* ovl)
 {
-	ovl_trace* trace = ovl->path.trace;
-	int tlen = ovl->path.tlen;
+    ovl_trace* trace = ovl->path.trace;
+    int tlen = ovl->path.tlen;
 
-	int a = ovl->path.abpos;
-	int b = ovl->path.bbpos;
+    int b = ovl->path.bbpos;
 
-	int i;
-	for (i = 0; i < tlen; i += 2)
-	{
-		if ( i > 0 && i%10 == 0 )
-		{
-			printf("\n");
-		}
+    int i;
+    for (i = 0; i < tlen; i += 2)
+    {
+        if ( i > 0 && i%10 == 0 )
+        {
+            printf("\n");
+        }
 
-		printf("%d %5d (%3d %3d) ", a, b, trace[i], trace[i+1]);
+        printf("%5d (%3d %3d) ", b, trace[i], trace[i+1]);
 
-		b += trace[i+1];
-		a = a/tspace*tspace + tspace;
-		//a += tspace;
-		if (a > ovl->path.aepos)
-		a = ovl->path.aepos;
-	}
+        b += trace[i+1];
+    }
 
-	printf("%5d\n", b);
+    printf("%5d\n", b);
 }
 
 #endif
 
 void trim_overlap(TRIM* trim, Overlap* ovl)
 {
-	ovl_trace* trace = ovl->path.trace;
+    ovl_trace* trace = ovl->path.trace;
 
-	trim->nOvls++;
-	trim->nOvlBases += (ovl->path.aepos - ovl->path.abpos) + (ovl->path.bepos - ovl->path.bbpos);
+    trim->nOvls++;
+    trim->nOvlBases += (ovl->path.aepos - ovl->path.abpos) + (ovl->path.bepos - ovl->path.bbpos);
 
-	int a = ovl->aread;
-	int b = ovl->bread;
+    int a = ovl->aread;
+    int b = ovl->bread;
 
-	int trim_a_left, trim_a_right;
-	get_trim(trim->db, trim->track, a, &trim_a_left, &trim_a_right);
+    int trim_a_left, trim_a_right;
+    get_trim(trim->db, trim->track, a, &trim_a_left, &trim_a_right);
 
-	int trim_b_left, trim_b_right;
-	get_trim(trim->db, trim->track, b, &trim_b_left, &trim_b_right);
+    int trim_b_left, trim_b_right;
+    get_trim(trim->db, trim->track, b, &trim_b_left, &trim_b_right);
 
-	if (trim_a_left >= trim_a_right || trim_b_left >= trim_b_right)
-	{
-		ovl->flags |= OVL_DISCARD | OVL_TRIM;
-		return;
-	}
+    if (trim_a_left >= trim_a_right || trim_b_left >= trim_b_right)
+    {
+        ovl->flags |= OVL_DISCARD | OVL_TRIM;
+        return ;
+    }
 
-	if (ovl->flags & OVL_COMP)
-	{
-		int tmp = trim_b_left;
+    if (ovl->flags & OVL_COMP)
+    {
+        int tmp = trim_b_left;
 
-		int ovlBLen = DB_READ_LEN(trim->db, ovl->bread);
-		trim_b_left = ovlBLen - trim_b_right;
-		trim_b_right = ovlBLen - tmp;
-	}
+        int ovlBLen = DB_READ_LEN(trim->db, ovl->bread);
+        trim_b_left = ovlBLen - trim_b_right;
+        trim_b_right = ovlBLen - tmp;
+    }
 
-	int abt = MAX(trim_a_left, ovl->path.abpos);
-	int aet = MIN(trim_a_right, ovl->path.aepos);
-	int bbt = MAX(trim_b_left, ovl->path.bbpos);
-	int bet = MIN(trim_b_right, ovl->path.bepos);
+    int abt = MAX(trim_a_left, ovl->path.abpos);
+    int aet = MIN(trim_a_right, ovl->path.aepos);
+    int bbt = MAX(trim_b_left, ovl->path.bbpos);
+    int bet = MIN(trim_b_right, ovl->path.bepos);
 
-	if (abt >= aet || bbt >= bet)
-	{
-		ovl->flags |= OVL_DISCARD | OVL_TRIM;
-#ifdef DEBUG_TRIM
-		printf("DISCARD alignment due to out of trim interval!\n");
-#endif
-		return;
-	}
+    if (abt >= aet || bbt >= bet)
+    {
+        ovl->flags |= OVL_DISCARD | OVL_TRIM;
+        return ;
+    }
 
-	if (aet - abt < MIN_TRIM_LENGTH || bet - bbt < MIN_TRIM_LENGTH)
-	{
-#ifdef DEBUG_TRIM
-		printf("DISCARD alignment due to short trim lengths!\n");
-		printf("%6d (%5d) %c %6d (%5d) " ANSI_COLOR_GREEN "OVL" ANSI_COLOR_RESET " %5d..%5d %5d..%5d " ANSI_COLOR_GREEN "TRIM" ANSI_COLOR_RESET " %5d..%5d %5d..%5d\n",
-				a, DB_READ_LEN(trim->db, ovl->aread), ovl->flags & OVL_COMP ? 'c' : 'n', b, DB_READ_LEN(trim->db, ovl->bread),
-				ovl->path.abpos, ovl->path.aepos,
-				ovl->path.bbpos, ovl->path.bepos,
-				trim_a_left, trim_a_right,
-				trim_b_left, trim_b_right);
-#endif
-		ovl->flags |= OVL_DISCARD | OVL_TRIM | OVL_OLEN;
-		return;
-	}
-
-	if (abt == ovl->path.abpos && aet == ovl->path.aepos && bbt == ovl->path.bbpos && bet == ovl->path.bepos)
-	{
-#ifdef DEBUG_TRIM
-		printf("trim interval equals alignment - nothing to do\n");
-#endif
-		return;
-	}
+    if (abt == ovl->path.abpos && aet == ovl->path.aepos &&
+        bbt == ovl->path.bbpos && bet == ovl->path.bepos)
+    {
+        return ;
+    }
 
 #ifdef DEBUG_TRIM
-	printf("%6d (%5d) %c %6d (%5d) " ANSI_COLOR_GREEN "OVL" ANSI_COLOR_RESET " %5d..%5d %5d..%5d " ANSI_COLOR_GREEN "TRIM" ANSI_COLOR_RESET " %5d..%5d %5d..%5d\n",
-			a, DB_READ_LEN(trim->db, ovl->aread), ovl->flags & OVL_COMP ? 'c' : 'n', b, DB_READ_LEN(trim->db, ovl->bread),
-			ovl->path.abpos, ovl->path.aepos,
-			ovl->path.bbpos, ovl->path.bepos,
-			trim_a_left, trim_a_right,
-			trim_b_left, trim_b_right);
+    printf("%6d (%5d) %c %6d (%5d) " ANSI_COLOR_GREEN "OVL" ANSI_COLOR_RESET " %5d..%5d %5d..%5d " ANSI_COLOR_GREEN "TRIM" ANSI_COLOR_RESET " %5d..%5d %5d..%5d\n",
+            a, DB_READ_LEN(trim->db, ovl->aread), ovl->flags & OVL_COMP ? 'c' : 'n', b, DB_READ_LEN(trim->db, ovl->bread),
+            ovl->path.abpos, ovl->path.aepos,
+            ovl->path.bbpos, ovl->path.bepos,
+            trim_a_left, trim_a_right,
+            trim_b_left, trim_b_right);
 #endif
 
-	if (abt != ovl->path.abpos || aet != ovl->path.aepos)
-	{
-		int seg_old = ovl->path.abpos / trim->twidth;
-		int seg_new = abt / trim->twidth;
+    if (abt != ovl->path.abpos || aet != ovl->path.aepos)
+    {
+        int seg_old = ovl->path.abpos / trim->twidth;
+        int seg_new = abt / trim->twidth;
 
-		ovl->path.tlen -= 2 * (seg_new - seg_old);
+        ovl->path.tlen -= 2 * (seg_new - seg_old);
 
-		int j = 0;
-		while (seg_new != seg_old)
-		{
-			ovl->path.bbpos += trace[j + 1];
+        int j = 0;
+        while (seg_new != seg_old)
+        {
+            ovl->path.bbpos += trace[j+1];
 
-			j += 2;
-			seg_old++;
-		}
+            j += 2;
+            seg_old++;
+        }
 
-		trace += j;
-		ovl->path.trace += sizeof(ovl_trace) * j;
+        trace += j;
+        ovl->path.trace += sizeof(ovl_trace) * j;
 
-		seg_old = (ovl->path.aepos - 1) / trim->twidth;
-		seg_new = (aet - 1) / trim->twidth;
+        seg_old = (ovl->path.aepos - 1) / trim->twidth;
+        seg_new = (aet - 1) / trim->twidth;
 
-		j = ovl->path.tlen - 2;
-		while (seg_new != seg_old)
-		{
-			ovl->path.bepos -= trace[j + 1];
+        j = ovl->path.tlen - 2;
+        while (seg_new != seg_old)
+        {
+            ovl->path.bepos -= trace[j+1];
 
-			j -= 2;
-			seg_old--;
-		}
+            j -= 2;
+            seg_old--;
+        }
 
-		ovl->path.tlen = j + 2;
+        ovl->path.tlen = j + 2;
 
-		if (trim_a_left > ovl->path.abpos)
-			trim->nTrimmedBases += (trim_a_left - ovl->path.abpos);
-		if (ovl->path.aepos > trim_a_right)
-			trim->nTrimmedBases += (ovl->path.aepos - trim_a_right);
-
-		ovl->path.abpos = MAX(trim_a_left, ovl->path.abpos);
-		ovl->path.aepos = MIN(trim_a_right, ovl->path.aepos);
+        ovl->path.abpos = MAX(trim_a_left, ovl->path.abpos);
+        ovl->path.aepos = MIN(trim_a_right, ovl->path.aepos);
 
 #ifdef DEBUG_TRIM
-		printf(ANSI_COLOR_BLUE);
+        printf(ANSI_COLOR_BLUE);
 #endif
-	}
+    }
 
 #ifdef DEBUG_TRIM
-	printf("%35s %5d..%5d %5d..%5d\n", "",
-			ovl->path.abpos, ovl->path.aepos,
-			ovl->path.bbpos, ovl->path.bepos);
-	printf(ANSI_COLOR_RESET);
+    printf("%35s %5d..%5d %5d..%5d\n", "",
+            ovl->path.abpos, ovl->path.aepos,
+            ovl->path.bbpos, ovl->path.bepos);
+    printf(ANSI_COLOR_RESET);
 #endif
 
-	trim->nTrimmedOvls++;
+    trim->nTrimmedOvls++;
 
-	bbt = MAX(trim_b_left, ovl->path.bbpos);
-	bet = MIN(trim_b_right, ovl->path.bepos);
+    bbt = MAX(trim_b_left, ovl->path.bbpos);
+    bet = MIN(trim_b_right, ovl->path.bepos);
 
-	if (bbt < bet && (bbt != ovl->path.bbpos || bet != ovl->path.bepos))
-	{
+    if (bbt < bet && (bbt != ovl->path.bbpos || bet != ovl->path.bepos))
+    {
+        int abpos, aepos, bbpos, bepos, j;
+
+        // align segment on the left
+
+        bbpos = ovl->path.bbpos;
+
+        if (bbpos < bbt)
+        {
+            // printf("left trim\n");
+
+            abpos = ovl->path.abpos;
+            aepos = (abpos / trim->twidth + 1) * trim->twidth;
+            bepos = bbpos + trace[1];
+
+            // print_trace(ovl);
+
+            for (j = 2; j < ovl->path.tlen; j += 2)
+            {
+                if (bbpos <= bbt && bepos > bbt)
+                {
+                    // printf("L %d %5d..%5d %5d..%5d\n", j, abpos, aepos, bbpos, bepos);
+                    break;
+                }
+
+                abpos  = aepos;
+                aepos += trim->twidth;
+
+                bbpos  = bepos;
+                bepos += trace[j+1];
+            }
+
+            if (bbpos != bbt)
+            {
+                align(trim, ovl, abpos, aepos, bbpos, bepos);
+
+                int stop_a, diffs_left, diffs_right;
+
+                eval_trace(trim, bbt, &stop_a, &diffs_left, &diffs_right);
+
+                trace[j-1] = bepos - bbt;
+                trace[j-2] = diffs_right;
+
+                // rare case, see e.coli dataset 729 -> 15957 for an example
+
+                if (aepos == stop_a) stop_a--;
+
+                trim->nTrimmedBases += (stop_a - ovl->path.abpos) + (bbt - ovl->path.bbpos);
+
+                ovl->path.abpos = stop_a;
+                ovl->path.bbpos = bbt;
+
+                // printf("STOP @ %5d %5d DIFFS %2d %2d\n", stop_a, bbt, diffs_left, diffs_right);
+            }
+            else
+            {
+            	trim->nTrimmedBases += (abpos - ovl->path.abpos) + (bbpos - ovl->path.bbpos);
+
+                ovl->path.abpos = abpos;
+                ovl->path.bbpos = bbpos;
+            }
+
+            trace += j - 2;
+            ovl->path.trace += sizeof(ovl_trace) * (j - 2);
+            ovl->path.tlen -= j - 2;
+
+            // print_trace(ovl);
+        }
+
+        // align segment on the right
+
+        bepos = ovl->path.bepos;
+
+        if (bepos > bet)
+        {
+            aepos = ovl->path.aepos;
+            abpos = (aepos % trim->twidth) ? aepos - (aepos % trim->twidth) : aepos - trim->twidth;
+            bbpos = bepos - trace[ ovl->path.tlen - 1 ];
+
+            // print_trace(ovl);
+
+            for (j = ovl->path.tlen - 4; j >= 0; j -= 2)
+            {
+                if (bbpos < bet && bepos >= bet)
+                {
+                    // printf("R %d %5d..%5d %5d..%5d\n", ovl->path.tlen - j-2, abpos, aepos, bbpos, bepos);
+                    break;
+                }
+
+                aepos  = abpos;
+                abpos -= trim->twidth;
+
+                bepos  = bbpos;
+                bbpos -= trace[j+1];
+            }
+
+            if (bepos != bet)
+            {
+                align(trim, ovl, abpos, aepos, bbpos, bepos);
+
+                int stop_a, diffs_left, diffs_right;
+
+                eval_trace(trim, bet, &stop_a, &diffs_left, &diffs_right);
+
+                trim->nTrimmedBases += (ovl->path.aepos - stop_a) + (ovl->path.bepos - bet);
+
+                ovl->path.aepos = stop_a;
+                ovl->path.bepos = bet;
+
+                trace[j+2] = diffs_left;
+                trace[j+3] = bet - bbpos;
+
+                // printf("STOP @ %5d %5d DIFFS %2d %2d\n", stop_a, bet, diffs_left, diffs_right);
+            }
+            else
+            {
+            	trim->nTrimmedBases += (ovl->path.aepos - aepos) + (ovl->path.bepos - bepos);
+
+                ovl->path.aepos = aepos;
+                ovl->path.bepos = bepos;
+            }
+
+            ovl->path.tlen = j + 4;
+
+            // print_trace(ovl);
+        }
+
 #ifdef DEBUG_TRIM
-		printf("if (bbt < bet && (bbt != ovl->path.bbpos || bet != ovl->path.bepos))\n");
+        printf(ANSI_COLOR_BLUE);
 #endif
-		int abpos, aepos, bbpos, bepos, j;
-
-		// align segment on the left
-
-		bbpos = ovl->path.bbpos;
-
-		if (bbpos < bbt)
-		{
-#ifdef DEBUG_TRIM
-			printf("left trim\n");
-#endif
-
-			abpos = ovl->path.abpos;
-			aepos = (abpos / trim->twidth + 1) * trim->twidth;
-			bepos = bbpos + trace[1];
-#ifdef DEBUG_TRIM
-			print_trace(ovl, trim->twidth);
-#endif
-			for (j = 2; j < ovl->path.tlen; j += 2)
-			{
-				if (bbpos <= bbt && bepos > bbt)
-				{
-#ifdef DEBUG_TRIM
-					printf("L %d %5d..%5d %5d..%5d\n", j, abpos, aepos, bbpos, bepos);
-#endif
-					break;
-				}
-
-				abpos = aepos;
-				aepos += trim->twidth;
-
-				bbpos = bepos;
-				bepos += trace[j + 1];
-			}
-
-			if (bbpos != bbt)
-			{
-				align(trim, ovl, abpos, aepos, bbpos, bepos);
-
-				int stop_a, diffs_left, diffs_right;
-
-				eval_trace(trim, bbt, &stop_a, &diffs_left, &diffs_right);
-
-				trace[j - 1] = bepos - bbt;
-				trace[j - 2] = diffs_right;
-
-				// rare case, see e.coli dataset 729 -> 15957 for an example
-
-				if (aepos == stop_a)
-					stop_a--;
-
-				trim->nTrimmedBases += (stop_a - ovl->path.abpos) + (bbt - ovl->path.bbpos);
-
-				ovl->path.abpos = stop_a;
-				ovl->path.bbpos = bbt;
+    }
 
 #ifdef DEBUG_TRIM
-				printf("STOP @ %5d %5d DIFFS %2d %2d\n", stop_a, bbt, diffs_left, diffs_right);
-#endif
-			}
-			else
-			{
-				trim->nTrimmedBases += (abpos - ovl->path.abpos) + (bbpos - ovl->path.bbpos);
-
-				ovl->path.abpos = abpos;
-				ovl->path.bbpos = bbpos;
-			}
-
-			trace += j - 2;
-			ovl->path.trace += sizeof(ovl_trace) * (j - 2);
-			ovl->path.tlen -= j - 2;
-#ifdef DEBUG_TRIM
-			print_trace(ovl, trim->twidth);
-#endif
-		}
-
-		// align segment on the right
-
-		bepos = ovl->path.bepos;
-
-		if (bepos > bet)
-		{
-#ifdef DEBUG_TRIM
-			printf("right trim\n");
-#endif
-			aepos = ovl->path.aepos;
-			abpos = (aepos % trim->twidth) ? aepos - (aepos % trim->twidth) : aepos - trim->twidth;
-			bbpos = bepos - trace[ovl->path.tlen - 1];
-
-#ifdef DEBUG_TRIM
-			print_trace(ovl, trim->twidth);
-#endif
-			for (j = ovl->path.tlen - 4; j >= 0; j -= 2)
-			{
-				if (bbpos < bet && bepos >= bet)
-				{
-#ifdef DEBUG_TRIM
-					printf("R %d %5d..%5d %5d..%5d\n", ovl->path.tlen - j-2, abpos, aepos, bbpos, bepos);
-#endif
-					break;
-				}
-
-				aepos = abpos;
-				abpos -= trim->twidth;
-
-				bepos = bbpos;
-				bbpos -= trace[j + 1];
-			}
-
-			if (bepos != bet)
-			{
-				align(trim, ovl, abpos, aepos, bbpos, bepos);
-
-				int stop_a, diffs_left, diffs_right;
-
-				eval_trace(trim, bet, &stop_a, &diffs_left, &diffs_right);
-
-				trim->nTrimmedBases += (ovl->path.aepos - stop_a) + (ovl->path.bepos - bet);
-
-				ovl->path.aepos = stop_a;
-				ovl->path.bepos = bet;
-
-				trace[j + 2] = diffs_left;
-				trace[j + 3] = bet - bbpos;
-
-				if (trace[j + 2] == trace[j + 3] && stop_a % trim->twidth == 0)
-				{
-					//ovl->path.bepos+=1;
-					trace[j] += trace[j + 2];
-					trace[j + 1] += trace[j + 3];
-					ovl->path.tlen = j + 2;
-				}
-				else
-					ovl->path.tlen = j + 4;
-
-#ifdef DEBUG_TRIM
-				printf("STOP @ %5d %5d DIFFS %2d %2d\n", stop_a, bet, diffs_left, diffs_right);
-#endif
-			}
-			else
-			{
-				trim->nTrimmedBases += (ovl->path.aepos - aepos) + (ovl->path.bepos - bepos);
-
-				ovl->path.aepos = aepos;
-				ovl->path.bepos = bepos;
-
-				ovl->path.tlen = j + 4;
-			}
-
-#ifdef DEBUG_TRIM
-			print_trace(ovl, trim->twidth);
-#endif
-		}
-
-#ifdef DEBUG_TRIM
-		printf(ANSI_COLOR_BLUE);
-#endif
-	}
-	else
-	{
-		if (trim_b_left > ovl->path.bbpos)
-			trim->nTrimmedBases += (trim_b_left - ovl->path.bbpos);
-		if (ovl->path.bepos > trim_b_right)
-			trim->nTrimmedBases += (ovl->path.bepos - trim_b_right);
-	}
-
-#ifdef DEBUG_TRIM
-	printf("%35s %5d..%5d %5d..%5d nTOvl(%lld) nTBas(%lld)\n", "",
-			ovl->path.abpos, ovl->path.aepos,
+    printf("%35s %5d..%5d %5d..%5d nTOvl(%lld) nTBas(%lld)\n", "",
+            ovl->path.abpos, ovl->path.aepos,
 			ovl->path.bbpos, ovl->path.bepos,
 			trim->nTrimmedOvls, trim->nTrimmedBases
-	);
-	printf(ANSI_COLOR_RESET);
+			);
+    printf(ANSI_COLOR_RESET);
 #endif
 
-	// this can happen if we trim the alignment to a very short length
-	// covering mostly noisy regions in either a or b
-	if (ovl->path.abpos >= ovl->path.aepos || ovl->path.bepos < trim_b_left || ovl->path.bbpos > trim_b_right)
-	{
-		ovl->flags |= OVL_DISCARD | OVL_TRIM;
-	}
-	else
-	{
-		ovl->path.diffs = 0;
-		int j;
-		for (j = 0; j < ovl->path.tlen; j += 2)
-		{
-			ovl->path.diffs += trace[j];
-		}
-	}
+    // this can happen if we trim the alignment to a very short length
+    // covering mostly noisy regions in either a or b
+    if (ovl->path.abpos >= ovl->path.aepos || ovl->path.bepos < trim_b_left || ovl->path.bbpos > trim_b_right)
+    {
+        ovl->flags |= OVL_DISCARD | OVL_TRIM;
+    }
+    else
+    {
+        ovl->path.diffs = 0;
+        int j;
+        for (j = 0; j < ovl->path.tlen; j += 2)
+        {
+            ovl->path.diffs += trace[j];
+        }
+    }
 
 #ifdef DEBUG_VALIDATE
-	{
-		int cura = ovl->path.abpos;
-		int curb = ovl->path.bbpos;
-		int j;
-		for (j = 0; j < ovl->path.tlen; j += 2)
-		{
-			cura = (cura/trim->twidth + 1) * trim->twidth;
-			curb += trace[j+1];
-		}
-		printf("curb %d== ovl->path.bepos %d\n", curb,ovl->path.bepos);
-		assert(curb == ovl->path.bepos);
-	}
+    {
+        int cura = ovl->path.abpos;
+        int curb = ovl->path.bbpos;
+        int j;
+        for (j = 0; j < ovl->path.tlen; j += 2)
+        {
+            cura = (cura/trim->twidth + 1) * trim->twidth;
+            curb += trace[j+1];
+        }
+
+        assert(curb == ovl->path.bepos);
+    }
 #endif
 }
 
 TRIM* trim_init(HITS_DB* db, ovl_header_twidth twidth, HITS_TRACK *track, Read_Loader *rl)
 {
-	TRIM* trim = malloc(sizeof(TRIM));
+    TRIM* trim = malloc( sizeof(TRIM) );
 
-	trim->db = db;
-	trim->twidth = twidth;
-	trim->track = track;
+    trim->db = db;
+    trim->twidth = twidth;
+    trim->track = track;
 
-	trim->align_work = New_Work_Data();
+    trim->align_work = New_Work_Data();
 
-	trim->align.path = &(trim->path);
-	trim->align.aseq = New_Read_Buffer(db);
-	trim->align.bseq = New_Read_Buffer(db);
+    trim->align.path = &(trim->path);
+    trim->align.aseq = New_Read_Buffer(db);
+    trim->align.bseq = New_Read_Buffer(db);
 
-	trim->nTrimmedBases = 0;
-	trim->nTrimmedOvls = 0;
-	trim->nOvls = 0;
-	trim->nOvlBases = 0;
+    trim->nTrimmedBases = 0;
+    trim->nTrimmedOvls  = 0;
+    trim->nOvls         = 0;
+    trim->nOvlBases     = 0;
 
-	trim->rl = rl;
+    trim->rl = rl;
 
-	return trim;
+    return trim;
 }
 
 void trim_close(TRIM* trim)
 {
 //    track_close(trim->track);
 
-	Free_Work_Data(trim->align_work);
-	free(trim->align.aseq - 1);
-	free(trim->align.bseq - 1);
+    Free_Work_Data(trim->align_work);
+    free(trim->align.aseq - 1);
+    free(trim->align.bseq - 1);
+
+    bzero(trim, sizeof(TRIM));
+    free(trim);
 }
