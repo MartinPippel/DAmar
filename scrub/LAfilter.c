@@ -120,6 +120,8 @@ typedef struct
 	uint64_t* rm_bins;
 	int rm_maxbins;
 
+	int trimIndels;
+
 	// repeat modules - result track
 
 	track_anno* rm_anno;
@@ -392,6 +394,52 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 			j = k + 1;
 		}
 	}
+}
+
+static void trimOffLeadingIndels(Overlap *ovl, ovl_header_twidth twidth)
+{
+  	ovl_trace* trace = ovl->path.trace;
+
+    int trim_a_left, trim_a_right;
+    int tlen = ovl->path.tlen;
+
+    trim_a_left = trim_a_right = -1;
+
+    // check first segment
+    if(trace[0] == trace[1] && trace[0] > 0)
+    {
+    	trim_a_left = (((ovl->path.abpos)/twidth)+1)*twidth;
+    }
+
+    // check last segment
+    if(trace[tlen - 2] == trace[tlen - 1] && trace[tlen - 2] > 0)
+    {
+    	trim_a_left = (((ovl->path.abpos)/twidth)+1)*twidth;
+    }
+
+    if (trim_a_left >= trim_a_right)
+    {
+        ovl->flags |= OVL_DISCARD | OVL_TRIM;
+        return ;
+    }
+
+    if (trim_a_left > -1)
+    {
+        ovl->path.abpos = trim_a_left;
+        ovl->path.bbpos += trace[0];
+        ovl->path.trace = &(ovl->path.trace[2]);
+				ovl->path.tlen	-= 2;
+
+				trace = ovl->path.trace;
+				tlen = ovl->path.tlen;
+    }
+
+    if (trim_a_right > -1)
+		{
+				ovl->path.aepos = trim_a_right;
+				ovl->path.bepos -= trace[tlen - 2];
+				ovl->path.tlen	-= 2;
+		}
 }
 
 static int filterMaxSegmentErrorRate(Overlap *ovl, int maxSegmentErrorRate)
@@ -2351,6 +2399,12 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
+	if(ctx->trimIndels)
+	{
+		for (j = 0; j < novl; j++)
+			trimOffLeadingIndels(ovl + j, ctx->twidth);
+	}
+
 	if(ctx->maxSegmentErrorRate >= 0 && ctx->maxSegmentErrorRate <=100)
 	{
 		for (j = 0; j < novl; j++)
@@ -2587,7 +2641,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpLqTwZ] [-dnolRsSumMfyYzZVWb <int>] [-rtD <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpLqTwZj] [-dnolRsSumMfyYzZVWb <int>] [-rtD <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v ... verbose\n");
 	fprintf(stderr, "         -d ... max divergence allowed [0,100]\n");
@@ -2633,6 +2687,7 @@ static void usage()
 	fprintf(stderr, "         -W ... window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
 	fprintf(stderr, "                or at -W bases at the tips of the neighboring repeat. Those can cause a fragmented repeat mask. (default: 600)\n");
 	fprintf(stderr, "         -b ... remove alignments which have segments error rates above -b <int>%% (default: not set)\n");
+	fprintf(stderr, "         -j ... trim off unaligned bases (indels) from start/end of alignments\n");
 }
 
 static int opt_repeat_count(int argc, char** argv, char opt)
@@ -2728,7 +2783,7 @@ int main(int argc, char* argv[])
 	}
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "TvLpwy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:V:W:b:")) != -1)
+	while ((c = getopt(argc, argv, "TvLpwy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:V:W:b:j")) != -1)
 	{
 		switch (c)
 		{
@@ -2738,6 +2793,10 @@ int main(int argc, char* argv[])
 
 		case 'T':
 			fctx.do_trim = 1;
+			break;
+
+		case 'j':
+			fctx.trimIndels = 1;
 			break;
 
 		case 'x':
