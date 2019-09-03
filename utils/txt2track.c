@@ -32,9 +32,12 @@ extern int optind, opterr, optopt;
 
 int SORT;
 
-static void usage()
+static void usage(FILE* out, arg)
 {
-	printf("<db> <txt> <track>\n");
+	fprintf("<db> <txt> <track>\n");
+	fprintf("options:	-m       track is mask track and has the format readid pos pos\n");
+	fprintf("	        -r       track is read pair track and has the format: readID readID\n");
+	fprintf("	        -S <int> sort columns from 0. to -S <int> \n");
 }
 
 static int cmp_ints(const void* x, const void* y)
@@ -61,12 +64,6 @@ static int cmp_ints(const void* x, const void* y)
 	}
 
 	return l - r;
-}
-
-// get maximum number of fields and do sanity checks
-static int getMaxColumnNumber(FILE* f, char delim, HITS_DB *db, int isMask)
-{
-
 }
 
 int main(int argc, char* argv[])
@@ -242,7 +239,7 @@ int main(int argc, char* argv[])
 			data = realloc(data, sizeof(track_data) * maxdata);
 		}
 
-		anno[ints[i + 0]] += 2 * sizeof(track_data);
+		anno[ints[i + 0]] += (count - 1) * sizeof(track_data);
 		data[ndata + 0] = ints[i + 1];
 		if(isMask)
 			data[ndata + 1] = ints[i + 2];
