@@ -32,12 +32,12 @@ extern int optind, opterr, optopt;
 
 int SORT;
 
-static void usage(FILE* out, arg)
+static void usage(FILE* out, char *name)
 {
-	fprintf("<db> <txt> <track>\n");
-	fprintf("options:	-m       track is mask track and has the format readid pos pos\n");
-	fprintf("	        -r       track is read pair track and has the format: readID readID\n");
-	fprintf("	        -S <int> sort columns from 0. to -S <int> \n");
+	fprintf(out, "Usage  %s [-mr] [-S<int>] <db> <txt> <track>\n", name);
+	fprintf(out, "Options:	-m       track is mask track and has the format readid pos pos\n");
+	fprintf(out, "	        -r       track is read pair track and has the format: readID readID\n");
+	fprintf(out, "	        -S <int> sort columns from 0. to -S <int> \n");
 }
 
 static int cmp_ints(const void* x, const void* y)
@@ -96,14 +96,14 @@ int main(int argc, char* argv[])
 				break;
 			default:
 				printf("Unknow option: %s\n", argv[optind - 1]);
-				usage();
+				usage(stderr, argv[0]);
 				exit(1);
 		}
 	}
 
 	if (argc - optind < 3)
 	{
-		usage();
+		usage(stderr, argv[0]);
 		exit(1);
 	}
 
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			count = fscanf(fileIn, "%d%*c%d%\n", &field1, &field2);
+			count = fscanf(fileIn, "%d%*c%d\n", &field1, &field2);
 			if (count != 2)
 			{
 				break;
