@@ -398,48 +398,49 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 
 static void trimOffLeadingIndels(Overlap *ovl, ovl_header_twidth twidth)
 {
-  	ovl_trace* trace = ovl->path.trace;
+    ovl_trace* trace = ovl->path.trace;
 
     int trim_a_left, trim_a_right;
     int tlen = ovl->path.tlen;
 
     trim_a_left = trim_a_right = -1;
 
+    int begSegA=(ovl->path.abpos == 0) ? ovl->path.abpos : (((ovl->path.abpos-1)/twidth+1)*twidth)-ovl->path.abpos; 
+    int endSegA=ovl->path.aepos-((((ovl->path.aepos)/twidth))*twidth);
+
+    //printf("%d vs %d a[%d, %d] b[%d,%d] aseg %d, %d\n",ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos,begSegA, endSegA);
     // check first segment
-    if(trace[0] == trace[1] && trace[0] > 0)
+    if((trace[0] == trace[1] && trace[0] == begSegA) || (trace[0]>0 && trace[1]==0))
     {
+	printf("trace[0] %d == trace[1] %d\n", trace[0], trace[1]);
     	trim_a_left = (((ovl->path.abpos)/twidth)+1)*twidth;
     }
 
     // check last segment
-    if(trace[tlen - 2] == trace[tlen - 1] && trace[tlen - 2] > 0)
+    if((trace[tlen - 2] == trace[tlen - 1] && trace[tlen - 2] == endSegA) || (trace[tlen-2]>2 && trace[tlen-1]==0))
     {
-    	trim_a_left = (((ovl->path.abpos)/twidth)+1)*twidth;
-    }
-
-    if (trim_a_left >= trim_a_right)
-    {
-        ovl->flags |= OVL_DISCARD | OVL_TRIM;
-        return ;
+	printf("trace[tlen - 2] %d == trace[tlen - 1] %d\n", trace[tlen - 2], trace[tlen - 1]);
+    	trim_a_right = (((ovl->path.aepos)/twidth))*twidth;
     }
 
     if (trim_a_left > -1)
     {
+        printf("trimBeg: %d vs %d a[%d,%d -> %d,%d] b[%d,%d -> %d,%d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, trim_a_left, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, ovl->path.bbpos + trace[0], ovl->path.bepos);
         ovl->path.abpos = trim_a_left;
         ovl->path.bbpos += trace[0];
-        ovl->path.trace = &(ovl->path.trace[2]);
-				ovl->path.tlen	-= 2;
-
-				trace = ovl->path.trace;
-				tlen = ovl->path.tlen;
+        trace += 2;
+	tlen -=2;
+	ovl->path.tlen = tlen;
+	ovl->path.trace = trace;
     }
 
     if (trim_a_right > -1)
-		{
-				ovl->path.aepos = trim_a_right;
-				ovl->path.bepos -= trace[tlen - 2];
-				ovl->path.tlen	-= 2;
-		}
+    {
+        printf("trimEnd: %d vs %d a[%d,%d -> %d,%d] b[%d,%d -> %d,%d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, ovl->path.abpos, trim_a_right, ovl->path.bbpos, ovl->path.bepos, ovl->path.bbpos, ovl->path.bepos - trace[tlen - 2]);
+	ovl->path.aepos = trim_a_right;
+	ovl->path.bepos -= trace[tlen - 2];
+	ovl->path.tlen	-= 2;
+    }
 }
 
 static int filterMaxSegmentErrorRate(Overlap *ovl, int maxSegmentErrorRate)
