@@ -779,7 +779,12 @@ then
             else
                 NUMACTL=""
             fi
-            cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
+            if [[ "x${DALIGNER_VERSION}" == "x2" ]]
+            then
+            	cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
+        	else
+        		cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x}"
+        	fi
             cmdLine=$((${cmdLine}+1))
             count=0
 
@@ -788,28 +793,34 @@ then
                 if [[ $count -lt ${RAW_FIX_DALIGNER_DAL} ]]
                 then
                     count=$((${count}+1))
-                else    
-                    echo -n "${cmd}-$((y-1)) && mv"
+                    echo -n " ${RAW_DAZZ_DB%.db}.${y}"
+                else
+                	if [[ "x${DALIGNER_VERSION}" == "x2" ]]
+            		then    
+                    	echo -n "${cmd}-$((y-1)) && mv"
+                	else
+                		echo -n " && mv"
+                	fi
                     z=${count}
-		    while [[ $z -ge 1 ]]
-		    do
-			echo -n " ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.$((y-z)).las"
-			z=$((z-1))
-		    done
-		    echo -n " d${x}"
-		    if [[ -z "${RAW_FIX_DALIGNER_ASYMMETRIC}" ]]
-		    then
-			z=${count}
-	                while [[ $z -ge 1 ]]
-        	        do
-				if [[ ${x} -ne $((y-z)) ]]
-				then
-                       		   echo -n " && mv ${RAW_DAZZ_DB%.db}.$((y-z)).${RAW_DAZZ_DB%.db}.${x}.las d$((y-z))"
-				fi
-                        	z=$((z-1)) 
-                    	done   
-		    fi
-		    echo " && cd ${myCWD}"
+		    		while [[ $z -ge 1 ]]
+		    		do
+						echo -n " ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.$((y-z)).las"
+						z=$((z-1))
+		    		done
+		    		echo -n " d${x}"
+				    if [[ -z "${RAW_FIX_DALIGNER_ASYMMETRIC}" ]]
+				    then
+						z=${count}
+			            while [[ $z -ge 1 ]]
+		        	    do
+							if [[ ${x} -ne $((y-z)) ]]
+							then
+		                    	echo -n " && mv ${RAW_DAZZ_DB%.db}.$((y-z)).${RAW_DAZZ_DB%.db}.${x}.las d$((y-z))"
+							fi
+		                    z=$((z-1)) 
+		            	done   
+				    fi
+				    echo " && cd ${myCWD}"
                     if [[ -n ${RAW_FIX_DALIGNER_NUMACTL} && ${RAW_FIX_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
                     then
                         if [[ $((${cmdLine} % 2)) -eq  0 ]]
@@ -821,7 +832,12 @@ then
                     else
                         NUMACTL=""
                     fi
-                    cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${y}"
+                    if [[ "x${DALIGNER_VERSION}" == "x2" ]]
+            		then
+                    	cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${y}"
+                	else
+                		cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.${y}"
+                	fi
                     cmdLine=$((${cmdLine}+1))
                     count=1
                 fi
@@ -847,7 +863,7 @@ then
                         done
                     fi
                     echo " && cd ${myCWD}"
-    	done > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.plan
+    	done > fix_02a_daligner_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 3 ]]
     then
