@@ -590,7 +590,7 @@ then
                 	then
                     	break
                 	fi
-                	echo -n " mv ${RAW_DAZZ_DB%.db}.${y}.${RAW_DAZZ_DB%.db}.${x}.las mask_${y}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
+                	echo -n " && mv ${RAW_DAZZ_DB%.db}.${y}.${RAW_DAZZ_DB%.db}.${x}.las mask_${y}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
             	done
         	fi
  
