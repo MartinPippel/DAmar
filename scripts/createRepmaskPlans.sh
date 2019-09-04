@@ -522,16 +522,33 @@ then
                 NUMACTL=""
             fi
 
-            echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
+			if [[ "x${DALIGNER_VERSION}" == "x2" ]]
+			then
+				echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
+			else
+				echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.${x}"
+			fi			
+			
             for y in $(seq ${x} $((${x}+${n}-1)))
             do
                 if [[ ${y} -gt ${nblocks} ]]
                 then
                 	y=$((y-1))
                     break
-                fi                
+                fi
+                if [[ "x${DALIGNER_VERSION}" != "x2" ]]
+				then
+					echo -n " ${RAW_DAZZ_DB%.db}.${y}"
+				fi			
+                                
             done 
-            echo -n "-${y} && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && mv"
+            
+            if [[ "x${DALIGNER_VERSION}" == "x2" ]]
+			then
+				echo -n "-${y} && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && mv"
+			else
+				echo -n " && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && mv"
+			fi			
             
             for y in $(seq ${x} $((${x}+${n}-1)))
             do
