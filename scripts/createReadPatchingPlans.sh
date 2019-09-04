@@ -980,7 +980,7 @@ then
         ### create LAq commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign ${RAW_DB%.db} -b ${x} ${RAW_DALIGN_OUTDIR}/${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}"
+            echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign ${RAW_DB%.db} -b ${x} ${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}"
     	done > fix_08_LAq_block_${RAW_DB%.db}.${slurmID}.plan 
         echo "MARVEL LAq $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_08_LAq_block_${RAW_DB%.db}.${slurmID}.version                
     elif [[ ${currentStep} -eq 9 ]]
