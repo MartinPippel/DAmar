@@ -779,12 +779,12 @@ then
             else
                 NUMACTL=""
             fi
-            if [[ "x${DALIGNER_VERSION}" == "x2" ]]
-            then
-            	cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
-        	else
-        		cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x}"
-        	fi
+            	if [[ "x${DALIGNER_VERSION}" == "x2" ]]
+            	then
+            		echo -n "cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
+		else
+        		echo -n "cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x}"
+		fi
             cmdLine=$((${cmdLine}+1))
             count=0
 
@@ -797,11 +797,11 @@ then
                 else
                 	if [[ "x${DALIGNER_VERSION}" == "x2" ]]
             		then    
-                    	echo -n "${cmd}-$((y-1)) && mv"
+                    	        echo -n "-$((y-1)) && mv"
                 	else
                 		echo -n " && mv"
                 	fi
-                    z=${count}
+                    	z=${count}
 		    		while [[ $z -ge 1 ]]
 		    		do
 						echo -n " ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.$((y-z)).las"
@@ -834,15 +834,20 @@ then
                     fi
                     if [[ "x${DALIGNER_VERSION}" == "x2" ]]
             		then
-                    	cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${y}"
+                    		echo -n "cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${y}"
                 	else
-                		cmd="cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.${y}"
+                		echo -n "cd ${RAW_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.${y}"
                 	fi
                     cmdLine=$((${cmdLine}+1))
                     count=1
                 fi
             done
-            echo -n "${cmd}-${y} && mv"
+	    if [[ "x${DALIGNER_VERSION}" == "x2" ]]	
+	    then
+            	echo -n "-${y} && mv"
+	    else
+		echo -n " && mv"
+	    fi
             z=$((count-1))
                     while [[ $z -ge 0 ]]
                     do
@@ -863,7 +868,7 @@ then
                         done
                     fi
                     echo " && cd ${myCWD}"
-    	done > fix_02a_daligner_block_${RAW_DB%.db}.${slurmID}.plan
+    	done > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 3 ]]
     then
