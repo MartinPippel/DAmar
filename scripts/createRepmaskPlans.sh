@@ -578,11 +578,10 @@ then
                 fi
                 echo -n " ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las"
             done
-            echo " mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
+            echo -n " mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
             
-            n=$((${n}-1))
             
-			if [[ -z "${RAW_FIX_DALIGNER_ASYMMETRIC}" || ${RAW_FIX_DALIGNER_ASYMMETRIC} -ne 0 ]]
+			if [[ -z "${RAW_REPMASK_DALIGNER_ASYMMETRIC}" || ${RAW_REPMASK_DALIGNER_ASYMMETRIC} -ne 0 ]]
 			then
 				
 				for y in $(seq $((x+1)) $((x+n-1)))
@@ -596,6 +595,7 @@ then
         	fi
  
             echo " && cd ${myCWD}"
+            n=$((${n}-1))
     	done > mask_11_daligner_block_${RAW_DB%.db}.${slurmID}.plan 
         echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_11_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 12 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
