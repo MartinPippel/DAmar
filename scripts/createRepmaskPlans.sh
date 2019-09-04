@@ -386,6 +386,16 @@ then
         done 
         ### find and set daligner options 
         setDaligerOptions
+		
+		## create job directories before daligner runs
+		for x in $(seq 1 ${nblocks})
+		do
+			if [[ -d ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} ]]
+			then
+				mv ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}_$(date '+%Y-%m-%d_%H-%M-%S')	
+			fi
+			mkdir -p ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}	
+		done
 
         bcmp=${RAW_REPMASK_BLOCKCMP[0]}
 		myCWD=$(pwd)
@@ -422,8 +432,7 @@ then
                 echo -n " ${RAW_DAZZ_DB%.db}.${y}"
             done 
 
-			echo -n " && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}"
-            for y in $(seq ${x} $((${x}+${n}-1)))
+			for y in $(seq ${x} $((${x}+${n}-1)))
             do
                 if [[ ${y} -gt ${nblocks} ]]
                 then
@@ -497,6 +506,17 @@ then
 		myCWD=$(pwd)
         setLArepeatOptions 0
         bcmp=${RAW_REPMASK_BLOCKCMP[1]}
+			
+		## create job directories before daligner runs
+		for x in $(seq 1 ${nblocks})
+		do
+			if [[ -d ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} ]]
+			then
+				mv ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}_$(date '+%Y-%m-%d_%H-%M-%S')	
+			fi
+			mkdir -p ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}	
+		done
+		
 
         ### create daligner commands
         n=${bcmp}
@@ -545,9 +565,9 @@ then
             
             if [[ "x${DALIGNER_VERSION}" == "x2" ]]
 			then
-				echo -n "-${y} && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && mv"
+				echo -n "-${y} && mv"
 			else
-				echo -n " && mkdir -p mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && mv"
+				echo -n " && mv"
 			fi			
             
             for y in $(seq ${x} $((${x}+${n}-1)))
@@ -558,10 +578,24 @@ then
                 fi
                 echo -n " ${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las"
             done
+            echo " mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
             
             n=$((${n}-1))
-
-            echo " mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && cd ${myCWD}"
+            
+			if [[ -z "${RAW_FIX_DALIGNER_ASYMMETRIC}" || ${RAW_FIX_DALIGNER_ASYMMETRIC} -ne 0 ]]
+			then
+				
+				for y in $(seq $((x+1)) $((x+n-1)))
+            	do
+                	if [[ ${y} -gt ${nblocks} ]]
+                	then
+                    	break
+                	fi
+                	echo -n " mv ${RAW_DAZZ_DB%.db}.${y}.${RAW_DAZZ_DB%.db}.${x}.las mask_${y}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}"
+            	done
+        	fi
+ 
+            echo " && cd ${myCWD}"
     	done > mask_11_daligner_block_${RAW_DB%.db}.${slurmID}.plan 
         echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_11_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 12 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
