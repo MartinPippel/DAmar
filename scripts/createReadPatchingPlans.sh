@@ -1573,29 +1573,6 @@ then
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/filterchainsraw ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las && ${MARVEL_PATH}/bin/LAfilter ${FIX_LAFILTER_OPT} ${RAW_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las && cd ${myCWD}" 
 		done > fix_${currentStep}_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.plan
     	echo "DACCORD filterchainsraw $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.version      	
-	### 14_LAfilterChains
-#    elif [[ ${currentStep} -eq 14 ]]
-#    then
-##        ### clean up plans 
-#        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
-#        do            
-#            rm $x
-#        done
-#                
-#    	setLAfilterChainsOptions
-#    	setLAfilterOptions
-#    	if [[ "${fsuffix}" == "dalignFilt" ]]
-#    	then 
-#    		setLArepeatOptions 1
-#    	else  
-#    		setLArepeatOptions 2
-#    	fi
-#   	 	myCWD=$(pwd)
-#   	 	for x in $(seq 1 ${nblocks})
-#        do
-#    		echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAfilterChains ${FIX_LAFILTERCHAINS_OPT} -r ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} -R ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.goneLongReads.txt ${RAW_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las && cd ${myCWD}" 
-#		done > fix_${currentStep}_LAfilterChains_block_${RAW_DB%.db}.${slurmID}.plan
-#    	echo "MARVEL LAfilterChains $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAfilterChains_block_${RAW_DB%.db}.${slurmID}.version
     ### 14_daccord
     elif [[ ${currentStep} -eq 14 ]]
     then
@@ -1681,6 +1658,23 @@ then
 			done	    		
 		done > fix_${currentStep}_split_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DACCORD ${RAW_FIX_SPLIT_TYPE} $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_split_block_${RAW_DB%.db}.${slurmID}.version
+	### 17_LAmerge 
+    elif [[ ${currentStep} -eq 17 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        		        
+        setLAmergeOptions
+        setHaploSplitOptions
+        myCWD=$(pwd)
+        for x in $(seq 1 ${nblocks})
+		do
+			echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge ${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2_${RAW_FIX_SPLIT_TYPE}.${x}.las ${RAW_FIX_SPLIT_TYPE}_s${x} identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && cd ${myCWD}"	
+		done > fix_${currentStep}_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAmaerge_block_${RAW_DB%.db}.${slurmID}.version        
 	else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
