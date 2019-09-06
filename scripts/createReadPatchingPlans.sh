@@ -1672,9 +1672,9 @@ then
         myCWD=$(pwd)
         for x in $(seq 1 ${nblocks})
 		do
-			echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge ${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2_${RAW_FIX_SPLIT_TYPE}.${x}.las ${RAW_FIX_SPLIT_TYPE}_s${x} identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && cd ${myCWD}"	
+			echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge ${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2_${RAW_FIX_SPLIT_TYPE}.${x}.las ${RAW_FIX_SPLIT_TYPE}_s${x} ${myCWD}/identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && cd ${myCWD}"	
 		done > fix_${currentStep}_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAmaerge_block_${RAW_DB%.db}.${slurmID}.version        
+        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAmerge_block_${RAW_DB%.db}.${slurmID}.version        
 	else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
