@@ -1674,7 +1674,39 @@ then
 		do
 			echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge ${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2_${RAW_FIX_SPLIT_TYPE}.${x}.las ${RAW_FIX_SPLIT_TYPE}_s${x} ${myCWD}/identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && cd ${myCWD}"	
 		done > fix_${currentStep}_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAmerge_block_${RAW_DB%.db}.${slurmID}.version        
+        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAmerge_block_${RAW_DB%.db}.${slurmID}.version
+	### 18_LAfix    
+    elif [[ ${currentStep} -eq 18 ]]
+    then
+        ### clean up plans 
+        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        ### find and set LAfix options
+        
+		if [[ "${fsuffix}" == "dalignFilt" ]]
+		then
+		   	setLAfixOptions dalign
+		else
+			setLAfixOptions repcomp
+		fi
+		
+		setHaploSplitOptions
+		
+        mkdir -p ${RAW_FIX_LAFIX_PATH}_daccord_${RAW_FIX_SPLIT_TYPE}
+		
+		addopt=""
+
+        for x in $(seq 1 ${nblocks})
+        do 
+        	if [[ -n ${RAW_FIX_LAFIX_TRIMFILEPREFIX} ]]
+        	then 
+        		addopt="-T${RAW_FIX_LAFIX_TRIMFILEPREFIX}_${x}.txt "
+        	fi
+            echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_DACCORD_OUTDIR}/${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2_${RAW_FIX_SPLIT_TYPE}.${x}.las ${RAW_FIX_LAFIX_PATH}_daccord_${RAW_FIX_SPLIT_TYPE}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
+    	done > fix_${currentStep}_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
+    echo "MARVEL LAfix $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAfix_block_${RAW_DB%.db}.${slurmID}.version                
 	else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
