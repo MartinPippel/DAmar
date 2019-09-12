@@ -255,7 +255,14 @@ then
 	   			echo "mv 10x_${PROJECT_ID}_supernova 10x_${PROJECT_ID}_supernova_$(date '+%Y-%m-%d_%H-%M-%S')"	   			
 	   		fi
 	   		
-	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID}_supernova --sample ${PROJECT_ID} --fastqs=${TENX_PATH} --maxreads='all'"	   					 
+	   		# set default minimum fasta record size
+	   		MINSIZE=500
+	   		
+	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID}_supernova --sample ${PROJECT_ID} --fastqs=${TENX_PATH} --maxreads='all'"
+	   		echo "${SUPERNOVA_PATH}/supernova mkoutput --asmdir=10x_${PROJECT_ID}_supernova --outprefix=10x_${PROJECT_ID}_supernova_megabubbles --style=megabubbles --minsize=${MINSIZE}"
+	   		echo "${SUPERNOVA_PATH}/supernova mkoutput --asmdir=10x_${PROJECT_ID}_supernova --outprefix=10x_${PROJECT_ID}_supernova_pseudohap --style=pseudohap --minsize=${MINSIZE}"
+	   		echo "${SUPERNOVA_PATH}/supernova mkoutput --asmdir=10x_${PROJECT_ID}_supernova --outprefix=10x_${PROJECT_ID}_supernova_pseudohap2 --style=pseudohap2 --minsize=${MINSIZE}"
+	   			   					 
 		fi > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.plan
         
         echo "$(${SUPERNOVA_PATH}/supernova run --version | head -n1)" > qc_01_supernova_single_${RAW_DB%.db}.${slurmID}.version
