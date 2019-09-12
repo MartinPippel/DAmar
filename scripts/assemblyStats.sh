@@ -565,8 +565,7 @@ then
 		### if assembly was produced from BIONANO Access, then the name is usually: EXP_REFINEFINAL1
 		### try this dirty hack to pull out the name from the cmap file 
 		#PROJECT_ID_CAPS=$(echo ${PROJECT_ID} | awk '{print toupper($0)}')
-		PROJECT_ID_CAPS1=$(grep EXP_REFIN ${SC_BIONANO_ASSEMBLY_1} | tr " " "\n" | grep REFINEFINAL1 | awk -F \/ '{print $NF}' | awk -F _ '{print $1}')
-		PROJECT_ID_CAPS2=$(grep EXP_REFIN ${SC_BIONANO_ASSEMBLY_2} | tr " " "\n" | grep REFINEFINAL1 | awk -F \/ '{print $NF}' | awk -F _ '{print $1}')		
+		PROJECT_ID_CAPS1=$(grep EXP_REFIN ${SC_BIONANO_ASSEMBLY_1} | tr " " "\n" | grep REFINEFINAL1 | awk -F \/ '{print $NF}' | awk -F _ '{print $1}')				
 
 		REF_NAME=$(basename ${SC_BIONANO_REF} | tr '.' '_')
 		
@@ -588,7 +587,7 @@ then
 		if [[ -n "${SC_BIONANO_ASSEMBLY_2}" && -f ${SC_BIONANO_ASSEMBLY_2} && ${SC_BIONANO_ASSEMBLY_1} != ${SC_BIONANO_ASSEMBLY_2} ]]
 		then
 			### two enzyme workflow 
-						
+			PROJECT_ID_CAPS2=$(grep EXP_REFIN ${SC_BIONANO_ASSEMBLY_2} | tr " " "\n" | grep REFINEFINAL1 | awk -F \/ '{print $NF}' | awk -F _ '{print $1}')						
 			if [[ -z "${PROJECT_ID_CAPS2}" ]]
 			then
 				(>&2 echo "ERROR - Could not determine variable PROJECT_ID_CAPS2 from CMAP file: ${SC_BIONANO_ASSEMBLY_2}")
