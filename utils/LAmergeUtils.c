@@ -233,25 +233,25 @@ static int check_process(void* _ctx, Overlap* ovl, int novl)
 
         if (ovl[i].path.abpos < 0)
           {
-            fprintf(stderr, "overlap %lld: abpos < 0\n", ctx->novl);
+            fprintf(stderr, "overlap %lld: abpos < 0: %d vs %d %c a[%d, %d] b[%d, %d] l[%d,%d]\n", ctx->novl, ovl[i].aread, ovl[i].bread, (ovl[i].flags & OVL_COMP) ? 'C' : 'N', ovl[i].path.abpos, ovl[i].path.aepos, ovl[i].path.bbpos, ovl[i].path.bepos, lena, lenb);
             ctx->error = 1;
           }
 
         if (ovl[i].path.bbpos < 0)
           {
-            fprintf(stderr, "overlap %lld: bbpos < 0\n", ctx->novl);
+            fprintf(stderr, "overlap %lld: bbpos < 0: %d vs %d %c a[%d, %d] b[%d, %d] l[%d,%d]\n", ctx->novl, ovl[i].aread, ovl[i].bread, (ovl[i].flags & OVL_COMP) ? 'C' : 'N', ovl[i].path.abpos, ovl[i].path.aepos, ovl[i].path.bbpos, ovl[i].path.bepos, lena, lenb);
             ctx->error = 1;
           }
 
         if (ovl[i].path.aepos > lena)
           {
-            fprintf(stderr, "overlap %lld: aepos > lena\n", ctx->novl);
+            fprintf(stderr, "overlap %lld: aepos > lena: %d vs %d %c a[%d, %d] b[%d, %d] l[%d,%d]\n", ctx->novl, ovl[i].aread, ovl[i].bread, (ovl[i].flags & OVL_COMP) ? 'C' : 'N', ovl[i].path.abpos, ovl[i].path.aepos, ovl[i].path.bbpos, ovl[i].path.bepos, lena, lenb);
             ctx->error = 1;
           }
 
         if (ovl[i].path.bepos > lenb)
           {
-            fprintf(stderr, "overlap %lld: bepos > lenb\n", ctx->novl);
+            fprintf(stderr, "overlap %lld: bepos > lenb: %d vs %d %c a[%d, %d] b[%d, %d] l[%d,%d]\n", ctx->novl, ovl[i].aread, ovl[i].bread, (ovl[i].flags & OVL_COMP) ? 'C' : 'N', ovl[i].path.abpos, ovl[i].path.aepos, ovl[i].path.bbpos, ovl[i].path.bepos, lena, lenb);
             ctx->error = 1;
           }
 
@@ -277,7 +277,7 @@ static int check_process(void* _ctx, Overlap* ovl, int novl)
 
             if (bpos != ovl[i].path.bepos)
               {
-                fprintf(stderr, "overlap %lld (%d x %d): pass-through points inconsistent be = %d (expected %d)\n", ctx->novl, ovl[i].aread, ovl[i].bread, bpos, ovl[i].path.bepos);
+                fprintf(stderr, "overlap %lld (%d x %d)  %c a[%d, %d] b[%d, %d] l[%d,%d]: pass-through points inconsistent be = %d (expected %d)\n", ctx->novl, ovl[i].aread, ovl[i].bread, (ovl[i].flags & OVL_COMP) ? 'C' : 'N', ovl[i].path.abpos, ovl[i].path.aepos, ovl[i].path.bbpos, ovl[i].path.bepos, lena, lenb, bpos, ovl[i].path.bepos);
                 ctx->error = 1;
               }
           }
