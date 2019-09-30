@@ -174,7 +174,7 @@ void pass(PassContext* ctx, pass_handler handler)
                     ctx->tmax = 1.2 * ctx->tmax + pOvls[n].path.tlen;
 
                     ovl_trace* trace = realloc(ctx->trace, ctx->tmax * sizeof(ovl_trace));
-
+		    assert(trace != NULL);
                     int j;
                     for (j = 0; j < n; j++)
                     {

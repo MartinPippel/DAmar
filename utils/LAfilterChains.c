@@ -1019,7 +1019,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 static int filter(FilterContext* ctx, Overlap* ovl)
 {
 	int ret = 0;
-
+	
 	int ovlBLen = DB_READ_LEN(ctx->db, ovl->bread);
 
 	if (ctx->nMinNonRepeatBases != -1 && ovl->aread != ovl->bread)
@@ -1123,6 +1123,15 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 	printf( ANSI_COLOR_RED "  nFuzzBases %d\n" ANSI_COLOR_RESET, fctx->nFuzzBases);
 	printf( ANSI_COLOR_RED "  nMinNonRepeatBases %d\n" ANSI_COLOR_RESET, fctx->nMinNonRepeatBases);
 	printf( ANSI_COLOR_RED "  repeatWindowLookBack %d\n" ANSI_COLOR_RESET, fctx->repeatWindowLookBack);
+      
+        if(fctx->trackRepeat)
+		printf( ANSI_COLOR_RED "  RepeatTrack %s\n" ANSI_COLOR_RESET, fctx->trackRepeat->name);
+	if(fctx->trackTrim)
+                printf( ANSI_COLOR_RED "  TrimTrack %s\n" ANSI_COLOR_RESET, fctx->trackTrim->name);
+	if(fctx->trackQ)
+                printf( ANSI_COLOR_RED "  QTrack %s\n" ANSI_COLOR_RESET, fctx->trackQ->name);
+	if(fctx->trackLowCompl)
+                printf( ANSI_COLOR_RED "  LowComplexityTrack %s\n" ANSI_COLOR_RESET, fctx->trackLowCompl->name);
 #endif
 
 	fctx->twidth = pctx->twidth;
@@ -1757,7 +1766,7 @@ static int filterChain(FilterContext *ctx, Chain *chain)
 	}
 
 	// 2. check min chain length
-	if (chain->ovls[chain->novl - 1]->path.aepos - chain->ovls[0]->path.abpos < ctx->stitchMinChainLen)
+	if (chain->ovls[chain->novl - 1]->path.aepos - chain->ovls[0]->path.abpos < ctx->minChainLen)
 	{
 		return 0;
 	}
@@ -2125,25 +2134,23 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	int trim_abeg, trim_aend;
 	int trim_bbeg, trim_bend;
 
+	if (ctx->trackTrim)
+	{
+		for (j = 0; j < novl; j++)
+		{
+			trim_overlap(ctx->trim, ovl + j);
+//			if(ovl[j].flags & OVL_TRIM)
+//			printf("TRIMMED %d %d [%d, %d] [%d,%d]\n", ovl[j].aread, ovl[j].bread, ovl[j].path.abpos, ovl[j].path.aepos, ovl[j].path.bbpos, ovl[j].path.bepos);
+		}
+//		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_abeg, &trim_aend);
+//		printf("T[%d, %d]\n", trim_abeg, trim_aend);
+	}
+
 // set filter flags
 	for (j = 0; j < novl; j++)
 	{
 		// get rid of all previous flags
 		ovl[j].flags &= ~(OVL_CONT | OVL_TEMP | OVL_REPEAT);
-
-		if (ctx->trackTrim)
-		{
-			for (j = 0; j < novl; j++)
-			{
-				trim_overlap(ctx->trim, ovl + j);
-//				if(ovl[j].flags & OVL_TRIM)
-//					printf("TRIMMED %d %d [%d, %d] [%d,%d]\n", ovl[j].aread, ovl[j].bread, ovl[j].path.abpos, ovl[j].path.aepos, ovl[j].path.bbpos, ovl[j].path.bepos);
-			}
-//			get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trim_abeg, &trim_aend);
-//			printf("T[%d, %d]\n", trim_abeg, trim_aend);
-
-		}
-
 		ovl[j].flags |= filter(ctx, ovl + j);
 	}
 
@@ -2443,7 +2450,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						validMinLen = 1;
 
 #ifdef CHAIN_DEBUG
-					printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainment %d validAnchor %d  validDiff %d numUniqABases %d numUniqBBases %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor, validDiff, numUniqABases ,numUniqBBases );
+					printf("properBegA %d properBegB %d properEndA %d properEndB %d properGapLen %d validBridge %d validContainment %d validAnchor %d  validDiff %d numUniqABases %d numUniqBBases %d validMinLen: %d\n", properBegA, properBegB, properEndA, properEndB, properGapLen, validBridge, validContainment, validAnchor, validDiff, numUniqABases ,numUniqBBases, validMinLen );
 #endif
 					if ((!properBegA && !properBegB) || (!properEndA && !properEndB) || !properGapLen || !validBridge || !validContainment || !validAnchor || !validDiff || !validMinLen)
 					{
@@ -2492,16 +2499,13 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							}
 						}
 #ifdef DEBUG_FILTER
-						else
+
+
+						for (b = 0; b < chain->novl; b++)
 						{
-
-							for (b = 0; b < chain->novl; b++)
-							{
-								if (!(chain->ovls[b]->flags & OVL_DISCARD))
-									count++;
-							}
+							if (!(chain->ovls[b]->flags & OVL_DISCARD))
+							count++;
 						}
-
 						printf(" validLAS %d\n", count);
 #endif
 					}
@@ -2820,11 +2824,10 @@ int main(int argc, char* argv[])
 		}
 	}
 
-// try to load further non-mandatory tracks
+	// try to load further non-mandatory tracks
 	fctx.trackTrim = track_load(&db, pcTrackTrim);
 	if (!fctx.trackTrim)
 		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackTrim);
-
 	fctx.trackQ = track_load(&db, pcTrackQ);
 	if (!fctx.trackQ)
 		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackQ);
