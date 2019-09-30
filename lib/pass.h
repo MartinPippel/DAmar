@@ -41,8 +41,8 @@ typedef struct
     off_t off_start;
     off_t off_end;
 
-    int tmax;
-    int tcur;
+    uint64 tmax;
+    uint64 tcur;
     ovl_trace* trace;
 
     size_t tbytes;
