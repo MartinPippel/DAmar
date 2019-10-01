@@ -286,7 +286,7 @@ then
             rm $x
         done
         
-        echo "if [[ -d ${RAW_REPAMSK_OUTDIR} ]]; then mv ${RAW_REPAMSK_OUTDIR} ${RAW_REPAMSK_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPAMSK_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_REPAMSK_OUTDIR}" > mask_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "if [[ -d ${RAW_REPAMSK_OUTDIR} ]]; then mv ${RAW_REPAMSK_OUTDIR} ${RAW_REPAMSK_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPAMSK_OUTDIR} && ln -s -r .${RAW_DB%.db}.idx .${RAW_DB%.db}.bps ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.idx .${RAW_DAZZ_DB%.db}.bps ${RAW_DAZZ_DB%.db}.db ${RAW_REPAMSK_OUTDIR}" > mask_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.version         
     elif [[ ${currentStep} -eq 2 ]]
     then
