@@ -361,7 +361,7 @@ then
 		fi
 		
 		
-		if [[ ${ext} == "." ]] 
+		if [[ "${ext}" == '.' ]] 
 		then
 			ext=""
 		fi
