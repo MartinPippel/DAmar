@@ -896,7 +896,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 
 		// find possible ovls that could be added to chain (i.e. fill gaps)
 
-		if (chain->novl > 1 && nremain > 0)
+		if (chain->novl > 1 /*&& nremain > 0*/)   // allow extension with previously repeat-marked overlaps
 		{
 #ifdef DEBUG_CHAIN
 			printf("find possible ovls that could be added to chain (i.e. fill gaps)\n");
@@ -934,10 +934,11 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 						}
 
 						// append left side overlaps at the end of chain, i.e. chain must be sorted afterwards by abpos
+						ovl->flags &= ~(OVL_DISCARD); //
 						ovl->flags |= OVL_TEMP;
 						chain->ovls[chain->novl] = ovl;
 						chain->novl++;
-						nremain--;
+						//nremain--;
 #ifdef DEBUG_CHAIN
 						printf("chain: nOvl: %d, maxOvl %d nremain %d\n", chain->novl, chain->maxOvl, nremain);
 #endif
