@@ -1150,7 +1150,8 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 	bzero(fctx->uniqBIntervals, sizeof(anchorItv) * fctx->maxUniqBIntervals);
 	fctx->curUniqBIntervals = 0;
 
-	fctx->trim = trim_init(fctx->db, pctx->twidth, fctx->trackTrim, NULL);
+	if(fctx->trackTrim)
+		fctx->trim = trim_init(fctx->db, pctx->twidth, fctx->trackTrim, NULL);
 }
 
 static void filter_post(FilterContext* ctx)
@@ -1197,7 +1198,8 @@ static void filter_post(FilterContext* ctx)
 	free(ctx->uniqAIntervals);
 	free(ctx->uniqBIntervals);
 
-	trim_close(ctx->trim);
+	if(ctx->trackTrim)
+		trim_close(ctx->trim);
 }
 
 static void getRepeatBasesFromInterval(HITS_TRACK* repeat, int readID, int beg, int end, int *cumBases, int *largest)
@@ -1284,6 +1286,14 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 #ifdef DEBUG_CHAIN
 	printf("trim_beg %d, trim_end %d\n", trim_beg, trim_end);
 #endif
+
+	if(ctx->trackRepeat == NULL)
+	{
+		ctx->curUniqAIntervals=1;
+		ctx->uniqAIntervals[0] = trim_beg;
+		ctx->uniqAIntervals[1] = trim_end;
+		return;
+	}
 
 	int MINANCHOR = 10;
 	int WINDOW = ctx->repeatWindowLookBack;
