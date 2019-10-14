@@ -28,7 +28,6 @@
 #include "db/DB.h"
 
 #define DEF_ARG_R TRACK_REPEATS
-#define DEF_ARG_Q TRACK_Q
 #define DEF_ARG_T TRACK_TRIM
 #define DEF_ARG_L TRACK_DUST
 #define DEF_ARG_F 0
@@ -107,7 +106,6 @@ typedef struct
 	HITS_DB* db;
 	HITS_TRACK* trackRepeat;
 	HITS_TRACK* trackTrim;
-	HITS_TRACK* trackQ;
 	HITS_TRACK* trackLowCompl;
 
 	FILE* fileOutDiscardedReads;
@@ -1131,8 +1129,6 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 		printf( ANSI_COLOR_RED "  RepeatTrack %s\n" ANSI_COLOR_RESET, fctx->trackRepeat->name);
 	if(fctx->trackTrim)
                 printf( ANSI_COLOR_RED "  TrimTrack %s\n" ANSI_COLOR_RESET, fctx->trackTrim->name);
-	if(fctx->trackQ)
-                printf( ANSI_COLOR_RED "  QTrack %s\n" ANSI_COLOR_RESET, fctx->trackQ->name);
 	if(fctx->trackLowCompl)
                 printf( ANSI_COLOR_RED "  LowComplexityTrack %s\n" ANSI_COLOR_RESET, fctx->trackLowCompl->name);
 #endif
@@ -2220,8 +2216,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							if (chain->ovls[b]->path.abpos - chain->ovls[b - 1]->path.aepos > fuzzy)
 							{
 								// check gap
-								//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos,chain->ovls[b]->aread, gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8),
-								//		badQV(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos));
+								//printf("gap [%d, %d] in %d is low complexity: %d\n", chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos,chain->ovls[b]->aread, gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8),);
 								if (!gapIsLowComplexity(ctx, chain->ovls[b]->aread, chain->ovls[b - 1]->path.aepos, chain->ovls[b]->path.abpos, 0.8))
 								{
 									properGapLen = 0;
@@ -2248,9 +2243,8 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 									bbpos = DB_READ_LEN(ctx->db, chain->ovls[b]->bread) - bepos;
 									bepos = DB_READ_LEN(ctx->db, chain->ovls[b]->bread) - tmp;
 								}
-								//printf("gap [%d, %d] in %d is low complexity: %d is badRegion: %d\n", bbpos, bepos, chain->ovls[b]->bread, gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8),
-								//		badQV(ctx, chain->ovls[b]->bread, bbpos, bepos));
-								if (!gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8) /* && !badQV(ctx, chain->ovls[b]->bread, bbpos, bepos)*/)
+								//printf("gap [%d, %d] in %d is low complexity: %d\n", bbpos, bepos, chain->ovls[b]->bread, gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8));
+								if (!gapIsLowComplexity(ctx, chain->ovls[b]->bread, bbpos, bepos, 0.8))
 								{
 									properGapLen = 0;
 									break;
@@ -2396,20 +2390,19 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOCMZ <int>] [-BR <file>][-rlqt <track>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpiS] [-nkfcmwdyoULGOCMZ <int>] [-BR <file>][-rlt <track>] <db> <overlaps_in> <overlaps_out>\n");
 
-	fprintf(stderr, "options: -v      	verbose\n");
+	fprintf(stderr, "options: -v        verbose\n");
 	fprintf(stderr, "         -i        keep identity overlaps\n");
-	fprintf(stderr, "         -p      	purge discarded overlaps\n");
-	fprintf(stderr, "         -r <trc>	repeat track name (%s)\n", DEF_ARG_R);
+	fprintf(stderr, "         -p        purge discarded overlaps\n");
+	fprintf(stderr, "         -r <trc>  repeat track name (%s)\n", DEF_ARG_R);
 	fprintf(stderr, "         -l <trc>  low complexity track (e.g. tan, dust, tan_dust, default: %s)\n", DEF_ARG_L);
-	fprintf(stderr, "         -q <trc>  q-track (default: %s)\n", DEF_ARG_Q);
 	fprintf(stderr, "         -t <trc>  trim-track (default: %s)\n", DEF_ARG_T);
 	fprintf(stderr, "         -k <int>  keep valid overlap chains: 0 ... best, 1 ... all\n");
 
 	fprintf(stderr, "\n 1. Chain overlaps\n");
 	fprintf(stderr, "         -u <int>  number of overall unaligned bases, (default: %d)\n", DEF_ARG_U);
-	fprintf(stderr, "         -n <int>	at least one alignment of a valid chain must have n non-repetitive bases\n");
+	fprintf(stderr, "         -n <int>  at least one alignment of a valid chain must have n non-repetitive bases\n");
 	fprintf(stderr, "         -m <int>  max merge distance of neighboring repeats (default: %d)\n", DEF_ARG_M);
 	fprintf(stderr, "         -w <int>  window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
 	fprintf(stderr, "                   or at -W bases at the tips of the neighboring repeat. Those can cause a fragmented repeat mask. (default: %d)\n", DEF_ARG_W);
@@ -2454,7 +2447,6 @@ int main(int argc, char* argv[])
 // args
 
 	char* pcTrackRepeats = DEF_ARG_R;
-	char* pcTrackQ = DEF_ARG_Q;
 	char* pcTrackTrim = DEF_ARG_T;
 	char* pcTrackLowCompl = DEF_ARG_L;
 	char* pathOutDiscardReads = NULL;
@@ -2489,7 +2481,7 @@ int main(int argc, char* argv[])
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:q:t:d:u:n:m:w:y:io:U:L:G:O:SC:B:E:M:N:R:Z:")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:t:d:u:n:m:w:y:io:U:L:G:O:SC:B:E:M:N:R:Z:")) != -1)
 	{
 		switch (c)
 		{
@@ -2577,10 +2569,6 @@ int main(int argc, char* argv[])
 				pcTrackRepeats = optarg;
 				break;
 
-			case 'q':
-				pcTrackQ = optarg;
-				break;
-
 			case 'l':
 				pcTrackLowCompl = optarg;
 				break;
@@ -2659,9 +2647,6 @@ int main(int argc, char* argv[])
 	fctx.trackTrim = track_load(&db, pcTrackTrim);
 	if (!fctx.trackTrim)
 		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackTrim);
-	fctx.trackQ = track_load(&db, pcTrackQ);
-	if (!fctx.trackQ)
-		fprintf(stderr, "[WARNING] - could not load track %s\n", pcTrackQ);
 
 	fctx.trackLowCompl = track_load(&db, pcTrackLowCompl);
 	if (!fctx.trackLowCompl)
