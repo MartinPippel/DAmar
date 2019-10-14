@@ -83,7 +83,6 @@ typedef struct
 	int keepIdentity;
 
 	int maxOverallDiff;		// add up all diffs from all chains divided by number of overlapping bases in A- and B-read
-	int maxUnalignedB;
 
 	// repeat settings
 	int mergeRepDist;
@@ -1119,7 +1118,6 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 	printf( ANSI_COLOR_RED "OPTIONS\n" ANSI_COLOR_RESET);
 	printf( ANSI_COLOR_RED "  keepIdentity %d\n" ANSI_COLOR_RESET, fctx->keepIdentity);
 	printf( ANSI_COLOR_RED "  mergeRepDist %d\n" ANSI_COLOR_RESET, fctx->mergeRepDist);
-	printf( ANSI_COLOR_RED "  maxUnalignedB %d\n" ANSI_COLOR_RESET, fctx->maxUnalignedB);
 	printf( ANSI_COLOR_RED "  nContPerc %d\n" ANSI_COLOR_RESET, fctx->nContPerc);
 	printf( ANSI_COLOR_RED "  nFuzzBases %d\n" ANSI_COLOR_RESET, fctx->nFuzzBases);
 	printf( ANSI_COLOR_RED "  nMinNonRepeatBases %d\n" ANSI_COLOR_RESET, fctx->nMinNonRepeatBases);
@@ -2284,7 +2282,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					if (numdiffs * 100.0 / alignedBasesInAread <= ctx->maxOverallDiff && numdiffs * 100.0 / alignedBasesInBread <= ctx->maxOverallDiff)
 						validDiff = 1;
 
-					if ((chain->ovls[chain->novl - 1]->path.aepos - chain->ovls[0]->path.abpos) > ctx->minChainLen && (chain->ovls[chain->novl - 1]->path.bepos - chain->ovls[0]->path.bbpos) > ctx->minChainLen)
+					if (coveredBasesInAread > ctx->minChainLen && coveredBasesInBread > ctx->minChainLen)
 						validMinLen = 1;
 
 #ifdef CHAIN_DEBUG
@@ -2410,7 +2408,6 @@ static void usage()
 	fprintf(stderr, "         -k <int>  keep valid overlap chains: 0 ... best, 1 ... all\n");
 
 	fprintf(stderr, "\n 1. Chain overlaps\n");
-	fprintf(stderr, "         -u <int>  number of overall unaligned bases, (default: %d)\n", DEF_ARG_U);
 	fprintf(stderr, "         -n <int>  at least one alignment of a valid chain must have n non-repetitive bases\n");
 	fprintf(stderr, "         -m <int>  max merge distance of neighboring repeats (default: %d)\n", DEF_ARG_M);
 	fprintf(stderr, "         -w <int>  window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
@@ -2470,7 +2467,6 @@ int main(int argc, char* argv[])
 	fctx.nContPerc = DEF_ARG_C;
 	fctx.keepIdentity = 0;
 	fctx.maxOverallDiff = DEF_ARG_D;
-	fctx.maxUnalignedB = DEF_ARG_U;
 	fctx.mergeRepDist = DEF_ARG_M;
 	fctx.repeatWindowLookBack = DEF_ARG_W;
 	fctx.rp_mergeTips = 0;
@@ -2490,7 +2486,7 @@ int main(int argc, char* argv[])
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:t:d:u:n:m:w:y:io:U:L:G:O:SC:B:E:M:N:R:Z:")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:t:d:n:m:w:y:io:U:L:G:O:SC:B:E:M:N:R:Z:")) != -1)
 	{
 		switch (c)
 		{
@@ -2592,10 +2588,6 @@ int main(int argc, char* argv[])
 
 			case 'k':
 				fctx.nkeptChains = atoi(optarg);
-				break;
-
-			case 'u':
-				fctx.maxUnalignedB = atoi(optarg);
 				break;
 
 			case 'm':
