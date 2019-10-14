@@ -1832,7 +1832,6 @@ static void filter_post(FilterContext* ctx)
 	if (ctx->trim)
 	{
 		trim_close(ctx->trim);
-		free(ctx->trim);
 	}
 
 	free(ctx->le_lbins);
