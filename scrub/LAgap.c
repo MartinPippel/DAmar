@@ -1927,7 +1927,6 @@ static void gaps_post(GapContext* ctx)
 	if (ctx->trackTrim)
 	{
 		trim_close(ctx->trim);
-		free(ctx->trim);
 	}
 
 	if (ctx->chimer)
