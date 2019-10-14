@@ -1290,8 +1290,8 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	if(ctx->trackRepeat == NULL)
 	{
 		ctx->curUniqAIntervals=1;
-		ctx->uniqAIntervals[0] = trim_beg;
-		ctx->uniqAIntervals[1] = trim_end;
+		ctx->uniqAIntervals[0].beg = trim_beg;
+		ctx->uniqAIntervals[0].end = trim_end;
 		return;
 	}
 
