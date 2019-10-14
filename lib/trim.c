@@ -11,8 +11,6 @@
 #undef DEBUG_VALIDATE
 #undef DEBUG_TRIM
 
-#define MIN_TRIM_LENGTH 500
-
 static void align(TRIM* trim, Overlap* ovl, int ab, int ae, int bb, int be)
 {
 #ifdef DEBUG_TRIM
