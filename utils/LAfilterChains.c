@@ -1198,7 +1198,6 @@ static void filter_post(FilterContext* ctx)
 	free(ctx->uniqBIntervals);
 
 	trim_close(ctx->trim);
-	free(ctx->trim);
 }
 
 static void getRepeatBasesFromInterval(HITS_TRACK* repeat, int readID, int beg, int end, int *cumBases, int *largest)
