@@ -112,13 +112,13 @@ then
 		fi
 		if [[ ! -d "${FIX_REPMASK_USELAFIX_PATH}" ]]	
 		then 
-			if [[ ! -d "../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}" ]]
+			if [[ ! -d "../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}" ]]
 			then
-				(>&2 echo "Cannot find patched reads in directory ../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}")
+				(>&2 echo "Cannot find patched reads in directory ../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH}")
 				(>&2 echo "cwd $(pwd)")
 		        exit 1
 			fi	
-			ln -s -r ../../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH} ${FIX_REPMASK_USELAFIX_PATH}
+			ln -s -r ../${PATCHING_DIR}/${FIX_REPMASK_USELAFIX_PATH} ${FIX_REPMASK_USELAFIX_PATH}
 		fi
 	fi
     ${SUBMIT_SCRIPTS_PATH}/createRepmaskPlans2.sh ${configFile} ${currentStep} ${slurmID}
