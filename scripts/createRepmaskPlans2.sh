@@ -589,7 +589,7 @@ then
         for x in $(seq 1 ${fixblocks})
         do 
         	echo "cd ${FIX_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.las && cd ${myCWD}/" 
-            echo "cd ${FIX_REPAMSK_OUTDIR} && ln -s -f ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.las ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.${x}.las && ${DAZZLER_PATH}/bin/REPmask -v -c${FIX_REPMASK_LAREPEAT_COV[0]} -n${RAW_REPMASK_REPEATTRACK} ${FIX_DAZZ_DB%.db} ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.${x}.las && unlink ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.${x}.las && cd ${myCWD}/"
+            echo "cd ${FIX_REPAMSK_OUTDIR} && ln -s -f ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.las ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.${x}.las && ${DAZZLER_PATH}/bin/REPmask -v -c${FIX_REPMASK_LAREPEAT_COV[0]} -n${FIX_REPMASK_REPEATTRACK} ${FIX_DAZZ_DB%.db} ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.${x}.las && unlink ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.${x}.las && cd ${myCWD}/"
 		done > mask_${sID}_LArepeat_block_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_${sID}_LArepeat_block_${FIX_DB%.db}.${slurmID}.version
         echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> mask_${sID}_LArepeat_block_${FIX_DB%.db}.${slurmID}.version
@@ -604,8 +604,8 @@ then
         setTKmergeOptions
         setLArepeatOptions 0
         ### create TKmerge commands
-        echo "cd ${FIX_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_REPEATTRACK} && cp .${FIX_DB%.db}.${RAW_REPMASK_REPEATTRACK}.a2 .${FIX_DB%.db}.${RAW_REPMASK_REPEATTRACK}.d2 ${myCWD}/ && cd ${myCWD}/" > mask_${sID}_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "cd ${FIX_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_TKMERGE_OPT} -f -v ${FIX_DAZZ_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${FIX_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.anno .${FIX_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> mask_${sID}_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "cd ${FIX_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_REPEATTRACK} && cp .${FIX_DB%.db}.${FIX_REPMASK_REPEATTRACK}.a2 .${FIX_DB%.db}.${FIX_REPMASK_REPEATTRACK}.d2 ${myCWD}/ && cd ${myCWD}/" > mask_${sID}_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "cd ${FIX_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_TKMERGE_OPT} -f -v ${FIX_DAZZ_DB%.db} ${FIX_REPMASK_REPEATTRACK} && cp .${FIX_DAZZ_DB%.db}.${FIX_REPMASK_REPEATTRACK}.anno .${FIX_DAZZ_DB%.db}.${FIX_REPMASK_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> mask_${sID}_TKmerge_single_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_${sID}_TKmerge_single_${FIX_DB%.db}.${slurmID}.version
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_${sID}_TKmerge_single_${FIX_DB%.db}.${slurmID}.version    
     elif [[ ${currentStep} -eq 11 && ${#FIX_REPMASK_BLOCKCMP[*]} -eq 2 && ${#FIX_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
