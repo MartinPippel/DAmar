@@ -452,7 +452,7 @@ then
 
             echo " && cd ${myCWD}"
    		done > mask_07_daligner_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DAZZLER daligner $(git --git-dir=${MARVEL_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_07_daligner_block_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_07_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 

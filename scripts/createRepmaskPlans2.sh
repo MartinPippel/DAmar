@@ -512,15 +512,14 @@ then
         setDaligerOptions
 
 		## create job directories before daligner runs
-		for x in $(seq 1 ${nblocks})
+		for x in $(seq 1 ${fixblocks})
 		do
 			if [[ -d ${FIX_REPAMSK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]} ]]
 			then
 				mv ${FIX_REPAMSK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]} ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}_$(date '+%Y-%m-%d_%H-%M-%S')	
 			fi
 			mkdir -p ${FIX_REPAMSK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}	
-		done
-		
+		done		
 
         bcmp=${FIX_REPMASK_BLOCKCMP[0]}
 
@@ -559,7 +558,7 @@ then
             
 			for y in $(seq ${x} $((${x}+${n}-1)))
             do
-                if [[ ${y} -gt ${nblocks} ]]
+                if [[ ${y} -gt ${fixblocks} ]]
                 then
                     break
                 fi
@@ -570,7 +569,7 @@ then
 
             echo " && cd ${myCWD}"
     	done > mask_${sID}_daligner_block_${FIX_DB%.db}.${slurmID}.planj
-        echo "DAZZLER daligner $(git --git-dir=${MARVEL_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_${sID}_daligner_block_${FIX_DB%.db}.${slurmID}.version
+        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_${sID}_daligner_block_${FIX_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
