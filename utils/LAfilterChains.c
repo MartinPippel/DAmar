@@ -275,6 +275,10 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		ctx->ovlChains->novl++;
 		ctx->curChains++;
 
+#ifdef DEBUG_CHAIN
+		printChain(ctx->ovlChains);
+#endif
+
 		return;
 	}
 
@@ -2077,7 +2081,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			k++;
 			nAnchorOvls += (ovl[k].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
 		}
-
+#ifdef CHAIN_DEBUG
+		printf("AnchorOvls: %d k: %d vs %d j: %d vs %d REP: %d, TRIM: %d\n", nAnchorOvls, ovl[j].aread, ovl[j].bread, ovl[k].aread, ovl[k].bread, ovl[j].flags & (OVL_REPEAT), ovl[j].flags & (OVL_TRIM));
+#endif
 		// ignore all self alignments if those are present
 		if (ovl[j].aread == ovl[j].bread)
 			nAnchorOvls = 0;
@@ -2317,9 +2323,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 							if (chain->novl - nStitch > ctx->stitchMaxChainLASs)
 							{
-#ifdef DEBUG_FILTER
-						printf("%d %d  stitch : %d", chain->ovls[0]->aread, chain->ovls[0]->bread, stitch);
-#endif
 								for (b = 0; b < chain->novl; b++)
 								{
 									chain->ovls[b]->flags |= OVL_DISCARD;
