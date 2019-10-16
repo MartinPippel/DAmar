@@ -141,7 +141,7 @@ function setTANmaskOptions()
     fi
 }
 
-function setDaligerOptions()
+function setDalignerOptions()
 {
     REPMASK_DALIGNER_OPT=""
     if [[ -n ${FIX_REPMASK_DALIGNER_IDENTITY_OVLS} && ${FIX_REPMASK_DALIGNER_IDENTITY_OVLS} -gt 0 ]]
@@ -150,50 +150,42 @@ function setDaligerOptions()
     fi
     if [[ -n ${FIX_REPMASK_DALIGNER_KMER} && ${FIX_REPMASK_DALIGNER_KMER} -gt 0 ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -k ${FIX_REPMASK_DALIGNER_KMER}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -k${FIX_REPMASK_DALIGNER_KMER}"
     fi
     if [[ -n ${FIX_REPMASK_DALIGNER_ERR} ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -e ${FIX_REPMASK_DALIGNER_ERR}"
-    fi
-    if [[ -n ${FIX_REPMASK_DALIGNER_BIAS} && ${FIX_REPMASK_DALIGNER_BIAS} -eq 1 ]]
-    then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -b"
-    fi
-    if [[ -n ${FIX_REPMASK_DALIGNER_RUNID} ]]
-    then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -r ${FIX_REPMASK_DALIGNER_RUNID}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -e${FIX_REPMASK_DALIGNER_ERR}"
     fi
     if [[ -n ${FIX_REPMASK_DALIGNER_OLEN} ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -l ${FIX_REPMASK_DALIGNER_OLEN}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -l${FIX_REPMASK_DALIGNER_OLEN}"
     fi    
     if [[ -n ${FIX_REPMASK_DALIGNER_MEM} && ${FIX_REPMASK_DALIGNER_MEM} -gt 0 ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -M ${FIX_REPMASK_DALIGNER_MEM}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -M${FIX_REPMASK_DALIGNER_MEM}"
     fi    
     if [[ -n ${FIX_REPMASK_DALIGNER_HITS} ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -h ${FIX_REPMASK_DALIGNER_HITS}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -h${FIX_REPMASK_DALIGNER_HITS}"
     fi        
     if [[ -n ${FIX_REPMASK_DALIGNER_T} ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -t ${FIX_REPMASK_DALIGNER_T}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -t${FIX_REPMASK_DALIGNER_T}"
     fi  
     if [[ -n ${FIX_REPMASK_DALIGNER_MASK} ]]
     then
         for x in ${FIX_REPMASK_DALIGNER_MASK}
         do 
-            REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -m ${x}"
+            REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -m${x}"
         done
     fi
     if [[ -n ${FIX_REPMASK_DALIGNER_TRACESPACE} && ${FIX_REPMASK_DALIGNER_TRACESPACE} -gt 0 ]]
     then
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -s ${FIX_REPMASK_DALIGNER_TRACESPACE}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -s${FIX_REPMASK_DALIGNER_TRACESPACE}"
     fi
     if [[ -n ${THREADS_daligner} ]]
     then 
-        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -j ${THREADS_daligner}"
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -T${THREADS_daligner}"
     fi
 }
 
@@ -509,7 +501,7 @@ then
             rm $x
         done 
         ### find and set daligner options 
-        setDaligerOptions
+        setDalignerOptions
 
 		## create job directories before daligner runs
 		for x in $(seq 1 ${fixblocks})
@@ -620,7 +612,7 @@ then
             rm $x
         done 
         ### find and set daligner options 
-        setDaligerOptions
+        setDalignerOptions
 
         setLArepeatOptions 0
         bcmp=${FIX_REPMASK_BLOCKCMP[1]}
