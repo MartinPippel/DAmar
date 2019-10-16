@@ -504,12 +504,23 @@ then
         echo "DAMAR TKcombine $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.version        
     elif [[ ${currentStep} -eq 7 ]]
     then
-        for x in $(ls mask_07_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
         ### find and set daligner options 
         setDaligerOptions
+
+		## create job directories before daligner runs
+		for x in $(seq 1 ${nblocks})
+		do
+			if [[ -d ${FIX_REPAMSK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]} ]]
+			then
+				mv ${FIX_REPAMSK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]} ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}_$(date '+%Y-%m-%d_%H-%M-%S')	
+			fi
+			mkdir -p ${FIX_REPAMSK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}	
+		done
+		
 
         bcmp=${FIX_REPMASK_BLOCKCMP[0]}
 
@@ -536,7 +547,7 @@ then
             else
                 NUMACTL=""
             fi
-            echo -n "${NUMACTL}${MARVEL_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${FIX_DB%.db}.${x}"
+            echo -n "cd ${FIX_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${FIX_DAZZ_DB%.db}.${x}"
             for y in $(seq ${x} $((${x}+${n}-1)))
             do
                 if [[ ${y} -gt ${fixblocks} ]]
@@ -545,15 +556,25 @@ then
                 fi
                 echo -n " ${FIX_DB%.db}.${y}"
             done 
+            
+			for y in $(seq ${x} $((${x}+${n}-1)))
+            do
+                if [[ ${y} -gt ${nblocks} ]]
+                then
+                    break
+                fi
+                echo -n " && mv ${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}"
+            done 
+            
             n=$((${n}-1))
 
-            echo ""
-    	done > mask_07_daligner_block_${FIX_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_07_daligner_block_${FIX_DB%.db}.${slurmID}.version
+            echo " && cd ${myCWD}"
+    	done > mask_${sID}_daligner_block_${FIX_DB%.db}.${slurmID}.planj
+        echo "DAZZLER daligner $(git --git-dir=${MARVEL_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_${sID}_daligner_block_${FIX_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
-        for x in $(ls mask_08_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -561,9 +582,9 @@ then
         ### create LAmerge commands 
         for x in $(seq 1 ${fixblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAmerge -n 32 ${FIX_DB%.db} ${FIX_DB%.db}.${x}.mask1.las $(getSubDirName ${FIX_REPMASK_DALIGNER_RUNID} ${x})"
-    	done > mask_08_LAmerge_block_${FIX_DB%.db}.${slurmID}.plan      
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_08_LAmerge_block_${FIX_DB%.db}.${slurmID}.version  
+        	echo "cd ${FIX_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge -n 32 ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.${x}.maskB${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]}.las mask_${x}_B${FIX_REPMASK_BLOCKCMP[0]}C${FIX_REPMASK_LAREPEAT_COV[0]} && cd ${myCWD}"
+    	done > mask_${sID}_LAmerge_block_${FIX_DB%.db}.${slurmID}.plan      
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_${sID}_LAmerge_block_${FIX_DB%.db}.${slurmID}.version  
     elif [[ ${currentStep} -eq 9 ]]
     then 
         ### clean up plans 
