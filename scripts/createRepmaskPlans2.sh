@@ -4,6 +4,10 @@ configFile=$1
 currentStep=$2
 slurmID=$3
 
+echo "createRepmaskPlans2.sh ${configFile} ${currentStep} ${slurmID}"
+echo "createRepmaskPlans2.sh cwd ${cwd}" 
+
+
 if [[ ! -f ${configFile} ]]
 then 
     (>&2 echo "cannot access config file ${configFile}")

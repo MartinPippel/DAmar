@@ -7,7 +7,7 @@ slurmID=$4
 
 cwd=$(pwd)
 echo "createCommandPlan.sh ${configFile} ${currentPhase} ${currentStep} ${slurmID}"
-echo "cwd ${cwd}" 
+echo "createCommandPlan.sh cwd ${cwd}" 
 
 if [[ ! -f ${configFile} ]]
 then 
@@ -124,7 +124,7 @@ then
     ${SUBMIT_SCRIPTS_PATH}/createRepmaskPlans2.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
-        (>&2 echo "createScrubbingPlans2.sh failed some how. Stop here.")
+        (>&2 echo "createRepmaskPlans2.sh failed some how. Stop here.")
         exit 1      
     fi   
 elif [[ ${currentPhase} -eq 4 ]]    
