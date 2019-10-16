@@ -391,6 +391,19 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 					}
 				}
 			}
+			else
+			{
+				// remove self alignments with exact same start and end coordinates
+				if(ovls[j].aread == ovls[j].bread && ovls[j].path.abpos == ovls[j].path.bbpos && ovls[j].path.aepos == ovls[j].path.bepos)
+				{
+					ovls[j].flags |= (OVL_DISCARD | OVL_CONT);
+					fctx->nFilteredContainedOvls++;
+					if(fctx->nVerbose)
+					{
+						printf("found contained OVL: %d vs %d a[%d,%d] equals b[%d,%d]\n", ovls[j].aread, ovls[j].bread, ovls[j].path.abpos, ovls[j].path.aepos, ovls[j].path.bbpos, ovls[j].path.bepos);
+					}
+				}
+			}
 			j = k + 1;
 		}
 	}
