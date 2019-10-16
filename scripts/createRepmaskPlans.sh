@@ -278,20 +278,27 @@ myTypes=("01_createSubdir, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Ca
 # type_0 - stepsp[1-14}: 01_createSubdir, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge
 if [[ ${RAW_REPMASK_TYPE} -eq 0 ]]
 then
+	if [[ ${currentStep} -lt 10 ]]
+	then 
+		sID=0${currentStep}
+	else
+		sID=${currentStep}
+	fi
+	
 	if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
-        for x in $(ls mask_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
         
-        echo "if [[ -d ${RAW_REPAMSK_OUTDIR} ]]; then mv ${RAW_REPAMSK_OUTDIR} ${RAW_REPAMSK_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPAMSK_OUTDIR} && ln -s -r .${RAW_DB%.db}.idx .${RAW_DB%.db}.bps ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.idx .${RAW_DAZZ_DB%.db}.bps ${RAW_DAZZ_DB%.db}.db ${RAW_REPAMSK_OUTDIR}" > mask_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.version         
+        echo "if [[ -d ${RAW_REPAMSK_OUTDIR} ]]; then mv ${RAW_REPAMSK_OUTDIR} ${RAW_REPAMSK_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPAMSK_OUTDIR} && ln -s -r .${RAW_DB%.db}.idx .${RAW_DB%.db}.bps ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.idx .${RAW_DAZZ_DB%.db}.bps ${RAW_DAZZ_DB%.db}.db ${RAW_REPAMSK_OUTDIR}" > mask_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.version         
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
-        for x in $(ls mask_02_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -304,9 +311,9 @@ then
         do 
             echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DB%.db}.${x} && cd ${myCWD}"
             echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DAZZ_DB%.db}.${x} && cd ${myCWD}"
-    	done > mask_02_DBdust_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_02_DBdust_block_${RAW_DB%.db}.${slurmID}.version
-        echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_02_DBdust_block_${RAW_DB%.db}.${slurmID}.version
+    	done > mask_${sID}_DBdust_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_${sID}_DBdust_block_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_${sID}_DBdust_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 3 ]]
     then 
         ### clean up plans 

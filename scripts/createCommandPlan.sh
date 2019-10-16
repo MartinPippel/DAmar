@@ -6,7 +6,7 @@ currentStep=$3
 slurmID=$4
 
 cwd=$(pwd)
-echo "createCommandPlan.sh ${configFile} ${currentPhase} ${currentStep} ${slurmID}"
+echo "createCommandPlan.sh config: ${configFile} phase: ${currentPhase} step: ${currentStep} ID: ${slurmID}"
 echo "createCommandPlan.sh cwd ${cwd}" 
 
 if [[ ! -f ${configFile} ]]
