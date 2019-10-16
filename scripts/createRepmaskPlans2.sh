@@ -462,7 +462,7 @@ then
         ### create datander commands
         for x in $(seq 1 ${fixblocks})
         do 
-            echo "cd ${FIX_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${FIX_DB%.db}.${x} && cd ${myCWD}"
+            echo "cd ${FIX_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${FIX_DAZZ_DB%.db}.${x} && cd ${myCWD}"
 		done > mask_${sID}_datander_block_${FIX_DB%.db}.${slurmID}.plan
         echo "DAZZLER datander $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > mask_${sID}_datander_block_${FIX_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 5 ]]
