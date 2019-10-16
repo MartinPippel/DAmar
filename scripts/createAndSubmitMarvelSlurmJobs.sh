@@ -538,8 +538,8 @@ then
 					(>&2 echo "WARNING - Variable FIX_REPMASK_USELAFIX_PATH is not set.Try to use default path: patchedReads_dalign")
 					FIX_REPMASK_USELAFIX_PATH="patchedReads_dalign"
 				fi
-				mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
-				cd ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
+				mkdir -p ${ASSMEBLY_DIR}_${FIX_REPMASK_USELAFIX_PATH}
+				cd ${ASSMEBLY_DIR}_${FIX_REPMASK_USELAFIX_PATH}
 				
 				if [[ ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -gt 0 && ${FIX_REPMASK_SUBMIT_SCRIPTS_FROM} -le ${FIX_REPMASK_SUBMIT_SCRIPTS_TO} ]]
 				then

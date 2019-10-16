@@ -314,22 +314,40 @@ then
     exit 1
 fi
 
+if [[ -z "${FIX_REPAMSK_OUTDIR}" ]]
+then
+	FIX_REPAMSK_OUTDIR=repmask	
+fi
+
 myTypes=("1-createFIX_DB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAmerge, 9-LArepeat, 10-TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge")
 # type_0 - steps: 1-createFIX_DB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAmerge, 9-LArepeat, 10-TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge
 if [[ ${FIX_REPMASK_TYPE} -eq 0 ]]
 then
+	if [[ ${currentStep} -lt 10 ]]
+	then 
+		sID=0${currentStep}
+	else
+		sID=${currentStep}
+	fi
+	
 	if [[ ${currentStep} -eq 1 ]]
     then
     	### clean up plans 
-        for x in $(ls mask_01_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
-        done 
-
+        done
+        
         if [[ -f ${FIX_DB%.db}.db ]]; 
         then 
-            echo "p3_s1 rm existing DB ${FIX_DB%.db}.db"
-            ${MARVEL_PATH}/bin/DBrm ${FIX_DB%.db}.db            
+            (>&2 echo "p3_s1 DB ${FIX_DB%.db}.db already exists !!!")
+            exit 1            
+        fi
+        
+        if [[ -f ${FIX_DAZZ_DB%.db}.db ]]; 
+        then 
+            (>&2 echo "p3_s1 DAZZ DB ${FIX_DAZZ_DB%.db}.db already exists !!!")
+            exit 1                        
         fi
 
         # get directory of patched reads
@@ -363,15 +381,9 @@ then
          	else
             	echo "${MARVEL_PATH}/bin/FA2db -v -c source ${FIX_REPMASK_REPEATTRACK} ${FIX_DB%.db}.db ${FIX_REPMASK_USELAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
         	fi
-        done > mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.plan        
+        done > mask_${sID}_createDB_single_${FIX_DB%.db}.${slurmID}.plan        
 
         ### convert corrected reads into a proper dazzler read format and create a valid dazzler db, that where read IDS do exactly map to the corressponding marvel db
-
-        if [[ -f ${FIX_DAZZ_DB%.db}.db ]]; 
-        then 
-            echo "p3_s1 rm existing DAZZ DB ${FIX_DAZZ_DB%.db}.db"
-            ${MARVEL_PATH}/bin/DBrm ${FIX_DAZZ_DB%.db}.db            
-        fi
 
         if [[ -d ${RAW_FIX_LAFIX_PATH}${ptype}_dazzler ]] 
         then
@@ -384,7 +396,7 @@ then
         for x in $(seq 1 ${rawblocks})
         do  
             echo "${DACCORD_PATH}/bin/fastaidrename < ${FIX_REPMASK_USELAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta | awk '{print \$1}' > ${FIX_REPMASK_USELAFIX_PATH}_dazzler/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"            
-        done >> mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.plan        
+        done >> mask_${sID}_createDB_single_${FIX_DB%.db}.${slurmID}.plan        
 
         # create dazzler db 
         for x in $(seq 1 ${rawblocks})
@@ -396,10 +408,13 @@ then
         	else
             	echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_DAZZ_DB%.db}.db ${FIX_REPMASK_USELAFIX_PATH}_dazzler/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
         	fi
-        done >> mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.plan
-    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.version
-    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.version
-    	echo "fastaidrename $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_01_createDB_single_${FIX_DB%.db}.${slurmID}.version 
+        done >> mask_${sID}_createDB_single_${FIX_DB%.db}.${slurmID}.plan
+        
+        echo "if [[ -d ${FIX_REPAMSK_OUTDIR} ]]; then mv ${FIX_REPAMSK_OUTDIR} ${FIX_REPAMSK_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_REPAMSK_OUTDIR} && ln -s -r .${FIX_DB%.db}.idx .${FIX_DB%.db}.bps ${FIX_DB%.db}.db .${RAW_DAZZ_DB%.db}.idx .${FIX_DAZZ_DB%.db}.bps ${FIX_DAZZ_DB%.db}.db ${FIX_REPAMSK_OUTDIR}" >> mask_${sID}_createDB_single_${FIX_DB%.db}.${slurmID}.plan
+        
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_${sID}_createDB_single_${FIX_DB%.db}.${slurmID}.version
+    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_${sID}_createDB_single_${FIX_DB%.db}.${slurmID}.version
+    	echo "fastaidrename $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_${sID}_createDB_single_${FIX_DB%.db}.${slurmID}.version 
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 

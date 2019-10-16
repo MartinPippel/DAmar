@@ -205,7 +205,7 @@ then
 		FIX_REPMASK_USELAFIX_PATH="patchedReads_dalign"
 	fi
 		
-	mkdir -p ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
+	mkdir -p ${ASSMEBLY_DIR}_${FIX_REPMASK_USELAFIX_PATH}
 	cd ${ASSMEBLY_DIR}/${FIX_REPMASK_USELAFIX_PATH}
 	${SUBMIT_SCRIPTS_PATH}/createAndSubmitMarvelSlurmJobs.sh ${realPathConfigFile} ${currentPhase} ${currentStep} ${Id}
 	cd ${cwd}

@@ -638,10 +638,66 @@ fi
 
 fixblocks=$(getNumOfDbBlocks ${FIX_DB%.db}.db)
 
+if [[ -z ${FIX_DALIGN_OUTDIR} ]]
+then
+	FIX_DALIGN_OUTDIR="dalign"
+fi
+
+if [[ -z ${FIX_REPCOMP_OUTDIR} ]]
+then
+	FIX_REPCOMP_OUTDIR="repcomp"
+fi
+
+if [[ -z ${FIX_DACCORD_OUTDIR} ]]
+then
+	FIX_DACCORD_OUTDIR="daccord"
+fi
+
+#type-0 - steps[1-10]: 01-createSubdir, 02-daligner, 03-LAmerge, 04-LArepeat, 05-TKmerge, 06-TKcombine, 07-TKhomogenize, 08-TKcombine, 09-LAstitch, 10-LAq, 11-TKmerge, 12-LAgap, 13-LAq, 14-TKmerge
+
+
+#type-7 steps [1-13]: 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge          ## old pipeline
+#type-8 steps [ 1-13 : 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge          ## experimental pipeline
+#              14-27 : 14-LAseparate, 15-repcomp, 16-LAmerge, 17-LArepeat, 18-TKmerge, 19-TKcombine, 20-TKhomogenize, 21-TKcombine, 22-LAstitch, 23-LAq, 24-TKmerge, 25-LAgap, 26-LAq, 27-TKmerge
+#              28-41]: 28-LAseparate, 29-forcealign, 30-LAmerge, 31-LArepeat, 32-TKmerge, 33-TKcombine, 34-TKhomogenize, 35-TKcombine, 36-LAstitch, 37-LAq, 38-TKmerge, 39-LAgap, 40-LAq, 41-TKmerge
+
 mytypes=("1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge" "1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge, 14-LAseparate, 15-repcomp, 16-LAmerge, 17-LArepeat, 18-TKmerge, 19-TKcombine, 20-TKhomogenize, 21-TKcombine, 22-LAstitch, 23-LAq, 24-TKmerge, 25-LAgap, 26-LAq, 27-TKmerge, 28-LAseparate, 29-forcealign, 30-LAmerge, 31-LArepeat, 32-TKmerge, 33-TKcombine, 34-TKhomogenize, 35-TKcombine, 36-LAstitch, 37-LAq, 38-TKmerge, 39-LAgap, 40-LAq, 41-TKmerge")
 
-#type-0 steps [1-13]: 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge          ## old pipeline
+
+#type-0 - steps[1-10]: 01-createSubdir, 02-daligner, 03-LAmerge, 04-LArepeat, 05-TKmerge, 06-TKcombine, 07-TKhomogenize, 08-TKcombine, 09-LAstitch, 10-LAq, 11-TKmerge, 12-LAgap, 13-LAq, 14-TKmerge
 if [[ ${FIX_SCRUB_TYPE} -eq 0 ]]
+then
+	if [[ ${currentStep} -lt 10 ]]
+	then 
+		sID=0${currentStep}
+	else
+		sID=${currentStep}
+	fi
+	
+	if [[ ${currentStep} -eq 1 ]]
+    then
+	
+	    ### clean up plans 
+	    for x in $(ls scrub_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+	    do            
+	        rm $x
+	    done 
+	    
+	    echo "if [[ -d ${FIX_DALIGN_OUTDIR} ]]; then mv ${FIX_DALIGN_OUTDIR} ${FIX_DALIGN_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_DALIGN_OUTDIR} && ln -s -r .${FIX_DB%.db}.* ${FIX_DB%.db}.db .${FIX_DAZZ_DB%.db}.* ${FIX_DAZZ_DB%.db}.db ${FIX_DALIGN_OUTDIR}" > scrub_${sID}_createSubdir_single_${FIX_DB%.db}.${slurmID}.plan
+		for x in $(seq 1 ${fixblocks})
+	        do
+			echo "mkdir -p ${FIX_DALIGN_OUTDIR}/d${x}"
+		done >> fix_01_createSubdir_single_${FIX_DB%.db}.${slurmID}.plan
+	    echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_createSubdir_single_${FIX_DB%.db}.${slurmID}.version
+
+	else
+        (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${FIX_SCRUB_TYPE}]}")
+        exit 1            
+    fi
+
+#type-0 steps [1-13]: 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge          ## old pipeline
+elif [[ ${FIX_SCRUB_TYPE} -eq 8 ]]
 then
     #### daligner 
     if [[ ${currentStep} -eq 1 ]]
@@ -994,7 +1050,7 @@ then
 #type-1 steps [ 1-13 : 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge          ## experimental pipeline
 #              14-27 : 14-LAseparate, 15-repcomp, 16-LAmerge, 17-LArepeat, 18-TKmerge, 19-TKcombine, 20-TKhomogenize, 21-TKcombine, 22-LAstitch, 23-LAq, 24-TKmerge, 25-LAgap, 26-LAq, 27-TKmerge
 #              28-41]: 28-LAseparate, 29-forcealign, 30-LAmerge, 31-LArepeat, 32-TKmerge, 33-TKcombine, 34-TKhomogenize, 35-TKcombine, 36-LAstitch, 37-LAq, 38-TKmerge, 39-LAgap, 40-LAq, 41-TKmerge
-elif [[ ${FIX_SCRUB_TYPE} -eq 1 ]]
+elif [[ ${FIX_SCRUB_TYPE} -eq 8 ]]
 then
 	#### daligner 
     if [[ ${currentStep} -eq 1 ]]
