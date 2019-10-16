@@ -133,11 +133,11 @@ function setTANmaskOptions()
     fi
     if [[ -n ${FIX_REPMASK_TANMASK_MINLEN} && ${FIX_REPMASK_TANMASK_MINLEN} -ge 1 ]]
     then
-        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -l ${FIX_REPMASK_TANMASK_MINLEN}"
+        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -l${FIX_REPMASK_TANMASK_MINLEN}"
     fi
     if [[ -n ${FIX_REPMASK_TANMASK_TRACK} ]]
     then
-        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -m ${FIX_REPMASK_TANMASK_TRACK}"
+        REPMASK_TANMASK_OPT="${REPMASK_TANMASK_OPT} -n${FIX_REPMASK_TANMASK_TRACK}"
     fi
 }
 
@@ -268,18 +268,11 @@ function setDatanderOptions()
     REPMASK_DATANDER_OPT=""
     if [[ -n ${FIX_REPMASK_DATANDER_THREADS} ]]
     then
-        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -j ${FIX_REPMASK_DATANDER_THREADS}"
+        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -T${FIX_REPMASK_DATANDER_THREADS}"
     fi
     if [[ -n ${FIX_REPMASK_DATANDER_MINLEN} ]]
     then
-        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -l ${FIX_REPMASK_DATANDER_MINLEN}"
-    fi
-    if [[ -n ${FIX_REPMASK_DATANDER_FOLDER} ]]
-    then
-        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -o ${FIX_REPMASK_DATANDER_FOLDER}"
-    else
-        FIX_REPMASK_DATANDER_FOLDER="tan"
-        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -o ${FIX_REPMASK_DATANDER_FOLDER}"
+        REPMASK_DATANDER_OPT="${REPMASK_DATANDER_OPT} -l${FIX_REPMASK_DATANDER_MINLEN}"
     fi
 }
 
@@ -318,6 +311,12 @@ then
     exit 1
 fi
 
+if [[ -z "${LASTOOLS_PATH}" ]]
+then 
+    (>&2 echo "ERROR - You have to set LASTOOLS_PATH. ")
+    exit 1
+fi
+
 if [[ -z "${FIX_REPAMSK_OUTDIR}" ]]
 then
 	FIX_REPAMSK_OUTDIR=repmask	
@@ -333,6 +332,7 @@ then
 	else
 		sID=${currentStep}
 	fi
+	myCWD=$(pwd)
 	
 	if [[ ${currentStep} -eq 1 ]]
     then
@@ -426,7 +426,6 @@ then
         do            
             rm $x
         done 
-        myCWD=$(pwd)
         ### find and set DBdust options 
         setDBdustOptions
         ### create DBdust commands 
@@ -444,7 +443,6 @@ then
         do            
             rm $x
         done 
-        myCWD=$(pwd)
         ### find and set Catrack options 
         setCatrackOptions
         ### create Catrack command
@@ -455,7 +453,7 @@ then
     elif [[ ${currentStep} -eq 4 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_04_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -464,13 +462,13 @@ then
         ### create datander commands
         for x in $(seq 1 ${fixblocks})
         do 
-            echo "${MARVEL_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${FIX_DB%.db}.${x}"
-		done > mask_04_datander_block_${FIX_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_04_datander_block_${FIX_DB%.db}.${slurmID}.version
+            echo "cd ${FIX_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${FIX_DB%.db}.${x} && cd ${myCWD}"
+		done > mask_${sID}_datander_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "DAZZLER datander $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > mask_${sID}_datander_block_${FIX_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 5 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_05_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -479,13 +477,13 @@ then
         ### create TANmask commands
         for x in $(seq 1 ${fixblocks})
         do 
-            echo "${MARVEL_PATH}/bin/TANmask${REPMASK_TANMASK_OPT} ${FIX_DB%.db} ${FIX_REPMASK_DATANDER_FOLDER}/${FIX_DB%.db}.${x}.${FIX_DB%.db}.${x}.las" 
-    	done > mask_05_TANmask_block_${FIX_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_05_TANmask_block_${FIX_DB%.db}.${slurmID}.version
+            echo "cd ${FIX_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/TANmask${REPMASK_TANMASK_OPT} ${FIX_DAZZ_DB%.db} TAN.${FIX_DAZZ_DB%.db}.${x}.las && cd ${myCWD}" 
+    	done > mask_${sID}_TANmask_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "DAZZLER TANmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > mask_${sID}_TANmask_block_${FIX_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 6 ]]
     then 
         ### clean up plans 
-        for x in $(ls mask_06_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls mask_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -495,9 +493,15 @@ then
             setCatrackOptions
         fi
         ### create Catrack command
-        echo "${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}" > mask_06_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "${MARVEL_PATH}/bin/TKcombine ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust" >> mask_06_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_06_Catrack_single_${FIX_DB%.db}.${slurmID}.version    
+		echo "cd ${FIX_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${FIX_DAZZ_DB%.db} ${FIX_REPMASK_TANMASK_TRACK} && cp .${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.anno .${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.data ${myCWD}/ && cd ${myCWD}" > mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "cd ${FIX_REPAMSK_OUTDIR} && ${LASTOOLS_PATH}/bin/viewmasks ${FIX_DAZZ_DB%.db} ${FIX_REPMASK_TANMASK_TRACK} > ${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.txt && cd ${myCWD}" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
+      	echo "cd ${FIX_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.txt ${FIX_REPMASK_TANMASK_TRACK} && cp .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.a2 .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.d2 ${myCWD}/ && cd ${myCWD}" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
+      	echo "cd ${FIX_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust && cp .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}_dust.a2 .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}_dust.d2 ${myCWD}/ && cd ${myCWD}" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan 
+        
+        echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.version
+        echo "LASTOOLS viewmasks $(git --git-dir=${LASTOOLS_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.version    
+        echo "DAMAR txt2track $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.version
+        echo "DAMAR TKcombine $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.version        
     elif [[ ${currentStep} -eq 7 ]]
     then
         for x in $(ls mask_07_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
