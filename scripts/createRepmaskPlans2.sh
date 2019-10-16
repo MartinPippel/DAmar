@@ -568,7 +568,7 @@ then
             n=$((${n}-1))
 
             echo " && cd ${myCWD}"
-    	done > mask_${sID}_daligner_block_${FIX_DB%.db}.${slurmID}.planj
+    	done > mask_${sID}_daligner_block_${FIX_DB%.db}.${slurmID}.plan
         echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > mask_${sID}_daligner_block_${FIX_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 8 ]]
     then
