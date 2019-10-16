@@ -545,7 +545,7 @@ then
                 then
                     break
                 fi
-                echo -n " ${FIX_DB%.db}.${y}"
+                echo -n " ${FIX_DAZZ_DB%.db}.${y}"
             done 
             
 			for y in $(seq ${x} $((${x}+${n}-1)))
