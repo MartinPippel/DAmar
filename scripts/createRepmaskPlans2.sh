@@ -4,8 +4,9 @@ configFile=$1
 currentStep=$2
 slurmID=$3
 
+cwd=$(pwd)
 echo "createRepmaskPlans2.sh ${configFile} ${currentStep} ${slurmID}"
-echo "createRepmaskPlans2.sh cwd $(cwd)" 
+echo "createRepmaskPlans2.sh cwd ${cwd}" 
 
 if [[ ! -f ${configFile} ]]
 then 
