@@ -738,29 +738,37 @@ myTypes=("01-createSubdir, 02-daligner, 03-LAmerge, 04-LArepeat, 05-TKmerge, 06-
 #type-3 - steps[1-1]:  01_patchStats 
 if [[ ${RAW_PATCH_TYPE} -eq 0 ]]
 then 
+	
+	if [[ ${currentStep} -lt 10 ]]
+	then 
+		sID=0${currentStep}
+	else
+		sID=${currentStep}
+	fi
+	myCWD=$(pwd)
+	
 	if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
         
-        echo "if [[ -d ${RAW_DALIGN_OUTDIR} ]]; then mv ${RAW_DALIGN_OUTDIR} ${RAW_DALIGN_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_DALIGN_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_DALIGN_OUTDIR}" > fix_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "if [[ -d ${RAW_DALIGN_OUTDIR} ]]; then mv ${RAW_DALIGN_OUTDIR} ${RAW_DALIGN_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_DALIGN_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_DALIGN_OUTDIR}" > fix_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
 		for x in $(seq 1 ${nblocks})
 	        do
 			echo "mkdir -p ${RAW_DALIGN_OUTDIR}/d${x}"
-		done >> fix_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.version
+		done >> fix_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_02_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
         
-        myCWD=$(pwd)
         ### find and set daligner options 
         setDalignerOptions
         ### create daligner commands
@@ -868,50 +876,48 @@ then
                         done
                     fi
                     echo " && cd ${myCWD}"
-    	done > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > fix_02_daligner_block_${RAW_DB%.db}.${slurmID}.version
+    	done > fix_${sID}_daligner_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > fix_${sID}_daligner_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
-        myCWD=$(pwd)
         ### find and set LAmerge options 
         setLAmergeOptions
         ### create LAmerge commands
         for x in $(seq 1 ${nblocks})
         do 
             echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.dalign.${x}.las d${x} && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.dalign.${x}.las ${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}"
-    	done > fix_03_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan  
-        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_LAmerge_block_${RAW_DB%.db}.${slurmID}.version       
+    	done > fix_${sID}_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan  
+        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LAmerge_block_${RAW_DB%.db}.${slurmID}.version       
     elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
-        myCWD=$(pwd)
         setLArepeatOptions 1
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
             echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${FIX_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}/"
             echo "cd ${RAW_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_DAZZ_FIX_LAREPEAT_THRESHOLD} -n${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}/"
-    	done > fix_04_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan 
-        echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
-        echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> fix_04_LArepeat_block_${RAW_DB%.db}.${slurmID}.version        
+    	done > fix_${sID}_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan 
+        echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> fix_${sID}_LArepeat_block_${RAW_DB%.db}.${slurmID}.version        
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
-        myCWD=$(pwd)
-        # we need the name of the repeat track, especially if the plan starts with step4
+        
+		# we need the name of the repeat track, especially if the plan starts with step4
         setLArepeatOptions 1
         ### find and set TKmerge options 
         if [[ -z "${FIX_TKMERGE_OPT}" ]]
@@ -920,14 +926,14 @@ then
         fi
                
         ### create TKmerge command
-        echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 ${myCWD} && cd ${myCWD}" > fix_05_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan      
-        echo "cd ${RAW_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${FIX_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> fix_05_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_05_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
-        echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> fix_05_TKmerge_single_${RAW_DB%.db}.${slurmID}.version   
+        echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 ${myCWD} && cd ${myCWD}" > fix_${sID}_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan      
+        echo "cd ${RAW_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${FIX_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> fix_${sID}_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> fix_${sID}_TKmerge_single_${RAW_DB%.db}.${slurmID}.version   
     elif [[ ${currentStep} -eq 6 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -950,17 +956,17 @@ then
         ### create TKcombine command        
         if [[ -n ${RAW_REPMASK_REPEATTRACK} ]]
         then
-            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_REPEATTRACK}" > fix_06_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
-            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK} dust" >> fix_06_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_REPEATTRACK}" > fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
+            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK} dust" >> fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         else
-            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_06_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
-            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_06_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         fi 
-        echo "MARVEL TKcombine $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_06_TKcombine_single_${RAW_DB%.db}.${slurmID}.version         
+        echo "MARVEL TKcombine $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.version         
     elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -969,29 +975,29 @@ then
         ### create LAfilter commands - filter out identity overlaps - has to be done because revcomp and forcealign will loose those 
         for x in $(seq 1 ${nblocks})
         do  
-            echo "${MARVEL_PATH}/bin/LAfilter -p -R 3 ${RAW_DB%.db} ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${x}.las identity/${RAW_DAZZ_DB%.db}.identity.${x}.las"
-		done > fix_07_LAfilter_block_${RAW_DB%.db}.${slurmID}.plan   
-    echo "MARVEL LAfilter $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_07_LAfilter_block_${RAW_DB%.db}.${slurmID}.version    
+            echo "${MARVEL_PATH}/bin/LAfilter -p -R 3 -R 6 ${RAW_DB%.db} ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${x}.las identity/${RAW_DAZZ_DB%.db}.identity.${x}.las"
+		done > fix_${sID}_LAfilter_block_${RAW_DB%.db}.${slurmID}.plan   
+    echo "MARVEL LAfilter $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LAfilter_block_${RAW_DB%.db}.${slurmID}.version    
     elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
-        myCWD=$(pwd)
-        ### find and set LAq options 
+        
+		### find and set LAq options 
         setLAqOptions
         ### create LAq commands
         for x in $(seq 1 ${nblocks})
         do 
             echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign ${RAW_DB%.db} -b ${x} ${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}"
-    	done > fix_08_LAq_block_${RAW_DB%.db}.${slurmID}.plan 
-        echo "MARVEL LAq $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_08_LAq_block_${RAW_DB%.db}.${slurmID}.version                
+    	done > fix_${sID}_LAq_block_${RAW_DB%.db}.${slurmID}.plan 
+        echo "MARVEL LAq $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LAq_block_${RAW_DB%.db}.${slurmID}.version                
     elif [[ ${currentStep} -eq 9 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1004,16 +1010,16 @@ then
         then 
             setTKmergeOptions
         fi
-        myCWD=$(pwd)
-        ### create TKmerge command
-        echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign && cp .${RAW_DB%.db}.trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign.a2 .${RAW_DB%.db}.trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign.d2 ${myCWD}/ && cd ${myCWD}" > fix_09_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign && cp .${RAW_DB%.db}.q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign.a2 .${RAW_DB%.db}.q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign.d2 ${myCWD}/ && cd ${myCWD}" >> fix_09_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan       
-        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_09_TKmerge_block_${RAW_DB%.db}.${slurmID}.version               
+        
+		### create TKmerge command
+        echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign && cp .${RAW_DB%.db}.trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign.a2 .${RAW_DB%.db}.trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign.d2 ${myCWD}/ && cd ${myCWD}" > fix_${sID}_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign && cp .${RAW_DB%.db}.q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign.a2 .${RAW_DB%.db}.q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_dalign.d2 ${myCWD}/ && cd ${myCWD}" >> fix_${sID}_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan       
+        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${sID}_TKmerge_block_${RAW_DB%.db}.${slurmID}.version               
 	### 10_LAfix    
     elif [[ ${currentStep} -eq 10 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_10_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1030,8 +1036,8 @@ then
         		addopt="-T${RAW_FIX_LAFIX_TRIMFILEPREFIX}_${x}.txt "
         	fi
             echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_DALIGN_OUTDIR}/${RAW_DAZZ_DB%.db}.dalignFilt.${x}.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
-    	done > fix_10_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
-    echo "MARVEL LAfix $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_10_LAfix_block_${RAW_DB%.db}.${slurmID}.version                 
+    	done > fix_${sID}_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
+    echo "MARVEL LAfix $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LAfix_block_${RAW_DB%.db}.${slurmID}.version                 
     else 
         (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_PATCH_TYPE}]}")
@@ -1043,24 +1049,24 @@ then
 	if [[ ${currentStep} -eq 1 ]]
     then
 		### clean up plans 
-	    for x in $(ls fix_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+	    for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
 	    do            
 	        rm $x
 	    done 
 	    
-	    echo "if [[ -d ${RAW_REPCOMP_OUTDIR} ]]; then mv ${RAW_REPCOMP_OUTDIR} ${RAW_REPCOMP_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPCOMP_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_REPCOMP_OUTDIR}" > fix_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
+	    echo "if [[ -d ${RAW_REPCOMP_OUTDIR} ]]; then mv ${RAW_REPCOMP_OUTDIR} ${RAW_REPCOMP_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPCOMP_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_REPCOMP_OUTDIR}" > fix_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
 		for x in $(seq 1 ${nblocks})
 	    do
 			echo "mkdir -p ${RAW_REPCOMP_OUTDIR}/r${x}"
 			echo "mkdir -p ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp"
 			echo "mkdir -p ${RAW_REPCOMP_OUTDIR}/d${x}_NoRepComp"
-		done >> fix_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
-	    echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_createSubdir_single_${RAW_DB%.db}.${slurmID}.version
+		done >> fix_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
+	    echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.version
   	#### LAseparate
   	elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_02_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1079,13 +1085,13 @@ then
                 fi
                 echo "${MARVEL_PATH}/bin/LAseparate${FIX_LASEPARATE_OPT} ${RAW_DB%.db} ${RAW_DALIGN_OUTDIR}/d${x}/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las ${RAW_REPCOMP_OUTDIR}/d${x}_NoRepComp/${RAW_DAZZ_DB%.db}.${x}.${RAW_DAZZ_DB%.db}.${y}.las"                
             done 
-    	done > fix_02_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_02_LAseparate_block_${RAW_DB%.db}.${slurmID}.version
+    	done > fix_${sID}_LAseparate_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LAseparate_block_${RAW_DB%.db}.${slurmID}.version
     #### repcomp 
     elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1133,17 +1139,17 @@ then
                     exit 1
                 fi
             done 
-		done > fix_03_repcomp_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "repcomp $(git --git-dir=${REPCOMP_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_repcomp_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_repcomp_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "repcomp $(git --git-dir=${REPCOMP_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_repcomp_block_${RAW_DB%.db}.${slurmID}.version
 	### 04_LAmergeLAfilter
     elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
-        myCWD=$(pwd)
+        
         ### find and set LAmerge options 
         setLAmergeOptions
         setRepcompOptions
@@ -1151,17 +1157,17 @@ then
         for x in $(seq 1 ${nblocks})
         do 
             echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las r${x} d${x}_ForRepComp d${x}_NoRepComp ${myCWD}/identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcomp.${x}.las ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}"                                                                                                                     
-    	done > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_04_LAmerge_block_${RAW_DB%.db}.${slurmID}.version      
+    	done > fix_${sID}_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LAmerge_block_${RAW_DB%.db}.${slurmID}.version      
     ### 05_LArepeat
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
-        myCWD=$(pwd)
+        
         setLArepeatOptions 2
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
@@ -1169,18 +1175,18 @@ then
             echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${FIX_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}/"
             echo "cd ${RAW_REPCOMP_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_DAZZ_FIX_LAREPEAT_THRESHOLD} -n${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}/"
             
-    	done > fix_05_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_05_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
-    	echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> fix_05_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
+    	done > fix_${sID}_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
+    	echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> fix_${sID}_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
     ### 06_TKmerge         
     elif [[ ${currentStep} -eq 6 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
-        myCWD=$(pwd)
+        
         # we need the name of the repeat track, especially if the plan starts with step4
         setLArepeatOptions 2
         ### find and set TKmerge options 
@@ -1189,15 +1195,15 @@ then
             setTKmergeOptions
         fi
         ### create TKmerge command
-        echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 ${myCWD} && cd ${myCWD}" > fix_06_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan      
-        echo "cd ${RAW_REPCOMP_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${FIX_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> fix_06_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_06_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
-        echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> fix_06_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
+        echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 ${myCWD} && cd ${myCWD}" > fix_${sID}_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan      
+        echo "cd ${RAW_REPCOMP_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${FIX_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_DAZZ_FIX_LAREPEAT_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> fix_${sID}_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
+        echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> fix_${sID}_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
     ### 07_TKcombine   
     elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done     
@@ -1220,39 +1226,39 @@ then
         ### create TKcombine command        
         if [[ -n ${RAW_REPMASK_REPEATTRACK} ]]
         then
-            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_REPEATTRACK}" > fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
-            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK} dust" >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_FIX_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_REPEATTRACK}" > fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan
+            echo "${MARVEL_PATH}/bin/TKcombine${FIX_TKCOMBINE_OPT} ${RAW_DB%.db} ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_TANMASK_TRACK}_dust ${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK} ${RAW_REPMASK_TANMASK_TRACK} dust" >> fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         else
-            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
-            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.d2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.d2"  > fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
+            echo "ln -s .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_FIX_LAREPEAT_REPEATTRACK}_${RAW_REPMASK_LAREPEAT_REPEATTRACK}.a2"  >> fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.plan         
         fi 
-        echo "MARVEL TKcombine $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_07_TKcombine_single_${RAW_DB%.db}.${slurmID}.version
+        echo "MARVEL TKcombine $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_TKcombine_single_${RAW_DB%.db}.${slurmID}.version
     ### 08_LAq  
     elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
-        myCWD=$(pwd)
+        
         ### find and set LAq options 
         setLAqOptions
         ### create LAq commands
         for x in $(seq 1 ${nblocks})
         do 
             echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAq${FIX_LAQ_OPT} -T trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp -Q q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp ${RAW_DB%.db} -b ${x} ${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}"
-		done > fix_08_LAq_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "MARVEL LAq $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_08_LAq_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_LAq_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL LAq $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LAq_block_${RAW_DB%.db}.${slurmID}.version
 	### 09_TKmerge    	                 
     elif [[ ${currentStep} -eq 9 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done  
-        myCWD=$(pwd)   
+           
         # we need the name of the q and trim track names, especially if the plan starts with step11
         if [[ -z ${FIX_LAQ_OPT} ]]
         then 
@@ -1263,9 +1269,9 @@ then
             setTKmergeOptions
         fi
         ### create TKmerge command
-        echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp && cp .${RAW_DB%.db}.trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp.a2 .${RAW_DB%.db}.trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp.d2 ${myCWD}/ && cd ${myCWD}" > fix_09_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp&& cp .${RAW_DB%.db}.q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp.a2 .${RAW_DB%.db}.q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp.d2 ${myCWD}/ && cd ${myCWD}" >> fix_09_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_09_TKmerge_block_${RAW_DB%.db}.${slurmID}.version               
+        echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp && cp .${RAW_DB%.db}.trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp.a2 .${RAW_DB%.db}.trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp.d2 ${myCWD}/ && cd ${myCWD}" > fix_${sID}_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${FIX_TKMERGE_OPT} ${RAW_DB%.db} q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp&& cp .${RAW_DB%.db}.q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp.a2 .${RAW_DB%.db}.q0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_repcomp.d2 ${myCWD}/ && cd ${myCWD}" >> fix_${sID}_TKmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_TKmerge_block_${RAW_DB%.db}.${slurmID}.version               
    ### 10 LAfix
     elif [[ ${currentStep} -eq 10 ]]
     then
@@ -1311,18 +1317,18 @@ then
     if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
-    for x in $(ls fix_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+    for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done                 
 
-        echo "if [[ -d ${RAW_DACCORD_OUTDIR} ]]; then mv ${RAW_DACCORD_OUTDIR} ${RAW_DACCORD_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_DACCORD_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_DACCORD_OUTDIR}" > fix_01_createSubDir_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_createSubDir_single_${RAW_DB%.db}.${slurmID}.version
+        echo "if [[ -d ${RAW_DACCORD_OUTDIR} ]]; then mv ${RAW_DACCORD_OUTDIR} ${RAW_DACCORD_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_DACCORD_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_DACCORD_OUTDIR}" > fix_${sID}_createSubDir_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_createSubDir_single_${RAW_DB%.db}.${slurmID}.version
  	### 02-lassort
 	elif [[ ${currentStep} -eq 2 ]]
     then
         ### clean up plans 
-    	for x in $(ls fix_02_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+    	for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1332,39 +1338,38 @@ then
 		for x in $(seq 1 ${nblocks})
         do
         	echo "${LASTOOLS_PATH}/bin/lassort ${FIX_LASSORT_OPT} ${RAW_DACCORD_OUTDIR}/${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las ${RAW_DACCORD_INDIR}/${RAW_DAZZ_DB%.db}.${fsuffix}.${x}.las"
-		done > fix_02_lassort_block_${RAW_DB%.db}.${slurmID}.plan    	         
-        echo "LASTOOLS lassort $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_02_lassort_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_lassort_block_${RAW_DB%.db}.${slurmID}.plan    	         
+        echo "LASTOOLS lassort $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_lassort_block_${RAW_DB%.db}.${slurmID}.version
     ### 03-computeIntrinsicQV
 	elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_03_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
-        done 
-		myCWD=$(pwd)		
+        done 				
 		
 		for x in $(seq 1 ${nblocks})
         do
         	echo "cd ${RAW_DACCORD_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && ${DACCORD_PATH}/bin/computeintrinsicqv2 -d${RAW_COV} ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && unlink ${RAW_DAZZ_DB%.db}.${x}.${fsuffix}Sort.las && cd ${myCWD}"
-		done > fix_03_computeintrinsicqv2_block_${RAW_DB%.db}.${slurmID}.plan    	         
-        echo "DACCORD computeintrinsicqv2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_03_computeintrinsicqv2_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_computeintrinsicqv2_block_${RAW_DB%.db}.${slurmID}.plan    	         
+        echo "DACCORD computeintrinsicqv2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_computeintrinsicqv2_block_${RAW_DB%.db}.${slurmID}.version
 	### 04_Catrack
 	elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_04_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
-        myCWD=$(pwd)
-        echo "cd ${RAW_DACCORD_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${RAW_DAZZ_DB%.db}.db inqual && cp .${RAW_DAZZ_DB%.db}.inqual.anno .${RAW_DAZZ_DB%.db}.inqual.data ${myCWD}/ && cd ${myCWD}" > fix_04_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-		echo "DAZZ_DB Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > fix_04_Catrack_single_${RAW_DB%.db}.${slurmID}.version                
+        
+        echo "cd ${RAW_DACCORD_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${RAW_DAZZ_DB%.db}.db inqual && cp .${RAW_DAZZ_DB%.db}.inqual.anno .${RAW_DAZZ_DB%.db}.inqual.data ${myCWD}/ && cd ${myCWD}" > fix_${sID}_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "DAZZ_DB Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > fix_${sID}_Catrack_single_${RAW_DB%.db}.${slurmID}.version                
     ### 05_lasdetectsimplerepeats
     elif [[ ${currentStep} -eq 5 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_05_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1376,23 +1381,22 @@ then
    	 	fi 
    	 	
    	 	OPT="${OPT} -d$((RAW_COV/2)) -e${RAW_FIX_LASDETECTSIMPLEREPEATS_ERATE}"
-    	myCWD=$(pwd)
+    	
         for x in $(seq 1 ${nblocks})
         do
         	echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/lasdetectsimplerepeats ${OPT} ${RAW_DAZZ_DB%.db}.rep.${x}.data ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las && cd ${myCWD}"
-		done > fix_05_lasdetectsimplerepeats_block_${RAW_DB%.db}.${slurmID}.plan
-      	echo "DACCORD lasdetectsimplerepeats $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_05_lasdetectsimplerepeats_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_lasdetectsimplerepeats_block_${RAW_DB%.db}.${slurmID}.plan
+      	echo "DACCORD lasdetectsimplerepeats $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_lasdetectsimplerepeats_block_${RAW_DB%.db}.${slurmID}.version
     ### 06_mergeAndSortRepeats
     elif [[ ${currentStep} -eq 6 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_06_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
         
-        myCWD=$(pwd)
-		files="${RAW_DAZZ_DB%.db}.rep.[0-9].data"
+        files="${RAW_DAZZ_DB%.db}.rep.[0-9].data"
 		if [[ ${nblocks} -gt 9 ]]
 		then
 			files="${files} ${RAW_DAZZ_DB%.db}.rep.[0-9][0-9].data"
@@ -1411,23 +1415,22 @@ then
 		fi
     	if [[ ${nblocks} -gt 99999 ]]
         then
-    		(>&2 echo "fix_06_mergeAndSortRepeats: more than 99999 db blocks are not supported!!!")
+    		(>&2 echo "fix_${sID}_mergeAndSortRepeats: more than 99999 db blocks are not supported!!!")
         	exit 1	
     	fi
     	## sanity check 
     	cd ${RAW_DACCORD_OUTDIR} && if [[ $(ls ${files} | wc -l) -ne ${nblocks} ]]; then exit 1; fi && cd ${myCWD}
-    	echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} | ${DACCORD_PATH}/bin/repsort ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.rep.data && cd ${myCWD}" >> fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD repsort $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_06_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.version
+    	echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} | ${DACCORD_PATH}/bin/repsort ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.rep.data && cd ${myCWD}" >> fix_${sID}_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD repsort $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_mergeAndSortRepeats_single_${RAW_DB%.db}.${slurmID}.version
     ### 07_lasfilteralignments 
     elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_07_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
         
-        myCWD=$(pwd)
         OPT=""
         
         if [[ -z "${RAW_FIX_LASFILTERALIGNMENTS_ERATE}" ]]
@@ -1440,26 +1443,25 @@ then
         for x in $(seq 1 ${nblocks})
         do
         	echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/lasfilteralignments ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.${x}.las ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las && cd ${myCWD}"
-		done > fix_07_lasfilteralignments_block_${RAW_DB%.db}.${slurmID}.plan
-      	echo "DACCORD lasfilteralignments $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_07_lasfilteralignments_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_lasfilteralignments_block_${RAW_DB%.db}.${slurmID}.plan
+      	echo "DACCORD lasfilteralignments $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_lasfilteralignments_block_${RAW_DB%.db}.${slurmID}.version
     ### 08_mergesym2
     elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_08_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
-        myCWD=$(pwd)
         
-        echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/mergesym2 ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.sym ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.*.las.sym && cd ${myCWD}" > fix_08_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_DACCORD_OUTDIR} && rm ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.*.las.sym && cd ${myCWD}" >> fix_08_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_08_mergesym2_single_${RAW_DB%.db}.${slurmID}.version        
+        echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/mergesym2 ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.sym ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.*.las.sym && cd ${myCWD}" > fix_${sID}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_DACCORD_OUTDIR} && rm ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.*.las.sym && cd ${myCWD}" >> fix_${sID}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_mergesym2_single_${RAW_DB%.db}.${slurmID}.version        
 	### 09_filtersym
     elif [[ ${currentStep} -eq 9 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_09_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1475,12 +1477,12 @@ then
         then
    	 		OPT="--verbose" 
    	 	fi
-   	 	myCWD=$(pwd)
+   	 	
    	 	for x in $(seq 1 ${nblocks})
         do
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/filtersym ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.sym" 
-		done > fix_09_filtsym_block_${RAW_DB%.db}.${slurmID}.plan
-      	echo "DACCORD filtsym $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_09_filtsym_block_${RAW_DB%.db}.${slurmID}.version                 
+		done > fix_${sID}_filtsym_block_${RAW_DB%.db}.${slurmID}.plan
+      	echo "DACCORD filtsym $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_filtsym_block_${RAW_DB%.db}.${slurmID}.version                 
    	### 10_lasfilteralignmentsborderrepeats
     elif [[ ${currentStep} -eq 10 ]]
     then
@@ -1505,8 +1507,7 @@ then
    	 	fi 
    	 	
    	 	OPT="${OPT} -e${RAW_FILT_LASFILTERALIGNMENTSBORDERREPEATS_ERATE}"
-   	 	myCWD=$(pwd)         	
-    	for x in $(seq 1 ${nblocks})
+   	 	for x in $(seq 1 ${nblocks})
         do
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/lasfilteralignmentsborderrepeats ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.rep.data ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt1.${x}.las && cd ${mxCWD}" 
 		done > fix_10_lasfilteralignmentsborderrepeats_block_${RAW_DB%.db}.${slurmID}.plan
@@ -1520,7 +1521,6 @@ then
             rm $x
         done
         
-        myCWD=$(pwd)        
         OPT=""        
         echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.sym ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" > fix_${currentStep}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
         echo "cd ${RAW_DACCORD_OUTDIR} && rm ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" >> fix_${currentStep}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
@@ -1529,7 +1529,7 @@ then
     elif [[ ${currentStep} -eq 12 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_12_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1545,12 +1545,12 @@ then
         then
    	 		OPT="--verbose" 
    	 	fi
-   	 	myCWD=$(pwd)
+   	 	
    	 	for x in $(seq 1 ${nblocks})
         do
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/filtersym ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.sym && cd ${myCWD}" 
-		done > fix_12_filtsym_block_${RAW_DB%.db}.${slurmID}.plan
-      	echo "DACCORD filtsym $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_12_filtsym_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_filtsym_block_${RAW_DB%.db}.${slurmID}.plan
+      	echo "DACCORD filtsym $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_filtsym_block_${RAW_DB%.db}.${slurmID}.version
     ### 13_filterchainsraw
     elif [[ ${currentStep} -eq 13 ]]
     then
@@ -1566,7 +1566,7 @@ then
         then
         	RAW_FILT_FILTERCHAINSRAW_LEN=4000
    	 	fi 
-   	 	myCWD=$(pwd)
+   	 	
    	 	OPT="-l${RAW_FILT_FILTERCHAINSRAW_LEN}"
         for x in $(seq 1 ${nblocks})
         do
@@ -1583,7 +1583,7 @@ then
         done 
 	
 		setDaccordOptions        
-		myCWD=$(pwd)
+		
 		for x in $(seq 1 ${nblocks})
 		do
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} --eprofonly -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.dac.fasta && cd ${myCWD}"
@@ -1614,7 +1614,7 @@ then
     		(>&2 echo "fix_${currentStep}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.: more than 99999 db blocks are not supported!!!")
         	exit 1	
     	fi
-    	myCWD=$(pwd)
+    	
     	OPT=""
 		if [[ -n "${RAW_FILT_COMPUTEEXTRINSICQ_THREADS}" ]]
         then
@@ -1649,7 +1649,7 @@ then
 		done 
                 
         setHaploSplitOptions
-        myCWD=$(pwd)
+        
         for x in $(seq 1 ${nblocks})
 		do
 			for y in $(seq 0 $((RAW_FIX_SPLIT_DIVIDEBLOCK-1)))
@@ -1669,7 +1669,7 @@ then
         		        
         setLAmergeOptions
         setHaploSplitOptions
-        myCWD=$(pwd)
+        
         for x in $(seq 1 ${nblocks})
 		do
 			echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge ${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2_${RAW_FIX_SPLIT_TYPE}.${x}.keep.las ${RAW_FIX_SPLIT_TYPE}_s${x}/${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2Split.*.${x}.las ${myCWD}/identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && cd ${myCWD}"
@@ -1718,7 +1718,7 @@ then
   	if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_01_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done    
@@ -1737,9 +1737,9 @@ then
 		if [[ -n ${MARVEL_STATS} && ${MARVEL_STATS} -gt 0 ]]
    		then
 	        ### create assemblyStats plan
-	    	echo "${SUBMIT_SCRIPTS_PATH}/patchingStats.sh ${configFile} 1" > fix_01_patchingStats_block_${RAW_DB%.db}.${slurmID}.plan
+	    	echo "${SUBMIT_SCRIPTS_PATH}/patchingStats.sh ${configFile} 1" > fix_${sID}_patchingStats_block_${RAW_DB%.db}.${slurmID}.plan
 		fi
-        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_patchingStats_block_${RAW_DB%.db}.${slurmID}.version
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_patchingStats_block_${RAW_DB%.db}.${slurmID}.version
     else
 		(>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_PATCH_TYPE}]}")
