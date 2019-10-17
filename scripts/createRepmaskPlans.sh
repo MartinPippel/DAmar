@@ -269,9 +269,9 @@ then
     exit 1
 fi
 
-if [[ -z "${RAW_REPAMSK_OUTDIR}" ]]
+if [[ -z "${RAW_REPMASK_OUTDIR}" ]]
 then
-	RAW_REPAMSK_OUTDIR=repmask	
+	RAW_REPMASK_OUTDIR=repmask	
 fi
 
 myTypes=("01_createSubdir, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge")
@@ -293,7 +293,7 @@ then
             rm $x
         done
         
-        echo "if [[ -d ${RAW_REPAMSK_OUTDIR} ]]; then mv ${RAW_REPAMSK_OUTDIR} ${RAW_REPAMSK_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPAMSK_OUTDIR} && ln -s -r .${RAW_DB%.db}.idx .${RAW_DB%.db}.bps ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.idx .${RAW_DAZZ_DB%.db}.bps ${RAW_DAZZ_DB%.db}.db ${RAW_REPAMSK_OUTDIR}" > mask_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "if [[ -d ${RAW_REPMASK_OUTDIR} ]]; then mv ${RAW_REPMASK_OUTDIR} ${RAW_REPMASK_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPMASK_OUTDIR} && ln -s -r .${RAW_DB%.db}.idx .${RAW_DB%.db}.bps ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.idx .${RAW_DAZZ_DB%.db}.bps ${RAW_DAZZ_DB%.db}.db ${RAW_REPMASK_OUTDIR}" > mask_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.version         
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -309,8 +309,8 @@ then
         ### create DBdust commands 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DB%.db}.${x} && cd ${myCWD}"
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DAZZ_DB%.db}.${x} && cd ${myCWD}"
+            echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DB%.db}.${x} && cd ${myCWD}"
+            echo "cd ${RAW_REPMASK_OUTDIR} && ${DAZZLER_PATH}/bin/DBdust${REPMASK_DBDUST_OPT} ${RAW_DAZZ_DB%.db}.${x} && cd ${myCWD}"
     	done > mask_${sID}_DBdust_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_${sID}_DBdust_block_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_${sID}_DBdust_block_${RAW_DB%.db}.${slurmID}.version
@@ -325,8 +325,8 @@ then
         ### find and set Catrack options 
         setCatrackOptions
         ### create Catrack command
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} dust && cp .${RAW_DB%.db}.dust.anno .${RAW_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" > mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} dust && cp .${RAW_DAZZ_DB%.db}.dust.anno .${RAW_DAZZ_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" >> mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DB%.db} dust && cp .${RAW_DB%.db}.dust.anno .${RAW_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" > mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPMASK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} dust && cp .${RAW_DAZZ_DB%.db}.dust.anno .${RAW_DAZZ_DB%.db}.dust.data ${myCWD}/ && cd ${myCWD}" >> mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
                  
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_03_Catrack_single_${RAW_DB%.db}.${slurmID}.version
@@ -343,7 +343,7 @@ then
         ### create datander commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${RAW_DAZZ_DB%.db}.${x} && cd ${myCWD}"
+            echo "cd ${RAW_REPMASK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/datander${REPMASK_DATANDER_OPT} ${RAW_DAZZ_DB%.db}.${x} && cd ${myCWD}"
     	done > mask_04_datander_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DAZZLER datander $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > mask_04_datander_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 5 ]]
@@ -359,7 +359,7 @@ then
         ### create TANmask commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/TANmask${REPMASK_TANMASK_OPT} ${RAW_DAZZ_DB%.db} TAN.${RAW_DAZZ_DB%.db}.${x}.las && cd ${myCWD}" 
+            echo "cd ${RAW_REPMASK_OUTDIR} && ${DAZZLER_PATH}/bin/TANmask${REPMASK_TANMASK_OPT} ${RAW_DAZZ_DB%.db} TAN.${RAW_DAZZ_DB%.db}.${x}.las && cd ${myCWD}" 
     	done > mask_05_TANmask_block_${RAW_DB%.db}.${slurmID}.plan
         echo "DAZZLER TANmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > mask_05_TANmask_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 6 ]]
@@ -376,10 +376,10 @@ then
             setCatrackOptions
         fi
         ### create Catrack command
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.data ${myCWD}/ && cd ${myCWD}" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${LASTOOLS_PATH}/bin/viewmasks ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} > ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-      	echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.d2 ${myCWD}/ && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
-      	echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine ${RAW_DB%.db} ${RAW_REPMASK_TANMASK_TRACK}_dust ${RAW_REPMASK_TANMASK_TRACK} dust && cp .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}_dust.a2 .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}_dust.d2 ${myCWD}/ && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan 
+        echo "cd ${RAW_REPMASK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.data ${myCWD}/ && cd ${myCWD}" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPMASK_OUTDIR} && ${LASTOOLS_PATH}/bin/viewmasks ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_TANMASK_TRACK} > ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+      	echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.txt ${RAW_REPMASK_TANMASK_TRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}.d2 ${myCWD}/ && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan
+      	echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine ${RAW_DB%.db} ${RAW_REPMASK_TANMASK_TRACK}_dust ${RAW_REPMASK_TANMASK_TRACK} dust && cp .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}_dust.a2 .${RAW_DB%.db}.${RAW_REPMASK_TANMASK_TRACK}_dust.d2 ${myCWD}/ && cd ${myCWD}" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.plan 
         
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version
         echo "LASTOOLS viewmasks $(git --git-dir=${LASTOOLS_SOURCE_PATH}/.git rev-parse --short HEAD)" >> mask_06_Catrack_single_${RAW_DB%.db}.${slurmID}.version    
@@ -397,11 +397,11 @@ then
 		## create job directories before daligner runs
 		for x in $(seq 1 ${nblocks})
 		do
-			if [[ -d ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} ]]
+			if [[ -d ${RAW_REPMASK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} ]]
 			then
-				mv ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}_$(date '+%Y-%m-%d_%H-%M-%S')	
+				mv ${RAW_REPMASK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} ${RAW_REPMASK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}_$(date '+%Y-%m-%d_%H-%M-%S')	
 			fi
-			mkdir -p ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}	
+			mkdir -p ${RAW_REPMASK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}	
 		done
 
         bcmp=${RAW_REPMASK_BLOCKCMP[0]}
@@ -429,7 +429,7 @@ then
             else
                 NUMACTL=""
             fi
-            echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x}"
+            echo -n "cd ${RAW_REPMASK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x}"
             for y in $(seq ${x} $((${x}+${n}-1)))
             do
                 if [[ ${y} -gt ${nblocks} ]]
@@ -464,7 +464,7 @@ then
         ### create LAmerge commands 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} && cd ${myCWD}"            
+            echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]} && cd ${myCWD}"            
     	done > mask_08_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_08_LAmerge_block_${RAW_DB%.db}.${slurmID}.version  
     elif [[ ${currentStep} -eq 9 ]]
@@ -480,8 +480,8 @@ then
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las && cd ${myCWD}/" 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.${x}.las && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[0]} -n${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.${x}.las && unlink ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.${x}.las && cd ${myCWD}/"
+            echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las && cd ${myCWD}/" 
+            echo "cd ${RAW_REPMASK_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.las ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.${x}.las && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[0]} -n${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.${x}.las && unlink ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[0]}C${RAW_REPMASK_LAREPEAT_COV[0]}.${x}.las && cd ${myCWD}/"
     	done > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> mask_09_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
@@ -497,8 +497,8 @@ then
         setTKmergeOptions
         setLArepeatOptions 0
         ### create TKmerge commands
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.d2 ${myCWD}/ && cd ${myCWD}/" > mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.d2 ${myCWD}/ && cd ${myCWD}/" > mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPMASK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_10_TKmerge_single_${RAW_DB%.db}.${slurmID}.version    
     elif [[ ${currentStep} -eq 11 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
@@ -517,11 +517,11 @@ then
 		## create job directories before daligner runs
 		for x in $(seq 1 ${nblocks})
 		do
-			if [[ -d ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} ]]
+			if [[ -d ${RAW_REPMASK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} ]]
 			then
-				mv ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}_$(date '+%Y-%m-%d_%H-%M-%S')	
+				mv ${RAW_REPMASK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} ${RAW_REPMASK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}_$(date '+%Y-%m-%d_%H-%M-%S')	
 			fi
-			mkdir -p ${RAW_REPAMSK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}	
+			mkdir -p ${RAW_REPMASK_OUTDIR}/mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}	
 		done
 		
 
@@ -551,9 +551,9 @@ then
 
 			if [[ "x${DALIGNER_VERSION}" == "x2" ]]
 			then
-				echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
+				echo -n "cd ${RAW_REPMASK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x} ${RAW_DAZZ_DB%.db}.@${x}"
 			else
-				echo -n "cd ${RAW_REPAMSK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x}"
+				echo -n "cd ${RAW_REPMASK_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${REPMASK_DALIGNER_OPT} ${REP} ${RAW_DAZZ_DB%.db}.${x}"
 			fi			
 			
             for y in $(seq ${x} $((${x}+${n}-1)))
@@ -617,7 +617,7 @@ then
         ### create LAmerge commands 
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && cd ${myCWD}"            
+            echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge -n 32 ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.las mask_${x}_B${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]} && cd ${myCWD}"            
     	done > mask_12_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL LAmerge  $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_11_LAmerge_block_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 13 && ${#RAW_REPMASK_BLOCKCMP[*]} -eq 2 && ${#RAW_REPMASK_LAREPEAT_COV[*]} -eq 2 ]]
@@ -634,8 +634,8 @@ then
         ### create LArepeat commands
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.las && cd ${myCWD}/" 
-            echo "cd ${RAW_REPAMSK_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.las ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.${x}.las && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[1]} -n${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.${x}.las && unlink ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.${x}.las && cd ${myCWD}/"
+            echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${REPMASK_LAREPEAT_OPT} -b ${x} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.las && cd ${myCWD}/" 
+            echo "cd ${RAW_REPMASK_OUTDIR} && ln -s -f ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.las ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.${x}.las && ${DAZZLER_PATH}/bin/REPmask -v -c${RAW_REPMASK_LAREPEAT_COV[1]} -n${RAW_REPMASK_REPEATTRACK} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.${x}.las && unlink ${RAW_DAZZ_DB%.db}.${x}.maskB${RAW_REPMASK_BLOCKCMP[1]}C${RAW_REPMASK_LAREPEAT_COV[1]}.${x}.las && cd ${myCWD}/"
     	done > mask_13_LArepeat_block_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_13_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> mask_13_LArepeat_block_${RAW_DB%.db}.${slurmID}.version
@@ -652,8 +652,8 @@ then
         setTKmergeOptions
         setLArepeatOptions 1
         ### create TKmerge commands
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.d2 ${myCWD}/ && cd ${myCWD}/" > mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_REPAMSK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${REPMASK_TKMERGE_OPT} ${RAW_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.a2 .${RAW_DB%.db}.${RAW_REPMASK_REPEATTRACK}.d2 ${myCWD}/ && cd ${myCWD}/" > mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_REPMASK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_TKMERGE_OPT} -f -v ${RAW_DAZZ_DB%.db} ${RAW_REPMASK_REPEATTRACK} && cp .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.anno .${RAW_DAZZ_DB%.db}.${RAW_REPMASK_REPEATTRACK}.data ${myCWD}/ && cd ${myCWD}/" >> mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mask_14_TKmerge_single_${RAW_DB%.db}.${slurmID}.version
     else 
