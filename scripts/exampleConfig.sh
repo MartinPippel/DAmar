@@ -2,24 +2,28 @@
 
 ### MARVEL PATH
 MARVEL_SOURCE_PATH="/projects/dazzler/pippel/prog/MARVEL/DAMARVEL"
-MARVEL_PATH="/projects/dazzler/pippel/prog/MARVEL/DAMARVEL-build"
+MARVEL_PATH="/projects/dazzler/pippel/prog/MARVEL/DAMARVEL-build/DAmar_TRACE_XOVR_75"
+#MARVEL_PATH="/projects/dazzler/pippel/prog/MARVEL/DAMARVEL-build/DAmar_TRACE_XOVR_125"
 
 ### REPCOMP PATH
 REPCOMP_SOURCE_PATH="/projects/dazzler/pippel/prog/repcomp"
-REPCOMP_PATH="/projects/dazzler/pippel/prog/repcomp-build"
+REPCOMP_PATH="/projects/dazzler/pippel/prog/repcomp-build/repcomp_TRACE_XOVR_75"
+#REPCOMP_PATH="/projects/dazzler/pippel/prog/repcomp-build/repcomp_TRACE_XOVR_125"
 
 ### DACCORD PATH - used progs: fastaidrename, forcealign
 DACCORD_SOURCE_PATH="/projects/dazzler/pippel/prog/daccord/"
-DACCORD_PATH="/projects/dazzler/pippel/prog/daccord-build/"
+DACCORD_PATH="LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 /projects/dazzler/pippel/prog/daccord-mpi-build/daccord_0_0_635"
+#DACCORD_PATH="LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=125 /projects/dazzler/pippel/prog/daccord-mpi-build/daccord_0_0_635"
 
 ### LASTOOL PATH - used progs: lassort2
 LASTOOLS_SOURCE_PATH="/projects/dazzler/pippel/prog/lastools"
-LASTOOLS_PATH="/projects/dazzler/pippel/prog/lastools-build"
-
+LASTOOLS_PATH="LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 /projects/dazzler/pippel/prog/lastools-build"
+#LASTOOLS_PATH="LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=125 /projects/dazzler/pippel/prog/lastools-build"
 
 ### DZZLER PATH
-DAZZLER_SOURCE_PATH="/projects/dazzler/pippel/prog/dazzler/"
-DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzler/"
+DAZZLER_SOURCE_PATH="/projects/dazzler/pippel/prog/dazzlerGIT"
+DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzlerGIT/bin_TRACE_XOVR_75"
+#DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzlerGIT/bin_TRACE_XOVR_125"
 
 ### slurm scripts path
 SUBMIT_SCRIPTS_PATH="${MARVEL_PATH}/scripts"
@@ -92,6 +96,13 @@ COVERAGE_DIR="coverage"
 MITO_DIR="mitochondrion"
 QC_DATA_DIR="processedData"
 
+RAW_DALIGN_OUTDIR="dalign"
+RAW_REPCOMP_OUTDIR="repcomp"
+RAW_DACCORD_OUTDIR="daccord"
+RAW_DACCORD_INDIR="dalign"
+
+RAW_REPAMSK_OUTDIR=repmask
+
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> phase -2 - data QC and statistics and format conversion <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 #type-0 [10x - prepare] 						[1-3]: 01_longrangerBasic, 02_longrangerToScaff10Xinput, 03_bxcheck
@@ -124,7 +135,7 @@ RAW_DASCOVER_SUBMIT_SCRIPTS_TO=16
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 1 - repeat masking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-# type-0 steps [1-13]: 1-DBdust, 2-Catrack, 3-datander, 4-TANmask, 5-Catrack, 6-daligner, 7-LAmerge, 8-LArepeat, 9-TKmerge, 10-daligner, 11-LAmerge, 12-LArepeat, 13-TKmerge]
+# type_0 - stepsp[1-14}: 01_createSubdir, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge
 RAW_REPMASK_TYPE=0
 
 RAW_REPMASK_SUBMIT_SCRIPTS_FROM=1
@@ -132,10 +143,10 @@ RAW_REPMASK_SUBMIT_SCRIPTS_TO=9
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> marvel phase 2 - read patching <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
  
-#type-0 steps   [1-11]:   1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix                 #old pipeline
-#type-1 steps   [ 1-11 :  1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAfilter, 9-LAq, 10-TKmerge, 11-LAfix                # experimental pipeline     
-#                12-22 : 12-LAseparate, 13-repcomp, 14-LAmerge, 15-LArepeat, 16-TKmerge, 17-TKcombine, 18-TKhomogenize, 19-TKcombine, 21-LAq, 21-TKmerge, 22-LAfix
-#                23-33]: 23-LAseparate, 24-forcealign, 25-LAmerge, 26-LArepeat, 27-TKmerge, 28-TKcombine, 29-TKhomogenize, 30-TKcombine, 31-LAq, 32-TKmerge, 33-LAfix
+#type-0 - steps[1-10]: 01-createSubdir, 02-daligner, 03-LAmerge, 04-LArepeat, 05-TKmerge, 06-TKcombine, 07-LAfilter, 08-LAq, 09-TKmerge, 10-LAfix
+#type-1 - steps[1-10]: 01-createSubdir, 02-LAseparate, 03-repcomp, 04-LAmerge, 05-LArepeat, 06-TKmerge, 07-TKcombine, 08-LAq, 09-TKmerge, 10-LAfix
+#type-2 - steps[1-18]: 01-createSubdir, 02-lassort2, 03-computeIntrinsicQV, 04_Catrack, 05_lasdetectsimplerepeats, 06_mergeAndSortRepeats, 07_lasfilteralignments, 08_mergesym2, 09_filtersym, 10_lasfilteralignmentsborderrepeats, 11_mergesym2, 12_filtersym, 13_filterchainsraw, 14_LAfilterChains, 15_LAfilter, 16_split, 17_LAmerge, 18_LAfix
+#type-3 - steps[1-1]:  01_patchStats
 RAW_PATCH_TYPE=1
 
 RAW_PATCH_SUBMIT_SCRIPTS_FROM=1
