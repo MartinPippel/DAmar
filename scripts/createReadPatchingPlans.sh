@@ -1516,15 +1516,15 @@ then
     elif [[ ${currentStep} -eq 11 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
         
         OPT=""        
-        echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.sym ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" > fix_${currentStep}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "cd ${RAW_DACCORD_OUTDIR} && rm ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" >> fix_${currentStep}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_mergesym2_single_${RAW_DB%.db}.${slurmID}.version        
+        echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/mergesym2 ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.sym ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" > fix_${sID}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cd ${RAW_DACCORD_OUTDIR} && rm ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.*.las.sym && cd ${myCWD}" >> fix_${sID}_mergesym2_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD mergesym2 $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_mergesym2_single_${RAW_DB%.db}.${slurmID}.version        
 	### 12_filtersym
     elif [[ ${currentStep} -eq 12 ]]
     then
@@ -1555,7 +1555,7 @@ then
     elif [[ ${currentStep} -eq 13 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1571,13 +1571,13 @@ then
         for x in $(seq 1 ${nblocks})
         do
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/filterchainsraw ${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2.${x}.las && ${MARVEL_PATH}/bin/LAfilter ${FIX_LAFILTER_OPT} ${RAW_DB%.db}.db ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las && cd ${myCWD}" 
-		done > fix_${currentStep}_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "DACCORD filterchainsraw $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.version      	
+		done > fix_${sID}_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "DACCORD filterchainsraw $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_filterchainsraw_block_${RAW_DB%.db}.${slurmID}.version      	
     ### 14_daccord
     elif [[ ${currentStep} -eq 14 ]]
     then
         ### clean up plans 
-    	for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+    	for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1587,13 +1587,13 @@ then
 		for x in $(seq 1 ${nblocks})
 		do
     		echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} --eprofonly -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las ${RAW_DAZZ_DB%.db}.db && ${DACCORD_PATH}/bin/daccord ${FIX_DACCORD_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.eprof ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las ${RAW_DAZZ_DB%.db}.db > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.dac.fasta && cd ${myCWD}"
-		done > fix_${currentStep}_daccord_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD daccord $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_daccord_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_daccord_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD daccord $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_daccord_block_${RAW_DB%.db}.${slurmID}.version
    	### 15_computeextrinsicqv
     elif [[ ${currentStep} -eq 15 ]]
     then
         ### clean up plans 
-    	for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+    	for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1611,7 +1611,7 @@ then
 		then
 			files="${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.[0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.[0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.[0-9][0-9][0-9].dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.[0-9][0-9][0-9][0-9].dac.fasta"
 		else
-    		(>&2 echo "fix_${currentStep}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.: more than 99999 db blocks are not supported!!!")
+    		(>&2 echo "fix_${sID}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.: more than 99999 db blocks are not supported!!!")
         	exit 1	
     	fi
     	
@@ -1620,13 +1620,13 @@ then
         then
         	OPT="${OPT} -t${RAW_FILT_COMPUTEEXTRINSICQ_THREADS}"
    	 	fi
-		echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.dac.fasta && ${DACCORD_PATH}/bin/computeextrinsicqv${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.dac.fasta ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}" > fix_${currentStep}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.version
+		echo "cd ${RAW_DACCORD_OUTDIR} && cat ${files} > ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.dac.fasta && ${DACCORD_PATH}/bin/computeextrinsicqv${OPT} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.dac.fasta ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}" > fix_${sID}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD computeextrinsicqv $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_computeextrinsicqv_single_${RAW_DB%.db}.${slurmID}.version
     ### 16_split
     elif [[ ${currentStep} -eq 16 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1656,13 +1656,13 @@ then
 			do
 				echo "cd ${RAW_DACCORD_OUTDIR} && ${DACCORD_PATH}/bin/${FIX_SPLIT_OPT} -E${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.eprof -J${y},${RAW_FIX_SPLIT_DIVIDEBLOCK} ${RAW_FIX_SPLIT_TYPE}_s${x}/${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2Split.${y}.${x}.las ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.dac.fasta ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2.${x}.las ${RAW_DAZZ_DB%.db}.db && cd ${myCWD}"		
 			done	    		
-		done > fix_${currentStep}_split_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "DACCORD ${RAW_FIX_SPLIT_TYPE} $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_split_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_split_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "DACCORD ${RAW_FIX_SPLIT_TYPE} $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_split_block_${RAW_DB%.db}.${slurmID}.version
 	### 17_LAmerge 
     elif [[ ${currentStep} -eq 17 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done
@@ -1674,13 +1674,13 @@ then
 		do
 			echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge ${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2_${RAW_FIX_SPLIT_TYPE}.${x}.keep.las ${RAW_FIX_SPLIT_TYPE}_s${x}/${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2Split.*.${x}.las ${myCWD}/identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && cd ${myCWD}"
 			echo "cd ${RAW_DACCORD_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge ${FIX_LAMERGE_OPT} ${RAW_DB%.db} ${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2_${RAW_FIX_SPLIT_TYPE}.${x}.drop.las ${RAW_FIX_SPLIT_TYPE}_s${x}/${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2Split.*.${x}_drop.las ${myCWD}/identity/${RAW_DAZZ_DB%.db}.identity.${x}.las && cd ${myCWD}"	
-		done > fix_${currentStep}_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
-        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAmerge_block_${RAW_DB%.db}.${slurmID}.version
+		done > fix_${sID}_LAmerge_block_${RAW_DB%.db}.${slurmID}.plan
+        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LAmerge_block_${RAW_DB%.db}.${slurmID}.version
 	### 18_LAfix    
     elif [[ ${currentStep} -eq 18 ]]
     then
         ### clean up plans 
-        for x in $(ls fix_${currentStep}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
+        for x in $(ls fix_${sID}_*_*_${RAW_DB%.db}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done 
@@ -1706,8 +1706,8 @@ then
         		addopt="-T${RAW_FIX_LAFIX_TRIMFILEPREFIX}_${x}.txt "
         	fi
             echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_DACCORD_OUTDIR}/${RAW_DAZZ_DB%.db}.${fsuffix}SortFilt2Chain2_${RAW_FIX_SPLIT_TYPE}.${x}.keep.las ${RAW_FIX_LAFIX_PATH}_daccord_${RAW_FIX_SPLIT_TYPE}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
-    	done > fix_${currentStep}_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
-    echo "MARVEL LAfix $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${currentStep}_LAfix_block_${RAW_DB%.db}.${slurmID}.version                
+    	done > fix_${sID}_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
+    echo "MARVEL LAfix $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_LAfix_block_${RAW_DB%.db}.${slurmID}.version                
 	else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${FIX_FILT_TYPE}]}")
