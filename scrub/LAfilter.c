@@ -360,6 +360,17 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 					if(o1->flags & OVL_CONT)
 						continue;
 
+					if(o1->aread == o1->bread && o1->path.abpos == o1->path.bbpos && o1->path.aepos == o1->path.bepos)
+					{
+						o1->flags |= (OVL_DISCARD | OVL_CONT);
+						fctx->nFilteredContainedOvls++;
+						if(fctx->nVerbose)
+						{
+							printf("found contained OVL: %d vs %d a[%d,%d] equals b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, o1->path.bbpos, o1->path.bepos);
+						}
+						continue;
+					}
+
 					for(m=l+1; m<=k; ++m)
 					{
 						Overlap *o2 = ovls + m;
