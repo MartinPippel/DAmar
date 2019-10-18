@@ -1011,7 +1011,7 @@ then
         ### create LAstitch commands
         for x in $(seq 1 ${fixblocks})
         do 
-            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAstitch${SCRUB_STITCH_OPT} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.dalignFilt.${x}.las ${FIX_DAZZ_DB%.db}.dalignStitch.${x}.las && cd ${myCWD}"
+            echo "${MARVEL_PATH}/bin/LAstitch${SCRUB_STITCH_OPT} ${FIX_DB%.db} ${FIX_DALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.dalignFilt.${x}.las ${FIX_DALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.dalignStitch.${x}.las"
 		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version                 
     #### LAq
@@ -1071,7 +1071,7 @@ then
             then 
                 breakChim=" -C ${FIX_DB%.db}.${x}.dalignGap.chimers.txt"
             fi
-            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAgap${SCRUB_LAGAP_OPT} -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign${breakChim} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.dalignStitch.${x}.las ${FIX_DAZZ_DB%.db}.dalignGap.${x}.las && cd ${myCWD}"
+            echo "${MARVEL_PATH}/bin/LAgap${SCRUB_LAGAP_OPT} -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign${breakChim} ${FIX_DB%.db} ${FIX_DALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.dalignStitch.${x}.las ${FIX_DALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.dalignGap.${x}.las && cd ${myCWD}"
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan      
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
     #### LAq
