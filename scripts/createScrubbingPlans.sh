@@ -1,9 +1,9 @@
 #!/bin/bash 
 
 configFile=$1
-currentPhase=$2
-currentStep=$3
-slurmID=$4
+currentPhase=scrub
+currentStep=$2
+slurmID=$3
 
 if [[ ! -f ${configFile} ]]
 then 
