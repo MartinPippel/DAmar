@@ -817,8 +817,8 @@ then
                         done
                     fi
                     echo " && cd ${myCWD}"
-    	done > ${currentPhase}_${sID}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
-        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version	    
+    	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version	    
     elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
@@ -832,8 +832,8 @@ then
         for x in $(seq 1 ${fixblocks})
         do 
             echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.dalign.${x}.las d${x} && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.dalign.${x}.las ${FIX_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}"
-    	done > ${currentPhase}_${sID}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan  
-        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version       
+    	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan  
+        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version       
 	    
 	    
 
