@@ -916,14 +916,14 @@ then
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-            	echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${FIX_REPMASK_REPEATTRACK} && cp .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2 ${myCWD} && cd ${myCWD}" 
+            	echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${FIX_REPMASK_REPEATTRACK}" 
         	done > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan         
         else
             for x in $(seq 0 $((${numRepeatTracks}-1)))
             do 
                 tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-                echo "cd ${FIX_DALIGN_OUTDIR} && ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 && cp .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ${myCWD} && cd ${myCWD}"
-                echo "cd ${FIX_DALIGN_OUTDIR} && ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2 && cp .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2 ${myCWD} && cd ${myCWD}" 
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2"
+                echo "ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2" 
 
         	done > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
         fi 
@@ -944,7 +944,7 @@ then
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             for y in $(seq 1 ${fixblocks})
             do 
-                echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKhomogenize -i ${tmp} -I h${tmp} -b ${y} ${FIX_DB%.db} ${FIX_DB%.db}.${y}.dalignFilt.las && cd ${myCWD}"
+                echo "${MARVEL_PATH}/bin/TKhomogenize -i ${tmp} -I h${tmp} -b ${y} ${FIX_DB%.db} ${FIX_DB%.db}.${y}.dalignFilt.las"
             done 
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
@@ -964,18 +964,18 @@ then
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} h${tmp} \#.h${tmp} && cp .${FIX_DB%.db}.h${tmp}.d2 .${FIX_DB%.db}.h${tmp}.a2 ${myCWD} && cd ${myCWD}"
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} h${tmp} \#.h${tmp}"
     	done > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan         
         ### find and set TKcombine options, but ignore the -d flag if it was set
         setTKcombineOptions 1
 
-        echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust && cp .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}_dust.d2 .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}_dust.a2 ${myCWD} && cd ${myCWD}" >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust" >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
-            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp} && cp .${FIX_DB%.db}.f${tmp}.d2 .${FIX_DB%.db}.f${tmp}.a2 ${myCWD} && cd ${myCWD}" 
-            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK} && cp .${FIX_DB%.db}.f${tmp}_${FIX_REPMASK_TANMASK_TRACK}.d2 .${FIX_DB%.db}.f${tmp}_${FIX_REPMASK_TANMASK_TRACK}.a2 ${myCWD} && cd ${myCWD}" 
-            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust && cp .${FIX_DB%.db}.f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust.d2 .${FIX_DB%.db}.f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust.a2 ${myCWD} && cd ${myCWD}"            
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp}" 
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK}" 
+            echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust"            
 		done >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
 		
 		### merge appropriate calCov and cCOV tracks 
@@ -992,7 +992,7 @@ then
         			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
         			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
     				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS=OFS="_"} {print $1,v1 v2,$3,$4,$5}')"
-        			echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2} && cp .${FIX_DB%.db}.f${out}.d2 .${FIX_DB%.db}.f${out}.a2 ${myCWD} && cd ${myCWD}"
+        			echo "${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2}"
         		fi
         	done
 		done >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
