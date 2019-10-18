@@ -1,8 +1,9 @@
 #!/bin/bash 
 
 configFile=$1
-currentStep=$2
-slurmID=$3
+currentPhase=$2
+currentStep=$3
+slurmID=$4
 
 if [[ ! -f ${configFile} ]]
 then 
@@ -676,7 +677,7 @@ function getStepName ()
     eval echo \${ScrubType_${1}[${2:-@}]}
 }
 
-sName=$(getStepName ${FIX_SCRUB_TYPE} $((currentStep-1)))
+sName=$(getStepName ${FIX_SCRUB_TYPE} $((${currentStep}-1)))
 
 if [[ ${currentStep} -lt 10 ]]
 then 

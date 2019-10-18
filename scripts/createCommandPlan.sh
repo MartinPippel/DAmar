@@ -129,7 +129,7 @@ then
     fi   
 elif [[ ${currentPhase} -eq 4 ]]    
 then 
-    ${SUBMIT_SCRIPTS_PATH}/createScrubbingPlans.sh ${configFile} ${currentStep} ${slurmID}
+	${SUBMIT_SCRIPTS_PATH}/createScrubbingPlans.sh ${configFile} ${currentPhase} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createScrubbingPlans.sh failed some how. Stop here.")
