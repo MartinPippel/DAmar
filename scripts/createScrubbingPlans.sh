@@ -676,7 +676,8 @@ function getStepName ()
     eval echo \${ScrubType_${1}[${2:-@}]}
 }
 
-sName=$(getStepName ${FIX_SCRUB_TYPE} ${currentStep})
+sName=$(getStepName ${FIX_SCRUB_TYPE} $((currentStep-1)))
+
 if [[ ${currentStep} -lt 10 ]]
 then 
 	sID=0${currentStep}
@@ -686,7 +687,7 @@ fi
 
 if [[ ${FIX_SCRUB_TYPE} -eq 0 ]]
 then
-	if [[ ${currentStep} -eq 0 ]]
+	if [[ ${currentStep} -eq 1 ]]
     then
     	### clean up plans 
 	    for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
