@@ -652,47 +652,192 @@ if [[ -z ${FIX_DACCORD_OUTDIR} ]]
 then
 	FIX_DACCORD_OUTDIR="daccord"
 fi
+	
+#type-0 - steps[0-13]:
+ScrubType_0=(createSubdir daligner LAmerge LArepeat TKmerge TKcombine TKhomogenize TKcombine LAstitch LAq TKmerge LAgap LAq TKmerge)
+#type-1 - steps[0-14]:
+ScrubType_1=(createSubdir LAseparate repcomp LAmerge LArepeat TKmerge TKcombine TKhomogenize TKcombine LAstitch LAq TKmerge LAgap LAq TKmerge)
+#type-2 - steps[0-14]:
+ScrubType_2=(createSubdir LAseparate forcealign LAmerge LArepeat TKmerge TKcombine TKhomogenize TKcombine LAstitch LAq TKmerge LAgap LAq TKmerge)
 
-#type-0 - steps[1-10]: 01-createSubdir, 02-daligner, 03-LAmerge, 04-LArepeat, 05-TKmerge, 06-TKcombine, 07-TKhomogenize, 08-TKcombine, 09-LAstitch, 10-LAq, 11-TKmerge, 12-LAgap, 13-LAq, 14-TKmerge
+function getStepName ()
+{ 
+	TMP="ScrubType_${1}"
+	if [[ -v ${!TMP} ]] 
+	then 
+         (>&2 echo "ERROR - Scrubbing Type: ${TMP} is not available")
+         exit 1	    	
+	fi	
+	if [[ $2 -lt 0 || $2 -ge $(eval echo \${#ScrubType_${1}[@]}) ]]
+	then 
+        (>&2 echo "ERROR - Scrubbing Type: ${TMP}: Unsupported step $2! ${TMP} has only steps [0-$(eval echo \${#ScrubType_${1}[@]}))")
+        exit 1	    
+	fi			
+    eval echo \${ScrubType_${1}[${2:-@}]}
+}
 
+sName=$(getStepName ${FIX_SCRUB_TYPE} ${currentStep})
+if [[ ${currentStep} -lt 10 ]]
+then 
+	sID=0${currentStep}
+else
+	sID=${currentStep}
+fi
 
-#type-7 steps [1-13]: 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge          ## old pipeline
-#type-8 steps [ 1-13 : 1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge          ## experimental pipeline
-#              14-27 : 14-LAseparate, 15-repcomp, 16-LAmerge, 17-LArepeat, 18-TKmerge, 19-TKcombine, 20-TKhomogenize, 21-TKcombine, 22-LAstitch, 23-LAq, 24-TKmerge, 25-LAgap, 26-LAq, 27-TKmerge
-#              28-41]: 28-LAseparate, 29-forcealign, 30-LAmerge, 31-LArepeat, 32-TKmerge, 33-TKcombine, 34-TKhomogenize, 35-TKcombine, 36-LAstitch, 37-LAq, 38-TKmerge, 39-LAgap, 40-LAq, 41-TKmerge
-
-mytypes=("1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge" "1-daligner, 2-LAmerge, 3-LArepeat, 4-TKmerge, 5-TKcombine, 6-TKhomogenize, 7-TKcombine, 8-LAstitch, 9-LAq, 10-TKmerge, 11-LAgap, 12-LAq, 13-TKmerge, 14-LAseparate, 15-repcomp, 16-LAmerge, 17-LArepeat, 18-TKmerge, 19-TKcombine, 20-TKhomogenize, 21-TKcombine, 22-LAstitch, 23-LAq, 24-TKmerge, 25-LAgap, 26-LAq, 27-TKmerge, 28-LAseparate, 29-forcealign, 30-LAmerge, 31-LArepeat, 32-TKmerge, 33-TKcombine, 34-TKhomogenize, 35-TKcombine, 36-LAstitch, 37-LAq, 38-TKmerge, 39-LAgap, 40-LAq, 41-TKmerge")
-
-
-#type-0 - steps[1-10]: 01-createSubdir, 02-daligner, 03-LAmerge, 04-LArepeat, 05-TKmerge, 06-TKcombine, 07-TKhomogenize, 08-TKcombine, 09-LAstitch, 10-LAq, 11-TKmerge, 12-LAgap, 13-LAq, 14-TKmerge
 if [[ ${FIX_SCRUB_TYPE} -eq 0 ]]
 then
-	if [[ ${currentStep} -lt 10 ]]
-	then 
-		sID=0${currentStep}
-	else
-		sID=${currentStep}
-	fi
-	
-	if [[ ${currentStep} -eq 1 ]]
+	if [[ ${currentStep} -eq 0 ]]
     then
-	
-	    ### clean up plans 
-	    for x in $(ls scrub_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+    	### clean up plans 
+	    for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
 	    do            
 	        rm $x
 	    done 
 	    
-	    echo "if [[ -d ${FIX_DALIGN_OUTDIR} ]]; then mv ${FIX_DALIGN_OUTDIR} ${FIX_DALIGN_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_DALIGN_OUTDIR} && ln -s -r .${FIX_DB%.db}.* ${FIX_DB%.db}.db .${FIX_DAZZ_DB%.db}.* ${FIX_DAZZ_DB%.db}.db ${FIX_DALIGN_OUTDIR}" > scrub_${sID}_createSubdir_single_${FIX_DB%.db}.${slurmID}.plan
+	    echo "if [[ -d ${FIX_DALIGN_OUTDIR} ]]; then mv ${FIX_DALIGN_OUTDIR} ${FIX_DALIGN_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${FIX_DALIGN_OUTDIR} && ln -s -r .${FIX_DB%.db}.* ${FIX_DB%.db}.db .${FIX_DAZZ_DB%.db}.* ${FIX_DAZZ_DB%.db}.db ${FIX_DALIGN_OUTDIR}" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
 		for x in $(seq 1 ${fixblocks})
 	        do
 			echo "mkdir -p ${FIX_DALIGN_OUTDIR}/d${x}"
-		done >> fix_01_createSubdir_single_${FIX_DB%.db}.${slurmID}.plan
-	    echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_01_createSubdir_single_${FIX_DB%.db}.${slurmID}.version
+		done >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
+	    echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
+	elif [[ ${currentStep} -eq 2 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        
+        ### find and set daligner options 
+        setDalignerOptions
+        ### create daligner commands
+        cmdLine=1
+    	for x in $(seq 1 ${fixblocks})
+        do 
+
+            if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
+            then
+                if [[ $((${cmdLine} % 2)) -eq  0 ]]
+                then
+                    NUMACTL="numactl -m0 -N0 "
+                else
+                    NUMACTL="numactl -m1 -N1 "    
+                fi
+            else
+                NUMACTL=""
+            fi
+            	if [[ "x${DALIGNER_VERSION}" == "x2" ]]
+            	then
+            		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x} ${FIX_DAZZ_DB%.db}.@${x}"
+			else
+	        		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x}"
+			fi
+            cmdLine=$((${cmdLine}+1))
+            count=0
+
+            for y in $(seq ${x} ${fixblocks})
+            do  
+                if [[ $count -lt ${FIX_SCRUB_DALIGNER_DAL} ]]
+                then
+                    count=$((${count}+1))
+                    echo -n " ${FIX_DAZZ_DB%.db}.${y}"
+                else
+                	if [[ "x${DALIGNER_VERSION}" == "x2" ]]
+            		then    
+                    	        echo -n "-$((y-1)) && mv"
+                	else
+                		echo -n " && mv"
+                	fi
+                    	z=${count}
+		    		while [[ $z -ge 1 ]]
+		    		do
+						echo -n " ${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.$((y-z)).las"
+						z=$((z-1))
+		    		done
+		    		echo -n " d${x}"
+				    if [[ -z "${FIX_SCRUB_DALIGNER_ASYMMETRIC}" ]]
+				    then
+						z=${count}
+			            while [[ $z -ge 1 ]]
+		        	    do
+							if [[ ${x} -ne $((y-z)) ]]
+							then
+		                    	echo -n " && mv ${FIX_DAZZ_DB%.db}.$((y-z)).${FIX_DAZZ_DB%.db}.${x}.las d$((y-z))"
+							fi
+		                    z=$((z-1)) 
+		            	done   
+				    fi
+				    echo " && cd ${myCWD}"
+                    if [[ -n ${FIX_SCRUB_DALIGNER_NUMACTL} && ${FIX_SCRUB_DALIGNER_NUMACTL} -gt 0 ]] && [[ "x${SLURM_NUMACTL}" == "x" || ${SLURM_NUMACTL} -eq 0 ]]
+                    then
+                        if [[ $((${cmdLine} % 2)) -eq  0 ]]
+                        then
+                            NUMACTL="numactl -m0 -N0 "
+                        else
+                            NUMACTL="numactl -m1 -N1 "    
+                        fi
+                    else
+                        NUMACTL=""
+                    fi
+                    if [[ "x${DALIGNER_VERSION}" == "x2" ]]
+            		then
+                    		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x} ${FIX_DAZZ_DB%.db}.@${y}"
+                	else
+                		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x} ${FIX_DAZZ_DB%.db}.${y}"
+                	fi
+                    cmdLine=$((${cmdLine}+1))
+                    count=1
+                fi
+            done
+	    if [[ "x${DALIGNER_VERSION}" == "x2" ]]	
+	    then
+            	echo -n "-${y} && mv"
+	    else
+		echo -n " && mv"
+	    fi
+            z=$((count-1))
+                    while [[ $z -ge 0 ]]
+                    do
+                        echo -n " ${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.$((y-z)).las"
+                        z=$((z-1))
+                    done
+                    echo -n " d${x}"
+                    if [[ -z "${FIX_SCRUB_DALIGNER_ASYMMETRIC}" ]]
+                    then
+                        z=$((count-1))
+                        while [[ $z -ge 0 ]]
+                        do
+                                if [[ ${x} -ne $((y-z)) ]]
+                                then
+                                   echo -n " && mv ${FIX_DAZZ_DB%.db}.$((y-z)).${FIX_DAZZ_DB%.db}.${x}.las d$((y-z))"
+                                fi
+                                z=$((z-1))
+                        done
+                    fi
+                    echo " && cd ${myCWD}"
+    	done > ${currentPhase}_${sID}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DALIGNER/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version	    
+    elif [[ ${currentStep} -eq 3 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+        ### find and set LAmerge options 
+        setLAmergeOptions
+        ### create LAmerge commands
+        for x in $(seq 1 ${fixblocks})
+        do 
+            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${FIX_LAMERGE_OPT} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.dalign.${x}.las d${x} && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.dalign.${x}.las ${FIX_DAZZ_DB%.db}.dalignFilt.${x}.las && cd ${myCWD}"
+    	done > ${currentPhase}_${sID}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan  
+        echo "MARVEL LAmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version       
+	    
+	    
 
 	else
         (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE} not supported")
-        (>&2 echo "valid steps are: ${myTypes[${FIX_SCRUB_TYPE}]}")
+        (>&2 echo "valid steps are: 	")
         exit 1            
     fi
 
