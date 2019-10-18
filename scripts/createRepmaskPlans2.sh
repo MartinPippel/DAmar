@@ -314,18 +314,18 @@ then
 	FIX_REPMASK_OUTDIR=repmask	
 fi
 
+if [[ ${currentStep} -lt 10 ]]
+then 
+	sID=0${currentStep}
+else
+	sID=${currentStep}
+fi
+myCWD=$(pwd)
+
 myTypes=("1-createFIX_DB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAmerge, 9-LArepeat, 10-TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge")
 # type_0 - steps: 1-createFIX_DB, 2-DBdust, 3-Catrack, 4-datander, 5-TANmask, 6-Catrack, 7-daligner, 8-LAmerge, 9-LArepeat, 10-TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge
 if [[ ${FIX_REPMASK_TYPE} -eq 0 ]]
-then
-	if [[ ${currentStep} -lt 10 ]]
-	then 
-		sID=0${currentStep}
-	else
-		sID=${currentStep}
-	fi
-	myCWD=$(pwd)
-	
+then	
 	if [[ ${currentStep} -eq 1 ]]
     then
     	### clean up plans 

@@ -274,17 +274,19 @@ then
 	RAW_REPMASK_OUTDIR=repmask	
 fi
 
+myCWD=$(pwd)
+
+if [[ ${currentStep} -lt 10 ]]
+then 
+	sID=0${currentStep}
+else
+	sID=${currentStep}
+fi
+
 myTypes=("01_createSubdir, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge")
 # type_0 - stepsp[1-14}: 01_createSubdir, 02_DBdust, 03_Catrack, 04_datander, 05_TANmask, 06_Catrack, 07_daligner, 08_LAmerge, 09_LArepeat, 10_TKmerge, 11-daligner, 12-LAmerge, 13-LArepeat, 14-TKmerge
 if [[ ${RAW_REPMASK_TYPE} -eq 0 ]]
 then
-	if [[ ${currentStep} -lt 10 ]]
-	then 
-		sID=0${currentStep}
-	else
-		sID=${currentStep}
-	fi
-	
 	if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 
@@ -305,7 +307,6 @@ then
         ### find and set DBdust options 
         setDBdustOptions
         
-        myCWD=$(pwd)
         ### create DBdust commands 
         for x in $(seq 1 ${nblocks})
         do 
@@ -321,7 +322,7 @@ then
         do            
             rm $x
         done 
-        myCWD=$(pwd)
+        
         ### find and set Catrack options 
         setCatrackOptions
         ### create Catrack command
@@ -339,7 +340,7 @@ then
         done     
         ### find and set datander options 
         setDatanderOptions
-        myCWD=$(pwd)
+        
         ### create datander commands
         for x in $(seq 1 ${nblocks})
         do 
@@ -353,7 +354,7 @@ then
         do            
             rm $x
         done
-        myCWD=$(pwd)     
+             
         ### find and set TANmask options         
         setTANmaskOptions
         ### create TANmask commands
@@ -369,7 +370,7 @@ then
         do            
             rm $x
         done 
-        myCWD=$(pwd)
+        
         ### find and set Catrack options
         if [[ -z ${REPMASK_CATRACK_OPT} ]] 
         then
@@ -405,7 +406,7 @@ then
 		done
 
         bcmp=${RAW_REPMASK_BLOCKCMP[0]}
-		myCWD=$(pwd)
+		
         ### create daligner commands
         n=${bcmp}
         for x in $(seq 1 ${nblocks})
@@ -460,7 +461,7 @@ then
         do            
             rm $x
         done 
-		myCWD=$(pwd)
+		
         ### create LAmerge commands 
         for x in $(seq 1 ${nblocks})
         do 
@@ -474,7 +475,7 @@ then
         do            
             rm $x
         done 
-        myCWD=$(pwd)
+        
         ### find and set LArepeat options 
         setLArepeatOptions 0
         ### create LArepeat commands
@@ -492,7 +493,7 @@ then
         do            
             rm $x
         done 
-        myCWD=$(pwd)
+        
         ### find and set TKmerge options 
         setTKmergeOptions
         setLArepeatOptions 0
@@ -510,7 +511,7 @@ then
         done 
         ### find and set daligner options 
         setDaligerOptions
-		myCWD=$(pwd)
+		
         setLArepeatOptions 0
         bcmp=${RAW_REPMASK_BLOCKCMP[1]}
 			
@@ -613,7 +614,6 @@ then
             rm $x
         done 
 
-        myCWD=$(pwd)
         ### create LAmerge commands 
         for x in $(seq 1 ${nblocks})
         do 
@@ -628,7 +628,6 @@ then
             rm $x
         done 
         
-        myCWD=$(pwd)
         ### find and set LArepeat options 
         setLArepeatOptions 1
         ### create LArepeat commands
@@ -647,7 +646,6 @@ then
             rm $x
         done 
         
-        myCWD=$(pwd)
         ### find and set TKmerge options 
         setTKmergeOptions
         setLArepeatOptions 1

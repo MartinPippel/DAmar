@@ -728,6 +728,14 @@ then
 	RAW_DACCORD_OUTDIR="daccord"
 fi
 
+if [[ ${currentStep} -lt 10 ]]
+then 
+	sID=0${currentStep}
+else
+	sID=${currentStep}
+fi
+myCWD=$(pwd)
+
 myTypes=("01-createSubdir, 02-daligner, 03-LAmerge, 04-LArepeat, 05-TKmerge, 06-TKcombine, 07-LAfilter, 08-LAq, 09-TKmerge, 10-LAfix" \
 "01-createSubdir, 02-LAseparate, 03-repcomp, 04-LAmerge, 05-LArepeat, 06-TKmerge, 07-TKcombine, 08-LAq, 09-TKmerge, 10-LAfix" \
 "01-createSubdir, 02-lassort2, 03-computeIntrinsicQV, 04_Catrack, 05_lasdetectsimplerepeats, 06_mergeAndSortRepeats, 07_lasfilteralignments, 08_mergesym2, 09_filtersym, 10_lasfilteralignmentsborderrepeats, 11_mergesym2, 12_filtersym, 13_filterchainsraw, 14_LAfilterChains, 15_LAfilter, 16_split, 16_LAmerge, 17_LAfix" \
@@ -738,15 +746,6 @@ myTypes=("01-createSubdir, 02-daligner, 03-LAmerge, 04-LArepeat, 05-TKmerge, 06-
 #type-3 - steps[1-1]:  01_patchStats 
 if [[ ${RAW_PATCH_TYPE} -eq 0 ]]
 then 
-	
-	if [[ ${currentStep} -lt 10 ]]
-	then 
-		sID=0${currentStep}
-	else
-		sID=${currentStep}
-	fi
-	myCWD=$(pwd)
-	
 	if [[ ${currentStep} -eq 1 ]]
     then
         ### clean up plans 

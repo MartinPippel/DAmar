@@ -22,8 +22,8 @@ LASTOOLS_PATH="LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 /proj
 
 ### DZZLER PATH
 DAZZLER_SOURCE_PATH="/projects/dazzler/pippel/prog/dazzlerGIT"
-DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzlerGIT/bin_TRACE_XOVR_75"
-#DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzlerGIT/bin_TRACE_XOVR_125"
+DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzlerGIT/TRACE_XOVR_75"
+#DAZZLER_PATH="/projects/dazzler/pippel/prog/dazzlerGIT/TRACE_XOVR_125"
 
 ### slurm scripts path
 SUBMIT_SCRIPTS_PATH="${MARVEL_PATH}/scripts"
