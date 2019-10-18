@@ -332,9 +332,9 @@ function setLArepeatOptions()
         	fi         	
             tmp="${tmp} -t repeats_calCov_l${FIX_SCRUB_LAREPEAT_LEAVE_COV[$x]}h${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}${stype}"
         fi
-        SCRUB_LAREPEAT_OPT[$x]=${tmp}
-        SCRUB_DAZZ_LAREPEAT_OPT[$x]=" -v -c$(echo "${FIX_COV} ${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}" | awk '{printf "%d", $1*$2}') -nrepeats_c$(echo "${FIX_COV} ${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}" | awk '{printf "%d", $1*$2}')${stype}"        
+        SCRUB_LAREPEAT_OPT[$x]=${tmp}                
     done 
+    SCRUB_DAZZ_LAREPEAT_OPT=" -v -c$(echo "${FIX_COV} ${FIX_SCRUB_LAREPEAT_ENTER_COV[0]}" | awk '{printf "%d", $1*$2}') -nrepeats_c$(echo "${FIX_COV} ${FIX_SCRUB_LAREPEAT_ENTER_COV[0]}" | awk '{printf "%d", $1*$2}')${stype}"
 
     FIX_REPMASK_REPEATTRACK=""
     for x in $(seq 1 ${#FIX_REPMASK_BLOCKCMP[*]})
@@ -850,14 +850,14 @@ then
             exit 1
         fi    
     
-        for x in $(seq 0 $((${numRepeatTracks}-1)))
-        do 
-            ### create LArepeat commands
-            for y in $(seq 1 ${fixblocks})
-            do
-            	echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${SCRUB_LAREPEAT_OPT[$x]} -b ${y} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.dalignFilt.${y}.las && cd ${myCWD}/"
-            	echo "cd ${FIX_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask${SCRUB_DAZZ_LAREPEAT_OPT[$x]} ${FIX_DAZZ_DB%.db} ${FIX_DAZZ_DB%.db}.dalignFilt.${y}.las && cd ${myCWD}/"
-        	done
+        ### create LArepeat commands
+        for y in $(seq 1 ${fixblocks})
+        do
+        	for x in $(seq 0 $((${numRepeatTracks}-1)))
+    		do
+        		echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${SCRUB_LAREPEAT_OPT[$x]} -b ${y} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.dalignFilt.${y}.las && cd ${myCWD}/"            		
+    		done
+    		echo "cd ${FIX_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask${SCRUB_DAZZ_LAREPEAT_OPT} ${FIX_DAZZ_DB%.db} ${FIX_DAZZ_DB%.db}.dalignFilt.${y}.las && cd ${myCWD}/"
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan 
         echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version
         echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version        
@@ -882,13 +882,14 @@ then
     	fi
     
         ### create TKmerge command
+        rep=$(echo ${SCRUB_DAZZ_LAREPEAT_OPT} | awk '{print substr($NF,3)}')
+        echo "cd ${FIX_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${SCRUB_TKMERGE_OPT} -f -v ${FIX_DAZZ_DB%.db} ${rep} && cp .${FIX_DAZZ_DB%.db}.${rep}.anno .${FIX_DAZZ_DB%.db}.${rep}.data ${myCWD}/ && cd ${myCWD}/" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
+        
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
         	rep=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
             echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} ${rep} && cp .${FIX_DB%.db}.${rep}.a2 .${FIX_DB%.db}.${rep}.d2 ${myCWD} && cd ${myCWD}"
-            rep=$(echo ${SCRUB_DAZZ_LAREPEAT_OPT[${x}]} | awk '{print substr($NF,3)}')
-            echo "cd ${FIX_DALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${SCRUB_TKMERGE_OPT} -f -v ${FIX_DAZZ_DB%.db} ${rep} && cp .${FIX_DAZZ_DB%.db}.${rep}.anno .${FIX_DAZZ_DB%.db}.${rep}.data ${myCWD}/ && cd ${myCWD}/"
-    	done > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan        
+    	done >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan        
         echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version	    
 	#### TKcombine 
