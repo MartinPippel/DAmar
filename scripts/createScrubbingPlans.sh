@@ -891,8 +891,227 @@ then
     	done > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan        
         echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version	    
-	    
+	#### TKcombine 
+    elif [[ ${currentStep} -eq 6 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done             
+         # we need the name of the repeat track, especially if the plan starts with step11
+        setLArepeatOptions 1
+        
+        ### find and set TKcombine options
+        setTKcombineOptions 1
 
+        if [[ ${numRepeatTracks} -eq 0 ]]
+        then 
+            exit 1
+        fi 
+        ### create TKmerge command
+        if [[ -n ${FIX_REPMASK_REPEATTRACK} ]]
+        then 
+            for x in $(seq 0 $((${numRepeatTracks}-1)))
+            do 
+                tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
+            	echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK} ${tmp} ${FIX_REPMASK_REPEATTRACK} && cp .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2 ${myCWD} && cd ${myCWD}" 
+        	done > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan         
+        else
+            for x in $(seq 0 $((${numRepeatTracks}-1)))
+            do 
+                tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
+                echo "cd ${FIX_DALIGN_OUTDIR} && ln -s -f .${FIX_DB%.db}.${tmp}.d2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 && cp .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.d2 ${myCWD} && cd ${myCWD}"
+                echo "cd ${FIX_DALIGN_OUTDIR} && ln -s -f .${FIX_DB%.db}.${tmp}.a2 .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2 && cp .${FIX_DB%.db}.${tmp}_${FIX_REPMASK_LAREPEAT_REPEATTRACK}.a2 ${myCWD} && cd ${myCWD}" 
+
+        	done > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
+        fi 
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
+    #### TKhomogenize
+    elif [[ ${currentStep} -eq 7 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done             
+         # we need the name of the repeat track, especially if the plan starts with step6
+        setLArepeatOptions 1
+        ### create TKhomogenize commands
+        for x in $(seq 0 $((${numRepeatTracks}-1)))
+        do 
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+            for y in $(seq 1 ${fixblocks})
+            do 
+                echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKhomogenize -i ${tmp} -I h${tmp} -b ${y} ${FIX_DB%.db} ${FIX_DB%.db}.${y}.dalignFilt.las && cd ${myCWD}"
+            done 
+    	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
+    #### TKcombine
+    elif [[ ${currentStep} -eq 8 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done             
+         # we need the name of the repeat track, especially if the plan starts with step7
+        setLArepeatOptions 1 
+        ### find and set TKcombine options
+        setTKcombineOptions 0
+        ### create TKcombine commands
+        for x in $(seq 0 $((${numRepeatTracks}-1)))
+        do 
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} h${tmp} \#.h${tmp} && cp .${FIX_DB%.db}.h${tmp}.d2 .${FIX_DB%.db}.h${tmp}.a2 ${myCWD} && cd ${myCWD}"
+    	done > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan         
+        ### find and set TKcombine options, but ignore the -d flag if it was set
+        setTKcombineOptions 1
+
+        echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust && cp .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}_dust.d2 .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}_dust.a2 ${myCWD} && cd ${myCWD}" >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
+        for x in $(seq 0 $((${numRepeatTracks}-1)))
+        do
+            tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp} h${tmp} ${tmp} && cp .${FIX_DB%.db}.f${tmp}.d2 .${FIX_DB%.db}.f${tmp}.a2 ${myCWD} && cd ${myCWD}" 
+            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK} f${tmp} ${FIX_REPMASK_TANMASK_TRACK} && cp .${FIX_DB%.db}.f${tmp}_${FIX_REPMASK_TANMASK_TRACK}.d2 .${FIX_DB%.db}.f${tmp}_${FIX_REPMASK_TANMASK_TRACK}.a2 ${myCWD} && cd ${myCWD}" 
+            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust f${tmp}_${FIX_REPMASK_TANMASK_TRACK} dust && cp .${FIX_DB%.db}.f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust.d2 .${FIX_DB%.db}.f${tmp}_${FIX_REPMASK_TANMASK_TRACK}_dust.a2 ${myCWD} && cd ${myCWD}"            
+		done >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
+		
+		### merge appropriate calCov and cCOV tracks 
+		for x in $(seq 0 $((${numRepeatTracks}-1)))
+        do
+        	tmp1=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        	for y in $(seq ${x} $((${numRepeatTracks}-1)))
+        	do
+        		tmp2=$(echo ${SCRUB_LAREPEAT_OPT[${y}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
+        		
+    			if [[ "$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" == "$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $1,$3,$4,$5}')" ]]
+        		then
+        			
+        			p1="$(echo ${tmp1} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+        			p2="$(echo ${tmp2} | awk 'BEGIN{FS=OFS="_"} {print $2')"
+    				out="$(echo ${tmp1} | awk -v p1=${p1} -v p2=${p2} 'BEGIN{FS=OFS="_"} {print $1,v1 v2,$3,$4,$5}')"
+        			echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine${SCRUB_TKCOMBINE_OPT} ${FIX_DB%.db} f${out} f${tmp1} f${tmp2} && cp .${FIX_DB%.db}.f${out}.d2 .${FIX_DB%.db}.f${out}.a2 ${myCWD} && cd ${myCWD}"
+        		fi
+        	done
+		done >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
+		
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version      
+    #### LAstitch
+    elif [[ ${currentStep} -eq 9 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done             
+        ### find and set LAstitch options 
+        setLAstitchOptions 1
+        ### create LAstitch commands
+        for x in $(seq 1 ${fixblocks})
+        do 
+            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAstitch${SCRUB_STITCH_OPT} ${FIX_DB%.db} ${FIX_DB%.db}.${x}.dalignFilt.las ${FIX_DB%.db}.${x}.dalignStitch.las && cd ${myCWD}"
+		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
+		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version                 
+    #### LAq
+    elif [[ ${currentStep} -eq 10 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+
+        ### find and set LAq options 
+        setLAqOptions
+        ### create LAq commands
+        for x in $(seq 1 ${fixblocks})
+        do 
+            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -T trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -Q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -b ${x} ${FIX_DB%.db} ${FIX_DB%.db}.${x}.dalignStitch.las && cd ${myCWD}"
+    	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version               
+    #### TKmerge    
+    elif [[ ${currentStep} -eq 11 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done         
+        # we need the name of the repeat track, especially if the plan starts with step10
+        if [[ -z ${SCRUB_LAQ_OPT} ]]
+        then 
+            setLAqOptions
+        fi
+        ### find and set TKmerge options 
+        if [[ -z ${SCRUB_TKMERGE_OPT} ]]
+        then 
+            setTKmergeOptions
+        fi
+        
+        ### create TKmerge command
+        echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign && cp .${FIX_DB%.db}.trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign.d2 .${FIX_DB%.db}.trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign.a2 ${myCWD} && cd ${myCWD}" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan 
+        echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign && cp .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign.d2 .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign.a2 ${myCWD} && cd ${myCWD}" >> ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version               
+    #### LAgap
+    elif [[ ${currentStep} -eq 12 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done         
+        setLAgapOptions 1
+        ### create LAq commands
+        for x in $(seq 1 ${fixblocks})
+        do 
+            breakChim=""
+            if [[ -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
+            then 
+                breakChim=" -C ${FIX_DB%.db}.${x}.dalignGap.chimers.txt"
+            fi
+            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAgap${SCRUB_LAGAP_OPT} -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign${breakChim} ${FIX_DB%.db} ${FIX_DB%.db}.${x}.dalignStitch.las ${FIX_DB%.db}.${x}.dalignGap.las && cd ${myCWD}"
+    	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan      
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
+    #### LAq
+    elif [[ ${currentStep} -eq 13 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done 
+
+        ### find and set LAq options 
+        setLAqOptions
+        ### create LAq commands
+        for x in $(seq 1 ${fixblocks})
+        do 
+            echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign -b ${x} ${FIX_DB%.db} ${FIX_DB%.db}.${x}.dalignGap.las && cd ${myCWD}"
+    done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan 
+    echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version              
+    #### TKmerge    
+    elif [[ ${currentStep} -eq 14 ]]
+    then
+        ### clean up plans 
+        for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done         
+        # we need the name of the repeat track, especially if the plan starts with step10
+        if [[ -z ${SCRUB_LAQ_OPT} ]]
+        then 
+            setLAqOptions
+        fi
+        ### find and set TKmerge options 
+        if [[ -z ${SCRUB_TKMERGE_OPT} ]]
+        then 
+            setTKmergeOptions
+        fi
+        
+        ### create TKmerge command
+    	echo "cd ${FIX_DALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign && cp .${FIX_DB%.db}.trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign.d2 .${FIX_DB%.db}.trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_dalign.a2 ${myCWD} && cd ${myCWD}" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan 
+        echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version	    
 	else
         (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE} not supported")
         (>&2 echo "valid steps are: 	")
