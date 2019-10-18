@@ -333,7 +333,7 @@ function setLArepeatOptions()
             tmp="${tmp} -t repeats_calCov_l${FIX_SCRUB_LAREPEAT_LEAVE_COV[$x]}h${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}${stype}"
         fi
         SCRUB_LAREPEAT_OPT[$x]=${tmp}
-        SCRUB_DAZZ_LAREPEAT_OPT[$x]="-v -c$(echo "${FIX_COV} ${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}" | awk '{printf "%d", $1*$2}') -nrepeats_c$(echo "${FIX_COV} ${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}" | awk '{printf "%d", $1*$2}')${ptype}"        
+        SCRUB_DAZZ_LAREPEAT_OPT[$x]=" -v -c$(echo "${FIX_COV} ${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}" | awk '{printf "%d", $1*$2}') -nrepeats_c$(echo "${FIX_COV} ${FIX_SCRUB_LAREPEAT_ENTER_COV[$x]}" | awk '{printf "%d", $1*$2}')${ptype}"        
     done 
 
     FIX_REPMASK_REPEATTRACK=""
