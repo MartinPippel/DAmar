@@ -1056,9 +1056,7 @@ then
 	    echo "if [[ -d ${RAW_REPCOMP_OUTDIR} ]]; then mv ${RAW_REPCOMP_OUTDIR} ${RAW_REPCOMP_OUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${RAW_REPCOMP_OUTDIR} && ln -s -r .${RAW_DB%.db}.* ${RAW_DB%.db}.db .${RAW_DAZZ_DB%.db}.* ${RAW_DAZZ_DB%.db}.db ${RAW_REPCOMP_OUTDIR}" > fix_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
 		for x in $(seq 1 ${nblocks})
 	    do
-			echo "mkdir -p ${RAW_REPCOMP_OUTDIR}/r${x}"
-			echo "mkdir -p ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp"
-			echo "mkdir -p ${RAW_REPCOMP_OUTDIR}/d${x}_NoRepComp"
+			echo "mkdir -p ${RAW_REPCOMP_OUTDIR}/r${x} ${RAW_REPCOMP_OUTDIR}/d${x}_ForRepComp ${RAW_REPCOMP_OUTDIR}/d${x}_NoRepComp"
 		done >> fix_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.plan
 	    echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_createSubdir_single_${RAW_DB%.db}.${slurmID}.version
   	#### LAseparate
