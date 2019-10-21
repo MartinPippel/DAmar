@@ -1529,62 +1529,30 @@ then
         setLAseparateOptions 1
         for x in $(seq 1 ${fixblocks}); 
         do 
-            sdir=
-            mkdir -p ${sdir}_ForForceAlign
-            mkdir -p ${sdir}_NoForceAlign
             for y in $(seq 1 ${fixblocks}); 
             do 
-                infile=""
+                infile1=${FIX_REPCOMP_OUTDIR}/d${x}_NoRepComp/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las
+                
                 if [[ $x -le $y ]]
                 then    
-                    infile=${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las${FIX_DB%.db}.repcomp.${x}.${y}_f.las 
-
-                    if [[ ! -f ${sdir}/${infile} ]]
-                    then
-                        (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE}: File missing ${sdir}/${infile}!!")
-                        exit 1                    
-                    fi
-                    echo "${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${sdir}/${infile} ${sdir}_ForForceAlign/${infile} ${sdir}_NoForceAlign/${infile}"                
-                fi
-                if [[ $x -ge $y ]]
-                then    
-                    infile=${FIX_DB%.db}.repcomp.${y}.${x}_r.las 
-
-                    if [[ ! -f ${sdir}/${infile} ]]
-                    then
-                        (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE}: File missing ${sdir}/${infile}!!")
-                        exit 1                    
-                    fi
-                    echo "${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${sdir}/${infile} ${sdir}_ForForceAlign/${infile} ${sdir}_NoForceAlign/${infile}"                
-                fi
-            done 
-		done > scrub_28_LAseparate_block_${FIX_DB%.db}.${slurmID}.plan
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-
-        ### find and set LAseparate options 
-        setLAseparateOptions 1
-
-        for x in $(seq 1 ${fixblocks}); 
-        do 
-            for y in $(seq 1 ${fixblocks}); 
-            do 
-                if [[ ! -f ${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las ]]
+                    
+                    infile2=${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_f.las
+				else
+					infile2=${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las
+				fi
+				
+				if [[ ! -f ${infile1} || ! -f ${infile2} ]]
                 then
-                    (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE}: File missing ${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las!!")
+                (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE}: File missing ${infile1} or ${infile2}!!")
                     exit 1                    
                 fi
-                echo "${MARVEL_PATH}/bin/LAseparate${FIX_LASEPARATE_OPT} ${FIX_DB%.db} ${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las"                
+				
+				echo -n "${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${infile1} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${infile1} ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/${infile1}"
+				echo -n " && ${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${infile2} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${infile2} ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/${infile2}"
+				echo -n " && ${MARVEL_PATH}/bin/LAmerge ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${infile1} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${infile2}"
+				echo -n " && ${LASTOOLS_PATH}/bin/lassort -zfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las"							
             done 
-    	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
+		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version   
 	#### forcealign 
     elif [[ ${currentStep} -eq 3 ]]
@@ -1600,37 +1568,28 @@ then
         cmdLine=1
     	for x in $(seq 1 ${fixblocks}); 
         do 
-            srcDir=${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign
-            desDir=${FIX_FORCEALIGN_OUTDIR}/f${x}
-
-            if [[ ! -d ${desDir} ]]
-            then
-                mkdir -p ${desDir}
-            fi
             start=${x}
 
         	for y in $(seq ${start} ${fixblocks}); 
             do 
-                movDir=${FIX_FORCEALIGN_OUTDIR}/f${y}
-                if [[ -f ${srcDir}/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las ]]
+                if [[ -f ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ]]
                 then 
-                    echo -n "${REPCOMP_PATH}/bin/repcomp${FIX_REPCOMP_OPT} -T/tmp/${FIX_DAZZ_DB%.db}.${x}.${y} ${desDir}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y} ${FIX_DAZZ_DB%.db} ${srcDir}/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las"
-                    echo -n "${DACCORD_PATH}/bin/forcealign${SCRUB_FORCEALIGN_OPT} -T/tmp/${FIX_DAZZDB%.db}.forcealign.${x}.${y} ${desDir}/${FIX_DB%.db}.forcealign.${x}.${y} ${FIX_DAZZ_DB%.db} ${inFile}"
+                    echo -n "${DACCORD_PATH}/bin/forcealign${SCRUB_FORCEALIGN_OPT} -T/tmp/${FIX_DAZZ_DB%.db}.forcealign.${x}.${y} ${FIX_FORCEALIGN_OUTDIR}/f${x}/${FIX_DAZZ_DB%.db}.forcealign.${x}.${y} ${FIX_DAZZ_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las"
                     
                     cmdLine=$((${cmdLine}+1))
                     if [[ $x -eq $y ]]
                     then
                         echo ""
-                    else    
-                        echo " && mv ${desDir}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las ${movDir}/"
+                    else
+                        echo " && mv ${FIX_FORCEALIGN_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.forcealign.${x}.${y}_r.las ${FIX_FORCEALIGN_OUTDIR}/r${y}"
                     fi
                 else
-                    (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE}: File missing ${srcDir}/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las!!")
+                    (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE}: File missing ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las!!")
                     exit 1
                 fi
             done 
 		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
-    	echo "repcomp $(git --git-dir=${REPCOMP_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version
+    	echo "forcealign $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version
 	### 04_LAmergeLAfilter
     elif [[ ${currentStep} -eq 4 ]]
     then
