@@ -1277,7 +1277,7 @@ then
         echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version	    
 	#### TKcombine 
-    elif [[ ${currentStep} -eq 6 ]]
+    elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1313,7 +1313,7 @@ then
         fi 
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
     #### TKhomogenize
-    elif [[ ${currentStep} -eq 7 ]]
+    elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1333,7 +1333,7 @@ then
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
     #### TKcombine
-    elif [[ ${currentStep} -eq 8 ]]
+    elif [[ ${currentStep} -eq 9 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1383,7 +1383,7 @@ then
 		
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version      
     #### LAstitch
-    elif [[ ${currentStep} -eq 9 ]]
+    elif [[ ${currentStep} -eq 10 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1399,7 +1399,7 @@ then
 		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version                 
     #### LAq
-    elif [[ ${currentStep} -eq 10 ]]
+    elif [[ ${currentStep} -eq 11 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1416,7 +1416,7 @@ then
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version               
     #### TKmerge    
-    elif [[ ${currentStep} -eq 11 ]]
+    elif [[ ${currentStep} -eq 12 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1439,7 +1439,7 @@ then
         echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp && cp .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.d2 .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.a2 ${myCWD} && cd ${myCWD}" >> ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version               
     #### LAgap
-    elif [[ ${currentStep} -eq 12 ]]
+    elif [[ ${currentStep} -eq 13 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1459,7 +1459,7 @@ then
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan      
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
     #### LAq
-    elif [[ ${currentStep} -eq 13 ]]
+    elif [[ ${currentStep} -eq 14 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1476,7 +1476,7 @@ then
     done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan 
     echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version              
     #### TKmerge    
-    elif [[ ${currentStep} -eq 14 ]]
+    elif [[ ${currentStep} -eq 15 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1664,7 +1664,7 @@ then
         echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version	    
 	#### TKcombine 
-    elif [[ ${currentStep} -eq 6 ]]
+    elif [[ ${currentStep} -eq 7 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1700,7 +1700,7 @@ then
         fi 
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
     #### TKhomogenize
-    elif [[ ${currentStep} -eq 7 ]]
+    elif [[ ${currentStep} -eq 8 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1720,7 +1720,7 @@ then
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
     #### TKcombine
-    elif [[ ${currentStep} -eq 8 ]]
+    elif [[ ${currentStep} -eq 9 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1770,7 +1770,7 @@ then
 		
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version      
     #### LAstitch
-    elif [[ ${currentStep} -eq 9 ]]
+    elif [[ ${currentStep} -eq 10 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1786,7 +1786,7 @@ then
 		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version                 
     #### LAq
-    elif [[ ${currentStep} -eq 10 ]]
+    elif [[ ${currentStep} -eq 11 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1803,7 +1803,7 @@ then
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version               
     #### TKmerge    
-    elif [[ ${currentStep} -eq 11 ]]
+    elif [[ ${currentStep} -eq 12 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1826,7 +1826,7 @@ then
         echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp && cp .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.d2 .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.a2 ${myCWD} && cd ${myCWD}" >> ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version               
     #### LAgap
-    elif [[ ${currentStep} -eq 12 ]]
+    elif [[ ${currentStep} -eq 13 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1846,7 +1846,7 @@ then
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan      
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
     #### LAq
-    elif [[ ${currentStep} -eq 13 ]]
+    elif [[ ${currentStep} -eq 14 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
@@ -1863,7 +1863,7 @@ then
     done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan 
     echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version              
     #### TKmerge    
-    elif [[ ${currentStep} -eq 14 ]]
+    elif [[ ${currentStep} -eq 15 ]]
     then
         ### clean up plans 
         for x in $(ls ${currentPhase}_${sID}_*_*_${FIX_DB%.db}.${slurmID}.* 2> /dev/null)
