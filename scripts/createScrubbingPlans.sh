@@ -1538,7 +1538,7 @@ then
                     
                     infile2=${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_f.las
 				else
-					infile2=${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las
+					infile2=${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.repcomp.${y}.${x}_r.las
 				fi
 				
 				if [[ ! -f ${infile1} || ! -f ${infile2} ]]
