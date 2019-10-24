@@ -1533,7 +1533,7 @@ then
             do 
                 infile1=${FIX_REPCOMP_OUTDIR}/d${x}_NoRepComp/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las
                 
-                if [[ $y -le $x ]]
+                if [[ $x -le $y ]]
                 then    
                     
                     infile2=${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_f.las
