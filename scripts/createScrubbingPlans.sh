@@ -1562,10 +1562,10 @@ then
 				fi
 				if [[ $count -eq 0 ]]
 				then
-					echo -e " && ${LASTOOLS_PATH}/bin/lassort -zfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las"
+					echo -e " && ${LASTOOLS_PATH}/bin/lassort -sfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las"
 					count=3
 				else
-					echo -n " && ${LASTOOLS_PATH}/bin/lassort -zfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las &&"
+					echo -n " && ${LASTOOLS_PATH}/bin/lassort -sfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las &&"
 				fi							
             done 
 		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan

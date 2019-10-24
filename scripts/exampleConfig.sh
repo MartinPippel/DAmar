@@ -7,8 +7,8 @@ MARVEL_PATH="/projects/dazzler/pippel/prog/MARVEL/DAMARVEL-build/DAmar_TRACE_XOV
 
 ### REPCOMP PATH
 REPCOMP_SOURCE_PATH="/projects/dazzler/pippel/prog/repcomp"
-REPCOMP_PATH="/projects/dazzler/pippel/prog/repcomp-build/repcomp_TRACE_XOVR_75"
-#REPCOMP_PATH="/projects/dazzler/pippel/prog/repcomp-build/repcomp_TRACE_XOVR_125"
+REPCOMP_PATH="LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=75 /projects/dazzler/pippel/prog/repcomp-build/repcomp_TRACE_XOVR_75"
+#REPCOMP_PATH="LIBMAUS2_DAZZLER_ALIGN_ALIGNMENTFILECONSTANTS_TRACE_XOVR=125 /projects/dazzler/pippel/prog/repcomp-build/repcomp_TRACE_XOVR_125"
 
 ### DACCORD PATH - used progs: fastaidrename, forcealign
 DACCORD_SOURCE_PATH="/projects/dazzler/pippel/prog/daccord/"
