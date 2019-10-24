@@ -1533,7 +1533,7 @@ then
             do 
                 infile1=${FIX_REPCOMP_OUTDIR}/d${x}_NoRepComp/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las
                 
-                if [[ $x -le $y ]]
+                if [[ $y -le $x ]]
                 then    
                     
                     infile2=${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_f.las
@@ -1547,10 +1547,16 @@ then
                     exit 1                    
                 fi
 				
-				echo -n "${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${infile1} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${infile1} ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/${infile1}"
-				echo -n " && ${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${infile2} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${infile2} ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/${infile2}"
-				echo -n " && ${MARVEL_PATH}/bin/LAmerge ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${infile1} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${infile2}"
-				echo -n " && ${LASTOOLS_PATH}/bin/lassort -zfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las"							
+				echo -n "${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${infile1} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile1}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/$(basename ${infile1})"
+				echo -n " && ${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${infile2} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile2}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/$(basename ${infile2})"
+				if [[ ${x} -eq $y ]]
+				then 
+					echo -n " && ${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las"
+					echo -n " && ${MARVEL_PATH}/bin/LAmerge ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile1}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile2}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las"
+				else
+					echo -n " && ${MARVEL_PATH}/bin/LAmerge ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile1}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile2})"
+				fi
+				echo -e " && ${LASTOOLS_PATH}/bin/lassort -zfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las"							
             done 
 		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version   
