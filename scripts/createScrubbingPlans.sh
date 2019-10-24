@@ -1527,10 +1527,14 @@ then
         setRepcompOptions
         setDalignerOptions
         setLAseparateOptions 1
+        
+        ### combine count many LAseparate jobs
+        count=3
         for x in $(seq 1 ${fixblocks}); 
         do 
             for y in $(seq 1 ${fixblocks}); 
             do 
+            	count=$((count-1))
                 infile1=${FIX_REPCOMP_OUTDIR}/d${x}_NoRepComp/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.las
                 
                 if [[ $x -le $y ]]
@@ -1556,7 +1560,13 @@ then
 				else
 					echo -n " && ${MARVEL_PATH}/bin/LAmerge ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile1}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile2})"
 				fi
-				echo -e " && ${LASTOOLS_PATH}/bin/lassort -zfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las"							
+				if [[ $count -eq 0 ]]
+				then
+					echo -e " && ${LASTOOLS_PATH}/bin/lassort -zfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las"
+					count=3
+				else
+					echo -n " && ${LASTOOLS_PATH}/bin/lassort -zfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las &&"
+				fi							
             done 
 		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version   
@@ -1587,7 +1597,7 @@ then
                     then
                         echo ""
                     else
-                        echo " && mv ${FIX_FORCEALIGN_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.forcealign.${x}.${y}_r.las ${FIX_FORCEALIGN_OUTDIR}/r${y}"
+                        echo " && mv ${FIX_FORCEALIGN_OUTDIR}/f${x}/${FIX_DAZZ_DB%.db}.forcealign.${x}.${y}_r.las ${FIX_FORCEALIGN_OUTDIR}/r${y}"
                     fi
                 else
                     (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE}: File missing ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las!!")
