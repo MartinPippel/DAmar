@@ -1218,7 +1218,7 @@ then
         ### create LAmerge commands
     	for x in $(seq 1 ${fixblocks})
         do 
-            echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${SCRUB_LAMERGE_OPT} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las r${x} d${x}_ForRepComp d${x}_NoRepComp && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las ${FIX_DAZZ_DB%.db}.repcompFilt.${x}.las && rm && ${FIX_DAZZ_DB%.db}.repcomp.${x}.las && cd ${myCWD}"                                                                                                                     
+            echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${SCRUB_LAMERGE_OPT} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las r${x} d${x}_ForRepComp d${x}_NoRepComp && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las ${FIX_DAZZ_DB%.db}.repcompFilt.${x}.las && rm ${FIX_DAZZ_DB%.db}.repcomp.${x}.las && cd ${myCWD}"                                                                                                                     
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 5 ]]
