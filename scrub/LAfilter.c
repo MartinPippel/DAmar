@@ -354,10 +354,10 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 			int num = k - j + 1;
 			if(num > 1)
 			{
-				for(l=j; l<=k; ++l)
+				for(l=j; l<=k; l++)
 				{
 					Overlap *o1 = ovls + l;
-					if(o1->flags & OVL_CONT)
+					if(o1->flags & OVL_DISCARD)
 						continue;
 
 					if(o1->aread == o1->bread && o1->path.abpos == o1->path.bbpos && o1->path.aepos == o1->path.bepos)
@@ -371,10 +371,10 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 						continue;
 					}
 
-					for(m=l+1; m<=k; ++m)
+					for(m=l+1; m<=k; m++)
 					{
 						Overlap *o2 = ovls + m;
-						if(o2->flags & OVL_CONT)
+						if(o2->flags & OVL_DISCARD)
 							continue;
 
 						int RM=0;
