@@ -1218,7 +1218,7 @@ then
         ### create LAmerge commands
     	for x in $(seq 1 ${fixblocks})
         do 
-            echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${SCRUB_LAMERGE_OPT} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las r${x} d${x}_ForRepComp d${x}_NoRepComp && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las ${FIX_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}"                                                                                                                     
+            echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${SCRUB_LAMERGE_OPT} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las r${x} d${x}_ForRepComp d${x}_NoRepComp && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las ${FIX_DAZZ_DB%.db}.repcompFilt.${x}.las && rm && ${FIX_DAZZ_DB%.db}.repcomp.${x}.las && cd ${myCWD}"                                                                                                                     
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 5 ]]
@@ -1621,7 +1621,7 @@ then
         ### create LAmerge commands
     	for x in $(seq 1 ${fixblocks})
         do 
-            echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAmerge${SCRUB_LAMERGE_OPT} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las r${x} d${x}_ForRepComp d${x}_NoRepComp && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcomp.${x}.las ${FIX_DAZZ_DB%.db}.repcompFilt.${x}.las && cd ${myCWD}"                                                                                                                     
+            echo "${MARVEL_PATH}/bin/LAmerge${SCRUB_LAMERGE_OPT} ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.forcealign.${x}.las ${FIX_FORCEALIGN_OUTDIR}/f${x} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign ${FIX_REPCOMP_OUTDIR}/d${x}_ForRepComp ${FIX_REPCOMP_OUTDIR}/d${x}_NoRepComp && ${MARVEL_PATH}/bin/LAfilter -p -R6 ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.forcealign.${x}.las ${FIX_FORCEALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.forcealignFilt.${x}.las && rm ${FIX_FORCEALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.forcealign.${x}.las && cd ${myCWD}"                                                                                                                     
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version
 	elif [[ ${currentStep} -eq 5 ]]
@@ -1642,9 +1642,9 @@ then
         do
         	for x in $(seq 0 $((${numRepeatTracks}-1)))
     		do
-        		echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${SCRUB_LAREPEAT_OPT[$x]} -b ${y} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcompFilt.${y}.las && cd ${myCWD}/"            		
+        		echo "cd ${FIX_FORCEALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LArepeat${SCRUB_LAREPEAT_OPT[$x]} -b ${y} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.forcealignFilt.${y}.las && cd ${myCWD}/"            		
     		done
-    		echo "cd ${FIX_REPCOMP_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask${SCRUB_DAZZ_LAREPEAT_OPT} ${FIX_DAZZ_DB%.db} ${FIX_DAZZ_DB%.db}.repcompFilt.${y}.las && cd ${myCWD}/"
+    		echo "cd ${FIX_FORCEALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/REPmask${SCRUB_DAZZ_LAREPEAT_OPT} ${FIX_DAZZ_DB%.db} ${FIX_DAZZ_DB%.db}.forcealignFilt.${y}.las && cd ${myCWD}/"
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan 
         echo "MARVEL LArepeat $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version
         echo "DAZZLER REPmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" >> ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version        
@@ -1656,7 +1656,7 @@ then
             rm $x
         done 
         
-        setLArepeatOptions 2
+        setLArepeatOptions 3
         ### find and set TKmerge options 
         if [[ -z ${SCRUB_TKMERGE_OPT} ]]
         then 
@@ -1670,12 +1670,12 @@ then
     
         ### create TKmerge command
         rep=$(echo ${SCRUB_DAZZ_LAREPEAT_OPT} | awk '{print substr($NF,3)}')
-        echo "cd ${FIX_REPCOMP_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${SCRUB_TKMERGE_OPT} -f -v ${FIX_DAZZ_DB%.db} ${rep} && cp .${FIX_DAZZ_DB%.db}.${rep}.anno .${FIX_DAZZ_DB%.db}.${rep}.data ${myCWD}/ && cd ${myCWD}/" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
+        echo "cd ${FIX_FORCEALIGN_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${SCRUB_TKMERGE_OPT} -f -v ${FIX_DAZZ_DB%.db} ${rep} && cp .${FIX_DAZZ_DB%.db}.${rep}.anno .${FIX_DAZZ_DB%.db}.${rep}.data ${myCWD}/ && cd ${myCWD}/" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan
         
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
         	rep=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')
-            echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} ${rep} && cp .${FIX_DB%.db}.${rep}.a2 .${FIX_DB%.db}.${rep}.d2 ${myCWD} && cd ${myCWD}"
+            echo "cd ${FIX_FORCEALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} ${rep} && cp .${FIX_DB%.db}.${rep}.a2 .${FIX_DB%.db}.${rep}.d2 ${myCWD} && cd ${myCWD}"
     	done >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan        
         echo "MARVEL TKmerge $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version	    
@@ -1688,7 +1688,7 @@ then
             rm $x
         done             
          # we need the name of the repeat track, especially if the plan starts with step11
-        setLArepeatOptions 2
+        setLArepeatOptions 3
         
         ### find and set TKcombine options
         setTKcombineOptions 1
@@ -1724,14 +1724,14 @@ then
             rm $x
         done             
          # we need the name of the repeat track, especially if the plan starts with step6
-        setLArepeatOptions 2
+        setLArepeatOptions 3
         ### create TKhomogenize commands
         for x in $(seq 0 $((${numRepeatTracks}-1)))
         do 
             tmp=$(echo ${SCRUB_LAREPEAT_OPT[${x}]} | awk '{print $NF}')_${FIX_REPMASK_LAREPEAT_REPEATTRACK}
             for y in $(seq 1 ${fixblocks})
             do 
-                echo "${MARVEL_PATH}/bin/TKhomogenize -i ${tmp} -I h${tmp} -b ${y} ${FIX_DB%.db} ${FIX_REPCOMP_OUTDIR}/${FIX_DAZZ_DB%.db}.repcompFilt.${y}.las"
+                echo "${MARVEL_PATH}/bin/TKhomogenize -i ${tmp} -I h${tmp} -b ${y} ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.forcealignFilt.${y}.las"
             done 
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
@@ -1744,7 +1744,7 @@ then
             rm $x
         done             
          # we need the name of the repeat track, especially if the plan starts with step7
-        setLArepeatOptions 2
+        setLArepeatOptions 3
         ### find and set TKcombine options
         setTKcombineOptions 0
         ### create TKcombine commands
@@ -1794,11 +1794,11 @@ then
             rm $x
         done             
         ### find and set LAstitch options 
-        setLAstitchOptions 2
+        setLAstitchOptions 3
         ### create LAstitch commands
         for x in $(seq 1 ${fixblocks})
         do 
-            echo "${MARVEL_PATH}/bin/LAstitch${SCRUB_STITCH_OPT} ${FIX_DB%.db} ${FIX_REPCOMP_OUTDIR}/${FIX_DAZZ_DB%.db}.repcompFilt.${x}.las ${FIX_REPCOMP_OUTDIR}/${FIX_DAZZ_DB%.db}.repcompStitch.${x}.las"
+            echo "${MARVEL_PATH}/bin/LAstitch${SCRUB_STITCH_OPT} ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.forcealignFilt.${x}.las ${FIX_FORCEALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.forcealignStitch.${x}.las"
 		done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version                 
     #### LAq
@@ -1815,7 +1815,7 @@ then
         ### create LAq commands
         for x in $(seq 1 ${fixblocks})
         do 
-            echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -T trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -Q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -b ${x} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcompStitch.${x}.las && cd ${myCWD}"
+            echo "cd ${FIX_FORCEALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -T trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -Q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -b ${x} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.forcealignStitch.${x}.las && cd ${myCWD}"
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version               
     #### TKmerge    
@@ -1838,8 +1838,8 @@ then
         fi
         
         ### create TKmerge command
-        echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp && cp .${FIX_DB%.db}.trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.d2 .${FIX_DB%.db}.trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.a2 ${myCWD} && cd ${myCWD}" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan 
-        echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp && cp .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.d2 .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.a2 ${myCWD} && cd ${myCWD}" >> ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
+    echo "cd ${FIX_FORCEALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign && cp .${FIX_DB%.db}.trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign.d2 .${FIX_DB%.db}.trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign.a2 ${myCWD} && cd ${myCWD}" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan 
+        echo "cd ${FIX_FORCEALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign && cp .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign.d2 .${FIX_DB%.db}.q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign.a2 ${myCWD} && cd ${myCWD}" >> ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version               
     #### LAgap
     elif [[ ${currentStep} -eq 13 ]]
@@ -1856,9 +1856,9 @@ then
             breakChim=""
             if [[ -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
             then 
-                breakChim=" -C ${FIX_REPCOMP_OUTDIR}/${FIX_DB%.db}.${x}.repcompGap.chimers.txt"
+                breakChim=" -C ${FIX_FORCEALIGN_OUTDIR}/${FIX_DB%.db}.${x}.forcealignGap.chimers.txt"
             fi
-            echo "${MARVEL_PATH}/bin/LAgap${SCRUB_LAGAP_OPT} -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp${breakChim} ${FIX_DB%.db} ${FIX_REPCOMP_OUTDIR}/${FIX_DAZZ_DB%.db}.repcompStitch.${x}.las ${FIX_REPCOMP_OUTDIR}/${FIX_DAZZ_DB%.db}.repcompGap.${x}.las && cd ${myCWD}"
+            echo "${MARVEL_PATH}/bin/LAgap${SCRUB_LAGAP_OPT} -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign${breakChim} ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.forcealignStitch.${x}.las ${FIX_FORCEALIGN_OUTDIR}/${FIX_DAZZ_DB%.db}.forcealignGap.${x}.las && cd ${myCWD}"
     	done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan      
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version         
     #### LAq
@@ -1875,7 +1875,7 @@ then
         ### create LAq commands
         for x in $(seq 1 ${fixblocks})
         do 
-            echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp -b ${x} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.repcompGap.${x}.las && cd ${myCWD}"
+            echo "cd ${FIX_FORCEALIGN_OUTDIR} && ${MARVEL_PATH}/bin/LAq${SCRUB_LAQ_OPT} -u -T trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -t trim0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -q q0_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign -b ${x} ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.forcealignGap.${x}.las && cd ${myCWD}"
     done > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.plan 
     echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_block_${FIX_DB%.db}.${slurmID}.version              
     #### TKmerge    
@@ -1898,7 +1898,7 @@ then
         fi
         
         ### create TKmerge command
-    	echo "cd ${FIX_REPCOMP_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp && cp .${FIX_DB%.db}.trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.d2 .${FIX_DB%.db}.trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_repcomp.a2 ${myCWD} && cd ${myCWD}" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan 
+    	echo "cd ${FIX_FORCEALIGN_OUTDIR} && ${MARVEL_PATH}/bin/TKmerge${SCRUB_TKMERGE_OPT} ${FIX_DB%.db} trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign && cp .${FIX_DB%.db}.trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign.d2 .${FIX_DB%.db}.trim1_d${FIX_SCRUB_LAQ_QTRIMCUTOFF}_s${FIX_SCRUB_LAQ_MINSEG}_forcealign.a2 ${myCWD} && cd ${myCWD}" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.plan 
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > ${currentPhase}_${sID}_${sName}_single_${FIX_DB%.db}.${slurmID}.version
 	fi
 	
