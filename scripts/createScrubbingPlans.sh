@@ -1631,7 +1631,7 @@ then
         do            
             rm $x
         done 
-        setLArepeatOptions 2
+        setLArepeatOptions 3
         if [[ ${numRepeatTracks} -eq 0 ]]
         then 
             exit 1
