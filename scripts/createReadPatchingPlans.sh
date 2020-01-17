@@ -97,6 +97,10 @@ function setDalignerOptions()
     then
         FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -k${RAW_FIX_DALIGNER_KMER}"
     fi
+    if [[ -n ${RAW_FIX_DALIGNER_OLEN} && ${RAW_FIX_DALIGNER_OLEN} -gt 0 ]]
+    then
+        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -l${RAW_FIX_DALIGNER_OLEN}"
+    fi
     if [[ -n ${RAW_FIX_DALIGNER_ERR} ]]
     then
         FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -e${RAW_FIX_DALIGNER_ERR}"
@@ -104,6 +108,10 @@ function setDalignerOptions()
     if [[ -n ${RAW_FIX_DALIGNER_BIAS} && ${RAW_FIX_DALIGNER_BIAS} -eq 1 ]]
     then
         FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -b"
+    fi
+    if [[ -n ${RAW_FIX_DALIGNER_BRIDGE} && ${RAW_FIX_DALIGNER_BRIDGE} -eq 1 ]]
+    then
+        FIX_DALIGNER_OPT="${FIX_DALIGNER_OPT} -B"
     fi
     if [[ -n ${RAW_FIX_DALIGNER_VERBOSE} && ${RAW_FIX_DALIGNER_VERBOSE} -ne 0 ]]
     then
@@ -369,6 +377,11 @@ function setLAfixOptions()
     if [[ -n ${RAW_FIX_LAFIX_TRIM} && ${RAW_FIX_LAFIX_TRIM} -ne 0 ]]
     then
         FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -t trim0_d${RAW_FIX_LAQ_QTRIMCUTOFF}_s${RAW_FIX_LAQ_MINSEG}_${ptype}"
+    fi
+
+    if [[ -n ${RAW_FIX_LAFIX_FIXCHIMERSINREPEATS} && ${RAW_FIX_LAFIX_FIXCHIMERSINREPEATS} -ge 0 ]]
+    then
+        FIX_LAFIX_OPT="${FIX_LAFIX_OPT} -R ${RAW_FIX_LAFIX_FIXCHIMERSINREPEATS}"
     fi
     
     if [[ -n ${RAW_FIX_LAFIX_FIXCHIMERS} && ${RAW_FIX_LAFIX_FIXCHIMERS} -ne 0 ]]

@@ -204,11 +204,15 @@ function setDalignerOptions()
     fi
     if [[ -n ${FIX_SCRUB_DALIGNER_KMER} && ${FIX_SCRUB_DALIGNER_KMER} -gt 0 ]]
     then
-        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -k ${FIX_SCRUB_DALIGNER_KMER}"
+        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -k${FIX_SCRUB_DALIGNER_KMER}"
+    fi
+    if [[ -n ${FIX_SCRUB_DALIGNER_BRIDGE} && ${FIX_SCRUB_DALIGNER_BRIDGE} -eq 1 ]]
+    then
+        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -B"
     fi
     if [[ -n ${FIX_SCRUB_DALIGNER_ERR} ]]
     then
-        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -e ${FIX_SCRUB_DALIGNER_ERR}"
+        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -e${FIX_SCRUB_DALIGNER_ERR}"
     fi
     if [[ -n ${FIX_SCRUB_DALIGNER_BIAS} && ${FIX_SCRUB_DALIGNER_BIAS} -eq 1 ]]
     then
@@ -216,7 +220,7 @@ function setDalignerOptions()
     fi
     if [[ -n ${FIX_SCRUB_DALIGNER_OLEN} && ${FIX_SCRUB_DALIGNER_OLEN} -ne 0 ]]
     then
-        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -l ${FIX_SCRUB_DALIGNER_OLEN}"
+        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -l${FIX_SCRUB_DALIGNER_OLEN}"
     fi
     if [[ -n ${FIX_SCRUB_DALIGNER_VERBOSE} && ${FIX_SCRUB_DALIGNER_VERBOSE} -ne 0 ]]
     then
@@ -224,15 +228,11 @@ function setDalignerOptions()
     fi
     if [[ -n ${FIX_SCRUB_DALIGNER_TRACESPACE} && ${FIX_SCRUB_DALIGNER_TRACESPACE} -gt 0 ]]
     then
-        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -s ${FIX_SCRUB_DALIGNER_TRACESPACE}"
-    fi
-    if [[ -n ${FIX_SCRUB_DALIGNER_RUNID} ]]
-    then
-        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -r ${FIX_SCRUB_DALIGNER_RUNID}"
+        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -s${FIX_SCRUB_DALIGNER_TRACESPACE}"
     fi
     if [[ -n ${FIX_SCRUB_DALIGNER_T} ]]
     then
-        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -t ${FIX_SCRUB_DALIGNER_T}"
+        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -t${FIX_SCRUB_DALIGNER_T}"
     fi  
     if [[ -n ${FIX_SCRUB_DALIGNER_ASYMMETRIC} && ${FIX_SCRUB_DALIGNER_ASYMMETRIC} -ne 0 ]]
     then
@@ -240,18 +240,18 @@ function setDalignerOptions()
     fi    
     if [[ -n ${FIX_SCRUB_DALIGNER_MEM} && ${FIX_SCRUB_DALIGNER_MEM} -ne 0 ]]
     then
-        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -M ${FIX_SCRUB_DALIGNER_MEM}"
+        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -M${FIX_SCRUB_DALIGNER_MEM}"
     fi    
     if [[ -n ${FIX_SCRUB_DALIGNER_MASK} ]]
     then
         for x in ${FIX_SCRUB_DALIGNER_MASK}
         do 
-            SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -m ${x}"
+            SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -m${x}"
         done
     fi
     if [[ -n ${THREADS_daligner} ]]
     then 
-        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -j ${THREADS_daligner}"
+        SCRUB_DALIGNER_OPT="${SCRUB_DALIGNER_OPT} -T${THREADS_daligner}"
     fi
     if [ ! -n ${FIX_SCRUB_DALIGNER_DAL} ]
     then
@@ -554,6 +554,10 @@ function setForcealignOptions()
     then
         SCRUB_FORCEALIGN_OPT="${SCRUB_FORCEALIGN_OPT} --partial"
     fi
+    if [[ -n ${FIX_SCRUB_FORCEALIGN_PARTIALSPLIT} && ${FIX_SCRUB_FORCEALIGN_PARTIALSPLIT} -ne 0 ]]
+    then
+        SCRUB_FORCEALIGN_OPT="${SCRUB_FORCEALIGN_OPT} --partialsplit"
+    fi
     if [[ -n ${FIX_SCRUB_FORCEALIGN_THREADS} && ${FIX_SCRUB_FORCEALIGN_THREADS} -gt 0 ]]
     then 
         SCRUB_FORCEALIGN_OPT="${SCRUB_FORCEALIGN_OPT} -t${FIX_SCRUB_FORCEALIGN_THREADS}"
@@ -738,9 +742,9 @@ then
             fi
             	if [[ "x${DALIGNER_VERSION}" == "x2" ]]
             	then
-            		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x} ${FIX_DAZZ_DB%.db}.@${x}"
+            		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${SCRUB_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x} ${FIX_DAZZ_DB%.db}.@${x}"
 			else
-	        		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x}"
+	        		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${SCRUB_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x}"
 			fi
             cmdLine=$((${cmdLine}+1))
             count=0
@@ -791,9 +795,9 @@ then
                     fi
                     if [[ "x${DALIGNER_VERSION}" == "x2" ]]
             		then
-                    		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x} ${FIX_DAZZ_DB%.db}.@${y}"
+                    		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${SCRUB_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x} ${FIX_DAZZ_DB%.db}.@${y}"
                 	else
-                		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${FIX_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x} ${FIX_DAZZ_DB%.db}.${y}"
+                		echo -n "cd ${FIX_DALIGN_OUTDIR} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${NUMACTL}${DAZZLER_PATH}/bin/daligner${SCRUB_DALIGNER_OPT} ${FIX_DAZZ_DB%.db}.${x} ${FIX_DAZZ_DB%.db}.${y}"
                 	fi
                     cmdLine=$((${cmdLine}+1))
                     count=1
@@ -1556,11 +1560,11 @@ then
 				if [[ ${x} -eq $y ]]
 				then 
 					echo -n " && ${MARVEL_PATH}/bin/LAseparate${SCRUB_LASEPARATE_OPT} ${FIX_DB%.db} ${FIX_REPCOMP_OUTDIR}/r${x}/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las"
-					echo -n " && ${MARVEL_PATH}/bin/LAmerge ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile1}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile2}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_NoForceAlign/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las"
+					echo -n " && ${MARVEL_PATH}/bin/LAmerge ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile1}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile2}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.repcomp.${x}.${y}_r.las"
 				else
 					echo -n " && ${MARVEL_PATH}/bin/LAmerge ${FIX_DB%.db} ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile1}) ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/$(basename ${infile2})"
 				fi
-				if [[ $count -eq 0 ]]
+				if [[ $count -eq 0 || ${y} -eq ${fixblocks} ]]
 				then
 					echo -e " && ${LASTOOLS_PATH}/bin/lassort -sfull -t1 ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.merge.las"
 					count=3
@@ -1597,7 +1601,7 @@ then
                     then
                         echo ""
                     else
-                        echo " && mv ${FIX_FORCEALIGN_OUTDIR}/f${x}/${FIX_DAZZ_DB%.db}.forcealign.${x}.${y}_r.las ${FIX_FORCEALIGN_OUTDIR}/r${y}"
+                        echo " && mv ${FIX_FORCEALIGN_OUTDIR}/f${x}/${FIX_DAZZ_DB%.db}.forcealign.${x}.${y}_r.las ${FIX_FORCEALIGN_OUTDIR}/f${y}"
                     fi
                 else
                     (>&2 echo "step ${currentStep} in FIX_SCRUB_TYPE ${FIX_SCRUB_TYPE}: File missing ${FIX_FORCEALIGN_OUTDIR}/r${x}_ForForceAlign/${FIX_DAZZ_DB%.db}.${x}.${FIX_DAZZ_DB%.db}.${y}.mergeSort.las!!")

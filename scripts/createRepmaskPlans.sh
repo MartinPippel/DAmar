@@ -144,6 +144,10 @@ function setDaligerOptions()
     then
         REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -b"
     fi
+    if [[ -n ${RAW_REPMASK_DALIGNER_BRIDGE} && ${RAW_REPMASK_DALIGNER_BRIDGE} -eq 1 ]]
+    then
+        REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -B"
+    fi
     if [[ -n ${RAW_REPMASK_DALIGNER_OLEN} ]]
     then
         REPMASK_DALIGNER_OPT="${REPMASK_DALIGNER_OPT} -l${RAW_REPMASK_DALIGNER_OLEN}"
