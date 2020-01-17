@@ -17,3 +17,5 @@ configure
 /.cproject
 /.project
 /.pydevproject
+*.log
+/recompile.sh
