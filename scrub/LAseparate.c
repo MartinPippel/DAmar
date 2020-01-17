@@ -332,8 +332,7 @@ static void chain(SeparateContext*ctx, Overlap *ovls, int n)
 				if (ovl_j->flags & (OVL_CONT))
 					continue;
 
-				if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos)
-						&& contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
+				if (contained(ovl_j->path.abpos, ovl_j->path.aepos, ovl_i->path.abpos, ovl_i->path.aepos) && contained(ovl_j->path.bbpos, ovl_j->path.bepos, ovl_i->path.bbpos, ovl_i->path.bepos))
 				{
 					ovl_j->flags |= (OVL_CONT);
 				}
@@ -598,8 +597,7 @@ static void chain(SeparateContext*ctx, Overlap *ovls, int n)
 						{
 							Overlap *tmpOvl = ovls + (longestUniqOvlIdx + curBestOffset);
 
-							if ((intersect(ab1, ae1, tmpOvl->path.abpos, tmpOvl->path.aepos) < ae1 - tmpOvl->path.abpos)
-									&& (intersect(bb1, be1, tmpOvl->path.bbpos, tmpOvl->path.bepos) < be1 - tmpOvl->path.bbpos))
+							if ((intersect(ab1, ae1, tmpOvl->path.abpos, tmpOvl->path.aepos) < ae1 - tmpOvl->path.abpos) && (intersect(bb1, be1, tmpOvl->path.bbpos, tmpOvl->path.bepos) < be1 - tmpOvl->path.bbpos))
 							{
 								curBestUniqOffset = curBestOffset;
 								curBestUniqBases = 1;
@@ -814,8 +812,7 @@ static void chain(SeparateContext*ctx, Overlap *ovls, int n)
 						{
 							Overlap *tmpOvl = ovls + (longestUniqOvlIdx - curBestOffset);
 
-							if ((intersect(tmpOvl->path.abpos, tmpOvl->path.aepos, ab1, ae1) < ae1 - tmpOvl->path.abpos)
-									&& (intersect(tmpOvl->path.bbpos, tmpOvl->path.bepos, bb1, be1) < be1 - tmpOvl->path.bbpos))
+							if ((intersect(tmpOvl->path.abpos, tmpOvl->path.aepos, ab1, ae1) < ae1 - tmpOvl->path.abpos) && (intersect(tmpOvl->path.bbpos, tmpOvl->path.bepos, bb1, be1) < be1 - tmpOvl->path.bbpos))
 							{
 								curBestUniqOffset = curBestOffset;
 								curBestUniqBases = 1;
@@ -928,13 +925,11 @@ static void chain(SeparateContext*ctx, Overlap *ovls, int n)
 				int ovhBases = 100;
 				for (j = chainIdx; j < chainLastIdx; j++)
 				{
-					if (chain->ovls[j]->path.aepos - ovhBases < ovl->path.abpos && chain->ovls[j + 1]->path.abpos + ovhBases > ovl->path.aepos
-							&& chain->ovls[j]->path.bepos - ovhBases < ovl->path.bbpos && chain->ovls[j + 1]->path.bbpos + ovhBases > ovl->path.bepos)
+					if (chain->ovls[j]->path.aepos - ovhBases < ovl->path.abpos && chain->ovls[j + 1]->path.abpos + ovhBases > ovl->path.aepos && chain->ovls[j]->path.bepos - ovhBases < ovl->path.bbpos && chain->ovls[j + 1]->path.bbpos + ovhBases > ovl->path.bepos)
 					{
 						Overlap *lastAddedOvl = chain->ovls[chain->novl - 1];
 
-						if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos) > ovhBases
-								|| intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos) > ovhBases)
+						if (intersect(ovl->path.abpos, ovl->path.aepos, lastAddedOvl->path.abpos, lastAddedOvl->path.aepos) > ovhBases || intersect(ovl->path.bbpos, ovl->path.bepos, lastAddedOvl->path.bbpos, lastAddedOvl->path.bepos) > ovhBases)
 							break;
 
 						if (chain->novl == chain->maxOvl)
@@ -982,8 +977,7 @@ static void chain(SeparateContext*ctx, Overlap *ovls, int n)
 
 				for (j = chainIdx; j <= chainLastIdx; j++)
 				{
-					if (intersect(chain->ovls[j]->path.abpos, chain->ovls[j]->path.aepos, ovl->path.abpos, ovl->path.aepos)
-							|| intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, ovl->path.bbpos, ovl->path.bepos))
+					if (intersect(chain->ovls[j]->path.abpos, chain->ovls[j]->path.aepos, ovl->path.abpos, ovl->path.aepos) || intersect(chain->ovls[j]->path.bbpos, chain->ovls[j]->path.bepos, ovl->path.bbpos, ovl->path.bepos))
 					{
 						ovl->flags |= OVL_DISCARD;
 						nremain--;
@@ -1015,10 +1009,8 @@ static void chain(SeparateContext*ctx, Overlap *ovls, int n)
 				{
 					for (j = 0; j < chain->novl; j++)
 					{
-						if ((chain->ovls[j]->path.abpos > ctx->ovlChains[i].ovls[0]->path.abpos
-								&& chain->ovls[j]->path.aepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.aepos)
-								|| (chain->ovls[j]->path.bbpos > ctx->ovlChains[i].ovls[0]->path.bbpos
-										&& chain->ovls[j]->path.bepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.bepos))
+						if ((chain->ovls[j]->path.abpos > ctx->ovlChains[i].ovls[0]->path.abpos && chain->ovls[j]->path.aepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.aepos)
+								|| (chain->ovls[j]->path.bbpos > ctx->ovlChains[i].ovls[0]->path.bbpos && chain->ovls[j]->path.bepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.bepos))
 						{
 #ifdef DEBUG_CHAIN
 							printf("CHAIN is invalid - DISCARD\n");
@@ -1113,8 +1105,7 @@ static int separate_handler(void* _ctx, Overlap* ovl, int novl)
 			if (MIN(bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bbpos) < 1000)
 				properBeg = 1;
 			// check for proper end
-			if (bestChain->ovls[bestChain->novl - 1]->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread)
-					|| bestChain->ovls[bestChain->novl - 1]->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
+			if (bestChain->ovls[bestChain->novl - 1]->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread) || bestChain->ovls[bestChain->novl - 1]->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
 				properEnd = 1;
 #ifdef DEBUG
 			printf("properBeg: %d, properEnd %d\n", properBeg, properEnd);
@@ -1181,8 +1172,7 @@ static int separate_handler(void* _ctx, Overlap* ovl, int novl)
 					gapBasesInB, overlapBases, gapBasesInA, gapBasesInB);
 #endif
 			// if there is a proper chain between A and B reads, then discard all overlaps between A and B for the repcomp step, (otherwise do repcomp)
-			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0
-					&& overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
+			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
 			{
 #ifdef DEBUG
 				printf("FOUND PROPER CHAIN - EXCLUDE ALL OVLS FROM REPCOMP INPUT\n");
@@ -1242,75 +1232,85 @@ static int separate_handler(void* _ctx, Overlap* ovl, int novl)
 			if (MIN(bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bbpos) < 1000)
 				properBeg = 1;
 			// check for proper end
-			if (bestChain->ovls[bestChain->novl - 1]->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread)
-					|| bestChain->ovls[bestChain->novl - 1]->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
+			if (bestChain->ovls[bestChain->novl - 1]->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread) || bestChain->ovls[bestChain->novl - 1]->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
 				properEnd = 1;
 #ifdef DEBUG
 			printf("properBeg: %d, properEnd %d\n", properBeg, properEnd);
 #endif
 			if (properBeg && properEnd)
 			{
-				int i, its_a, its_b;
-				overlapBases = MAX(bestChain->ovls[0]->path.aepos - bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bepos - bestChain->ovls[0]->path.bbpos);
-
-				for (i = 1; i < bestChain->novl; i++)
+				if (bestChain->novl == 1)
 				{
-					its_a = its_b = 0;
-					overlapBases += MAX(bestChain->ovls[i]->path.aepos - bestChain->ovls[i]->path.abpos, bestChain->ovls[i]->path.bepos - bestChain->ovls[i]->path.bbpos);
-					// check for intersection in A
-					if (bestChain->ovls[i]->path.abpos < bestChain->ovls[i - 1]->path.aepos)
+					int realBeg = (MIN(bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bbpos) == 0);
+					int realEnd = (bestChain->ovls[0]->path.aepos == DB_READ_LEN(ctx->db, bestChain->ovls[0]->aread) || bestChain->ovls[0]->path.bepos == DB_READ_LEN(ctx->db, bestChain->ovls[0]->bread));
+
+					if (realBeg && realEnd)
 					{
-						its_a = bestChain->ovls[i - 1]->path.aepos - bestChain->ovls[i]->path.abpos;
-						if (its_a > 1000)
-						{
-							itsBasesInA = -1;
-							break;
-						}
-						itsBasesInA += its_a;
+						properBeg = 0;
 					}
-					// check for gap in A
-					else
+				}
+				else
+				{
+					int i, its_a, its_b;
+					overlapBases = MAX(bestChain->ovls[0]->path.aepos - bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bepos - bestChain->ovls[0]->path.bbpos);
+
+					for (i = 1; i < bestChain->novl; i++)
 					{
-						int gap = bestChain->ovls[i]->path.abpos - bestChain->ovls[i - 1]->path.aepos;
+						its_a = its_b = 0;
+						overlapBases += MAX(bestChain->ovls[i]->path.aepos - bestChain->ovls[i]->path.abpos, bestChain->ovls[i]->path.bepos - bestChain->ovls[i]->path.bbpos);
+						// check for intersection in A
+						if (bestChain->ovls[i]->path.abpos < bestChain->ovls[i - 1]->path.aepos)
+						{
+							its_a = bestChain->ovls[i - 1]->path.aepos - bestChain->ovls[i]->path.abpos;
+							if (its_a > 1000)
+							{
+								itsBasesInA = -1;
+								break;
+							}
+							itsBasesInA += its_a;
+						}
+						// check for gap in A
+						else
+						{
+							int gap = bestChain->ovls[i]->path.abpos - bestChain->ovls[i - 1]->path.aepos;
 //						if (gap > 1000)
 //						{
 //							gapBasesInA = -1;
 //							break;
 //						}
-						gapBasesInA += gap;
-					}
-					// check for intersection in B
-					if (bestChain->ovls[i]->path.bbpos < bestChain->ovls[i - 1]->path.bepos)
-					{
-						its_b = bestChain->ovls[i - 1]->path.bepos - bestChain->ovls[i]->path.bbpos;
-						if (its_b > 1000)
-						{
-							itsBasesInB = -1;
-							break;
+							gapBasesInA += gap;
 						}
-						itsBasesInB += its_b;
-					}
-					// check for gap in B
-					else
-					{
-						int gap = bestChain->ovls[i]->path.bbpos - bestChain->ovls[i - 1]->path.bepos;
+						// check for intersection in B
+						if (bestChain->ovls[i]->path.bbpos < bestChain->ovls[i - 1]->path.bepos)
+						{
+							its_b = bestChain->ovls[i - 1]->path.bepos - bestChain->ovls[i]->path.bbpos;
+							if (its_b > 1000)
+							{
+								itsBasesInB = -1;
+								break;
+							}
+							itsBasesInB += its_b;
+						}
+						// check for gap in B
+						else
+						{
+							int gap = bestChain->ovls[i]->path.bbpos - bestChain->ovls[i - 1]->path.bepos;
 //						if (gap > 1000)
 //						{
 //							gapBasesInB = -1;
 //							break;
 //						}
-						gapBasesInB += gap;
+							gapBasesInB += gap;
+						}
+						overlapBases -= MAX(its_a, its_b);
 					}
-					overlapBases -= MAX(its_a, its_b);
 				}
 			}
-
 #ifdef DEBUG
 			printf("if(%d && %d && %d >=0 && %d >=0 && %d >=0 && %d >=0 && %d * 0.3 > MAX(%d, %d))\n", properBeg, properEnd, itsBasesInA, itsBasesInB, gapBasesInA,
 					gapBasesInB, overlapBases, gapBasesInA, gapBasesInB);
 #endif
-			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0
-					&& overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
+			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
 			{
 #ifdef DEBUG
 				printf("FOUND PROPER CHAIN - INCLUDE ALL CHAIN OVLS FOR FORCEALIGN INPUT\n");
@@ -1396,8 +1396,7 @@ static int separateDiscard_handler(void* _ctx, Overlap* ovl, int novl)
 			if (MIN(bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bbpos) < 1000)
 				properBeg = 1;
 			// check for proper end
-			if (bestChain->ovls[bestChain->novl - 1]->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread)
-					|| bestChain->ovls[bestChain->novl - 1]->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
+			if (bestChain->ovls[bestChain->novl - 1]->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread) || bestChain->ovls[bestChain->novl - 1]->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
 				properEnd = 1;
 #ifdef DEBUG
 			printf("properBeg: %d, properEnd %d\n", properBeg, properEnd);
@@ -1463,8 +1462,7 @@ static int separateDiscard_handler(void* _ctx, Overlap* ovl, int novl)
 					gapBasesInB, overlapBases, gapBasesInA, gapBasesInB);
 #endif
 			// if there is a proper chain between A and B reads, then discard all overlaps between A and B for the repcomp step, (otherwise do repcomp)
-			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0
-					&& overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
+			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
 			{
 #ifdef DEBUG
 				printf("FOUND PROPER CHAIN - EXCLUDE ALL OVLS FROM REPCOMP INPUT\n");
@@ -1532,75 +1530,89 @@ static int separateDiscard_handler(void* _ctx, Overlap* ovl, int novl)
 			if (MIN(bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bbpos) < 1000)
 				properBeg = 1;
 			// check for proper end
-			if (bestChain->ovls[bestChain->novl - 1]->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread)
-					|| bestChain->ovls[bestChain->novl - 1]->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
+			if (bestChain->ovls[bestChain->novl - 1]->path.aepos + 1000 > DB_READ_LEN(ctx->db, ovl->aread) || bestChain->ovls[bestChain->novl - 1]->path.bepos + 1000 > DB_READ_LEN(ctx->db, ovl->bread))
 				properEnd = 1;
 
 #ifdef DEBUG
 			printf("properBeg: %d, properEnd %d\n", properBeg, properEnd);
 #endif
+
+			// it could still be possible, that only a single alignment remained in the chain and all others were excluded
+			// if that happens we have check if that single alignment is fully proper, then there is no need to call forcealign for this!!!!
 			if (properBeg && properEnd)
 			{
-				int i, its_a, its_b;
-				overlapBases = MAX(bestChain->ovls[0]->path.aepos - bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bepos - bestChain->ovls[0]->path.bbpos);
-
-				for (i = 1; i < bestChain->novl; i++)
+				if (bestChain->novl == 1)
 				{
-					its_a = its_b = 0;
-					overlapBases += MAX(bestChain->ovls[i]->path.aepos - bestChain->ovls[i]->path.abpos, bestChain->ovls[i]->path.bepos - bestChain->ovls[i]->path.bbpos);
-					// check for intersection in A
-					if (bestChain->ovls[i]->path.abpos < bestChain->ovls[i - 1]->path.aepos)
+					int realBeg = (MIN(bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bbpos) == 0);
+					int realEnd = (bestChain->ovls[0]->path.aepos == DB_READ_LEN(ctx->db, bestChain->ovls[0]->aread) || bestChain->ovls[0]->path.bepos == DB_READ_LEN(ctx->db, bestChain->ovls[0]->bread));
+
+					if (realBeg && realEnd)
 					{
-						its_a = bestChain->ovls[i - 1]->path.aepos - bestChain->ovls[i]->path.abpos;
-						if (its_a > 1000)
+						properBeg = 0;
+					}
+				}
+				else
+				{
+					int i, its_a, its_b;
+					overlapBases = MAX(bestChain->ovls[0]->path.aepos - bestChain->ovls[0]->path.abpos, bestChain->ovls[0]->path.bepos - bestChain->ovls[0]->path.bbpos);
+
+					for (i = 1; i < bestChain->novl; i++)
+					{
+						its_a = its_b = 0;
+						overlapBases += MAX(bestChain->ovls[i]->path.aepos - bestChain->ovls[i]->path.abpos, bestChain->ovls[i]->path.bepos - bestChain->ovls[i]->path.bbpos);
+						// check for intersection in A
+						if (bestChain->ovls[i]->path.abpos < bestChain->ovls[i - 1]->path.aepos)
 						{
-							itsBasesInA = -1;
-							break;
+							its_a = bestChain->ovls[i - 1]->path.aepos - bestChain->ovls[i]->path.abpos;
+							if (its_a > 1000)
+							{
+								itsBasesInA = -1;
+								break;
+							}
+							itsBasesInA += its_a;
 						}
-						itsBasesInA += its_a;
-					}
-					// check for gap in A
-					else
-					{
-						int gap = bestChain->ovls[i]->path.abpos - bestChain->ovls[i - 1]->path.aepos;
-//						if (gap > 1000)
-//						{
-//							gapBasesInA = -1;
-//							break;
-//						}
-						gapBasesInA += gap;
-					}
-					// check for intersection in B
-					if (bestChain->ovls[i]->path.bbpos < bestChain->ovls[i - 1]->path.bepos)
-					{
-						its_b = bestChain->ovls[i - 1]->path.bepos - bestChain->ovls[i]->path.bbpos;
-						if (its_b > 1000)
+						// check for gap in A
+						else
 						{
-							itsBasesInB = -1;
-							break;
+							int gap = bestChain->ovls[i]->path.abpos - bestChain->ovls[i - 1]->path.aepos;
+							//						if (gap > 1000)
+							//						{
+							//							gapBasesInA = -1;
+							//							break;
+							//						}
+							gapBasesInA += gap;
 						}
-						itsBasesInB += its_b;
+						// check for intersection in B
+						if (bestChain->ovls[i]->path.bbpos < bestChain->ovls[i - 1]->path.bepos)
+						{
+							its_b = bestChain->ovls[i - 1]->path.bepos - bestChain->ovls[i]->path.bbpos;
+							if (its_b > 1000)
+							{
+								itsBasesInB = -1;
+								break;
+							}
+							itsBasesInB += its_b;
+						}
+						// check for gap in B
+						else
+						{
+							int gap = bestChain->ovls[i]->path.bbpos - bestChain->ovls[i - 1]->path.bepos;
+							//						if (gap > 1000)
+							//						{
+							//							gapBasesInB = -1;
+							//							break;
+							//						}
+							gapBasesInB += gap;
+						}
+						overlapBases -= MAX(its_a, its_b);
 					}
-					// check for gap in B
-					else
-					{
-						int gap = bestChain->ovls[i]->path.bbpos - bestChain->ovls[i - 1]->path.bepos;
-//						if (gap > 1000)
-//						{
-//							gapBasesInB = -1;
-//							break;
-//						}
-						gapBasesInB += gap;
-					}
-					overlapBases -= MAX(its_a, its_b);
 				}
 			}
 #ifdef DEBUG
 			printf("if(%d && %d && %d >=0 && %d >=0 && %d >=0 && %d >=0 && %d * 0.3 > MAX(%d, %d))\n", properBeg, properEnd, itsBasesInA, itsBasesInB, gapBasesInA,
 					gapBasesInB, overlapBases, gapBasesInA, gapBasesInB);
 #endif
-			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0
-					&& overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
+			if (properBeg && properEnd && itsBasesInA >= 0 && itsBasesInB >= 0 && gapBasesInA >= 0 && gapBasesInB >= 0 && overlapBases * 0.3 > MAX(gapBasesInA, gapBasesInB))
 			{
 				;
 #ifdef DEBUG
@@ -1698,39 +1710,39 @@ int main(int argc, char* argv[])
 		switch (c)
 		{
 
-		case 'L':
-			sctx.useRLoader = 1;
-			break;
+			case 'L':
+				sctx.useRLoader = 1;
+				break;
 
-		case 'v':
-			sctx.nVerbose++;
-			break;
+			case 'v':
+				sctx.nVerbose++;
+				break;
 
-		case 'o':
-			sctx.nMinAlnLength = atoi(optarg);
-			break;
+			case 'o':
+				sctx.nMinAlnLength = atoi(optarg);
+				break;
 
-		case 'l':
-			sctx.nMinReadLength = atoi(optarg);
-			break;
+			case 'l':
+				sctx.nMinReadLength = atoi(optarg);
+				break;
 
-		case 'T':
-			sctx.type = atoi(optarg);
-			if (sctx.type < 0 || sctx.type > 1)
-			{
-				fprintf(stderr, "Unsupported type: %d\n", sctx.type);
+			case 'T':
+				sctx.type = atoi(optarg);
+				if (sctx.type < 0 || sctx.type > 1)
+				{
+					fprintf(stderr, "Unsupported type: %d\n", sctx.type);
+					exit(1);
+				}
+				break;
+
+			case 'r':
+				pcTrackRepeats = optarg;
+				break;
+
+			default:
+				fprintf(stderr, "unknown option %c\n", c);
+				usage();
 				exit(1);
-			}
-			break;
-
-		case 'r':
-			pcTrackRepeats = optarg;
-			break;
-
-		default:
-			fprintf(stderr, "unknown option %c\n", c);
-			usage();
-			exit(1);
 		}
 	}
 
@@ -1849,3 +1861,4 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+
