@@ -632,7 +632,7 @@ then
 			then
 				mv ${FIX_REPMASK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[1]}C${FIX_REPMASK_LAREPEAT_COV[1]} ${FIX_REPMASK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[1]}C${FIX_REPMASK_LAREPEAT_COV[1]}_$(date '+%Y-%m-%d_%H-%M-%S')	
 			fi
-			mkdir -p ${FIX_REPAMSK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[1]}C${FIX_REPMASK_LAREPEAT_COV[1]}	
+			mkdir -p ${FIX_REPMASK_OUTDIR}/mask_${x}_B${FIX_REPMASK_BLOCKCMP[1]}C${FIX_REPMASK_LAREPEAT_COV[1]}	
 		done
 
         ### create daligner commands
