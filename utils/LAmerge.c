@@ -683,8 +683,10 @@ static void doMergeAll(MERGE_OPT *mopt)
 			// remove intermediate files
 			if (!mopt->KEEP && currentMergeRound > 1)
 			{
-				for (j = 0; j < numIn; j++)
+				for (j = 0; j + 1 < numIn; j++)
 				{
+					if(mopt->VERBOSE)
+					   printf("1-delete intermediate file: %s\n", tmpIN[j]);
 					if (unlink(tmpIN[j]))
 						fprintf(stderr,
 								"WARNING - Cannot remove intermediate overlap file: %s\n",
@@ -716,6 +718,8 @@ static void doMergeAll(MERGE_OPT *mopt)
 		{
 			for (j = 0; j + 1 < numIn; j++)
 			{
+				if(mopt->VERBOSE)
+                                           printf("2-delete intermediate file: %s\n", tmpIN[j]);
 				if (unlink(tmpIN[j]))
 					fprintf(stderr,
 							"WARNING - Cannot remove intermediate overlap file: %s\n",
@@ -725,6 +729,8 @@ static void doMergeAll(MERGE_OPT *mopt)
 			if (strcmp(tmpIN[j], mopt->iFileNames[mopt->numOfFilesToMerge - 1])
 					!= 0)
 			{
+				if(mopt->VERBOSE)
+                                           printf("3-delete intermediate file: %s\n", tmpIN[j]);
 				if (unlink(tmpIN[j]))
 					fprintf(stderr,
 							"WARNING - Cannot remove intermediate overlap file: %s\n",
