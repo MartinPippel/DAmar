@@ -2072,14 +2072,16 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	while (j < novl)
 	{
 
+		//printf("%d vs %d\n", ovl[j].aread, ovl[j].bread); 
 		assert(k == j);
 
 		int nAnchorOvls = (ovl[j].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
-
+		//printf("---< nAnchorOvls: %d a(%d, %d) b(%d,%d) R? %d, T? %d\n", nAnchorOvls,ovl[j].path.abpos,ovl[j].path.aepos,ovl[j].path.bbpos,ovl[j].path.bepos, (ovl[j].flags & (OVL_REPEAT)), (ovl[j].flags & (OVL_TRIM)));
 		while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
 		{
 			k++;
 			nAnchorOvls += (ovl[k].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
+			//printf("---< nAnchorOvls: %d a(%d, %d) b(%d,%d) R? %d, T? %d\n", nAnchorOvls, ovl[k].path.abpos,ovl[k].path.aepos,ovl[k].path.bbpos,ovl[k].path.bepos, (ovl[j].flags & (OVL_REPEAT)), (ovl[j].flags & (OVL_TRIM)));
 		}
 #ifdef CHAIN_DEBUG
 		printf("AnchorOvls: %d k: %d vs %d j: %d vs %d REP: %d, TRIM: %d\n", nAnchorOvls, ovl[j].aread, ovl[j].bread, ovl[k].aread, ovl[k].bread, ovl[j].flags & (OVL_REPEAT), ovl[j].flags & (OVL_TRIM));
@@ -2351,10 +2353,12 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 		else
 		{
-			if (ovl->aread != ovl->bread || (ovl->aread == ovl->bread && ctx->keepIdentity == 0))
+		   //printf("DISCARD all overlaps\n");
+			if (ovl[j].aread != ovl[j].bread || (ctx->keepIdentity == 0))
 			{					// discard all overlaps
 				for (i = j; i <= k; i++)
 				{
+					//printf("DISCARD: %d vs %d a[%d, %d] b[%d, %d] \n",ovl[i].aread,ovl[i].bread,ovl[i].path.abpos,ovl[i].path.aepos,ovl[i].path.bbpos,ovl[i].path.bepos);
 					ovl[i].flags |= OVL_DISCARD;
 					ctx->statsFiltInvalidChain++;
 				}
