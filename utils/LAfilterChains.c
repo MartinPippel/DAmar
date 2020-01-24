@@ -41,6 +41,8 @@
 
 #define VERBOSE
 
+#undef DEBUG_UMASK
+
 #undef DEBUG_CHAIN
 #undef CHAIN_DEBUG
 #undef DEBUG_GAPS
@@ -1125,6 +1127,7 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 	printf( ANSI_COLOR_RED "  nContPerc %d\n" ANSI_COLOR_RESET, fctx->nContPerc);
 	printf( ANSI_COLOR_RED "  nFuzzBases %d\n" ANSI_COLOR_RESET, fctx->nFuzzBases);
 	printf( ANSI_COLOR_RED "  nMinNonRepeatBases %d\n" ANSI_COLOR_RESET, fctx->nMinNonRepeatBases);
+	printf( ANSI_COLOR_RED "  minChainLen %d\n" ANSI_COLOR_RESET, fctx->minChainLen);
 	printf( ANSI_COLOR_RED "  repeatWindowLookBack %d\n" ANSI_COLOR_RESET, fctx->repeatWindowLookBack);
       
         if(fctx->trackRepeat)
@@ -1255,6 +1258,9 @@ static int cmp_aIvl(const void *a, const void *b)
 
 static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 {
+#ifdef DEBUG_UMASK
+	printf("createUniqueMask: read: %d, isA: %d\n", read, isAread);
+#endif
 	int *numIntervals;
 	int *curItv;
 	anchorItv *uniqIntervals;
@@ -1285,7 +1291,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 		trim_end = rlen;
 	}
 
-#ifdef DEBUG_CHAIN
+#ifdef DEBUG_UMASK
 	printf("trim_beg %d, trim_end %d\n", trim_beg, trim_end);
 #endif
 
@@ -1302,6 +1308,9 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 	int MAXMERGE = ctx->mergeRepDist;
 	int i, b, e;
 
+#ifdef DEBUG_UMASK
+	printf("MINANCHOR %d, WINDOW %d, MAXMERGE %d\n",MINANCHOR,WINDOW,MAXMERGE);
+#endif
 	track_anno* repeats_anno = ctx->trackRepeat->anno;
 	track_data* repeats_data = ctx->trackRepeat->data;
 
@@ -1310,6 +1319,9 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 
 	if (*numIntervals < (e - b + 1) + 4)
 	{
+#ifdef DEBUG_UMASK
+		printf("reallocate uniqInterval buffer\n");
+#endif
 		*numIntervals = (e - b + 1) + 4;
 		if (isAread)
 		{
@@ -1341,6 +1353,9 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 			uniqIntervals[*curItv].beg = 0;
 			uniqIntervals[*curItv].end = rb1;
 			(*curItv)++;
+#ifdef DEBUG_UMASK
+			printf("add uniqInterval [%d, %d] -> repeat(%d,%d)\n", 0, rb1, rb1, re1);
+#endif
 		}
 
 		b += 2;
@@ -1354,6 +1369,9 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 				uniqIntervals[*curItv].beg = re1;
 				uniqIntervals[*curItv].end = rb2;
 				(*curItv)++;
+#ifdef DEBUG_UMASK
+                        printf("add uniqInterval [%d, %d] -> repeat(%d,%d)\n", re1, rb2, rb2, re2);
+#endif
 			}
 
 			rb1 = rb2;
@@ -1366,6 +1384,9 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 			uniqIntervals[*curItv].beg = re1;
 			uniqIntervals[*curItv].end = rlen;
 			(*curItv)++;
+#ifdef DEBUG_UMASK
+                        printf("add uniqInterval [%d, %d] -> repeat(%d,%d)\n", re1, rlen, -1, -1);
+#endif
 		}
 
 		anchorbases = 0;
@@ -1376,8 +1397,14 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 				continue;
 
 			anchorbases += a->end - a->beg;
+#ifdef DEBUG_UMASK
+			printf("uniq [%d, %d] anchor: %d, cum %d\n",a->beg, a->end, a->end - a->beg, anchorbases);
+#endif
 		}
 
+#ifdef DEBUG_UMASK		
+		printf("update unique intervals based on trim track\n");
+#endif
 		// update unique intervals based on trim track
 		if (trim_beg > 0 || trim_end < rlen)
 		{
@@ -1413,6 +1440,9 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 				continue;
 
 			anchorbases += a->end - a->beg;
+#ifdef DEBUG_UMASK
+			printf("uniq [%d, %d] anchor: %d, cum %d\n",a->beg, a->end, a->end - a->beg, anchorbases);
+#endif
 		}
 
 		// update unique intervals based on low complexity and tandem repeat
@@ -1463,7 +1493,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 						checkFlanks += 100;
 				}
 			}
-#ifdef DEBUG_CHAIN
+#ifdef DEBUG_UMASK
 			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", read, a->beg, a->end, a->flag, predust,
 					a->beg - MAX(0, a->beg - WINDOW), predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg),
 					postdust, MIN(a->end + WINDOW, rlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, rlen) - a->end), predust + dust + postdust,
@@ -1641,7 +1671,7 @@ static void createUniqueMask(FilterContext *ctx, int read, int isAread)
 		}
 	}
 
-#ifdef DEBUG_CHAIN
+#ifdef DEBUG_UMASK
 	// report final unique anchors:
 	anchorbases = 0;
 	printf("#final anchors %d", read);
@@ -2071,17 +2101,22 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 	while (j < novl)
 	{
-
-		//printf("%d vs %d\n", ovl[j].aread, ovl[j].bread); 
+#ifdef CHAIN_DEBUG
+		printf("%d vs %d\n", ovl[j].aread, ovl[j].bread); 
+#endif
 		assert(k == j);
 
 		int nAnchorOvls = (ovl[j].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
-		//printf("---< nAnchorOvls: %d a(%d, %d) b(%d,%d) R? %d, T? %d\n", nAnchorOvls,ovl[j].path.abpos,ovl[j].path.aepos,ovl[j].path.bbpos,ovl[j].path.bepos, (ovl[j].flags & (OVL_REPEAT)), (ovl[j].flags & (OVL_TRIM)));
+#ifdef CHAIN_DEBUG
+		printf("---< nAnchorOvls: %d a(%d, %d) b(%d,%d) R? %d, T? %d\n", nAnchorOvls,ovl[j].path.abpos,ovl[j].path.aepos,ovl[j].path.bbpos,ovl[j].path.bepos, (ovl[j].flags & (OVL_REPEAT)), (ovl[j].flags & (OVL_TRIM)));
+#endif
 		while (k < novl - 1 && ovl[j].bread == ovl[k + 1].bread)
 		{
 			k++;
 			nAnchorOvls += (ovl[k].flags & (OVL_REPEAT | OVL_TRIM)) ? 0 : 1;
-			//printf("---< nAnchorOvls: %d a(%d, %d) b(%d,%d) R? %d, T? %d\n", nAnchorOvls, ovl[k].path.abpos,ovl[k].path.aepos,ovl[k].path.bbpos,ovl[k].path.bepos, (ovl[j].flags & (OVL_REPEAT)), (ovl[j].flags & (OVL_TRIM)));
+#ifdef CHAIN_DEBUG
+			printf("---< nAnchorOvls: %d a(%d, %d) b(%d,%d) R? %d, T? %d\n", nAnchorOvls, ovl[k].path.abpos,ovl[k].path.aepos,ovl[k].path.bbpos,ovl[k].path.bepos, (ovl[j].flags & (OVL_REPEAT)), (ovl[j].flags & (OVL_TRIM)));
+#endif
 		}
 #ifdef CHAIN_DEBUG
 		printf("AnchorOvls: %d k: %d vs %d j: %d vs %d REP: %d, TRIM: %d\n", nAnchorOvls, ovl[j].aread, ovl[j].bread, ovl[k].aread, ovl[k].bread, ovl[j].flags & (OVL_REPEAT), ovl[j].flags & (OVL_TRIM));
