@@ -156,7 +156,10 @@ function setOGbuildOptions()
     then
         TOUR_OGBUILD_OPT="${TOUR_OGBUILD_OPT} -s "
     fi
-    if [[ -n ${FIX_TOUR_OGBUILD_TRIM} && ${FIX_TOUR_OGBUILD_TRIM} -ne 0 ]]
+    if [[ ${FIX_TOUR_OGBUILD_TRIMNAME} ]]
+    then
+	TOUR_OGBUILD_OPT="${TOUR_OGBUILD_OPT} -t ${FIX_TOUR_OGBUILD_TRIMNAME}"
+    elif [[ -n ${FIX_TOUR_OGBUILD_TRIM} && ${FIX_TOUR_OGBUILD_TRIM} -ne 0 ]]
     then
         if [[ -z ${SCRUB_LAQ_OPT} ]]
         then 
@@ -230,7 +233,10 @@ function settour2fastaOptions()
     then
         TOUR_2FASTA_OPT="${TOUR_2FASTA_OPT} -s"
     fi
-    if [[ -n ${FIX_TOUR_2FASTA_TRIM} && ${FIX_TOUR_2FASTA_TRIM} -ne 0 ]]
+    if [[ ${FIX_TOUR_2FASTA_TRIMNAME} ]]
+    then
+        TOUR_2FASTA_OPT="${TOUR_2FASTA_OPT} -t ${FIX_TOUR_2FASTA_TRIMNAME}"
+    elif [[ -n ${FIX_TOUR_2FASTA_TRIM} && ${FIX_TOUR_2FASTA_TRIM} -ne 0 ]]
     then
         if [[ -z ${SCRUB_LAQ_OPT} ]]
         then 
