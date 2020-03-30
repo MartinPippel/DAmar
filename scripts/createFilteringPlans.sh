@@ -240,7 +240,7 @@ function setLAfilterOptions()
         FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -l ${FIX_FILT_LAFILTER_RLEN}"
     fi   
 
-    if [[ -n ${FIX_FILT_LAFILTER_DIF} && ${FIX_FILT_LAFILTER_DIF} -ne 0 ]]
+    if [[ -n ${FIX_FILT_LAFILTER_DIF} ]]
     then
         FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -d ${FIX_FILT_LAFILTER_DIF}"
     fi
@@ -278,7 +278,7 @@ function setLAfilterOptions()
     	FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -W ${FIX_FILT_LAFILTER_MAXREPEATMERGEWINDOW}"
     fi
                 
-    if [[ -n ${FIX_FILT_LAFILTER_EXCLUDEREADS} || -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
+    if [[ -n ${FIX_FILT_LAFILTER_EXCLUDEREADS} && ${FIX_FILT_LAFILTER_EXCLUDEREADS} -gt 0 ]] || [[ -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} && ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} -gt 0 ]]
     then
         if [[ -n ${FIX_SCRUB_LAGAP_DISCARD_CHIMERS} ]]
         then 
@@ -301,7 +301,7 @@ function setLAfilterOptions()
             ## if additional reads have to be excluded append them to final gapChimer file
             if [[ -n ${FIX_FILT_LAFILTER_EXCLUDEREADS} ]]
             then 
-                cat ${FIX_FILT_OUTDIR}/${FIX_FILT_LAFILTER_EXCLUDEREADS} >> ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${ptype}Gap.chimers.txt
+                cat ${FIX_FILT_LAFILTER_EXCLUDEREADS} >> ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${ptype}Gap.chimers.txt
             fi  
             FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -x ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.${ptype}Gap.chimers.txt"
         else
@@ -357,6 +357,11 @@ function setLAfilterOptions()
         then 
             exit 1
         fi
+    fi
+
+    if [[ -n ${FIX_FILT_LAFILTER_CHIMER} ]]
+    then 
+       FILT_LAFILTER_OPT="${FILT_LAFILTER_OPT} -c ${FIX_FILT_LAFILTER_CHIMER}"
     fi
 
     if [[ ${FIX_FILT_SCRUB_TYPE} -eq 1 ]]
@@ -645,9 +650,13 @@ then
             for x in $(seq 1 ${fixblocks})
             do 
                 addOpt=""
-                if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]]
+                if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]] || [[ -n ${FIX_FILT_LAFILTER_DISCARDFILEOUT} && ${FIX_FILT_LAFILTER_DISCARDFILEOUT} -ge 0 ]]
                 then
-                	addOpt=" -a ${FIX_FILT_OUTDIR}/discardOvlTipCov${FIX_FILT_LAFILTER_MINTIPCOV}.${x}.txt"
+                	addOpt=" -a ${FIX_FILT_OUTDIR}/discardOvl.${x}.txt"
+                fi		
+		if [[ -n ${FIX_FILT_LAFILTER_REMPERCWORSTALN} && ${FIX_FILT_LAFILTER_REMPERCWORSTALN} -gt 0 ]]
+                then
+                        addOpt="${addOpt} -Z ${FIX_FILT_LAFILTER_REMPERCWORSTALN}"
                 fi
                 
                 echo "${MARVEL_PATH}/bin/LAfilter${FILT_LAFILTER_OPT}${addOpt} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_ALN}/${FIX_DAZZ_DB%.db}.${FIX_FILT_ENDING}.${x}.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.${x}.las"
@@ -670,7 +679,16 @@ then
         ### find and set LAmerge options 
         setLAmergeOptions
         
-        echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.*.las" > filt_03_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan
+	if [[ -n ${FIX_FILT_LAFILTER_MINTIPCOV} && ${FIX_FILT_LAFILTER_MINTIPCOV} -ge 0 ]] || [[ -n ${FIX_FILT_LAFILTER_DISCARDFILEOUT} && ${FIX_FILT_LAFILTER_DISCARDFILEOUT} -ge 0 ]]
+        then
+		echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.async.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.*.las" 
+		echo "cat ${FIX_FILT_OUTDIR}/discardOvl.*.txt | awk '{if (\$1<\$2) print \$1\" \"\$2; else print \$2\" \"\$1}' | sort -k1,1n -k2,2n | uniq > ${FIX_FILT_OUTDIR}/discardOvl.sort.uniq.txt"
+		echo "${MARVEL_PATH}/bin/LAfilter -p -A ${FIX_FILT_OUTDIR}/discardOvl.sort.uniq.txt ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.async.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.sync.las"
+		echo "ln -s -f -r ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.sync.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las"
+		
+	else 
+        	echo "${MARVEL_PATH}/bin/LAmerge${FILT_LAMERGE_OPT} ${FIX_FILT_OUTDIR}/${FIX_DB%.db} ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.las ${FIX_FILT_OUTDIR}/${FIX_DB%.db}.filt.*.las" 
+	fi > filt_03_LAmerge_single_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > filt_03_LAmerge_single_${FIX_DB%.db}.${slurmID}.version             
     else
         (>&2 echo "step ${currentStep} in FIX_FILT_TYPE ${FIX_FILT_TYPE} not supported")
