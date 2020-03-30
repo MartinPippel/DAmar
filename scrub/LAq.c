@@ -84,6 +84,8 @@ typedef struct
     track_anno* trim_anno;
     track_data* trim_data;
     track_anno tcur;
+
+    int CCS_READ;
 } AnnotateContext;
 
 // for getopt()
@@ -138,7 +140,7 @@ static int trim_q_offsets(AnnotateContext* actx, int rid, int rlen, track_data* 
     {
         track_data q = dataq[wnd_left];
 
-        if (q >= trim_q || q == 0)
+        if (q >= trim_q || (!actx->CCS_READ && q == 0))
         {
             // printf("reset left\n");
 
@@ -165,7 +167,7 @@ static int trim_q_offsets(AnnotateContext* actx, int rid, int rlen, track_data* 
     {
         track_data q = dataq[wnd_right - 1];
 
-        if (q >= trim_q || q == 0)
+        if (q >= trim_q || (!actx->CCS_READ && q == 0))
         {
             // printf("reset right q %d oe %llu wnd_right %llu\n", q, oe, wnd_right);
 
@@ -384,7 +386,10 @@ static int handler_annotate(void* _ctx, Overlap* ovls, int novl)
 
         if (count < segmin)
         {
-            q = 0;
+        		if (ctx->CCS_READ)
+        			q = 25;		// set to a very high value
+        		else
+        			q = 0;
         }
         else
         {
@@ -540,7 +545,7 @@ static int handler_update_anno(void* _ctx, Overlap* ovls, int novl)
 
 static void usage()
 {
-    fprintf(stderr, "[-u] [-mbdsS <int>] [-L <file>] [-tT <track>] <db> <overlaps>\n");
+    fprintf(stderr, "[-uc] [-mbdsS <int>] [-L <file>] [-tT <track>] <db> <overlaps>\n");
     fprintf(stderr, "options: -b ... track block number\n");
     fprintf(stderr, "         -d ... trim with Q cutoff (diff: %d)\n", DEF_ARG_D);
 
@@ -558,6 +563,8 @@ static void usage()
     fprintf(stderr, "         -q ... input q track (%s)\n", DEF_ARG_Q);
     fprintf(stderr, "         -Q ... output q track (%s)\n", DEF_ARG_Q);
 
+    fprintf(stderr, "\nEXPERIMENTAL\n");
+    fprintf(stderr, "         -c ... CCS- or HiFI-reads: allow quality values of 0!\n");
 }
 
 int main(int argc, char* argv[])
@@ -588,7 +595,7 @@ int main(int argc, char* argv[])
     actx.track_q_out = DEF_ARG_Q;
 
     int c;
-    while ((c = getopt(argc, argv, "s:S:o:ub:d:L:t:T:q:Q:")) != -1)
+    while ((c = getopt(argc, argv, "s:S:o:ub:d:L:t:T:q:Q:c")) != -1)
     {
         switch (c)
         {
@@ -634,6 +641,10 @@ int main(int argc, char* argv[])
 
             case 'Q':
                       actx.track_q_out = optarg;
+                      break;
+
+            case 'c':
+                      actx.CCS_READ = 1;
                       break;
 
             default:
