@@ -22,7 +22,7 @@ source ${configFile}
 
 if [[ ${currentPhase} -eq -2 ]]
 then	 
-	${SUBMIT_SCRIPTS_PATH}/createQCandStatsPlans.sh ${configFile} ${currentStep} ${slurmID}
+    ${SUBMIT_SCRIPTS_PATH}/createQCandStatsPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
     then 
         (>&2 echo "createQCandStatsPlans.sh failed some how. Stop here.")
