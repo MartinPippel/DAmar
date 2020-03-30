@@ -572,7 +572,7 @@ then
 			then
 				first=0 
 				echo "${MARVEL_PATH}/bin/FA2db -x0 -c path -c ends -c length -c rreads -c preads -c creads ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB} ${x}"
-				echo "${MARVEL_PATH}/bin/DBsplit ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB}"
+				echo "${MARVEL_PATH}/bin/DBsplit -s5 ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB}"
 			else
 				echo "${MARVEL_PATH}/bin/FA2db -x0 -c path -c ends -c length -c rreads -c preads -c creads ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DB} ${x}"				
 			fi				
@@ -594,7 +594,7 @@ then
 	        then
 	        	first=0
 				echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/$(basename ${x%.fasta})_dazzler.fasta"
-				echo "${DAZZLER_PATH}/bin/DBsplit ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB}"	        		
+				echo "${DAZZLER_PATH}/bin/DBsplit -s5 ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB}"	        		
 	        else
 	        	echo "${DAZZLER_PATH}/bin/fasta2DB -v ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/${CONT_DAZZ_DB} ${FIX_FILT_OUTDIR}/${ANALYZE_DIR}/correctedContigs_dazzler/$(basename ${x%.fasta})_dazzler.fasta"
 	        fi              
