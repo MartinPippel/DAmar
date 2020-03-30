@@ -216,8 +216,11 @@ function setTourToFastaOptions()
     then
         COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -s"
     fi
-    
-    if [[ -n ${FIX_CORR_2FASTA_TRIM} ]]
+   
+    if [[ -n ${FIX_CORR_2FASTA_TRIMNAME} ]]
+    then
+	COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t ${FIX_CORR_2FASTA_TRIMNAME}"
+    elif [[ -n ${FIX_CORR_2FASTA_TRIM} ]]
     then 
     	COR_TOURTOFASTA_OPT="${COR_TOURTOFASTA_OPT} -t ${FIX_CORR_2FASTA_TRIM}"
 	else
