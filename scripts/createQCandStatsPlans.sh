@@ -257,8 +257,13 @@ then
 	   		
 	   		# set default minimum fasta record size
 	   		MINSIZE=500
-	   		
-	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID}_supernova --sample ${PROJECT_ID} --fastqs=${TENX_PATH} --maxreads='all'"
+ 			addOpt=""
+			if [[ -n ${THREADS_supernova} ]]
+		        then 
+			    addOpt="${addOpt} --localcores ${THREADS_supernova}"
+			fi
+	
+	   		echo "${SUPERNOVA_PATH}/supernova run --id=10x_${PROJECT_ID}_supernova --sample ${PROJECT_ID} --fastqs=${TENX_PATH} --maxreads='all' ${addOpt}"
 	   		echo "${SUPERNOVA_PATH}/supernova mkoutput --asmdir=10x_${PROJECT_ID}_supernova/outs/assembly --outprefix=10x_${PROJECT_ID}_supernova_megabubbles --style=megabubbles --minsize=${MINSIZE}"
 	   		echo "${SUPERNOVA_PATH}/supernova mkoutput --asmdir=10x_${PROJECT_ID}_supernova/outs/assembly --outprefix=10x_${PROJECT_ID}_supernova_pseudohap --style=pseudohap --minsize=${MINSIZE}"
 	   		echo "${SUPERNOVA_PATH}/supernova mkoutput --asmdir=10x_${PROJECT_ID}_supernova/outs/assembly --outprefix=10x_${PROJECT_ID}_supernova_pseudohap2 --style=pseudohap2 --minsize=${MINSIZE}"
@@ -282,8 +287,13 @@ then
         do            
             rm $x
         done
-        
-    	longrangerOut="10x_${PROJECT_ID}_longrangerBasic/outs/barcoded.fastq.gz"
+       
+        if [[ -n "${RAW_QC_LONGRANGERBASIC_PATH}" && -f "${RAW_QC_LONGRANGERBASIC_PATH}" ]]
+	then 
+		longrangerOut="${RAW_QC_LONGRANGERBASIC_PATH}"
+	else 
+    		longrangerOut="10x_${PROJECT_ID}_longrangerBasic/outs/barcoded.fastq.gz"
+	fi
         
         if [[ ! -f ${longrangerOut} ]]
         then 
@@ -613,13 +623,13 @@ then
     	slurmOpt=""
     	if [[ ${SLURM_PARTITION} == "gpu" ]]
     	then
-    		slurmOpt="--jobmode=slurmGPU --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight"
+    		slurmOpt="--jobmode=slurm_gpu --localcores=38 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight"
     	elif [[ ${SLURM_PARTITION} == "long" ||  ${SLURM_PARTITION} == "batch" ]]
     	then
-    		slurmOpt="--jobmode=slurmBATCH --localcores=24 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight"
+    		slurmOpt="--jobmode=slurm_long --localcores=24 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight"
     	elif [[ ${SLURM_PARTITION} == "bigmem" ]]
     	then
-    		slurmOpt="--jobmode=slurmBIGMEM --localcores=48 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight"
+    		slurmOpt="--jobmode=slurm_bigmem --localcores=48 --localmem=128 --maxjobs=1000 --jobinterval=5000 --disable-ui --nopreflight"
     	else
     		(>&2 echo "ERROR - SLUM PARTITION: ${SLURM_PARTITION} not supported!")
         	exit 1
