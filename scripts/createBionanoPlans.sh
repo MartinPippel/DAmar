@@ -41,7 +41,7 @@ function setBionanoOptions()
 		
 		if [[ -z ${SC_BIONANO_CONFLICTLEVEL_GENOMEMAPS} ]]
 		then
-			(>&2 echo "[WARNING] - Variable SC_BIONANO_CONFLICTLEVEL_GENOMEMAPS not set. Use 2, i.e. cut cmap at conflict!!")
+
 			SC_BIONANO_CONFLICTLEVEL_GENOMEMAPS=2
 		fi
 		
@@ -57,7 +57,7 @@ function setBionanoOptions()
 		then 
 			(>&2 echo "[WARNING] - To align molecules to hybrid scaffolds (-x) and to generate a chimeric quality score all of the following variables have to be set properly:")
 			(>&2 echo "            SC_BIONANO_MOLECULES_1, SC_BIONANO_ASSEMBLY_1, SC_BIONANO_ASSEMBLYSCRIPT_1, SC_BIONANO_ASSEMBLYOPTARGS_1, SC_BIONANO_ASSEMBLY_NOISE_1")
-		elif [[ ! -f "${SC_BIONANO_MOLECULES_1}" || ! -f "${SC_BIONANO_ASSEMBLY_1}" || ! -d "${SC_BIONANO_ASSEMBLYSCRIPT_1}" || ! -f "${SC_BIONANO_ASSEMBLYOPTARGS_1}" || ! -f "${SC_BIONANO_ASSEMBLY_NOISE_1}" ]]
+		elif [[ ! -f "${SC_BIONANO_MOLECULES_1}" || ! -f "${SC_BIONANO_ASSEMBLY_1}" || ! -f "${SC_BIONANO_ASSEMBLYSCRIPT_1}" || ! -f "${SC_BIONANO_ASSEMBLYOPTARGS_1}" || ! -f "${SC_BIONANO_ASSEMBLY_NOISE_1}" ]]
 		then 
 			(>&2 echo "[WARNING] - To align molecules to hybrid scaffolds (-x) and to generate a chimeric quality score all of the following variables have to be set properly:")
 			(>&2 echo "            SC_BIONANO_MOLECULES_1, SC_BIONANO_ASSEMBLY_1, SC_BIONANO_ASSEMBLYSCRIPT_1, SC_BIONANO_ASSEMBLYOPTARGS_1, SC_BIONANO_ASSEMBLY_NOISE_1")
@@ -179,10 +179,10 @@ then
    			# set output directory
    			OUT="${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/out"
    			# set refaligner path 
-   			REFALN=$(find ${BIONANO_PATH}/RefAligner/*/avx -name "RefAligner")
+   			REFALN=$(find ${BIONANO_PATH}/RefAligner/1.0/avx -name "RefAligner")
    			if [[ $(echo -e "${REFALN}" | wc -l ) -ne 1 ]]
    			then
-   				(>&2 echo "ERROR - Cannot find RefAligner binary. Should be here: ${BIONANO_PATH}/RefAligner/*/avx/RefAligner")
+   				(>&2 echo "ERROR - Cannot find RefAligner binary. Should be here: ${BIONANO_PATH}/RefAligner/1.0/avx/RefAligner")
         		exit 1
    			fi
    			
@@ -227,10 +227,10 @@ then
 				HYB_CONF=${SC_BIONANO_OUTDIR}/bionano_${SC_BIONANO_RUNID}/config/hybridScaffold_BSSSI_config.xml				   				
    			fi >> bionano_01_BNscaffold_single_${CONT_DB}.${slurmID}.plan
    			# set refaligner path 
-   			REFALN=$(find ${BIONANO_PATH}/RefAligner/*/avx -name "RefAligner")
+   			REFALN=$(find ${BIONANO_PATH}/RefAligner/1.0/avx -name "RefAligner")
    			if [[ $(echo -e "${REFALN}" | wc -l ) -ne 1 ]]
    			then
-   				(>&2 echo "ERROR - Cannot find RefAligner binary. Should be here: ${BIONANO_PATH}/RefAligner/*/avx/RefAligner")
+   				(>&2 echo "ERROR - Cannot find RefAligner binary. Should be here: ${BIONANO_PATH}/RefAligner/1.0/avx/RefAligner")
         		exit 1
    			fi 
    			# set output directory
