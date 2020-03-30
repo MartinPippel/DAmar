@@ -1071,7 +1071,7 @@ then
     		# normalization - (matrix balancing)
         	echo "HDF5_USE_FILE_LOCKING=FALSE cooler balance ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${i}.cool"
         	# aggregation - (for HiGlass view)
-        	echo "HDF5_USE_FILE_LOCKING=FALSE cooler zoomify ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${i}.cool"
+        	echo "HDF5_USE_FILE_LOCKING=FALSE cooler zoomify --resolutions 10000,20000,40000,60000,80000,100000,120000,150000,200000,300000,400000,500000 ${SC_HIC_OUTDIR}/hic_${SC_HIC_RUNID}/matrix/${PROJECT_ID}_allHiC.output.${i}.cool"
     	done > hic_04_HiChiglassMatrix_single_${CONT_DB}.${slurmID}.plan
 	else	
     	(>&2 echo "step ${currentStep} in SC_HIC_TYPE ${SC_HIC_TYPE} not supported")
