@@ -458,6 +458,10 @@ function setLAqOptions()
             SCRUB_LAQ_OPT="${SCRUB_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
         fi
     fi
+    if [[ -n ${FIX_SCRUB_LAQ_CCS} && ${FIX_SCRUB_LAQ_CCS} -gt 0 ]]
+    then 
+	SCRUB_LAQ_OPT="${SCRUB_LAQ_OPT} -c"
+    fi
 }
 
 function setLAgapOptions()
