@@ -458,6 +458,7 @@ int main(int argc, char* argv[])
 	// track_close(track);
 
 	Close_DB(&db);
-
+	free(tsum);
+	free(hist);
 	return 0;
 }
