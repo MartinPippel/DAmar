@@ -58,6 +58,8 @@
 #define ANCHOR_TRIM 		(1 << 1)
 #define ANCHOR_LOWCOMP 	(1 << 2)
 
+#define DEBUG_CHIMER
+
 typedef struct
 {
 
@@ -163,6 +165,8 @@ typedef struct
 	int mergeRepeatsMaxLen;
 
 	int maxSegmentErrorRate;
+	int chimerCoverage;
+	int chimerAnchorBases;
 } FilterContext;
 
 extern char* optarg;
@@ -339,7 +343,7 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 		}
 	}
 
-	if(rmFlag & REMOVE_CONT_OVL)
+	if (rmFlag & REMOVE_CONT_OVL)
 	{
 		int j, k, l, m;
 		j = k = 0;
@@ -352,50 +356,48 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 			}
 
 			int num = k - j + 1;
-			if(num > 1)
+			if (num > 1)
 			{
-				for(l=j; l<=k; l++)
+				for (l = j; l <= k; l++)
 				{
 					Overlap *o1 = ovls + l;
-					if(o1->flags & OVL_DISCARD)
+					if (o1->flags & OVL_DISCARD)
 						continue;
 
-					if(o1->aread == o1->bread && o1->path.abpos == o1->path.bbpos && o1->path.aepos == o1->path.bepos)
+					if (o1->aread == o1->bread && o1->path.abpos == o1->path.bbpos && o1->path.aepos == o1->path.bepos)
 					{
 						o1->flags |= (OVL_DISCARD | OVL_CONT);
 						fctx->nFilteredContainedOvls++;
-						if(fctx->nVerbose)
+						if (fctx->nVerbose)
 						{
 							printf("found contained OVL: %d vs %d a[%d,%d] equals b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, o1->path.bbpos, o1->path.bepos);
 						}
 						continue;
 					}
 
-					for(m=l+1; m<=k; m++)
+					for (m = l + 1; m <= k; m++)
 					{
 						Overlap *o2 = ovls + m;
-						if(o2->flags & OVL_DISCARD)
+						if (o2->flags & OVL_DISCARD)
 							continue;
 
-						int RM=0;
-						if(ovls[j].aread != ovls[j].bread) // ignore identity overlaps, as they can be removed with another -R option
+						int RM = 0;
+						if (ovls[j].aread != ovls[j].bread) // ignore identity overlaps, as they can be removed with another -R option
 						{
-							RM=(contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) &&
-									contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos));
+							RM = (contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) && contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos));
 						}
 						else // identity overlaps, remove duplicates
 						{
-							RM=(duplicated(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) &&
-									duplicated(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos));
+							RM = (duplicated(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) && duplicated(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos));
 						}
 
-						if(RM)
+						if (RM)
 						{
 							o2->flags |= (OVL_DISCARD | OVL_CONT);
 							fctx->nFilteredContainedOvls++;
-							if(fctx->nVerbose)
+							if (fctx->nVerbose)
 							{
-								printf("found contained OVL: %d vs %d a[%d,%d] b[%d,%d] in a[%d,%d] b[%d,%d]\n", o2->aread, o2->bread, o2->path.abpos, o2->path.aepos, o2->path.bbpos, o2->path.bepos, o1->path.abpos, o1->path.aepos,o1->path.bbpos, o1->path.bepos);
+								printf("found contained OVL: %d vs %d a[%d,%d] b[%d,%d] in a[%d,%d] b[%d,%d]\n", o2->aread, o2->bread, o2->path.abpos, o2->path.aepos, o2->path.bbpos, o2->path.bepos, o1->path.abpos, o1->path.aepos, o1->path.bbpos, o1->path.bepos);
 							}
 						}
 					}
@@ -404,11 +406,11 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 			else
 			{
 				// remove self alignments with exact same start and end coordinates
-				if(ovls[j].aread == ovls[j].bread && ovls[j].path.abpos == ovls[j].path.bbpos && ovls[j].path.aepos == ovls[j].path.bepos)
+				if (ovls[j].aread == ovls[j].bread && ovls[j].path.abpos == ovls[j].path.bbpos && ovls[j].path.aepos == ovls[j].path.bepos)
 				{
 					ovls[j].flags |= (OVL_DISCARD | OVL_CONT);
 					fctx->nFilteredContainedOvls++;
-					if(fctx->nVerbose)
+					if (fctx->nVerbose)
 					{
 						printf("found contained OVL: %d vs %d a[%d,%d] equals b[%d,%d]\n", ovls[j].aread, ovls[j].bread, ovls[j].path.abpos, ovls[j].path.aepos, ovls[j].path.bbpos, ovls[j].path.bepos);
 					}
@@ -421,49 +423,49 @@ static void removeOvls(FilterContext *fctx, Overlap* ovls, int novls, int rmFlag
 
 static void trimOffLeadingIndels(Overlap *ovl, ovl_header_twidth twidth)
 {
-    ovl_trace* trace = ovl->path.trace;
+	ovl_trace* trace = ovl->path.trace;
 
-    int trim_a_left, trim_a_right;
-    int tlen = ovl->path.tlen;
+	int trim_a_left, trim_a_right;
+	int tlen = ovl->path.tlen;
 
-    trim_a_left = trim_a_right = -1;
+	trim_a_left = trim_a_right = -1;
 
-    int begSegA=(ovl->path.abpos == 0) ? ovl->path.abpos : (((ovl->path.abpos-1)/twidth+1)*twidth)-ovl->path.abpos; 
-    int endSegA=ovl->path.aepos-((((ovl->path.aepos)/twidth))*twidth);
+	int begSegA = (ovl->path.abpos == 0) ? ovl->path.abpos : (((ovl->path.abpos - 1) / twidth + 1) * twidth) - ovl->path.abpos;
+	int endSegA = ovl->path.aepos - ((((ovl->path.aepos) / twidth)) * twidth);
 
-    //printf("%d vs %d a[%d, %d] b[%d,%d] aseg %d, %d\n",ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos,begSegA, endSegA);
-    // check first segment
-    if((trace[0] == trace[1] && trace[0] == begSegA) || (trace[0]>0 && trace[1]==0))
-    {
-	printf("trace[0] %d == trace[1] %d\n", trace[0], trace[1]);
-    	trim_a_left = (((ovl->path.abpos)/twidth)+1)*twidth;
-    }
+	//printf("%d vs %d a[%d, %d] b[%d,%d] aseg %d, %d\n",ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos,begSegA, endSegA);
+	// check first segment
+	if ((trace[0] == trace[1] && trace[0] == begSegA) || (trace[0] > 0 && trace[1] == 0))
+	{
+		printf("trace[0] %d == trace[1] %d\n", trace[0], trace[1]);
+		trim_a_left = (((ovl->path.abpos) / twidth) + 1) * twidth;
+	}
 
-    // check last segment
-    if((trace[tlen - 2] == trace[tlen - 1] && trace[tlen - 2] == endSegA) || (trace[tlen-2]>2 && trace[tlen-1]==0))
-    {
-	printf("trace[tlen - 2] %d == trace[tlen - 1] %d\n", trace[tlen - 2], trace[tlen - 1]);
-    	trim_a_right = (((ovl->path.aepos)/twidth))*twidth;
-    }
+	// check last segment
+	if ((trace[tlen - 2] == trace[tlen - 1] && trace[tlen - 2] == endSegA) || (trace[tlen - 2] > 2 && trace[tlen - 1] == 0))
+	{
+		printf("trace[tlen - 2] %d == trace[tlen - 1] %d\n", trace[tlen - 2], trace[tlen - 1]);
+		trim_a_right = (((ovl->path.aepos) / twidth)) * twidth;
+	}
 
-    if (trim_a_left > -1)
-    {
-        printf("trimBeg: %d vs %d a[%d,%d -> %d,%d] b[%d,%d -> %d,%d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, trim_a_left, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, ovl->path.bbpos + trace[0], ovl->path.bepos);
-        ovl->path.abpos = trim_a_left;
-        ovl->path.bbpos += trace[0];
-        trace += 2;
-	tlen -=2;
-	ovl->path.tlen = tlen;
-	ovl->path.trace = trace;
-    }
+	if (trim_a_left > -1)
+	{
+		printf("trimBeg: %d vs %d a[%d,%d -> %d,%d] b[%d,%d -> %d,%d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, trim_a_left, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos, ovl->path.bbpos + trace[0], ovl->path.bepos);
+		ovl->path.abpos = trim_a_left;
+		ovl->path.bbpos += trace[0];
+		trace += 2;
+		tlen -= 2;
+		ovl->path.tlen = tlen;
+		ovl->path.trace = trace;
+	}
 
-    if (trim_a_right > -1)
-    {
-        printf("trimEnd: %d vs %d a[%d,%d -> %d,%d] b[%d,%d -> %d,%d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, ovl->path.abpos, trim_a_right, ovl->path.bbpos, ovl->path.bepos, ovl->path.bbpos, ovl->path.bepos - trace[tlen - 2]);
-	ovl->path.aepos = trim_a_right;
-	ovl->path.bepos -= trace[tlen - 2];
-	ovl->path.tlen	-= 2;
-    }
+	if (trim_a_right > -1)
+	{
+		printf("trimEnd: %d vs %d a[%d,%d -> %d,%d] b[%d,%d -> %d,%d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, ovl->path.abpos, trim_a_right, ovl->path.bbpos, ovl->path.bepos, ovl->path.bbpos, ovl->path.bepos - trace[tlen - 2]);
+		ovl->path.aepos = trim_a_right;
+		ovl->path.bepos -= trace[tlen - 2];
+		ovl->path.tlen -= 2;
+	}
 }
 
 static int filterMaxSegmentErrorRate(Overlap *ovl, int maxSegmentErrorRate)
@@ -471,19 +473,19 @@ static int filterMaxSegmentErrorRate(Overlap *ovl, int maxSegmentErrorRate)
 	ovl_trace* trace = ovl->path.trace;
 	int tlen = ovl->path.tlen;
 
-//	printf("o[%d, %d] %c a[%d, %d] b[%d, %d]", ovl->aread, ovl->bread, ovl->flags & OVL_COMP ? 'C' : 'N', ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos);
+	//	printf("o[%d, %d] %c a[%d, %d] b[%d, %d]", ovl->aread, ovl->bread, ovl->flags & OVL_COMP ? 'C' : 'N', ovl->path.abpos, ovl->path.aepos, ovl->path.bbpos, ovl->path.bepos);
 	int i;
 	for (i = 0; i < tlen - 2; i += 2)
 	{
 		// ignore substitutions for now // TODO
-		if((trace[i])*100.0/(trace[i+1]) > maxSegmentErrorRate)
+		if ((trace[i]) * 100.0 / (trace[i + 1]) > maxSegmentErrorRate)
 		{
 			ovl->flags |= (OVL_DISCARD | OVL_DIFF);
-//			printf(" (%3d %3d) erate: %f DISCARD\n", trace[i], trace[i+1], (trace[i])*100.0/(trace[i+1]));
+			//			printf(" (%3d %3d) erate: %f DISCARD\n", trace[i], trace[i+1], (trace[i])*100.0/(trace[i+1]));
 			return 1;
 		}
 	}
-//	printf("\n");
+	//	printf("\n");
 	return 0;
 }
 
@@ -1313,26 +1315,20 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 
 		if (ctx->discardedAreadList[a])
 		{
-			int discard = 0;
 			int j;
 			for (j = 0; ctx->discardedAreadList[a][j] > -1; j++)
 			{
 				if (ctx->discardedAreadList[a][j] == b)
 				{
-					discard = 1;
+					ret |= OVL_DISCARD | OVL_SYMDISCARD;
+					ctx->nSymDiscard++;
+
+					if (ctx->nVerbose)
+					{
+						printf("overlap (%d x %d): in list of discarded overlaps\n", ovl->aread, ovl->bread);
+					}
 					break;
 				}
-			}
-			if (discard)
-			{
-				ret |= OVL_DISCARD | OVL_SYMDISCARD;
-				ctx->nSymDiscard++;
-
-				if (ctx->nVerbose)
-				{
-					printf("overlap (%d x %d): in list of discarded overlaps\n", ovl->aread, ovl->bread);
-				}
-
 			}
 		}
 	}
@@ -1356,13 +1352,11 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 
 	if (ctx->nMaxUnalignedBases != -1)
 	{
-		if (((ovl->path.abpos - trim_ab) > ctx->nMaxUnalignedBases && (ovl->path.bbpos - trim_bb) > ctx->nMaxUnalignedBases)
-				|| ((trim_ae - ovl->path.aepos) > ctx->nMaxUnalignedBases && (trim_be - ovl->path.bepos) > ctx->nMaxUnalignedBases))
+		if (((ovl->path.abpos - trim_ab) > ctx->nMaxUnalignedBases && (ovl->path.bbpos - trim_bb) > ctx->nMaxUnalignedBases) || ((trim_ae - ovl->path.aepos) > ctx->nMaxUnalignedBases && (trim_be - ovl->path.bepos) > ctx->nMaxUnalignedBases))
 		{
 			if (ctx->nVerbose)
 			{
-				printf("overlap %d -> %d: drop due to unaligned overhang [%d, %d -> trim %d, %d], [%d, %d -> trim %d, %d]\n", ovl->aread, ovl->bread, ovl->path.abpos,
-						ovl->path.aepos, trim_ab, trim_ae, ovl->path.bbpos, ovl->path.bepos, trim_bb, trim_be);
+				printf("overlap %d -> %d: drop due to unaligned overhang [%d, %d -> trim %d, %d], [%d, %d -> trim %d, %d]\n", ovl->aread, ovl->bread, ovl->path.abpos, ovl->path.aepos, trim_ab, trim_ae, ovl->path.bbpos, ovl->path.bepos, trim_bb, trim_be);
 			}
 
 			ctx->nFilteredUnalignedBases++;
@@ -1383,12 +1377,6 @@ static int filter(FilterContext* ctx, Overlap* ovl)
 			ctx->nFilteredDiffs++;
 
 			ret |= OVL_DISCARD | OVL_DIFF;
-
-			if (ctx->fileOutDiscardedOverlaps)
-			{
-				fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", ovl->aread, ovl->bread);
-			}
-
 		}
 	}
 
@@ -1881,6 +1869,174 @@ static int cmp_ovls_qual(const void* a, const void* b)
 	return ((100 - (o1->path.diffs * 100.0 / (o1->path.aepos - o1->path.abpos))) * 10 - (100 - (o2->path.diffs * 100.0 / (o2->path.aepos - o2->path.abpos))) * 10);
 }
 
+static void removeChimerOvls(FilterContext* ctx, Overlap *ovl, int novl)
+{
+#ifdef DEBUG_CHIMER
+	printf("CHIMER: a[%d] minCov %d minAnchor: %d\n", ovl->aread, ctx->chimerCoverage, ctx->chimerAnchorBases);
+#endif
+
+	int trimABeg = 0;
+	int trimAEnd = DB_READ_LEN(ctx->db, ovl->aread);
+
+	if (ctx->trackTrim)
+		get_trim(ctx->db, ctx->trackTrim, ovl->aread, &trimABeg, &trimAEnd);
+
+	int i, j;
+	if (novl < ctx->chimerCoverage)
+	{
+#ifdef DEBUG_CHIMER
+		printf("CHIMER: a[%d] has less then chimerCoverage (%d) overlaps (%d)\n", ovl->aread, ctx->chimerCoverage, novl);
+#endif
+		for (i = 0; i < novl; i++)
+		{
+			ovl[i].flags |= OVL_DISCARD;
+#ifdef DEBUG_CHIMER
+			printf("CHIMER: discard %d vs %d a[%d, %d] %c b[%d, %d]\n", ovl[i].aread, ovl[i].bread, ovl[i].path.abpos, ovl[i].path.aepos, (ovl[i].flags & OVL_COMP) ? 'c' : 'n', ovl[i].path.bbpos, ovl[i].path.bepos);
+#endif
+		}
+	}
+
+	// check if trim interval fits to alignments
+	i = j = 0;
+	int left = trimAEnd;
+	int right = trimABeg;
+
+	int numMostLeftLAS = 0;
+	int numMostRightLAS = 0;
+
+	while (i < novl)
+	{
+		if (!(ovl[i].flags & OVL_DISCARD))
+		{
+			if (ovl[i].path.abpos < left)
+			{
+				left = ovl[i].path.abpos;
+				j = i;
+				numMostLeftLAS = 1;
+			}
+			else if (ovl[i].path.abpos == left)
+			{
+				if (ovl[i].path.aepos > ovl[j].path.aepos)
+					j = i;
+				numMostLeftLAS++;
+			}
+
+			if (ovl[i].path.aepos > right)
+			{
+				right = ovl[i].path.aepos;
+				numMostRightLAS = 1;
+			}
+			else if (ovl[i].path.aepos == right)
+			{
+				numMostRightLAS++;
+			}
+		}
+
+		i++;
+	}
+
+	if (left == trimAEnd)
+	{
+#ifdef DEBUG_CHIMER
+		printf("CHIMER: Nothing todo all reads already discarded OR trim track does not correspond to LAS file\n");
+#endif
+		return;
+	}
+
+	if(numMostLeftLAS < ctx->chimerCoverage || numMostRightLAS < ctx->chimerCoverage)
+	{
+#ifdef DEBUG_CHIMER
+		printf("CHIMER: Number of entering/leaving overlaps of trim interval is lower than non-chimeric minimum number of overlaps L(%d) || R (%d) < %d\n", numMostLeftLAS, numMostRightLAS, ctx->chimerCoverage);
+#endif
+		for (i = 0; i < novl; i++)
+				{
+					ovl[i].flags |= OVL_DISCARD;
+		#ifdef DEBUG_CHIMER
+					printf("CHIMER: discard %d vs %d a[%d, %d] %c b[%d, %d]\n", ovl[i].aread, ovl[i].bread, ovl[i].path.abpos, ovl[i].path.aepos, (ovl[i].flags & OVL_COMP) ? 'c' : 'n', ovl[i].path.bbpos, ovl[i].path.bepos);
+		#endif
+				}
+		return;
+	}
+
+	Overlap * o1 = ovl + j;
+	Overlap * o3 = ovl + j;
+
+	while (o1->path.aepos < right)
+	{
+		int curCov = 0;
+
+		for (i = 0; i < novl; i++)
+		{
+			Overlap * o2 = ovl + i;
+
+			if (o2->flags == OVL_DISCARD)
+				continue;
+
+#ifdef DEBUG_CHIMER
+			printf("CHIMER: check position [%d] curCov [%d] ovl b%d a[%d, %d] %c b[%d, %d]\n", o1->path.aepos, curCov, o2->bread, o2->path.abpos, o2->path.aepos, (o2->flags & OVL_COMP) ? 'c' : 'n', o2->path.bbpos, o2->path.bepos);
+#endif
+
+			if (o1->path.aepos == right)
+			{
+#ifdef DEBUG_CHIMER
+				printf("CHIMER: skip trimAEnd position a[%d, %d] %c b[%d, %d]\n", o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
+#endif
+				curCov = ctx->chimerCoverage;
+				break;
+			}
+
+			if (o1->path.aepos == right)
+			{
+#ifdef DEBUG_CHIMER
+				printf("CHIMER: found fully spanning B-read %d. Skip chimer detection! a[%d, %d] %c b[%d, %d]\n", o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
+#endif
+				curCov = ctx->chimerCoverage;
+				break;
+			}
+
+			if (o2->path.abpos <= o1->path.aepos - MIN(ctx->chimerAnchorBases, o1->path.aepos - left) && o2->path.aepos >= o1->path.aepos + MIN(ctx->chimerAnchorBases, right - o1->path.aepos))
+			{
+				curCov++;
+#ifdef DEBUG_CHIMER
+				printf("CHIMER: anchorCov %d (a[%d, %d] %c b[%d, %d])\n", curCov, o2->path.abpos, o2->path.aepos, (o2->flags & OVL_COMP) ? 'c' : 'n', o2->path.bbpos, o2->path.bepos);
+#endif
+				if (o2->path.aepos > o3->path.aepos)
+				{
+#ifdef DEBUG_CHIMER
+					printf("CHIMER: mark overlap with largest aepos!  a[%d, %d] %c b[%d, %d]\n", o2->path.abpos, o2->path.aepos, (o2->flags & OVL_COMP) ? 'c' : 'n', o2->path.bbpos, o2->path.bepos);
+#endif
+					o3 = o2;
+				}
+			}
+
+			if (curCov >= ctx->chimerCoverage)
+			{
+#ifdef DEBUG_CHIMER
+				printf("CHIMER: No chimer at %d anchorCov %d\n", o1->path.aepos, curCov);
+#endif
+				curCov = 0;
+				o1 = o3;
+			}
+		}
+
+		if (curCov < ctx->chimerCoverage)
+		{
+#ifdef DEBUG_CHIMER
+			printf("CHIMER: found chimer at position %d. Remove all overlaps.\n", o1->path.aepos);
+#endif
+			for (i = 0; i < novl; i++)
+			{
+				ovl[i].flags |= OVL_DISCARD;
+#ifdef DEBUG_CHIMER
+				printf("CHIMER: discard %d vs %d a[%d, %d] %c b[%d, %d]\n", ovl[i].aread, ovl[i].bread, ovl[i].path.abpos, ovl[i].path.aepos, (ovl[i].flags & OVL_COMP) ? 'c' : 'n', ovl[i].path.bbpos, ovl[i].path.bepos);
+#endif
+			}
+			break;
+		}
+	}
+
+}
+
 static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 {
 	int i;
@@ -1947,33 +2103,24 @@ static void removeWorstAlignments(FilterContext* ctx, Overlap* ovl, int novl)
 
 		removeAlnBases += so->path.aepos - so->path.abpos;
 
-		if (removeAlnBases * 100.0 / cumOverallBases < MaxRemovedAlnBasesPerc && numIncomingReads - numRemovedIncomingReads >= MinTipCov
-				&& numLeavingReads - numRemovedLeavingReads >= MinTipCov)
+		if (removeAlnBases * 100.0 / cumOverallBases < MaxRemovedAlnBasesPerc && numIncomingReads - numRemovedIncomingReads >= MinTipCov && numLeavingReads - numRemovedLeavingReads >= MinTipCov)
 		{
-			if (ctx->fileOutDiscardedOverlaps)
-			{
-				fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", so->aread, so->bread);
-			}
-
 			so->flags |= OVL_DISCARD | OVL_DIFF;
 			ctx->nFilteredDiffs += 1;
 			if (ctx->nVerbose)
-				printf("DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread, so->path.abpos,
-						so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
+				printf("DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread, so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
 		}
 		else
 		{
 			if (ctx->nVerbose)
-				printf("DO NOT DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread, so->path.abpos,
-						so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
+				printf("DO NOT DISCARD %d%% bad overlaps [%d, %d] a[%d, %d] b [%d, %d] %c ODIF %d\n", MaxRemovedAlnBasesPerc, so->aread, so->bread, so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N', err);
 			break;
 		}
 
 		if (err < maxQV)
 		{
 			if (ctx->nVerbose)
-				printf("STOP reached maxqv of %d [%d, %d] a[%d, %d] b [%d, %d] %c\n", err, so->aread, so->bread, so->path.abpos, so->path.aepos, so->path.bbpos,
-						so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N');
+				printf("STOP reached maxqv of %d [%d, %d] a[%d, %d] b [%d, %d] %c\n", err, so->aread, so->bread, so->path.abpos, so->path.aepos, so->path.bbpos, so->path.bepos, (so->flags & OVL_COMP) ? 'C' : 'N');
 			break;
 		}
 	}
@@ -2020,7 +2167,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	}
 
 	int MINANCHOR = 10;
-	int WINDOW =   ctx->mergeRepeatsWindow;
+	int WINDOW = ctx->mergeRepeatsWindow;
 	int MAXMERGE = ctx->mergeRepeatsMaxLen;
 	int i, b, e;
 
@@ -2170,23 +2317,21 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 					getRepeatBasesFromInterval(ctx->trackDust, aread, MAX(0, a->beg - checkFlanks), a->beg, &predust, &longestDustl);
 					getRepeatBasesFromInterval(ctx->trackDust, aread, a->end, MIN(a->end + checkFlanks, arlen), &postdust, &longestDustr);
 
-					if ((predust*100.0/checkFlanks > 20.0 && longestDustl > 30) || (postdust*100/checkFlanks > 20.0 && longestDustr > 30))
+					if ((predust * 100.0 / checkFlanks > 20.0 && longestDustl > 30) || (postdust * 100 / checkFlanks > 20.0 && longestDustr > 30))
 					{
-							a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
-							break;
+						a->flag |= (ANCHOR_LOWCOMP | ANCHOR_INVALID);
+						break;
 					}
 
-					if(checkFlanks < WINDOW && checkFlanks + 100 > WINDOW)
+					if (checkFlanks < WINDOW && checkFlanks + 100 > WINDOW)
 						checkFlanks = WINDOW;
 					else
-						checkFlanks+=100;
+						checkFlanks += 100;
 				}
 			}
 
-			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end, a->flag, predust,
-					a->beg - MAX(0, a->beg - WINDOW), predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg),
-					postdust, MIN(a->end + WINDOW, arlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, arlen) - a->end), predust + dust + postdust,
-					(a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end),
+			printf("#LC %d %d %d f%d PRE %d %d %.2f DUST %d %d %.2f post %d %d %.2f SUM %d %d %.2f\n", aread, a->beg, a->end, a->flag, predust, a->beg - MAX(0, a->beg - WINDOW), predust * 100.0 / (a->beg - MAX(0, a->beg - WINDOW)), dust, a->end - a->beg, dust * 100.0 / (a->end - a->beg), postdust,
+					MIN(a->end + WINDOW, arlen) - a->end, postdust * 100.0 / (MIN(a->end + WINDOW, arlen) - a->end), predust + dust + postdust, (a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end),
 					(predust + dust + postdust) * 100.0 / ((a->beg - MAX(0, a->beg - WINDOW)) + (a->end - a->beg) + (MIN(a->end + WINDOW, arlen) - a->end)));
 		}
 	}
@@ -2278,8 +2423,7 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 			ctx->uniqIntervals[ctx->curItv].end = rb;
 
 			ctx->uniqIntervals[i].beg = re;
-			printf(" decrease cutItv_%d: [%d, %d] append new interval %d [%d, %d] f%d\n", i, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end, ctx->curItv,
-					ctx->uniqIntervals[ctx->curItv].beg, ctx->uniqIntervals[ctx->curItv].end, ctx->uniqIntervals[ctx->curItv].flag);
+			printf(" decrease cutItv_%d: [%d, %d] append new interval %d [%d, %d] f%d\n", i, ctx->uniqIntervals[i].beg, ctx->uniqIntervals[i].end, ctx->curItv, ctx->uniqIntervals[ctx->curItv].beg, ctx->uniqIntervals[ctx->curItv].end, ctx->uniqIntervals[ctx->curItv].flag);
 			ctx->curItv++;
 
 			b += 2;
@@ -2291,8 +2435,8 @@ static void analyzeRepeatIntervals(FilterContext *ctx, int aread)
 	for (i = 0; i < ctx->curItv; i++)
 	{
 		anchorItv *a = ctx->uniqIntervals + i;
-//		if (a->flag & ANCHOR_INVALID)
-//			continue;
+		//		if (a->flag & ANCHOR_INVALID)
+		//			continue;
 
 		printf(" %d-%d-%d", a->beg, a->end, a->flag);
 		anchorbases += a->end - a->beg;
@@ -2422,17 +2566,17 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		}
 	}
 
-	if(ctx->trimIndels)
+	if (ctx->trimIndels)
 	{
 		for (j = 0; j < novl; j++)
 			trimOffLeadingIndels(ovl + j, ctx->twidth);
 	}
 
-	if(ctx->maxSegmentErrorRate >= 0 && ctx->maxSegmentErrorRate <=100)
+	if (ctx->maxSegmentErrorRate >= 0 && ctx->maxSegmentErrorRate <= 100)
 	{
 		for (j = 0; j < novl; j++)
 		{
-			if(filterMaxSegmentErrorRate(ovl + j, ctx->maxSegmentErrorRate))
+			if (filterMaxSegmentErrorRate(ovl + j, ctx->maxSegmentErrorRate))
 			{
 				ctx->nFilteredDiffs++;
 			}
@@ -2509,9 +2653,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						if (o2->flags & (OVL_STITCH | OVL_DISCARD))
 							continue;
 
-						if (contained(o1->path.abpos, o1->path.aepos, o2->path.abpos, o2->path.aepos)
-								|| contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos)
-								|| contained(o1->path.bbpos, o1->path.bepos, o2->path.bbpos, o2->path.bepos)
+						if (contained(o1->path.abpos, o1->path.aepos, o2->path.abpos, o2->path.aepos) || contained(o2->path.abpos, o2->path.aepos, o1->path.abpos, o1->path.aepos) || contained(o1->path.bbpos, o1->path.bepos, o2->path.bbpos, o2->path.bepos)
 								|| contained(o2->path.bbpos, o2->path.bepos, o1->path.bbpos, o1->path.bepos))
 						{
 							foundMultiMapper = 1;
@@ -2525,8 +2667,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					{
 						ovl[l].flags |= OVL_DISCARD;
 #ifdef VERBOSE
-						printf("remove ovl, falls into multi mapper interval: %d vs %d [%d, %d] %c [%d, %d]\n", ovl[l].aread, ovl[l].bread, ovl[l].path.abpos,
-								ovl[l].path.aepos, (ovl[l].flags & OVL_COMP) ? 'c' : 'n', ovl[l].path.bbpos, ovl[l].path.bepos);
+						printf("remove ovl, falls into multi mapper interval: %d vs %d [%d, %d] %c [%d, %d]\n", ovl[l].aread, ovl[l].bread, ovl[l].path.abpos, ovl[l].path.aepos, (ovl[l].flags & OVL_COMP) ? 'c' : 'n', ovl[l].path.bbpos, ovl[l].path.bepos);
 #endif
 						ctx->nMultiMapper++;
 						ctx->nMultiMapperBases += ovl[l].path.aepos - ovl[l].path.abpos;
@@ -2598,10 +2739,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 					ovl_j->flags |= OVL_DISCARD;
 					ctx->nLowCovALn++;
-					if (ctx->fileOutDiscardedOverlaps)
-					{
-						fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", ovl_j->aread, ovl_j->bread);
-					}
 				}
 			}
 			free(cov_read_active);
@@ -2618,6 +2755,10 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 	// evaluate remove flags
 	if (ctx->removeFlags != 0)
 		removeOvls(ctx, ovl, novl, ctx->removeFlags);
+
+	// check for chimers and gaps
+	if (ctx->chimerCoverage > 0)
+		removeChimerOvls(ctx, ovl, novl);
 
 	// filter by read flags
 	int aread = ovl->aread;
@@ -2659,12 +2800,21 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 		write_spanning_reads(ctx, ovl->aread);
 	}
 
+	if (ctx->fileOutDiscardedOverlaps)
+	{
+		for (j = 0; j < novl; j++)
+		{
+			if (ovl[j].flags & OVL_DISCARD)
+				fprintf(ctx->fileOutDiscardedOverlaps, "%d %d\n", ovl[j].aread, ovl[j].bread);
+		}
+	}
+
 	return 1;
 }
 
 static void usage()
 {
-	fprintf(stderr, "[-vpLqTwZj] [-dnolRsSumMfyYzZVWb <int>] [-rtD <track>] [-xPIaA <file>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpLqTwZj] [-dnolRsSumMfyYzZVWb <int>] [-rtD <track>] [-xPIaA <file>] [-c<int,int>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v ... verbose\n");
 	fprintf(stderr, "         -d ... max divergence allowed [0,100]\n");
@@ -2695,22 +2845,22 @@ static void usage()
 	fprintf(stderr, "         -I ... include read ids found in file, all other are excluded\n");
 	fprintf(stderr, "         -P ... write read ids of repeat spanners to file\n");
 	fprintf(stderr, "         -z ... drop entering/leaving alignments if number is below -z <int>\n");
-	fprintf(stderr,
-			"         -y ... merge repeats if they are closer then -y bases apart (if distance > 100, then smaller repeats (< 100) usually from DBdust are ignored)\n");
+	fprintf(stderr, "         -y ... merge repeats if they are closer then -y bases apart (if distance > 100, then smaller repeats (< 100) usually from DBdust are ignored)\n");
 	fprintf(stderr, "         -Y ... merge repeats with start/end position of read if repeat interval starts/ends with fewer then -Y\n");
 	fprintf(stderr, "         -a ... write discarded overlaps that may not symmetrically removed to file\n");
 	fprintf(stderr, "         -A ... read file of discarded overlaps and remove them symmetrically\n");
 	fprintf(stderr, "         -w ... remove multi-mapper overlaps within the same read\n");
-	fprintf(stderr,
-			"         -Z ... remove at most -Z percent of the worst alignments. Set -d INT to avoid loss of good alignments. Set -z INT to avoid loss of contiguity !\n");
-	fprintf(stderr,
-			"                This option was included to get rid of low coverage repeats or random alignments, that clearly get separated by diff scores\n");
+	fprintf(stderr, "         -Z ... remove at most -Z percent of the worst alignments. Set -d INT to avoid loss of good alignments. Set -z INT to avoid loss of contiguity !\n");
+	fprintf(stderr, "                This option was included to get rid of low coverage repeats or random alignments, that clearly get separated by diff scores\n");
 	fprintf(stderr, "         -D ... read low complexity track (dust or tan_dust)\n");
 	fprintf(stderr, "         -V ... max merge distance of neighboring repeats (default: 2400)\n");
 	fprintf(stderr, "         -W ... window size in bases. Merge repeats that are closer then -V bases and have a decent number of low complexity bases in between both repeats\n");
 	fprintf(stderr, "                or at -W bases at the tips of the neighboring repeat. Those can cause a fragmented repeat mask. (default: 600)\n");
 	fprintf(stderr, "         -b ... remove alignments which have segments error rates above -b <int>%% (default: not set)\n");
+	fprintf(stderr, "         -c <inta,intb> remove overlaps from chimeric reads (Chimer detection: locations that have less then <inta> coverage and less then in <intb> anchor bases around that location)\n");
+	fprintf(stderr, "OBSOLETE - will be removed in future\n");
 	fprintf(stderr, "         -j ... trim off unaligned bases (indels) from start/end of alignments\n");
+
 }
 
 static int opt_repeat_count(int argc, char** argv, char opt)
@@ -2784,6 +2934,8 @@ int main(int argc, char* argv[])
 	fctx.includeReadFlag = 0;
 	fctx.removeLowCoverageOverlaps = 0;
 	fctx.maxSegmentErrorRate = -1;
+	fctx.chimerCoverage = -1;
+	fctx.chimerAnchorBases = 1000;
 
 	fctx.stitch_aggressively = 0;
 	fctx.removeFlags = 0;
@@ -2806,154 +2958,169 @@ int main(int argc, char* argv[])
 	}
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "TvLpwy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:V:W:b:j")) != -1)
+	while ((c = getopt(argc, argv, "TvLpwy:z:d:n:o:l:R:s:S:u:m:M:r:t:P:x:f:I:Y:a:A:Z:D:V:W:b:jc:")) != -1)
 	{
 		switch (c)
 		{
-		case 'f':
-			fctx.downsample = atoi(optarg);
-			break;
+			case 'f':
+				fctx.downsample = atoi(optarg);
+				break;
 
-		case 'T':
-			fctx.do_trim = 1;
-			break;
+			case 'T':
+				fctx.do_trim = 1;
+				break;
 
-		case 'j':
-			fctx.trimIndels = 1;
-			break;
+			case 'j':
+				fctx.trimIndels = 1;
+				break;
 
-		case 'x':
-			pathExcludeReads = optarg;
-			break;
+			case 'x':
+				pathExcludeReads = optarg;
+				break;
 
-		case 'Z':
-			fctx.remUpToXPercAln = atoi(optarg);
-			break;
+			case 'Z':
+				fctx.remUpToXPercAln = atoi(optarg);
+				break;
 
-		case 'b':
-			fctx.maxSegmentErrorRate = atoi(optarg);
-			break;
+			case 'b':
+				fctx.maxSegmentErrorRate = atoi(optarg);
+				break;
 
-		case 'I':
-			pathIncludeReads = optarg;
-			break;
+			case 'I':
+				pathIncludeReads = optarg;
+				break;
 
-		case 'P':
-			pathSpanningReads = optarg;
-			break;
+			case 'P':
+				pathSpanningReads = optarg;
+				break;
 
-		case 'a':
-			pathOutDiscardedOvls = optarg;
-			break;
+			case 'a':
+				pathOutDiscardedOvls = optarg;
+				break;
 
-		case 'A':
-			pathInDiscardedOvls = optarg;
-			break;
+			case 'A':
+				pathInDiscardedOvls = optarg;
+				break;
 
-		case 'L':
-			fctx.useRLoader = 1;
-			break;
+			case 'L':
+				fctx.useRLoader = 1;
+				break;
 
-		case 'w':
-			fctx.removeMultiMappers = 1;
-			break;
+			case 'w':
+				fctx.removeMultiMappers = 1;
+				break;
 
-		case 'z':
-			fctx.removeLowCoverageOverlaps = atoi(optarg);
-			break;
+			case 'z':
+				fctx.removeLowCoverageOverlaps = atoi(optarg);
+				break;
 
-		case 'y':
-			fctx.rm_merge = atoi(optarg);
-			break;
+			case 'y':
+				fctx.rm_merge = atoi(optarg);
+				break;
 
-		case 'Y':
-			fctx.rp_mergeTips = atoi(optarg);
-			break;
+			case 'Y':
+				fctx.rp_mergeTips = atoi(optarg);
+				break;
 
-		case 'M':
-			fctx.rm_aggressive = 1;
+			case 'M':
+				fctx.rm_aggressive = 1;
 
-			// fall through
+				// fall through
 
-		case 'm':
-			fctx.rm_cov = atoi(optarg);
-			break;
+			case 'm':
+				fctx.rm_cov = atoi(optarg);
+				break;
 
-		case 'R':
-		{
-			int flag = atoi(optarg);
-			if (flag < 0 || flag > 6)
+			case 'R':
 			{
-				fprintf(stderr, "[ERROR]: Unsupported -R [%d] option.\n", flag);
+				int flag = atoi(optarg);
+				if (flag < 0 || flag > 6)
+				{
+					fprintf(stderr, "[ERROR]: Unsupported -R [%d] option.\n", flag);
+					usage();
+					exit(1);
+				}
+				fctx.removeFlags |= (1 << flag);
+			}
+				break;
+
+			case 'S':
+				fctx.stitch_aggressively = 1;
+
+				// fall through
+
+			case 's':
+				fctx.stitch = atoi(optarg);
+				break;
+
+			case 'v':
+				fctx.nVerbose = 1;
+				break;
+
+			case 'p':
+				arg_purge = 1;
+				break;
+
+			case 'd':
+				fctx.fMaxDiffs = atof(optarg) / 100.0;
+				break;
+
+			case 'o':
+				fctx.nMinAlnLength = atoi(optarg);
+				break;
+
+			case 'l':
+				fctx.nMinReadLength = atoi(optarg);
+				break;
+
+			case 'u':
+				fctx.nMaxUnalignedBases = atoi(optarg);
+				break;
+
+			case 'n':
+				fctx.nMinNonRepeatBases = atoi(optarg);
+				break;
+
+			case 'r':
+				pcTrackRepeats = optarg;
+				break;
+
+			case 't':
+				arg_trimTrack = optarg;
+				break;
+
+			case 'D':
+				arg_dustTrack = optarg;
+				break;
+
+			case 'W':
+				fctx.mergeRepeatsWindow = atoi(optarg);
+				break;
+
+			case 'V':
+				fctx.mergeRepeatsMaxLen = atoi(optarg);
+				break;
+
+			case 'c':
+			{
+				char * pch;
+				pch = strchr(optarg, ',');
+				if (pch == NULL)
+				{
+					fprintf(stderr, "[ERROR]: Unsupported argument for chimer detection: \"%s\". format must be -c <int>,<int> \n", optarg);
+					usage();
+					exit(1);
+				}
+				*pch = '\0';
+				fctx.chimerCoverage = atoi(optarg);
+				*pch = ',';
+				fctx.chimerAnchorBases = atoi(pch + 1);
+			}
+				break;
+			default:
+				fprintf(stderr, "[ERROR] unknown option -%c\n", optopt);
 				usage();
 				exit(1);
-			}
-			fctx.removeFlags |= (1 << flag);
-		}
-			break;
-
-		case 'S':
-			fctx.stitch_aggressively = 1;
-
-			// fall through
-
-		case 's':
-			fctx.stitch = atoi(optarg);
-			break;
-
-		case 'v':
-			fctx.nVerbose = 1;
-			break;
-
-		case 'p':
-			arg_purge = 1;
-			break;
-
-		case 'd':
-			fctx.fMaxDiffs = atof(optarg) / 100.0;
-			break;
-
-		case 'o':
-			fctx.nMinAlnLength = atoi(optarg);
-			break;
-
-		case 'l':
-			fctx.nMinReadLength = atoi(optarg);
-			break;
-
-		case 'u':
-			fctx.nMaxUnalignedBases = atoi(optarg);
-			break;
-
-		case 'n':
-			fctx.nMinNonRepeatBases = atoi(optarg);
-			break;
-
-		case 'r':
-			pcTrackRepeats = optarg;
-			break;
-
-		case 't':
-			arg_trimTrack = optarg;
-			break;
-
-		case 'D':
-			arg_dustTrack = optarg;
-			break;
-
-		case 'W':
-			fctx.mergeRepeatsWindow = atoi(optarg);
-			break;
-
-		case 'V':
-			fctx.mergeRepeatsMaxLen = atoi(optarg);
-			break;
-
-
-		default:
-			fprintf(stderr, "[ERROR] unknown option -%c\n", optopt);
-			usage();
-			exit(1);
 		}
 	}
 
@@ -3145,11 +3312,18 @@ int main(int argc, char* argv[])
 
 		int line = 0;
 		// search for exact number of areads and breads, to avoid a bread reallocation
-//		printf("check for proper file format\n");
+		//		printf("check for proper file format\n");
 		while (fscanf(fileIn, "%d %d\n", &aread, &bread) == 2)
 		{
 			if (aread != prevAread)
 				numAreads++;
+
+			if (aread > bread)
+			{
+				fprintf(stderr, "[ERROR] - read list must be sorted aread <= bread! Failed at %d, %d!\n", aread, bread);
+				fprintf(stderr, "	    Please sort your file first! awk '{if($1>$2) print $2\" \"$1; else print $1\" \"$2}' INFILE | sort -k 1,1n -k2,2n | uniq > OUTFILE\n");
+				exit(1);
+			}
 
 			numBreads++;
 
@@ -3161,11 +3335,11 @@ int main(int argc, char* argv[])
 
 			line++;
 
-//			printf("line %5d: prev [%7d, %7d] cur [%7d, %7d] #a %5d #b %5d\n", line, prevAread, prevBread, aread, bread, numAreads, numBreads);
+			//			printf("line %5d: prev [%7d, %7d] cur [%7d, %7d] #a %5d #b %5d\n", line, prevAread, prevBread, aread, bread, numAreads, numBreads);
 			prevAread = aread;
 			prevBread = bread;
 		}
-//		printf("#areads: %6d, #breads %6d\n", numAreads, numBreads);
+		//		printf("#areads: %6d, #breads %6d\n", numAreads, numBreads);
 		fseek(fileIn, 0L, SEEK_SET);
 
 		int * discardedBreads = (int*) malloc(sizeof(int) * (numBreads + numAreads + 10));
@@ -3174,7 +3348,7 @@ int main(int argc, char* argv[])
 		prevAread = -2;
 		prevBread = -1;
 		int curBreadIdx = 0;
-//		printf("put overlaps into data structure\n");
+		//		printf("put overlaps into data structure\n");
 		while (fscanf(fileIn, "%d %d\n", &aread, &bread) == 2)
 		{
 			assert(prevAread <= aread);
@@ -3190,34 +3364,34 @@ int main(int argc, char* argv[])
 			}
 			discardedBreads[curBreadIdx++] = bread;
 
-//			printf("line %5d: prev [%7d, %7d] cur [%7d, %7d] #a %5d #b %5d \n", line, prevAread, prevBread, aread, bread, numAreads, numBreads);
+			//			printf("line %5d: prev [%7d, %7d] cur [%7d, %7d] #a %5d #b %5d \n", line, prevAread, prevBread, aread, bread, numAreads, numBreads);
 			prevAread = aread;
 			prevBread = bread;
 		}
 		discardedBreads[curBreadIdx++] = -1;
 
-//		printf("output data structure:\n");
-//		int i;
-//		for(i=0; i<DB_NREADS(fctx.db)+1; i++)
-//		{
-//			printf("i %d\n",i);
-//			if(discardedAreadList[i])
-//			{
-//				printf("discard ovls from aread %7d:", i);
-//				int j=0;
-//				while(discardedAreadList[i][j] > -1)
-//				{
-//					printf(" %7d", discardedAreadList[i][j++]);
-//				}
-//				printf("\n");
-//			}
-//		}
+		//		printf("output data structure:\n");
+		//		int i;
+		//		for(i=0; i<DB_NREADS(fctx.db)+1; i++)
+		//		{
+		//			printf("i %d\n",i);
+		//			if(discardedAreadList[i])
+		//			{
+		//				printf("discard ovls from aread %7d:", i);
+		//				int j=0;
+		//				while(discardedAreadList[i][j] > -1)
+		//				{
+		//					printf(" %7d", discardedAreadList[i][j++]);
+		//				}
+		//				printf("\n");
+		//			}
+		//		}
 		fctx.discardedAreadList = discardedAreadList;
 		fctx.discardedBreads = discardedBreads;
 		fclose(fileIn);
 	}
 
-	if(fctx.maxSegmentErrorRate < -1 && fctx.maxSegmentErrorRate > 100)
+	if (fctx.maxSegmentErrorRate < -1 && fctx.maxSegmentErrorRate > 100)
 	{
 		printf("[ERROR]: invalid maxSegmentErrorRate %d! Must be within [0,100]\n", fctx.maxSegmentErrorRate);
 		usage();
@@ -3282,3 +3456,4 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+
