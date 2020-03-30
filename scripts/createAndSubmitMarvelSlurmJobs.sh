@@ -43,13 +43,13 @@ source ${configFile}
 
 function getPhaseFilePrefix()
 {
-	if [[ ${currentPhase} -eq -2 ]]
+    if [[ ${currentPhase} -eq -2 ]]
     then
         echo "qc"
-	elif [[ ${currentPhase} -eq -1 ]]
+    elif [[ ${currentPhase} -eq -1 ]]
     then
         echo "mito"
-	elif [[ ${currentPhase} -eq 0 ]]
+    elif [[ ${currentPhase} -eq 0 ]]
     then
         echo "cover"	
     elif [[ ${currentPhase} -eq 1 || ${currentPhase} -eq 3 ]]
@@ -246,7 +246,7 @@ then
             then
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "qc" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "qc" ]]
 			then
 				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "hic" ]] && ! [[ ${SC_HIC_TYPE} -eq 0 && ${currentStep} -eq 6 ]]
@@ -255,6 +255,9 @@ then
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
 				echo -e "\n${CONDA_PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "freebayes" ]]
+                        then
+                                echo -e "\n${CONDA_FREEBAYES_ENV}" >> ${file}.slurm
 			fi
 			
             echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -323,7 +326,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi	        
 	        
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "qc" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "qc" ]]
 			then
 				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "hic" ]] && ! [[ ${SC_HIC_TYPE} -eq 0 && ${currentStep} -eq 6 ]]
@@ -332,6 +335,9 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
 				echo -e "\n${CONDA_PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
+			elif [[ ${prefix} == "freebayes" ]]
+                        then
+                                echo -e "\n${CONDA_FREEBAYES_ENV}" >> ${file}.slurm
 			fi
 	
 	        echo "export PATH=${MARVEL_PATH}/bin:\$PATH
@@ -381,7 +387,7 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
             then
                 echo "#SBATCH -A ${SLURM_ACCOUNT}" >> ${file}.slurm
             fi
-			if [[ ${prefix} == "arrow" || ${prefix} == "freebayes" || ${prefix} == "qc" ]]
+			if [[ ${prefix} == "arrow" || ${prefix} == "qc" ]]
 			then
 				echo -e "\n${CONDA_BASE_ENV}" >> ${file}.slurm
 			elif [[ ${prefix} == "hic" ]] && ! [[ ${SC_HIC_TYPE} -eq 0 && ${currentStep} -eq 6 ]]
@@ -390,7 +396,10 @@ echo \"${file}.plan run time: \$((\${end}-\${beg}))\"" >> ${file}.slurm
 			elif [[ ${prefix} == "purgeHaplotigs" ]]
 			then	
 				echo -e "\n${CONDA_PURGEHAPLOTIGS_ENV}" >> ${file}.slurm
-			fi
+			elif [[ ${prefix} == "freebayes" ]]
+                        then
+                                echo -e "\n${CONDA_FREEBAYES_ENV}" >> ${file}.slurm
+                        fi			
 
 			echo "export PATH=${MARVEL_PATH}/bin:\$PATH
 export PATH=${MARVEL_PATH}/scripts:\$PATH
