@@ -1007,11 +1007,12 @@ then
    		fi >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan   		
    		
    		## we need a special reference fastq file with other names  
-   		echo "${SCAFF10X_PATH}/scaff-bin/scaff_fastq -name tarseq -len 10 ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/${REFNAME} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
+		## not required anymore - removed for version 4.2
+   		##echo "${SCAFF10X_PATH}/scaff-bin/scaff_fastq -name tarseq -len 10 ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/${REFNAME} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.tag" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
    		## convert the reference fastq into fasta 
-   		echo "sed -n '1~4s/^@/>/p;2~4p' ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
-
-		echo "scaff_fastq $(${SCAFF10X_PATH}/scaff10x | grep Version)" > 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.version
+   		##echo "sed -n '1~4s/^@/>/p;2~4p' ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fastq > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
+		echo "${SCAFF10X_PATH}/scaff-bin/scaff_rename ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/${REFNAME} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ref/tarseq.fasta" >> 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.plan
+		#echo "scaff_fastq $(${SCAFF10X_PATH}/scaff10x | grep Version)" > 10x_01_scaff10xprepare_single_${CONT_DB}.${slurmID}.version
 	## 02_scaff10xLongrangerAlign
     elif [[ ${currentStep} -eq 2 ]]
     then
@@ -1045,8 +1046,35 @@ then
         echo "$(${LONGRANGER_PATH}/longranger mkref --version | head -n1)" > 10x_02_scaff10xLongrangerAlign_single_${CONT_DB}.${slurmID}.version
         echo "$(${LONGRANGER_PATH}/longranger align --version | head -n1)" >> 10x_02_scaff10xLongrangerAlign_single_${CONT_DB}.${slurmID}.version
     
+    ## the following step is not required anymore (since v4.2)
     ## 03_scaff10xPrepareIntermediate
-    elif [[ ${currentStep} -eq 3 ]]
+    #elif [[ ${currentStep} -eq 3 ]]
+    #then
+    #    ### clean up plans 
+    #    for x in $(ls 10x_03_scaff10x*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+    #    do            
+    #        rm $x
+    #    done
+    #    
+    #    bam=${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/10x_${PROJECT_ID}_longrangerAlign/outs/possorted_bam.bam
+    # 		if [[ ! -f ${bam} ]]
+    #		then 
+    # 			(>&2 echo "ERROR - cannot final duplicate marked bam file: ${bam}!")
+    #    	exit 1
+  # 		fi 
+   #		
+   #		# we have to find the BX tag and append it to the fasta name 
+   #		# unfortunatelly the column is not fixed, in my example data its 19, 21 and 20 --> to be conservative: loop through all optional fields 12 - NF
+   #		
+   #		if [[ -n ${SC_10X_SCAFF10X_LONGREAD} && ${SC_10X_SCAFF10X_LONGREAD} -ne 0 ]]
+#		then
+#			echo "samtools view ${bam}  | awk '(\$4!=0)&&(\$2<100)&&(\$5>=0){ for(i = 12; i <= NF; i++) { if (\$i ~ \"BX:Z\") {print \$1\"_\"substr(\$i,6,16),\$2,\$3,\$4,\$5; break; } } }' > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/dalign.dat"
+#		else
+#			echo "samtools view ${bam}  | awk '(\$4!=0)&&(\$2<100)&&(\$5>0){ for(i = 12; i <= NF; i++) { if (\$i ~ \"BX:Z\") {print \$1\"_\"substr(\$i,6,16),\$2,\$3,\$4,\$5; break; } } }' > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/dalign.dat"
+#		fi > 10x_03_scaff10xPrepareIntermediate_single_${CONT_DB}.${slurmID}.plan 
+ #  		
+	## 03_scaff10xScaff10x   		
+   	elif [[ ${currentStep} -eq 3 ]]
     then
         ### clean up plans 
         for x in $(ls 10x_03_scaff10x*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
@@ -1054,59 +1082,43 @@ then
             rm $x
         done
         
-        bam=${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/10x_${PROJECT_ID}_longrangerAlign/outs/possorted_bam.bam
-   		if [[ ! -f ${bam} ]]
-   		then 
-   			(>&2 echo "ERROR - cannot final duplicate marked bam file: ${bam}!")
-        	exit 1
-   		fi 
+	if [[ -z ${SC_10X_SCAFF10X_BAM} || ! -f ${SC_10X_SCAFF10X_BAM} ]]
+	then 
+		bam=$(pwd)/${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/10x_${PROJECT_ID}_longrangerAlign/outs/possorted_bam.bam
+        	if [[ ! -f ${bam} ]]
+        	then 
+            		(>&2 echo "ERROR - cannot final duplicate marked bam file: ${bam}!")
+            		exit 1
+        	fi 
+		options="-bam ${bam}"
+	fi
+  #      dat=${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/dalign.dat
+  #      if [[ ! -f ${dat} ]]
+  # 		then 
+  # 			(>&2 echo "ERROR - dat file missing : ${dat}!. Rerun step 03_scaff10xPrepareIntermediate!")
+  #      	exit 1
+  # 		fi
    		
-   		# we have to find the BX tag and append it to the fasta name 
-   		# unfortunatelly the column is not fixed, in my example data its 19, 21 and 20 --> to be conservative: loop through all optional fields 12 - NF
+   	REFNAME=$(basename ${SC_10X_REF})
    		
-   		if [[ -n ${SC_10X_SCAFF10X_LONGREAD} && ${SC_10X_SCAFF10X_LONGREAD} -ne 0 ]]
-		then
-			echo "samtools view ${bam}  | awk '(\$4!=0)&&(\$2<100)&&(\$5>=0){ for(i = 12; i <= NF; i++) { if (\$i ~ \"BX:Z\") {print \$1\"_\"substr(\$i,6,16),\$2,\$3,\$4,\$5; break; } } }' > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/dalign.dat"
-		else
-			echo "samtools view ${bam}  | awk '(\$4!=0)&&(\$2<100)&&(\$5>0){ for(i = 12; i <= NF; i++) { if (\$i ~ \"BX:Z\") {print \$1\"_\"substr(\$i,6,16),\$2,\$3,\$4,\$5; break; } } }' > ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/dalign.dat"
-		fi > 10x_03_scaff10xPrepareIntermediate_single_${CONT_DB}.${slurmID}.plan 
+   	if [[ ! -f ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME} ]]
+   	then
+   		ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}
+   	fi > 10x_03_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan
    		
-	## 04_scaff10xScaff10x   		
+   	setScaff10xOptions
+		
+    	prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
+        ext=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
+        # additional options         
+	options="${options} -plot ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${ext}.png"
+        echo "cd ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ && ${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${REFNAME} ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${ext}.fasta && cd  ../../" >> 10x_03_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan        
+		echo "scaff10x $(${SCAFF10X_PATH}/scaff10x | grep Version)" > 10x_03_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.version
+	## 04_scaff10xStatistics   		
    	elif [[ ${currentStep} -eq 4 ]]
     then
         ### clean up plans 
         for x in $(ls 10x_04_scaff10x*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
-        do            
-            rm $x
-        done
-        
-        dat=${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/bams/dalign.dat
-        if [[ ! -f ${dat} ]]
-   		then 
-   			(>&2 echo "ERROR - dat file missing : ${dat}!. Rerun step 03_scaff10xPrepareIntermediate!")
-        	exit 1
-   		fi
-   		
-   		REFNAME=$(basename ${SC_10X_REF})
-   		
-   		if [[ ! -f ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME} ]]
-   		then
-   			ln -s -r ${SC_10X_REF} ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/${REFNAME}
-   		fi > 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan
-   		
-   		setScaff10xOptions
-		
-    	prevExt=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF-1)}')
-        ext=$(basename ${SC_10X_REF%.fasta} | awk -F '[_.]' '{print $(NF)}')
-                
-        options="-debug 1 -dat ../bams/dalign.dat"
-        echo "cd ${SC_10X_OUTDIR}/scaff10x_${SC_10X_RUNID}/ && ${SCAFF10X_PATH}/scaff10x${SCAFF10X_SCAFF10X_OPT} ${options} ${REFNAME} ${PROJECT_ID}_${SC_10X_OUTDIR}_${prevExt}x.${ext}.fasta && cd  ../../" >> 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.plan        
-		echo "scaff10x $(${SCAFF10X_PATH}/scaff10x | grep Version)" > 10x_04_scaff10xScaff10x_single_${CONT_DB}.${slurmID}.version
-	## 05_scaff10xStatistics   		
-   	elif [[ ${currentStep} -eq 5 ]]
-    then
-        ### clean up plans 
-        for x in $(ls 10x_05_scaff10x*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
         do            
             rm $x
         done	
@@ -1120,9 +1132,9 @@ then
         	ssh falcon "cd ${cwd} && bash ${SUBMIT_SCRIPTS_PATH}/slurmStats.sh ${configFile}"
     	fi
     	### create assemblyStats plan 
-    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 12" > 10x_05_scaff10xStatistics_single_${CONT_DB}.${slurmID}.plan
-    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > 10x_05_scaff10xStatistics_single_${CONT_DB}.${slurmID}.version	
-		echo "$(quast.py --version)" >> 10x_05_scaff10xStatistics_single_${CONT_DB}.${slurmID}.version	
+    	echo "${SUBMIT_SCRIPTS_PATH}/assemblyStats.sh ${configFile} 12" > 10x_04_scaff10xStatistics_single_${CONT_DB}.${slurmID}.plan
+    	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > 10x_04_scaff10xStatistics_single_${CONT_DB}.${slurmID}.version	
+		echo "$(quast.py --version)" >> 10x_04_scaff10xStatistics_single_${CONT_DB}.${slurmID}.version	
    	else   		
         (>&2 echo "step ${currentStep} in SC_10X_TYPE ${SC_10X_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${SC_10X_TYPE}]}")
