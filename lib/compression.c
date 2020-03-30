@@ -7,16 +7,25 @@
 
 #include "utils.h"
 
+#define ULONG_MAX 0xFFFFFFFFUL
 #undef DEBUG_COMPRESSION
 
 #define COMPRESS_MAX_CHUNK ( 8 * 1024 * 1024 )
 
 void compress_chunks(void* ibuf, uint64_t ilen, void** _obuf, uint64_t* _olen)
 {
+#ifdef DEBUG_COMPRESSION
+     printf("compress_chunks: ilen %lu\n", ilen);
+#endif 
     uLongf chunk = COMPRESS_MAX_CHUNK;
 
-    uint64_t omax = ilen * 1.01 + 12 + sizeof(uint64_t) * ( ilen / chunk + 1 );
+    uint64_t omax = ilen * 1.02 + 12 + sizeof(uint64_t) * ( ilen / chunk + 1 );
     void* obuf = malloc(omax);
+    if(obuf == NULL)
+    {
+	printf("[ERROR] compress_chunks: Could not allocate obuf of size: %lu\n", omax);
+	exit(1);
+    }
     void* ocur = obuf;
     void* icur = ibuf;
 
@@ -30,7 +39,23 @@ void compress_chunks(void* ibuf, uint64_t ilen, void** _obuf, uint64_t* _olen)
         {
             chunk = ilen;
         }
-        uLongf cchunk = omax - (ocur - obuf);
+        
+	if(omax < (ocur - obuf))
+	{
+	   printf("omax: %lu is smaller then chunk size %lu!!!\n", omax, (ocur - obuf));
+        }
+#ifdef DEBUG_COMPRESSION
+        printf("cchunk: %lu, omax: %lu, ocur: %p, obuf: %p, ilen: %lu, chunk: %lu\n", omax - (ocur - obuf), omax, ocur, obuf, ilen, chunk);
+#endif
+	uLongf cchunk;
+	if (omax - (ocur - obuf) >= ULONG_MAX)
+	{
+	   cchunk=ULONG_MAX/2;	
+	}
+	else
+	{
+        	cchunk = omax - (ocur - obuf);
+	}
 
         compress(ocur + sizeof(uint64_t), &cchunk, icur, chunk);
 
