@@ -30,6 +30,11 @@ then
     exit 1
 fi
 
+if [[ -z ${TOM_SCRIPTS} || ! -d ${TOM_SCRIPTS} ]] 
+then
+    (>&2 echo "Assembly scrots directory not set! Just change TOM_SCRIPTS.")
+fi
+
 function getNumOfDbBlocks()
 {
     if [[ ! -f ${RAW_DAZZ_DB%.db}.db ]]
@@ -604,8 +609,21 @@ then
         done 
 	
         ### create REPcover commands 
-		echo "${DAZZLER_PATH}/bin/REPcover ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK} | tee effectiveCov_${RAW_DAZZ_DB%.db}_${slurmID}_forBlock${RAW_DASCOVER_DALIGNER_FORBLOCK}.txt" > cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
-        echo "DASCRUBBER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DASCRUBBER/.git rev-parse --short HEAD)" > cover_16_DAScover_single_${RAW_DAZZ_DB%.db}.${slurmID}.version
+	echo "${DAZZLER_PATH}/bin/Catrack ${RAW_DAZZ_DB%.db} -f -v dust" > cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
+	echo "${DAZZLER_PATH}/bin/Catrack ${RAW_DAZZ_DB%.db} -f -v tan" >> cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
+	echo "${DAZZLER_PATH}/bin/Catrack ${RAW_DAZZ_DB%.db} -f -v rep" >> cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
+	echo "${DAZZLER_PATH}/bin/REPcover ${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK} | tee effectiveCov_${RAW_DAZZ_DB%.db}_${slurmID}_forBlock${RAW_DASCOVER_DALIGNER_FORBLOCK}.txt" >> cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
+        echo "${DAZZLER_PATH}/bin/DBstats -b100 -mdust -mtan -mrep ${RAW_DAZZ_DB%.db} > ${RAW_DAZZ_DB%.db}.DBstats.LowComp.txt" >> cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
+	if [[ ${RAW_DASCOVER_DALIGNER_FORBLOCK} -eq 1 ]]
+	then 
+        	echo "cp .${RAW_DAZZ_DB%.db}.${RAW_DASCOVER_DALIGNER_FORBLOCK}.covr.anno .${RAW_DAZZ_DB%.db}.covr.anno" >> cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
+		echo "${DAZZLER_PATH}/bin/DASqv -v -c${RAW_COV} ${RAW_DAZZ_DB%.db} ${RAW_DAZZ_DB%.db}.${nblocks}.${RAW_DASCOVER_DALIGNER_FORBLOCK} > ${RAW_DAZZ_DB%.db}.DASqv.txt" >> cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan
+	fi
+        if [[ -n ${TOM_SCRIPTS} && -f ${TOM_SCRIPTS}/make_effCovPlot.R ]]
+	then
+        	echo "Rscript --vanilla ${TOM_SCRIPTS}/make_effCovPlot.R effectiveCov_${RAW_DAZZ_DB%.db}_${slurmID}_forBlock${RAW_DASCOVER_DALIGNER_FORBLOCK}.txt ${RAW_DAZZ_DB%.db}.dbStats.txt ${RAW_DAZZ_DB%.db}" >> cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.plan 
+	fi
+        echo "DASCRUBBER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DASCRUBBER/.git rev-parse --short HEAD)" > cover_16_REPcover_single_${RAW_DAZZ_DB%.db}.${slurmID}.version
     else 
         (>&2 echo "step ${currentStep} in RAW_DASCOVER_TYPE ${RAW_DASCOVER_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_DASCOVER_TYPE}]}")
