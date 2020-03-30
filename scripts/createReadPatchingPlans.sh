@@ -1787,7 +1787,7 @@ then
         cmdLine=1
         for x in $(seq 1 ${nblocks}); 
         do 
-            srcDir=${RAW_REPCOMP_OUTDIR}/d${x}
+            srcDir=${RAW_DALIGN_OUTDIR}/d${x}
             desDir=${RAW_REPCOMP_OUTDIR}/r${x}
 
             if [[ ! -d ${desDir} ]]
