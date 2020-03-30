@@ -19,3 +19,4 @@ configure
 /.pydevproject
 *.log
 /recompile.sh
+.DS_Store
