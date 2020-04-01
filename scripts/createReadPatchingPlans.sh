@@ -1966,8 +1966,8 @@ then
         		addopt="-T${RAW_FIX_LAFIX_TRIMFILEPREFIX}_${x}.txt "
         	fi
             echo "${MARVEL_PATH}/bin/LAfix${FIX_LAFIX_OPT} ${addopt}${RAW_DB%.db} ${RAW_REPCOMP_OUTDIR}/${RAW_DAZZ_DB%.db}.repcompFilt.${x}.las ${RAW_FIX_LAFIX_PATH}/${RAW_DB%.db}.${x}${RAW_FIX_LAFIX_FILESUFFIX}.fasta"
-		done > fix_10_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
-    	echo "MARVEL LAfix $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_10_LAfix_block_${RAW_DB%.db}.${slurmID}.version                                  
+		done > fix_09_LAfix_block_${RAW_DB%.db}.${slurmID}.plan
+    	echo "MARVEL LAfix $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_09_LAfix_block_${RAW_DB%.db}.${slurmID}.version                                  
     else 
         (>&2 echo "step ${currentStep} in RAW_PATCH_TYPE ${RAW_PATCH_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_PATCH_TYPE}]}")
