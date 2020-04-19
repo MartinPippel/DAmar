@@ -633,10 +633,10 @@ then
 		echo "${MARVEL_PATH}/bin/LAshow -r ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mitoHits.las | awk '{print \$2}' | sort -n -u > ${RAW_DB%.db}.${rawblocks}.mitoHits.readids" > mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${MARVEL_PATH}/bin/DBshow ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mitoHits.readids > ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${MARVEL_PATH}/bin/FA2db -v -x0 ${PROJECT_ID}_MITO_M ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "${MARVEL_PATH}/bin/DBsplit ${PROJECT_ID}_MITO_M" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/bin/DBsplit -s 1 ${PROJECT_ID}_MITO_M" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
         echo "${DACCORD_PATH}/bin/fastaidrename < ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta | awk '{print \$1}' > ${RAW_DB%.db}.${rawblocks}.mitoHitsDazzler.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_MITO_D ${RAW_DB%.db}.${rawblocks}.mitoHitsDazzler.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "${DAZZLER_PATH}/bin/DBsplit ${PROJECT_ID}_MITO_D" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${DAZZLER_PATH}/bin/DBsplit -s 1 ${PROJECT_ID}_MITO_D" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
 
     	echo "MARVEL LAshow $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 6 ]]
@@ -723,8 +723,8 @@ then
         echo "${MARVEL_PATH}/scripts/splitReads.py ${PROJECT_ID}_MITO_M.sort.dacRN.fasta ${PROJECT_ID}_MITO_M.sort.dac.split.fasta 5000 0" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${MARVEL_PATH}/bin/FA2db -v -x0 -c source ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_M.sort.dac.split.fasta" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_MITO_COR_D ${PROJECT_ID}_MITO_M.sort.dac.split.fasta" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan		                
-		echo "${MARVEL_PATH}/bin/DBsplit ${PROJECT_ID}_MITO_COR_M" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
-		echo "${DAZZLER_PATH}/bin/DBsplit ${PROJECT_ID}_MITO_COR_D" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan		                
+		echo "${MARVEL_PATH}/bin/DBsplit -s 1 ${PROJECT_ID}_MITO_COR_M" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${DAZZLER_PATH}/bin/DBsplit -s 1 ${PROJECT_ID}_MITO_COR_D" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan		                
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version
     ### 11_mitoHitCorDBdaligner
@@ -738,7 +738,16 @@ then
         
         setDalignerOptions 1
         
-    	echo "${MARVEL_PATH}/bin/daligner${MITO_DALIGNER_OPT} ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M" > mito_${sID}_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.plan
+        corblocks=$(getNumOfDbBlocks ${PROJECT_ID}_MITO_COR_M.db)	
+
+        echo "mkdir -p cor_las" > mito_${sID}_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.plan
+        for x in $(seq 1 ${corblocks})
+        do
+            echo "PATH=${DAZZLER_PATH}/bin:\$PATH ${DAZZLER_PATH}/bin/daligner -k32 -e.95 -v -M16 -T${THREADS_daligner} ${PROJECT_ID}_MITO_COR_D.${x} ${PROJECT_ID}_MITO_COR_D.@"    
+            echo "mv ${PROJECT_ID}_MITO_COR_D.${x}.${PROJECT_ID}_MITO_COR_D.*las cor_las"
+        done >> mito_${sID}_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.plan
+
+        echo "${MARVEL_PATH}/bin/LAmerge -v ${PROJECT_ID}_MITO_COR_M.db ${PROJECT_ID}_MITO_COR_M.las cor_las && rm -r cor_las" >> mito_${sID}_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_${sID}_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.version
     ### 12_mitoHitCorDBLAq
     elif [[ ${currentStep} -eq 12 ]]
