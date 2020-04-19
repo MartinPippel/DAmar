@@ -333,7 +333,7 @@ function setLAfilterOptions()
         fi
     fi
     
-	if [[ -n ${RAW_MITO_LAFILTER_TRIM} && ${RAW_MITO_LAFILTER_TRIM} -ne 0 ]] || [[ -n ${RAW_MITO_LAFILTER_UBAS} ]]
+       if [[ -n ${RAW_MITO_LAFILTER_TRIM} && ${RAW_MITO_LAFILTER_TRIM} -ne 0 ]] || [[ -n ${RAW_MITO_LAFILTER_UBAS} ]]
     then
         if [[ "x$1" == "x1" ]]
         then 
@@ -737,7 +737,7 @@ then
         ### find and set LAq options 
     	setLAfilterOptions
         
-		echo "${MARVEL_PATH}/bin/LAfilter${MITO_LAFILTER_OPT} -T -t trim1_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.gap.las ${PROJECT_ID}_MITO_FIX_M.filt.las" > mito_${sID}_mitoHitFixDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
+	        echo "${MARVEL_PATH}/bin/LAfilter${MITO_LAFILTER_OPT} -T -t trim1_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.gap.las ${PROJECT_ID}_MITO_FIX_M.filt.las" > mito_${sID}_mitoHitFixDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "${MARVEL_PATH}/bin/LAshow -r ${PROJECT_ID}_MITO_FIX_M ${PROJECT_ID}_MITO_FIX_M.filt.las | awk '{print \$1}' | uniq > ${PROJECT_ID}_MITO_FIX_M.filt.readIds.txt" >> mito_${sID}_mitoHitFixDBLAfilter_single_${RAW_DB%.db}.${slurmID}.plan
     	echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_${sID}_mitoHitFixDBLAfilter_single_${RAW_DB%.db}.${slurmID}.version        
     ### 15_mitoHitFixDBLAcorrect 
