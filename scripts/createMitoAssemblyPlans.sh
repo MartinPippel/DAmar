@@ -723,8 +723,8 @@ then
         echo "${MARVEL_PATH}/scripts/splitReads.py ${PROJECT_ID}_MITO_M.sort.dacRN.fasta ${PROJECT_ID}_MITO_M.sort.dac.split.fasta 5000 0" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${MARVEL_PATH}/bin/FA2db -v -x0 -c source ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_M.sort.dac.split.fasta" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_MITO_COR_D ${PROJECT_ID}_MITO_M.sort.dac.split.fasta" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan		                
-		echo "${MARVEL_PATH}/bin/DBsplit -s 1 ${PROJECT_ID}_MITO_COR_M" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
-		echo "${DAZZLER_PATH}/bin/DBsplit -s 1 ${PROJECT_ID}_MITO_COR_D" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan		                
+		echo "${MARVEL_PATH}/bin/DBsplit -s1 ${PROJECT_ID}_MITO_COR_M" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
+		echo "${DAZZLER_PATH}/bin/DBsplit -s1 ${PROJECT_ID}_MITO_COR_D" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan		                
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version
         echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.version
     ### 11_mitoHitCorDBdaligner
