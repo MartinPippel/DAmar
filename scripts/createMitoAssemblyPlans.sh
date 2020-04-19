@@ -224,12 +224,12 @@ function setLAqOptions()
 	    else 
 	        if [[ -n ${COR_MITO_DALIGNER_TRACESPACE} && ${COR_MITO_DALIGNER_TRACESPACE} -ne 100 ]]
 	        then 
-	            COR_MITO_LAQ_QTRIMCUTOFF=25
+	            COR_MITO_LAQ_QTRIMCUTOFF=5
 	            adaptQTRIMCUTOFF=$(echo "${COR_MITO_LAQ_QTRIMCUTOFF}*${RAW_MITO_DALIGNER_TRACESPACE}/100+1" | bc)
 	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"
 	        else
-	            adaptQTRIMCUTOFF=25
-	            COR_MITO_LAQ_QTRIMCUTOFF=25
+	            adaptQTRIMCUTOFF=5
+	            COR_MITO_LAQ_QTRIMCUTOFF=5
 	            MITO_LAQ_OPT="${MITO_LAQ_OPT} -d ${adaptQTRIMCUTOFF}"            
 	        fi
 	    fi    	
@@ -340,16 +340,16 @@ function setLAfilterOptions()
             MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -s ${RAW_MITO_LAFILTER_STITCH}"
         fi
     fi
-    
+
+    if [[ "x$1" == "x1" ]]
+    then 
+        setLAqOptions 1
+    else
+        setLAqOptions
+    fi              
+
 	if [[ -n ${RAW_MITO_LAFILTER_TRIM} && ${RAW_MITO_LAFILTER_TRIM} -ne 0 ]] || [[ -n ${RAW_MITO_LAFILTER_UBAS} ]]
     then
-        if [[ "x$1" == "x1" ]]
-        then 
-            setLAqOptions 1
-    	else
-    		setLAqOptions
-        fi               
-        
         MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -t trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -T" 
     fi
 }
@@ -774,10 +774,7 @@ then
         done    
         
         setLAfilterOptions 1
-        
-        ### find and set LAq options 
-        setLAqOptions 1
-        
+                
         echo "${MARVEL_PATH}/bin/OGbuild -t trim0_d${COR_MITO_LAQ_QTRIMCUTOFF}_s${COR_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.filt.las ${PROJECT_ID}_MITO_COR_M.graphml" > mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
         echo "${MARVEL_PATH}/scripts/OGtour.py -c -d -l3 -b4 ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.graphml" >> mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
         echo "${MARVEL_PATH}/scripts/tour2fasta.py -t trim0_d${COR_MITO_LAQ_QTRIMCUTOFF}_s${COR_MITO_LAQ_MINSEG} -p ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.graphml ${PROJECT_ID}_MITO_COR_M.tour.paths" >> mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
