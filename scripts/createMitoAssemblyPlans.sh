@@ -344,14 +344,17 @@ function setLAfilterOptions()
     if [[ "x$1" == "x1" ]]
     then 
         setLAqOptions 1
+        if [[ -n ${COR_MITO_LAFILTER_TRIM} && ${COR_MITO_LAFILTER_TRIM} -ne 0 ]] || [[ -n ${RAW_MITO_LAFILTER_UBAS} ]]
+        then
+            MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -t trim0_d${COR_MITO_LAQ_QTRIMCUTOFF}_s${COR_MITO_LAQ_MINSEG} -T" 
+        fi
     else
         setLAqOptions
-    fi              
-
-	if [[ -n ${RAW_MITO_LAFILTER_TRIM} && ${RAW_MITO_LAFILTER_TRIM} -ne 0 ]] || [[ -n ${RAW_MITO_LAFILTER_UBAS} ]]
-    then
-        MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -t trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -T" 
-    fi
+        if [[ -n ${RAW_MITO_LAFILTER_TRIM} && ${RAW_MITO_LAFILTER_TRIM} -ne 0 ]] || [[ -n ${RAW_MITO_LAFILTER_UBAS} ]]
+        then
+            MITO_LAFILTER_OPT="${MITO_LAFILTER_OPT} -t trim0_d${RAW_MITO_LAQ_QTRIMCUTOFF}_s${RAW_MITO_LAQ_MINSEG} -T" 
+        fi
+    fi        
 }
 
 function setLAfixOptions()
@@ -773,7 +776,7 @@ then
             rm $x
         done    
         
-        setLAfilterOptions 1
+        setLAqOptions 1
                 
         echo "${MARVEL_PATH}/bin/OGbuild -t trim0_d${COR_MITO_LAQ_QTRIMCUTOFF}_s${COR_MITO_LAQ_MINSEG} ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.filt.las ${PROJECT_ID}_MITO_COR_M.graphml" > mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
         echo "${MARVEL_PATH}/scripts/OGtour.py -c -d -l3 -b4 ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.graphml" >> mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
