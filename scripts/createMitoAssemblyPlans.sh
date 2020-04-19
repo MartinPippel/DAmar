@@ -743,8 +743,8 @@ then
         echo "mkdir -p cor_las" > mito_${sID}_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.plan
         for x in $(seq 1 ${corblocks})
         do
-            echo "PATH=${DAZZLER_PATH}/bin:\$PATH ${DAZZLER_PATH}/bin/daligner -k32 -e.95 -v -M16 -T${THREADS_daligner} ${PROJECT_ID}_MITO_COR_D.${x} ${PROJECT_ID}_MITO_COR_D.@"    
-            echo "mv ${PROJECT_ID}_MITO_COR_D.${x}.${PROJECT_ID}_MITO_COR_D.*las cor_las"
+            echo "PATH=${DAZZLER_PATH}/bin:\$PATH ${DAZZLER_PATH}/bin/daligner -k32 -e.95 -v -M16 -T${THREADS_daligner} ${PROJECT_ID}_MITO_COR_D.${x} ${PROJECT_ID}_MITO_COR_D.@${x}"    
+            echo "mv ${PROJECT_ID}_MITO_COR_D.${x}.${PROJECT_ID}_MITO_COR_D.*.las ${PROJECT_ID}_MITO_COR_D.*.${PROJECT_ID}_MITO_COR_D.${x}.las cor_las/"
         done >> mito_${sID}_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.plan
 
         echo "${MARVEL_PATH}/bin/LAmerge -v ${PROJECT_ID}_MITO_COR_M.db ${PROJECT_ID}_MITO_COR_M.las cor_las && rm -r cor_las" >> mito_${sID}_mitoHitCorDBdaligner_single_${RAW_DB%.db}.${slurmID}.plan
