@@ -716,7 +716,8 @@ then
     		done
     	fi    	
                 
-        echo "${MARVEL_PATH}/scripts/splitReads.py ${PROJECT_ID}_MITO_M.sort.dac.fasta ${PROJECT_ID}_MITO_M.sort.dac.split.fasta 5000 0" > mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "cat ${PROJECT_ID}_MITO_M.sort.dac.fasta | awk -F '[/=,]' '{if (\$1 ~ \">\") print \$0\" source=\"substr(\$1,2,1)-1\",\"substr(\$4,2,length(\$4)-1)\",\"substr(\$5,1,length(\$5)-1); else print \$0}' > ${PROJECT_ID}_MITO_M.sort.dacRN.fasta" > mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${MARVEL_PATH}/scripts/splitReads.py ${PROJECT_ID}_MITO_M.sort.dacRN.fasta ${PROJECT_ID}_MITO_M.sort.dac.split.fasta 5000 0" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${MARVEL_PATH}/bin/FA2db -v -x0 ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_M.sort.dac.split.fasta" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_MITO_COR_D ${PROJECT_ID}_MITO_M.sort.dac.split.fasta" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan		                
 		echo "${MARVEL_PATH}/bin/DBsplit ${PROJECT_ID}_MITO_COR_M" >> mito_${sID}_mitoPrepareMitoHitCorDB_single_${RAW_DB%.db}.${slurmID}.plan
