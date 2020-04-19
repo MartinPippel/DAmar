@@ -205,7 +205,7 @@ function setLAqOptions()
         MITO_LAQ_OPT="${MITO_LAQ_OPT} -c"
 		if [[ -n ${COR_MITO_LAQ_MINSEG} && ${COR_MITO_LAQ_MINSEG} -ne 0 ]]
 	    then
-	        MITO_LAQ_OPT="${COR_LAQ_OPT} -s ${COR_MITO_LAQ_MINSEG}"
+	        MITO_LAQ_OPT="${MITO_LAQ_OPT} -s ${COR_MITO_LAQ_MINSEG}"
 	    else 
 	        COR_MITO_LAQ_MINSEG=2
 	        MITO_LAQ_OPT="${MITO_LAQ_OPT} -s ${COR_MITO_LAQ_MINSEG}"
