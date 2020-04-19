@@ -490,8 +490,9 @@ then
         fi
         ### create Catrack command
 		echo "cd ${FIX_REPMASK_OUTDIR} && ${DAZZLER_PATH}/bin/Catrack${REPMASK_CATRACK_OPT} ${FIX_DAZZ_DB%.db} ${FIX_REPMASK_TANMASK_TRACK} && cp .${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.anno .${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.data ${myCWD}/ && cd ${myCWD}" > mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "cd ${FIX_REPMASK_OUTDIR} && ${LASTOOLS_PATH}/bin/viewmasks ${FIX_DAZZ_DB%.db} ${FIX_REPMASK_TANMASK_TRACK} > ${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.txt && cd ${myCWD}" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
-      	echo "cd ${FIX_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.txt ${FIX_REPMASK_TANMASK_TRACK} && cp .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.a2 .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.d2 ${myCWD}/ && cd ${myCWD}" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
+
+	echo "cd ${FIX_REPMASK_OUTDIR} && ${DAZZLER_PATH}/bin/DBdump -r -m${FIX_REPMASK_TANMASK_TRACK} ${FIX_DAZZ_DB%.db} | awk '{if (\$1 == \"R\") {read=\$2}; if (\$1 == \"T0\" && \$2 > 0) {for (i = 3; i < 3+2*\$2; i+=2) print read-1\" \"\$i\" \"\$(i+1)} }' > ${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.txt && cd ${myCWD}" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan 
+        echo "cd ${FIX_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/txt2track -m ${FIX_DB%.db} ${FIX_DAZZ_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.txt ${FIX_REPMASK_TANMASK_TRACK} && cp .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.a2 .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}.d2 ${myCWD}/ && cd ${myCWD}" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan
       	echo "cd ${FIX_REPMASK_OUTDIR} && ${MARVEL_PATH}/bin/TKcombine ${FIX_DB%.db} ${FIX_REPMASK_TANMASK_TRACK}_dust ${FIX_REPMASK_TANMASK_TRACK} dust && cp .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}_dust.a2 .${FIX_DB%.db}.${FIX_REPMASK_TANMASK_TRACK}_dust.d2 ${myCWD}/ && cd ${myCWD}" >> mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.plan 
         
         echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > mask_${sID}_Catrack_single_${FIX_DB%.db}.${slurmID}.version
