@@ -855,11 +855,11 @@ then
         # filter out only PacBio read IDs, that survived some filtering, and the daccord polishing 
         echo "for x in \$(grep -e \">\" ${PROJECT_ID}_MITO_M.sort.dac.fasta | awk -F '[>/]' '{print \$2}' | uniq); do sed -n \${x}p ${RAW_DB%.db}.${rawblocks}.mitoHits.readIDs; done  > ${PROJECT_ID}_MITO_M.sort.dac.rawPacBioIds.txt" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # index subread bam files 
-        echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate pbbioconda; for x in ${POLISH_DIR}/*.subreads.bam; do pbindex ${x} done; conda deactivate;" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate pbbioconda; for x in ${POLISH_DIR}/*.subreads.bam; do pbindex \${x} done; conda deactivate;" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # filter relevant hole IDs, and create an individual file per bam file 
         echo "for x in ${POLISH_DIR}/*.subreads.bam; do n=$(basename \${x%.subreads.bam}) && grep -e \"\$n\" ${PROJECT_ID}_MITO_M.sort.dac.rawPacBioIds.txt | awk -F \/ '{print \$2}' > ${POLISH_DIR}/\${n}.mitoHoleIDs.txt; done" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # create a subset of the bamfiles by using bamSieve 
-        echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate base; for x in ${POLISH_DIR}/*.mitoHoleIDs.txt; do bamSieve --whitelist $x ${x%.mitoHoleIDs.txt}.subreads.bam ${x%.mitoHoleIDs.txt}.mito.subreads.bam; done; conda deactivate" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate base; for x in ${POLISH_DIR}/*.mitoHoleIDs.txt; do bamSieve --whitelist \$x \${x%.mitoHoleIDs.txt}.subreads.bam \${x%.mitoHoleIDs.txt}.mito.subreads.bam; done; conda deactivate" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # merge all mito bam files and create index 
         echo "ls ${POLISH_DIR}/*.mito.subreads.bam > input_bam.fofn && source /projects/dazzler/pippel/prog/miniconda3/bin/activate pbbioconda && bamtools merge -list input_bam.fofn -out ${POLISH_DIR}/all.mito.subreads.bam && pbindex ${POLISH_DIR}/all.mito.subreads.bam && conda deactivate" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # map mito reads to mito assembly
