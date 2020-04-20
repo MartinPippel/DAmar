@@ -822,7 +822,7 @@ then
         POLISH_DIR=polishing
 
         # create polishing dir 
-        echo "if [[ -d ${POLISH_DIR} ]]; then mv ${POLISH_DIR} ${RAW_DALIGN_POLISH_DIROUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${POLISH_DIR}" > mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "if [[ -d ${POLISH_DIR} ]]; then mv ${POLISH_DIR} ${POLISH_DIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${POLISH_DIR}" > mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # link relevat bam files 
 
         if [[ ! -d ${PB_ARROW_BAM} ]]
