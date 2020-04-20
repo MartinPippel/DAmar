@@ -636,7 +636,7 @@ then
         echo "${MARVEL_PATH}/bin/DBsplit -s 1 ${PROJECT_ID}_MITO_M" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
         echo "${DACCORD_PATH}/bin/fastaidrename < ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta | awk '{print \$1}' > ${RAW_DB%.db}.${rawblocks}.mitoHitsDazzler.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_MITO_D ${RAW_DB%.db}.${rawblocks}.mitoHitsDazzler.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "${DAZZLER_PATH}/bin/DBsplit -s 1 ${PROJECT_ID}_MITO_D" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${DAZZLER_PATH}/bin/DBsplit -s1 ${PROJECT_ID}_MITO_D" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
 
     	echo "MARVEL LAshow $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.version
     elif [[ ${currentStep} -eq 6 ]]
@@ -792,7 +792,7 @@ then
         echo "${MARVEL_PATH}/scripts/tour2fasta.py -t trim0_d${COR_MITO_LAQ_QTRIMCUTOFF}_s${COR_MITO_LAQ_MINSEG} -p ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M ${PROJECT_ID}_MITO_COR_M.graphml ${PROJECT_ID}_MITO_COR_M.tour.paths" >> mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
         echo "${MARVEL_PATH}/bin/OGlayout -R -d 300 ${PROJECT_ID}_MITO_COR_M.tour.graphml ${PROJECT_ID}_MITO_COR_M.tour.layout.graphml" >> mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.version
-    ### 15_mitoHitCorDBArrowPolishing    
+    ### 15_mitoHitCorDBCircularize
     elif [[ ${currentStep} -eq 15 ]]
     then
     	### clean up plans 
@@ -801,8 +801,74 @@ then
             rm $x
         done    
         
-        ## TODO --> pull out raw read ids, create pacbio data set, run arrow polishing twice !!!!!!
-        
+        ##TODO: set and check dependecies via script and config file
+        cmd="PATH=/projects/dazzler/pippel/prog/canu-2.0/Linux-amd64/bin:/projects/dazzler/pippel/prog/Prodigal/:/projects/dazzler/pippel/prog/SPAdes-3.13.0-Linux/bin:/projects/dazzler/pippel/prog/amos-3.1.0/bin:\$PATH circlator"
+        minID=70
+
+        # circularize! 
+        echo "${cmd} minimus2 ${PROJECT_ID}_MITO_COR_M.fasta ${PROJECT_ID}_MITO_COR_M" > mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${cmd} get_dnaa get_dnaa" >> mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
+        # fix start 
+        echo "${cmd} fixstart --genes_fa get_dnaa.nucleotides.fa --min_id ${minID} ${PROJECT_ID}_MITO_COR_M.circularise.fasta ${PROJECT_ID}_MITO_COR_M.circularise.fixstart" >> mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
+    ### 16_mitoHitCorDBArrow
+    elif [[ ${currentStep} -eq 16 ]]
+    then
+    	### clean up plans 
+        for x in $(ls mito_${sID}_*_*_${RAW_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done    
+
+        POLISH_DIR=polishing
+
+        # create polishing dir 
+        echo "if [[ -d ${POLISH_DIR} ]]; then mv ${POLISH_DIR} ${RAW_DALIGN_POLISH_DIROUTDIR}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${POLISH_DIR}" > mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        # link relevat bam files 
+
+        if [[ ! -d ${PB_ARROW_BAM} ]]
+        then
+        	(>&2 echo "ERROR - Variable ${PB_ARROW_BAM} is not set or cannot be accessed")
+        	exit 1
+        fi
+                
+        # todo: hard-coded, handle CCS reads as well, etc.
+   		numFiles=0 
+		for file in ${PB_ARROW_BAM}/*.subreads.bam   		
+   		do
+            if [[ -f "${file}" ]]
+            then
+                numFiles=$((numFiles+1))
+                machineName=$(samtools view -H "${file}" | grep -e "^@RG" | awk '{print substr($5,4,length($5)-3)}')
+                echo "ln -s -f -r "${file}" ${POLISH_DIR}/${machineName}.subreads.bam" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+
+            fi
+   		done
+
+        if [[ "${numFiles}" == "0" ]]
+        then 
+            (>&2 echo "could not find PacBio subreads bam file in dir: ${PB_ARROW_BAM}!")
+            exit 1
+        fi 
+
+        # get intial raw PacBio read IDs, that somehow matched the reference 
+        echo "grep -e \">\" ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta > ${RAW_DB%.db}.${rawblocks}.mitoHits.readIDs" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        # filter out only PacBio read IDs, that survived some filtering, and the daccord polishing 
+        echo "for x in \$(grep -e \">\" ${PROJECT_ID}_MITO_M.sort.dac.fasta | awk -F '[>/]' '{print \$2}' | uniq); do sed -n \${x}p ${RAW_DB%.db}.${rawblocks}.mitoHits.readIDs; done  > ${PROJECT_ID}_MITO_M.sort.dac.rawPacBioIds.txt" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        # index subread bam files 
+        for x in ${POLISH_DIR}/*.subreads.bam; do echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate pbbioconda && pbindex ${x} && conda deactivate"; done >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        # filter relevant hole IDs, and create an individual file per bam file 
+        for x in ${POLISH_DIR}/*.subreads.bam; do echo "n=$(basename \${x%.subreads.bam}) && grep -e \"\$n\" ${PROJECT_ID}_MITO_M.sort.dac.rawPacBioIds.txt | awk -F \/ '{print \$2}' > ${POLISH_DIR}/\${n}.mitoHoleIDs.txt"; done >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        # create a subset of the bamfiles by using bamSieve 
+        for x in ${POLISH_DIR}/*.mitoHoleIDs.txt; do echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate base && bamSieve --whitelist $x ${x%.mitoHoleIDs.txt}.subreads.bam ${x%.mitoHoleIDs.txt}.mito.subreads.bam && conda deactivate"; done >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        # merge all mito bam files and create index 
+        echo "ls ${POLISH_DIR}/*.mito.subreads.bam > input_bam.fofn && source /projects/dazzler/pippel/prog/miniconda3/bin/activate pbbioconda && bamtools merge -list input_bam.fofn -out ${POLISH_DIR}/all.mito.subreads.bam && pbindex ${POLISH_DIR}/all.mito.subreads.bam && conda deactivate" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        # map mito reads to mito assembly
+        echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate pbbioconda && pbmm2 align ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.fasta ${POLISH_DIR}/all.mito.subreads.bam --sort -j 6 -J 2 > ${POLISH_DIR}/all.mito.arrow.pbmm2.bam" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        # arrow polishing 
+        echo "samtools faidx ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.fasta" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate base && arrow -r ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.fasta -o ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.arrow.fq -o ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.arrow.fa --log-level INFO -j 8 --minAccuracy 0.88 -X 200 --minMapQV 20 ${POLISH_DIR}/all.mito.arrow.pbmm2.bam && conda deactivate" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan          
+
+        ## todo add programs and corresponding versions
     else
         (>&2 echo "step ${currentStep} in RAW_MITO_TYPE ${RAW_MITO_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${RAW_MITO_TYPE}]}")
