@@ -54,7 +54,7 @@ then
 			(>&2 echo "Cannot find initial databases ${RAW_DAZZ_DB%.db}.db in directory ${DB_PATH}")
 	        exit 1	
 		fi		
-        ln -s ${DB_PATH}/${RAW_DAZZ_DB%db}.db ${DB_PATH}/.${RAW_DAZZ_DB%db}.* .
+        cp ${DB_PATH}/${RAW_DAZZ_DB%db}.db ${DB_PATH}/.${RAW_DAZZ_DB%db}.* .
     fi	
     ${SUBMIT_SCRIPTS_PATH}/createMitoAssemblyPlans.sh ${configFile} ${currentStep} ${slurmID}
     if [ $? -ne 0 ]
