@@ -806,10 +806,10 @@ then
         minID=70
 
         # circularize! 
-        echo "${cmd} minimus2 ${PROJECT_ID}_MITO_COR_M.fasta ${PROJECT_ID}_MITO_COR_M" > mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
-        echo "${cmd} get_dnaa get_dnaa" >> mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${cmd} minimus2 ${PROJECT_ID}_MITO_COR_M.fasta ${PROJECT_ID}_MITO_COR_M" > mito_${sID}_mitoHitCorDBCircularize_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${cmd} get_dnaa get_dnaa" >> mito_${sID}_mitoHitCorDBCircularize_single_${RAW_DB%.db}.${slurmID}.plan
         # fix start 
-        echo "${cmd} fixstart --genes_fa get_dnaa.nucleotides.fa --min_id ${minID} ${PROJECT_ID}_MITO_COR_M.circularise.fasta ${PROJECT_ID}_MITO_COR_M.circularise.fixstart" >> mito_${sID}_mitoHitCorDBTour_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "${cmd} fixstart --genes_fa get_dnaa.nucleotides.fa --min_id ${minID} ${PROJECT_ID}_MITO_COR_M.circularise.fasta ${PROJECT_ID}_MITO_COR_M.circularise.fixstart" >> mito_${sID}_mitoHitCorDBCircularize_single_${RAW_DB%.db}.${slurmID}.plan
     ### 16_mitoHitCorDBArrow
     elif [[ ${currentStep} -eq 16 ]]
     then
