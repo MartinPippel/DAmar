@@ -634,7 +634,7 @@ then
         ### pull out read IDs
 		echo "${MARVEL_PATH}/bin/LAshow -r ${RAW_DB%.db} ${RAW_DB%.db}.${rawblocks}.mitoHits.las | awk '{print \$2}' | sort -n -u > ${RAW_DB%.db}.${rawblocks}.mitoHits.readids" > mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
         echo "awk '{print \$1+1}' ${RAW_DB%.db}.${rawblocks}.mitoHits.readids > ${RAW_DB%.db}.${rawblocks}.mitoHits.DAZZ.readids" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
-    	echo "${DAZZLER_PATH}/bin/DBshow ${RAW_DAZZ_DB%.db} ${RAW_DB%.db}.${rawblocks}.mitoHits.readids > ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
+    	echo "${DAZZLER_PATH}/bin/DBshow ${RAW_DAZZ_DB%.db} ${RAW_DB%.db}.${rawblocks}.mitoHits.DAZZ.readids > ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${MARVEL_PATH}/bin/FA2db -v -x0 ${PROJECT_ID}_MITO_M ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
         echo "${MARVEL_PATH}/bin/DBsplit -s 1 ${PROJECT_ID}_MITO_M" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
 		echo "${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_MITO_D ${RAW_DB%.db}.${rawblocks}.mitoHits.fasta" >> mito_${sID}_mitoPrepareMitoHitDB_single_${RAW_DB%.db}.${slurmID}.plan
@@ -859,7 +859,7 @@ then
         # index subread bam files 
         echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate pbbioconda; for x in ${POLISH_DIR}/*.subreads.bam; do pbindex \${x}; done; conda deactivate;" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # filter relevant hole IDs, and create an individual file per bam file 
-        echo "for x in ${POLISH_DIR}/*.subreads.bam; do n=$(basename \${x%.subreads.bam}) && grep -e \"\$n\" ${PROJECT_ID}_MITO_M.sort.dac.rawPacBioIds.txt | awk -F \/ '{print \$2}' > ${POLISH_DIR}/\${n}.mitoHoleIDs.txt; done" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "for x in ${POLISH_DIR}/*.subreads.bam; do n=\$(basename \${x%.subreads.bam}) && grep -e \"\$n\" ${PROJECT_ID}_MITO_M.sort.dac.rawPacBioIds.txt | awk -F \/ '{print \$2}' > ${POLISH_DIR}/\${n}.mitoHoleIDs.txt; done" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # create a subset of the bamfiles by using bamSieve 
         echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate base; for x in ${POLISH_DIR}/*.mitoHoleIDs.txt; do bamSieve --whitelist \$x \${x%.mitoHoleIDs.txt}.subreads.bam \${x%.mitoHoleIDs.txt}.mito.subreads.bam; done; conda deactivate" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # merge all mito bam files and create index 
@@ -868,6 +868,7 @@ then
         echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate pbbioconda && pbmm2 align ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.fasta ${POLISH_DIR}/all.mito.subreads.bam --sort -j 6 -J 2 > ${POLISH_DIR}/all.mito.arrow.pbmm2.bam" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         # arrow polishing 
         echo "samtools faidx ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.fasta" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
+        echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate pbbioconda && pbindex ${POLISH_DIR}/all.mito.arrow.pbmm2.bam && conda deactivate" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan
         echo "source /projects/dazzler/pippel/prog/miniconda3/bin/activate base && arrow -r ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.fasta -o ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.arrow.fq -o ${PROJECT_ID}_MITO_COR_M.circularise.fixstart.arrow.fa --log-level INFO -j 8 --minAccuracy 0.88 -X 200 --minMapQV 20 ${POLISH_DIR}/all.mito.arrow.pbmm2.bam && conda deactivate" >> mito_${sID}_mitoHitCorDBArrow_single_${RAW_DB%.db}.${slurmID}.plan          
 
         ## todo add programs and corresponding versions
