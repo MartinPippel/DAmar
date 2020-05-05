@@ -86,7 +86,10 @@ static int cyclicChain(FilterContext *ctx, Overlap *ovls, int n)
 	Overlap *ovl1 = ovls;
 
 	if (ovl1->path.abpos > ctx->nMaxUnalignedTips && ovl1->path.bbpos > ctx->nMaxUnalignedTips)
-		return 0;
+	{
+	  printf("ctx->nMaxUnalignedTip! : %d > %d && %d > %d\n", ovl1->path.abpos, ctx->nMaxUnalignedTips, ovl1->path.bbpos, ctx->nMaxUnalignedTips);
+	  return 0;
+	}
 
 	if (n == 1)
 	{
@@ -109,10 +112,16 @@ static int cyclicChain(FilterContext *ctx, Overlap *ovls, int n)
 		bCumAlnLen += ovl2->path.bepos - ovl2->path.bbpos;
 
 		if ((ovl1->flags & OVL_COMP) != (ovl2->flags & OVL_COMP))
+		{
+			printf("wrong orientation\n");
 			return 0;
-
+		}
+		// TODO: urgent check gaps at the very end, otherwise we loos to many reads
 		if(ovl2->path.abpos - ovl1->path.aepos > ctx->nMaxGapLength)
+		{
+			printf("gap length to large: %d > %d\n",ovl2->path.abpos - ovl1->path.aepos, ctx->nMaxGapLength );
 			return 0;
+		}
 
 		if (ovl1->path.aepos - ctx->nMaxOverhangLength < ovl2->path.abpos)
 		{
@@ -137,11 +146,17 @@ static int cyclicChain(FilterContext *ctx, Overlap *ovls, int n)
 	}
 
 	if (numCyclicBreaks > 1)
+        {
+		printf("numCyclicBreaks(%d) > 1\n",numCyclicBreaks);
 		return 0;
-
+	}
 	// check covered b-read percentage
 	if(bCumAlnLen*100.0/blen < ctx->nMinCoveredReadLength)
+	{
+		printf("bCumAlnLen*100.0/blen < ctx->nMinCoveredReadLength: %.3f < %d\n", bCumAlnLen*100.0/blen, ctx->nMinCoveredReadLength);
 		return 0;
+	}
+
 
 	return 1;
 }
@@ -150,6 +165,20 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 {
 #ifdef VERBOSE
 	printf( ANSI_COLOR_GREEN "PASS filtering\n" ANSI_COLOR_RESET);
+
+	printf( ANSI_COLOR_RED "   OPTIONS\n");
+	printf( "   verbose : %d\n", fctx->nVerbose);
+	printf( "   nMinReadLength : %d\n", fctx->nMinReadLength);
+	printf( "   nMinCoveredReadLength : %d\n", fctx->nMinCoveredReadLength);
+	printf( "   nMaxUnalignedTips : %d\n", fctx->nMaxUnalignedTips);
+	printf( "   nMaxReadLength : %d\n", fctx->nMaxReadLength);
+	printf( "   nMaxOverhangLength : %d\n", fctx->nMaxOverhangLength);
+	printf( "   nMaxGapLength : %d\n", fctx->nMaxGapLength);
+	printf( "   nFilteredMinLenReads : %d\n", fctx->nFilteredMinLenReads);
+	printf( "   nFilteredMinLenAln : %d\n", fctx->nFilteredMinLenAln);
+	printf( "   nFilteredMaxLenReads : %d\n", fctx->nFilteredMaxLenReads);
+	printf( "   DB name : %s\n", fctx->db->path);
+	printf("\n" ANSI_COLOR_RESET);
 #endif
 
 	fctx->twidth = pctx->twidth;
@@ -200,6 +229,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 			{
 				for (i = j; i<=k; i++)
 				{
+					printf("discard OVL: %d vs  %d [%d, %d] [%d, %d] comp? %c, l [%d, %d]\n", ovl[i].aread, ovl[i].bread, ovl[i].path.abpos, ovl[i].path.aepos, ovl[i].path.bbpos, ovl[i].path.bepos, (ovl[i].flags & OVL_COMP) ? 'C' : 'N', DB_READ_LEN(ctx->db, ovl[j].aread), DB_READ_LEN(ctx->db, ovl[j].bread));
 					ovl[i].flags |= OVL_DISCARD;
 				}
 			}
