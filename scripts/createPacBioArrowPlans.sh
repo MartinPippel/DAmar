@@ -679,27 +679,31 @@ then
    			then
    				(>&2 echo "bam file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam is EMPTY. Skip it!")
    			else
-			   	tmp=$((cumSize+$(cut -f 2 ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta.fai)))			    
+			    clen=$(cut -f 2 ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta.fai)
+			   	tmp=$((cumSize+clen))			    
 				if [[ ${tmp} -lt ${limit} ]]
 				then 
 					if [[ ${cumSize} -eq 0 ]]
 					then
 						echo -n "${CONDA_BASE_ENV} && "
 					fi
-					echo -n "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT}${gff}${vcf}${fq} -w ${x}:0-${tmp} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam;"
+					echo -n "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT}${gff}${vcf}${fq} -w ${x}:0-${clen} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam;"
 					cumSize=$((cumSize+tmp))					
 				else
 					if [[ ${cumSize} -eq 0 ]]
 					then
-						echo -e "${CONDA_BASE_ENV} && bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT}${gff}${vcf}${fq} -w ${x}:0-${tmp} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && conda deactivate"
+						echo -e "${CONDA_BASE_ENV} && bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT}${gff}${vcf}${fq} -w ${x}:0-${clen} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && conda deactivate"
 					else
-						echo -e "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT}${gff}${vcf}${fq} -w ${x}:0-${tmp} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && conda deactivate"
+						echo -e "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT}${gff}${vcf}${fq} -w ${x}:0-${clen} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && conda deactivate"
 					fi
 					cumSize=0
-				fi
-   				
+				fi   				
    			fi
 		done > arrow_06_gcpp_block_${CONT_DB}.${slurmID}.plan	
+		if [[ ${cumSize} -gt 0 ]]
+		then
+			echo -e "\n" >> arrow_06_gcpp_block_${CONT_DB}.${slurmID}.plan	
+		fi
 		echo "$(${CONDA_BASE_ENV} && bamtools --version | grep bamtools && conda deactivate)" > arrow_06_gcpp_block_${CONT_DB}.${slurmID}.version
 		echo "pbindex $(${CONDA_BASE_ENV} && pbindex --version && conda deactivate)" >> arrow_06_gcpp_block_${CONT_DB}.${slurmID}.version
 		echo "gcpp $(${CONDA_BASE_ENV} && gcpp --version && conda deactivate)" >> arrow_06_gcpp_block_${CONT_DB}.${slurmID}.version				
