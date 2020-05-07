@@ -702,7 +702,7 @@ then
 		done > arrow_06_gcpp_block_${CONT_DB}.${slurmID}.plan	
 		if [[ ${cumSize} -gt 0 ]]
 		then
-			echo -e "\n" >> arrow_06_gcpp_block_${CONT_DB}.${slurmID}.plan	
+			echo -e "" >> arrow_06_gcpp_block_${CONT_DB}.${slurmID}.plan	
 		fi
 		echo "$(${CONDA_BASE_ENV} && bamtools --version | grep bamtools && conda deactivate)" > arrow_06_gcpp_block_${CONT_DB}.${slurmID}.version
 		echo "pbindex $(${CONDA_BASE_ENV} && pbindex --version && conda deactivate)" >> arrow_06_gcpp_block_${CONT_DB}.${slurmID}.version
