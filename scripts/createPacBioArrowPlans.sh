@@ -655,23 +655,21 @@ then
 		setgcppOptions
 		
 		cumSize=0;
-		limit=5000000;
+		limit=10000000;
 		for x in $(cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header)   		
    		do
-   			gff=""
+		    aout="-o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa"
    			if [[ -n ${PB_ARROW_GCPP_GFFOUT} && ${PB_ARROW_GCPP_GFFOUT} -ne 0 ]]
    			then
-   				gff=" -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.gff"	
+   				aout="${aout},${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.gff"	
    			fi 
-   			vcf=""
    			if [[ -n ${PB_ARROW_GCPP_VCFOUT} && ${PB_ARROW_GCPP_VCFOUT} -ne 0 ]]
    			then
-   				vcf=" -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.vcf"	
+   				aout="${aout},${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.vcf"	
    			fi
-   			fq=""
    			if [[ -n ${PB_ARROW_GCPP_FQOUT} && ${PB_ARROW_GCPP_FQOUT} -ne 0 ]]
    			then
-   				fq=" -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fq"	
+   				aout="${aout},${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fq"	
    			fi
    			
    			# check if bam is empty !!!!!
@@ -687,14 +685,14 @@ then
 					then
 						echo -n "${CONDA_BASE_ENV} && "
 					fi
-					echo -n "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT}${gff}${vcf}${fq} -w ${x}:0-${clen} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam;"
+					echo -n "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT} -w ${x}:0-${clen} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${aout} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam;"
 					cumSize=$((cumSize+tmp))					
 				else
 					if [[ ${cumSize} -eq 0 ]]
 					then
-						echo -e "${CONDA_BASE_ENV} && bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT}${gff}${vcf}${fq} -w ${x}:0-${clen} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && conda deactivate"
+						echo -e "${CONDA_BASE_ENV} && bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT} -w ${x}:0-${clen} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${aout} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && conda deactivate"
 					else
-						echo -e "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT}${gff}${vcf}${fq} -w ${x}:0-${clen} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && conda deactivate"
+						echo -e "bamtools index -in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && pbindex ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && gcpp${ARROW_GCPP_OPT} -w ${x}:0-${clen} -r ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta -o ${aout} ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam && conda deactivate"
 					fi
 					cumSize=0
 				fi   				
