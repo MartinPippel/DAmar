@@ -264,9 +264,24 @@ then
 					continue
 				fi  
 				
-				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"					        		
-			done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta
+				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta
+				if [[ -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq ]]
+				then 
+					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq
+				fi
+			done 
 			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta
+
+			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq ]]
+			then 
+				cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq | awk '{if(NR%4==0) printf("%s",$0);}' | od -A n -t u1 -v | tr -d "\n" | \
+					awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}}
+    				{
+		        		for(i=1;i<=NF;i++) 
+        				{qual[$i-33]++;}
+    				}
+    				END{for(i=0;i<100;i++) {printf "%d ", qual[i]}; printf "\n"}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.qval
+			fi 
 			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.assemblyStats
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
@@ -295,9 +310,23 @@ then
 					continue
 				fi  
 				
-				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"					        		
-			done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta
+				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta
+				if [[ -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq ]]
+				then 
+					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq
+				fi				        		
+			done 
 			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta
+			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq ]]
+			then 
+				cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq | awk '{if(NR%4==0) printf("%s",$0);}' | od -A n -t u1 -v | tr -d "\n" | \
+					awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}}
+    				{
+		        		for(i=1;i<=NF;i++) 
+        				{qual[$i-33]++;}
+    				}
+    				END{for(i=0;i<100;i++) {printf "%d ", qual[i]}; printf "\n"}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.qval
+			fi 
 			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.assemblyStats
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
@@ -326,10 +355,25 @@ then
 					continue
 				fi  
 				
-				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"					        		
-			done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta
+				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta
+				if [[ -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq ]]
+				then 
+					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq
+				fi
+			done 
 			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}${pipelineExt}a.m ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta
 			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.assemblyStats
+			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq ]]
+			then 
+				cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq | awk '{if(NR%4==0) printf("%s",$0);}' | od -A n -t u1 -v | tr -d "\n" | \
+					awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}}
+    				{
+		        		for(i=1;i<=NF;i++) 
+        				{qual[$i-33]++;}
+    				}
+    				END{for(i=0;i<100;i++) {printf "%d ", qual[i]}; printf "\n"}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.qval
+			fi 
+
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
 				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fa.gz && conda deactivate
@@ -406,10 +450,24 @@ then
 			 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.elog
 				continue
 			fi
-			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g"
-		done > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta
+			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta
+			if [[ -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq ]]
+			then 
+				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq
+			fi
+		done 
 		${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt} ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta
 		assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.assemblyStats
+		if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq ]]
+		then 
+			cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq | awk '{if(NR%4==0) printf("%s",$0);}' | od -A n -t u1 -v | tr -d "\n" | \
+				awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}}
+				{
+					for(i=1;i<=NF;i++) 
+					{qual[$i-33]++;}
+				}
+				END{for(i=0;i<100;i++) {printf "%d ", qual[i]}; printf "\n"}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.qval
+		fi 
 		if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 		then
 			${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fa.gz && conda deactivate
