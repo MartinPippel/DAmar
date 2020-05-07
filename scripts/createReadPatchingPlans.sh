@@ -1348,7 +1348,7 @@ then
 		
 		for x in $(seq 1 ${nblocks})
         do
-        	echo "${LASTOOLS_PATH}/bin/lassort ${FIX_LASSORT_OPT} ${RAW_DACCORD_OUTDIR}_${RAW_DACCORD_INDIR}/${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las ${RAW_DACCORD_INDIR}/${RAW_DAZZ_DB%.db}.${fsuffix}.${x}.las"
+        	echo "${LASTOOLS_PATH}/bin/lassort ${c} ${RAW_DACCORD_OUTDIR}_${RAW_DACCORD_INDIR}/${RAW_DAZZ_DB%.db}.${fsuffix}Sort.${x}.las ${RAW_DACCORD_INDIR}/${RAW_DAZZ_DB%.db}.${fsuffix}.${x}.las"
 		done > fix_${sID}_lassort_block_${RAW_DB%.db}.${slurmID}.plan    	         
         echo "LASTOOLS lassort $(git --git-dir=${DACCORD_SOURCE_PATH}/.git rev-parse --short HEAD)" > fix_${sID}_lassort_block_${RAW_DB%.db}.${slurmID}.version
     ### 03-computeIntrinsicQV
