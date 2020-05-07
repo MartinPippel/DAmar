@@ -236,7 +236,7 @@ then
 		then 
 			(>&2 echo "ERROR - Wrong file formats! ${pipelineExt} == ${FIX_FILT_OUTDIR}")
     	    exit 1        			
-		fis
+		fi
 	        
         if [[ -d ${arrowPath} ]]
 		then
