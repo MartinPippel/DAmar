@@ -658,7 +658,7 @@ then
 		limit=10000000;
 		for x in $(cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header)   		
    		do
-		    aout="-o ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa"
+		    aout="${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.fa"
    			if [[ -n ${PB_ARROW_GCPP_GFFOUT} && ${PB_ARROW_GCPP_GFFOUT} -ne 0 ]]
    			then
    				aout="${aout},${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.arrow.gff"	
