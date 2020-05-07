@@ -280,7 +280,7 @@ then
 		        		for(i=1;i<=NF;i++) 
         				{qual[$i-33]++;}
     				}
-    				END{for(i=0;i<100;i++) {printf "%d ", qual[i]}; printf "\n"}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.qval
+    				END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.qval
 			fi 
 			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.assemblyStats
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
@@ -325,7 +325,7 @@ then
 		        		for(i=1;i<=NF;i++) 
         				{qual[$i-33]++;}
     				}
-    				END{for(i=0;i<100;i++) {printf "%d ", qual[i]}; printf "\n"}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.qval
+    				END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.qval
 			fi 
 			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.assemblyStats
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
@@ -371,7 +371,7 @@ then
 		        		for(i=1;i<=NF;i++) 
         				{qual[$i-33]++;}
     				}
-    				END{for(i=0;i<100;i++) {printf "%d ", qual[i]}; printf "\n"}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.qval
+    				END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.qval
 			fi 
 
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
@@ -466,7 +466,7 @@ then
 					for(i=1;i<=NF;i++) 
 					{qual[$i-33]++;}
 				}
-				END{for(i=0;i<100;i++) {printf "%d ", qual[i]}; printf "\n"}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.qval
+				END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.qval
 		fi 
 		if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 		then
