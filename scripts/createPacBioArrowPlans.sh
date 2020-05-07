@@ -464,7 +464,7 @@ then
 		echo "sawriter ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		echo "samtools faidx ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		echo "seqkit split -i  ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
-		echo "for x in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/\*.fasta; do samtools faidx \${x}; done" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+		echo "for x in ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/*.fasta; do samtools faidx \${x}; done" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		echo "grep -e \">\" ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta | sed -e 's:^>::' > ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.header" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
 		echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.version
 		echo "samtools $(${CONDA_BASE_ENV} && samtools 2>&1 | grep Version | awk '{print $2}' && conda deactivate)" >> arrow_01_prepInFasta_single_${CONT_DB}.${slurmID}.version
@@ -679,7 +679,7 @@ then
    			then
    				(>&2 echo "bam file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${x}/ALL_${x}.bam is EMPTY. Skip it!")
    			else
-			   	tmp=$((cumSize+$(cut -f 2 ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta)))			    
+			   	tmp=$((cumSize+$(cut -f 2 ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/arrow_in.fasta.split/arrow_in.id_${x}.fasta.fai)))			    
 				if [[ ${tmp} -lt ${limit} ]]
 				then 
 					if [[ ${cumSize} -eq 0 ]]
