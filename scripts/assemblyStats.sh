@@ -361,7 +361,7 @@ then
 					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq
 				fi
 			done 
-			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}${pipelineExt}a.m ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta
 			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.assemblyStats
 			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq ]]
 			then 
