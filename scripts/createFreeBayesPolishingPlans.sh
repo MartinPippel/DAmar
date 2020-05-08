@@ -519,8 +519,15 @@ then
    			(>&2 echo "ERROR - cannot final duplicate marked bam file: ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/${PROJECT_ID}_final10x.bam!")
         	exit 1
    		fi 
+		
+		mean_cov=$(tail -n1 ${CT_FREEBAYES_OUTDIR}/freebayes_${CT_FREEBAYES_RUNID}/bams/10x_${PROJECT_ID}_longrangerAlign/outs/summary.csv | awk -F "," '{printf "%.0f\n", $17}')
+		if [[ "$mean_cov" -eq "" ]]; then
+			echo "No mean cov found. Set to 50. Regions with >600x (50 x 12) depth of coverage will be ignored."
+			mean_cov=50
+		fi
+		echo "Using $mean_cov for mean coverage"
    		
-   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} '{print "freebayes --bam "bam" --region "$1":1-"$2" -f "ref" | bcftools view --no-version -Ou -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.plan
+   		echo "$(awk -v bam=${bam} -v ref=${ref} -v out=${outdir} '{print "freebayes --bam "bam" --region "$1":1-"$2" --skip-coverage $((mean_cov*12)) -f "ref" | bcftools view --no-version -Ou -o "out$1":1-"$2".bcf"}' ${ref}.fai)" > freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.plan
 
 		echo "freebayes $(${CONDA_FREEBAYES_ENV} && freebayes --version && conda deactivate)" > freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.version
 		echo "bcftools $(${CONDA_FREEBAYES_ENV} && bcftools --version | head -n1 | awk '{print $2}' && conda deactivate)" >> freebayes_03_FBfreebayes_block_${CONT_DB}.${slurmID}.version   
