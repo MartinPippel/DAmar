@@ -313,8 +313,8 @@ then
                 
         ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
 		
-		echo "${PURGEDUPS_PATH}/bin/split_fa {CT_PURGEHAPLOTIGS_INFASTA} > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.fasta" > purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.plan 
-		echo "minimap2 $(${PBBIOCONDA_ENV}) && minimap2 -xasm10 -DP ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.fasta ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.fasta | gzip -c - > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.self.paf.gz && conda deactivate" >> purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.plan 
+		echo "${PURGEDUPS_PATH}/bin/split_fa ${CT_PURGEHAPLOTIGS_INFASTA} > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.fasta" > purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.plan 
+		echo "minimap2 $(${PBBIOCONDA_ENV}) && minimap2 -xasm10 -t ${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS} -DP ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.fasta ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.fasta | gzip -c - > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.self.paf.gz && conda deactivate" >> purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.plan 
 
 		echo "purge_dups (split_fa) $(${PURGEDUPS_PATH}/bin/purge_dups -h 2>&1 | grep Version)" > purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.version 
     	echo "minimap2 $(${PBBIOCONDA_ENV}) && minimap2 --version && conda deactivate" >> purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.version 
