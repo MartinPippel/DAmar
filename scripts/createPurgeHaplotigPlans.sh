@@ -27,7 +27,8 @@ then
  gsize=$((${GSIZE:0:$i}*1000))
 fi
 
-myTypes=("1-prepInFasta, 2-createMinimap2RefIndex, 3-minimap2, 4-bamMerge, 5-readCovHist, 6-contigCovHist, 7-purgeHaplotigs, 8-statistics")
+myTypes=("1-prepInFasta, 2-createMinimap2RefIndex, 3-minimap2, 4-bamMerge, 5-readCovHist, 6-contigCovHist, 7-purgeHaplotigs, 8-statistics",
+"01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
 if [[ ${CT_PURGEHAPLOTIGS_TYPE} -eq 0 ]]
 then 
     ### 1-prepInFasta
@@ -178,6 +179,170 @@ then
     	
     	echo "purge_haplotigs readhist -b ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_minimap2.sort.bam -g ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta -t ${CT_PURGEHAPLOTIGS_THREADS}" > purgeHaplotigs_05_readCovHist_single_${CONT_DB}.${slurmID}.plan
     	echo "purge_haplotigs $(${PURGEHAPLOTIGS_ENV} && conda list purge_haplotigs | grep -e "^purge_haplotigs" | awk '{print $2}' && ${PURGEHAPLOTIGS_ENV_DEACT})" > purgeHaplotigs_05_readCovHist_single_${CONT_DB}.${slurmID}.version	   						
+    else
+        (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${CT_PURGEHAPLOTIGS_TYPE}]}")
+        exit 1            
+    fi    		
+elif [[ ${CT_PURGEHAPLOTIGS_TYPE} -eq 1 ]]
+then 
+	if [[ -z ${PBBIOCONDA_ENV} ]]
+	then 
+		(>&2 echo "ERROR - var PBBIOCONDA_ENV needs to be set! We need a conda env with folling tools: bam2fasta")
+		exit 1
+	fi  
+
+	if [[ -z ${PURGEDUPS_PATH} || ! -f ${PURGEDUPS_PATH}/bin/purge_dups ]]
+	then 
+		(>&2 echo "ERROR - var ${PURGEDUPS_PATH} needs to be set! We need a installation dir like: \${PURGEDUPS_PATH}/bin/purge_dups!")
+		exit 1
+	fi  
+
+    ### 01_PDprepInput			("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
+    if [[ ${currentStep} -eq 1 ]]		
+    then
+        ### clean up plans 
+        for x in $(ls purgeHaplotigs_01_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+        
+        if [[ ! -f "${CT_PURGEHAPLOTIGS_INFASTA}" ]]
+        then
+        	(>&2 echo "ERROR - set CT_PURGEHAPLOTIGS_INFASTA to input fasta file")
+        	exit 1
+   		fi
+   		
+   		echo "if [[ -d ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ]]; then mv ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" > purgeHaplotigs_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -r ${CT_PURGEHAPLOTIGS_INFASTA} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" >> purgeHaplotigs_01_prepInFasta_single_${CONT_DB}.${slurmID}.plan
+    ### 02_PDminimap2			("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
+    elif [[ ${currentStep} -eq 2 ]]
+    then
+        ### clean up plans 
+        for x in $(ls purgeHaplotigs_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+
+		if [[ ! -f ${CT_PURGEHAPLOTIGS_INFASTA} ]]
+		then 
+			(>&2 echo "ERROR - No reference fasta present. Var CT_PURGEHAPLOTIGS_INFASTA must be set!")
+		fi
+        
+        if [[ -d ${CT_PURGEHAPLOTIGS_PACBIOFASTA} ]]
+        then
+			# sanity checks
+			numFiles=0 
+			for x in ${CT_PURGEHAPLOTIGS_PACBIOFASTA}/*.subreads.fasta
+			do
+				if [[ ! -f ${x} || ! -s ${x} ]]
+				then
+					(>&2 echo "WARNING - file ${x} not available or empty")
+				else
+					numFiles=$((${numFiles}+1))
+				fi      						
+			done
+
+			if [[ ${numFiles} -eq 0 ]]
+			then
+				(>&2 echo "ERROR - no input *.subreads.fasta files found")
+				exit 1	
+			fi
+			
+			ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
+					
+			for x in ${CT_PURGEHAPLOTIGS_PACBIOFASTA}/*.subreads.fasta	
+			do
+				name=$(basename ${x%.subreads.fasta})
+				echo "minimap2 -x map-pb -t ${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS} ${CT_PURGEHAPLOTIGS_INFASTA} ${x} | gzip -c - > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_${name}_minimap2.sort.paf.gz"        	
+			done > purgeHaplotigs_02_PDminimap2_block_${CONT_DB}.${slurmID}.plan 
+		else 
+        	(>&2 echo "ERROR - Variable ${CT_PURGEHAPLOTIGS_PACBIOFASTA} is not set. Extract subreads on the fly.")
+			
+			numFiles=0 
+			for x in ${DB_PATH}/*.subreads.bam
+			do
+				if [[ ! -f ${x} || ! -s ${x} ]]
+				then
+					(>&2 echo "WARNING - file ${x} not available or empty")
+				else
+					numFiles=$((${numFiles}+1))
+				fi      						
+			done
+
+			if [[ ${numFiles} -eq 0 ]]
+			then
+				(>&2 echo "ERROR - no input *.subreads.bam files found")
+				exit 1	
+			fi
+
+			ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
+					
+			for x in ${DB_PATH}/*.subreads.bam	
+			do
+				name=$(basename ${x%.subreads.bam})
+				echo -n "${PBBIOCONDA_ENV} && bam2fasta -o ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${name%.bam}.fa.gz ${x} "
+				echo -e "minimap2 -x map-pb -t ${CT_PURGEHAPLOTIGS_MINIMAP2ALNTHREADS} ${CT_PURGEHAPLOTIGS_INFASTA} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${name%.bam}.fa.gz | gzip -c - > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_${name}_minimap2.sort.paf.gz && conda deactivate"        	
+			done > purgeHaplotigs_02_PDminimap2_block_${CONT_DB}.${slurmID}.plan 
+        fi
+       	echo "minimap2 $(${PBBIOCONDA_ENV}) && minimap2 --version && conda deactivate" > purgeHaplotigs_02_PDminimap2_block_${CONT_DB}.${slurmID}.version	
+		echo "$(${PBBIOCONDA_ENV}) && bam2fasta --version && conda deactivate" > purgeHaplotigs_02_PDminimap2_block_${CONT_DB}.${slurmID}.version
+	### 03_PDcalcuts				("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
+    elif [[ ${currentStep} -eq 3 ]]
+    then
+        ### clean up plans 
+        for x in $(ls purgeHaplotigs_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+
+		ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
+
+		echo "${PURGEDUPS_PATH}/bin/pbcstat -O ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_*_minimap2.sort.paf.gz" > purgeHaplotigs_03_PDcalcuts_single_${CONT_DB}.${slurmID}.plan 
+		echo "${PURGEDUPS_PATH}/bin/calcuts ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/PB.stat > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/cutoffs 2> ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/calcults.log" >> purgeHaplotigs_03_PDcalcuts_single_${CONT_DB}.${slurmID}.plan 
+
+		echo "purge_dups $(${PURGEDUPS_PATH}/bin/purge_dups -h 2>&1 | grep Version)" > purgeHaplotigs_03_PDcalcuts_single_${CONT_DB}.${slurmID}.version   	
+   	### 04_PDminimap2 				("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
+    elif [[ ${currentStep} -eq 4  ]]
+    then
+        ### clean up plans 
+        for x in $(ls purgeHaplotigs_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+                
+        ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
+		
+		echo "${PURGEDUPS_PATH}/bin/split_fa {CT_PURGEHAPLOTIGS_INFASTA} > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.fasta" > purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.plan 
+		echo "minimap2 $(${PBBIOCONDA_ENV}) && minimap2 -xasm10 -DP ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.fasta ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.fasta | gzip -c - > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.self.paf.gz && conda deactivate" >> purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.plan 
+
+		echo "purge_dups (split_fa) $(${PURGEDUPS_PATH}/bin/purge_dups -h 2>&1 | grep Version)" > purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.version 
+    	echo "minimap2 $(${PBBIOCONDA_ENV}) && minimap2 --version && conda deactivate" >> purgeHaplotigs_04_PDminimap2_single_${CONT_DB}.${slurmID}.version 
+   	### 05_purgedups 				("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
+    elif [[ ${currentStep} -eq 5  ]]
+    then
+        ### clean up plans 
+        for x in $(ls purgeHaplotigs_05_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+                
+        ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
+		
+		echo "${PURGEDUPS_PATH}bin/purge_dups -2 -T ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/cutoffs -c ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/PB.base.cov ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}_split.self.paf.gz > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/dups.bed 2> ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/purge_dups.log" > purgeHaplotigs_05_purgedups_single_${CONT_DB}.${slurmID}.plan 
+		echo "${PURGEDUPS_PATH}bin/get_seqs -p ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/ ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/dups.bed ${CT_PURGEHAPLOTIGS_INFASTA}" >> purgeHaplotigs_05_purgedups_single_${CONT_DB}.${slurmID}.plan 
+
+		echo "purge_dups (get_seqs) $(${PURGEDUPS_PATH}/bin/purge_dups -h 2>&1 | grep Version)" > purgeHaplotigs_05_purgedups_single_${CONT_DB}.${slurmID}.version  
+		echo "purge_dups (purge_dups) $(${PURGEDUPS_PATH}/bin/purge_dups -h 2>&1 | grep Version)" >> purgeHaplotigs_05_purgedups_single_${CONT_DB}.${slurmID}.version  
+	elif [[ ${currentStep} -eq 6  ]]
+    then
+        ### clean up plans 
+        for x in $(ls purgeHaplotigs_06_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+		
+		echo still todo 
     else
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PURGEHAPLOTIGS_TYPE}]}")
