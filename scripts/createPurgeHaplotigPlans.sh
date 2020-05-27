@@ -414,7 +414,7 @@ then
 		### find and set DBdust options 
 		##TODO setDBdustOptions
         ### create DBdust commands 
-		nblocks=$(getNumOfDbBlocks ${PROJECT_ID}_CT_M.db)
+		nblocks=$(getNumOfDbBlocks ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${PROJECT_ID}_CT_M.db)
         for x in $(seq 1 ${nblocks})
         do 
            	echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/DBdust ${PROJECT_ID}_CT_M.${x} && ${DAZZLER_PATH}/bin/DBdust ${PROJECT_ID}_CT_M.${x} && cd ${myCWD}"
