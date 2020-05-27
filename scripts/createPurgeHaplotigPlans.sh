@@ -372,7 +372,7 @@ then
 		echo "if [[ -d ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ]]; then mv ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" > purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
 		echo "ln -s -r ${CT_PURGEHAPLOTIGS_INFASTA} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
 		echo "seqkit split -i ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
-		echo "grep -e ">" ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta | tr -d ">" | > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.header" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "grep -e \">\" ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta | tr -d \">\" > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.header" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
 		echo "for x in \$(cat ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.header); do len=\$(seqkit stats -T --quiet $x | awk '{if(NR==2)print \$5}'); awk -v l=\${len} '{if (substr(\$1,1,1) ~ /^>/ ) {print \$1\"/1/0_\"len} else print \$0}' ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta.split/${ref}.id_${ref}.fasta > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta.split/${ref}.fasta; done" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
 
 		echo "$(seqkit version)" > purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.version
@@ -382,8 +382,7 @@ then
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PURGEHAPLOTIGS_TYPE}]}")
         exit 1            
-    fi    	
-		
+    fi    		
 else
     (>&2 echo "unknown CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE}")
     (>&2 echo "supported types")
