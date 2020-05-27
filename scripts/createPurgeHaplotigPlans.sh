@@ -417,10 +417,10 @@ then
 		nblocks=$(getNumOfDbBlocks ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${PROJECT_ID}_CT_M.db)
         for x in $(seq 1 ${nblocks})
         do 
-           	echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/DBdust ${PROJECT_ID}_CT_M.${x} && ${DAZZLER_PATH}/bin/DBdust ${PROJECT_ID}_CT_M.${x} && cd ${myCWD}"
-    	done > purgeHaplotigs_02_TCDBdust_single_${CONT_DB}.${slurmID}.plan
-        echo "DAmar $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > purgeHaplotigs_02_TCDBdust_single_${CONT_DB}.${slurmID}.version
-    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> purgeHaplotigs_02_TCDBdust_single_${CONT_DB}.${slurmID}.version        	
+           	echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/DBdust ${PROJECT_ID}_CT_M.${x} && ${DAZZLER_PATH}/bin/DBdust ${PROJECT_ID}_CT_Z.${x} && cd ${myCWD}"
+    	done > purgeHaplotigs_02_TCDBdust_block_${CONT_DB}.${slurmID}.plan
+        echo "DAmar $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > purgeHaplotigs_02_TCDBdust_block_${CONT_DB}.${slurmID}.version
+    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> purgeHaplotigs_02_TCDBdust_block_s${CONT_DB}.${slurmID}.version        	
     ### 02_PDminimap2			("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
 	else
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
