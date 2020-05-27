@@ -28,7 +28,7 @@ then
 fi
 
 myTypes=("1-prepInFasta, 2-createMinimap2RefIndex, 3-minimap2, 4-bamMerge, 5-readCovHist, 6-contigCovHist, 7-purgeHaplotigs, 8-statistics",
-"01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
+"01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics", "01_TCPrepInput, 02_TCDBdust, 03_TCdatander, 04_TCCatrack, 05_TCdaligner, 06_TCLAmerge, 07_TCLAfilterChain, 08_TCLAmerge, 09_TCCTtrim, 10_TCstatistics")
 if [[ ${CT_PURGEHAPLOTIGS_TYPE} -eq 0 ]]
 then 
     ### 1-prepInFasta
@@ -355,7 +355,35 @@ then
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PURGEHAPLOTIGS_TYPE}]}")
         exit 1            
-    fi    		
+    fi    	
+elif [[ ${CT_PURGEHAPLOTIGS_TYPE} -eq 2 ]]
+then 
+    ### 01_TCPrepInput			("01_TCPrepInput, 02_TCDBdust, 03_TCdatander, 04_TCCatrack, 05_TCdaligner, 06_TCLAmerge, 07_TCLAfilterChain, 08_TCLAmerge, 09_TCCTtrim, 10_TCstatistics")
+    if [[ ${currentStep} -eq 1 ]]		
+    then
+		### clean up plans 
+        for x in $(ls purgeHaplotigs_01_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+
+		ref=$(basename ${CT_PURGEHAPLOTIGS_INFASTA%.fasta})
+
+		echo "if [[ -d ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ]]; then mv ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}_$(date '+%Y-%m-%d_%H-%M-%S'); fi && mkdir ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" > purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "ln -s -r ${CT_PURGEHAPLOTIGS_INFASTA} ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "seqkit split -i ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "grep -e ">" ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta | tr -d ">" | > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.header" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "for x in \$(cat ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.header); do len=\$(seqkit stats -T --quiet $x | awk '{if(NR==2)print \$5}'); awk -v l=\${len} '{if (substr(\$1,1,1) ~ /^>/ ) {print \$1\"/1/0_\"len} else print \$0}' ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta.split/${ref}.id_${ref}.fasta > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta.split/${ref}.fasta; done" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+
+		echo "$(seqkit version)" > purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.version
+		echo $(awk --version | head -n 1) >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.version
+    ### 02_PDminimap2			("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
+	else
+        (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
+        (>&2 echo "valid steps are: ${myTypes[${CT_PURGEHAPLOTIGS_TYPE}]}")
+        exit 1            
+    fi    	
+		
 else
     (>&2 echo "unknown CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE}")
     (>&2 echo "supported types")
