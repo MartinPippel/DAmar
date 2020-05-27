@@ -289,7 +289,7 @@ then
 				gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fa.gz
 				if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fastq ]]
 				then
-					gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fa.gz
+					gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fq.gz
 				fi
 			fi
 		fi
@@ -486,8 +486,16 @@ then
 		if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 		then
 			${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fa.gz && conda deactivate
+			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta ]]
+			then
+				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fq.gz && conda deactivate
+			fi
 		else
 			gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fa.gz
+			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta ]]
+			then
+				gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fq.gz
+			fi
        	fi
        
         if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta ]]
