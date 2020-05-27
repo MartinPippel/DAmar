@@ -377,13 +377,32 @@ then
 
 		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && for x in \$(cat ${ref}.header); do ${MARVEL_PATH}/bin/FA2db -v -x0 ${PROJECT_ID}_CT_M ${ref}.fasta.split/\${x}.fasta; done && cd ${myCWD}" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
 		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && for x in \$(cat ${ref}.header); do ${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_CT_Z ${ref}.fasta.split/\${x}.fasta; done && cd ${myCWD}" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
-		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/DBsplit -s50 ${PROJECT_ID}_CT_M"  >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
-		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${DAZZLER_PATH}/bin/DBsplit -s50 ${PROJECT_ID}_CT_Z" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/DBsplit -s50 ${PROJECT_ID}_CT_M && cd ${myCWD}"  >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${DAZZLER_PATH}/bin/DBsplit -s50 ${PROJECT_ID}_CT_Z && cd ${myCWD}" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
 
 		echo "$(seqkit version)" > purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.version
 		echo $(awk --version | head -n 1) >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.version
-    	echo "DAmar $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
-    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+    	echo "DAmar $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.version
+    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.version
+	### 02_TCDBdust			("01_TCPrepInput, 02_TCDBdust, 03_TCdatander, 04_TCCatrack, 05_TCdaligner, 06_TCLAmerge, 07_TCLAfilterChain, 08_TCLAmerge, 09_TCCTtrim, 10_TCstatistics")
+    elif [[ ${currentStep} -eq 2 ]]		
+    then
+		### clean up plans 
+        for x in $(ls purgeHaplotigs_02_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+		
+		### find and set DBdust options 
+		##TODO setDBdustOptions
+        ### create DBdust commands 
+		nblocks=$(getNumOfDbBlocks ${PROJECT_ID}_CT_M.db)
+        for x in $(seq 1 ${nblocks})
+        do 
+           	echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/DBdust ${PROJECT_ID}_CT_M.${x} && ${DAZZLER_PATH}/bin/DBdust ${PROJECT_ID}_CT_M.${x} && cd ${myCWD}"
+    	done > purgeHaplotigs_02_TCDBdust_single_${CONT_DB}.${slurmID}.plan
+        echo "DAmar $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > purgeHaplotigs_02_TCDBdust_single_${CONT_DB}.${slurmID}.version
+    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> purgeHaplotigs_02_TCDBdust_single_${CONT_DB}.${slurmID}.version        	
     ### 02_PDminimap2			("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
 	else
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
