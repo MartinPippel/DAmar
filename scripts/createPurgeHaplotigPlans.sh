@@ -10,6 +10,24 @@ then
     exit 1
 fi
 
+function getNumOfDbBlocks()
+{
+    db=$1
+    if [[ ! -f $db ]]
+    then
+        (>&2 echo "database $db not found")
+        exit 1
+    fi
+
+    blocks=$(grep block $db | awk '{print $3}')
+    if [[ ! -n $blocks ]]
+    then 
+        (>&2 echo "database $db has not been partitioned. Run DBsplit first!")
+        exit 1
+    fi 
+    echo ${blocks}
+}
+
 source ${configFile}
 
 gsize=${GSIZE}
