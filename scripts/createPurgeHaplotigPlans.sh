@@ -26,7 +26,7 @@ if [[ "${GSIZE: -1}" =~ [kK] ]]
 then
  gsize=$((${GSIZE:0:$i}*1000))
 fi
-
+myCWD=$(pwd)
 myTypes=("1-prepInFasta, 2-createMinimap2RefIndex, 3-minimap2, 4-bamMerge, 5-readCovHist, 6-contigCovHist, 7-purgeHaplotigs, 8-statistics",
 "01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics", "01_TCPrepInput, 02_TCDBdust, 03_TCdatander, 04_TCCatrack, 05_TCdaligner, 06_TCLAmerge, 07_TCLAfilterChain, 08_TCLAmerge, 09_TCCTtrim, 10_TCstatistics")
 if [[ ${CT_PURGEHAPLOTIGS_TYPE} -eq 0 ]]
@@ -375,8 +375,15 @@ then
 		echo "grep -e \">\" ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta | tr -d \">\" > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.header" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
 		echo "for x in \$(cat ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.header); do len=\$(seqkit stats -T --quiet ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta.split/${ref}.id_\${x}.fasta | awk '{if(NR==2)print \$5}'); awk -v l=\${len} '{if (substr(\$1,1,1) ~ /^>/ ) {print \$1\"/1/0_\"l} else print \$0}' ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta.split/${ref}.id_\${x}.fasta > ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${ref}.fasta.split/\${x}.fasta; done" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
 
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && for x in \$(cat ${ref}.header); do ${MARVEL_PATH}/bin/FA2db -v -x0 ${PROJECT_ID}_CT_M ${ref}.fasta.split/\${x}.fasta; done && cd ${myCWD}" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && for x in \$(cat ${ref}.header); do ${DAZZLER_PATH}/bin/fasta2DB -v ${PROJECT_ID}_CT_Z ${ref}.fasta.split/\${x}.fasta; done && cd ${myCWD}" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/DBsplit -s50 ${PROJECT_ID}_CT_M"  >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${DAZZLER_PATH}/bin/DBsplit -s50 ${PROJECT_ID}_CT_Z" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+
 		echo "$(seqkit version)" > purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.version
 		echo $(awk --version | head -n 1) >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.version
+    	echo "DAmar $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
+    	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> purgeHaplotigs_01_TCPrepInput_single_${CONT_DB}.${slurmID}.plan
     ### 02_PDminimap2			("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
 	else
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
