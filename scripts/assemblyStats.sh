@@ -272,11 +272,11 @@ then
 			done 
 			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta
 
-			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq ]]
-			then 
+			#if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq ]]
+			#then 
 				#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.qval
-				awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.qval
-			fi 
+			#	awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.qval
+			#fi 
 			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.assemblyStats
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
@@ -312,12 +312,12 @@ then
 				fi				        		
 			done 
 			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta
-			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq ]]
-			then 
+#			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq ]]
+#			then 
 				#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.qval
-
-				awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.qval
-			fi 
+#
+			#	awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.qval
+			#fi 
 			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.assemblyStats
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
@@ -354,11 +354,11 @@ then
 			done 
 			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta
 			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.assemblyStats
-			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq ]]
-			then 
-				awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.qval
+			#if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq ]]
+			#then 
+			#	awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.qval
 				#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.qval
-			fi 
+			#fi 
 
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
@@ -450,11 +450,11 @@ then
 		done 
 		${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt} ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta
 		assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.assemblyStats
-		if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq ]]
-		then
-			awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.qval 
+		#if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq ]]
+		#then
+			#awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.qval 
 			#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.qval
-		fi 
+		#fi 
 		if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 		then
 			${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fa.gz && conda deactivate
