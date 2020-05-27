@@ -254,35 +254,43 @@ then
 				
 				if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID} ]]
 				then 
-					echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.elog
+					echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.elog
 					continue
 				fi  
 				
 				if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa ]]
 				then 
-				 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.elog
+				 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.elog
 					continue
 				fi  
 				
-				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta
+				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta
 				if [[ -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq ]]
 				then 
-					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq
+					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fastq
 				fi
 			done 
-			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta
 
-			#if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq ]]
+			#if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fastq ]]
 			#then 
-				#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.qval
-			#	awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.qval
+				#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.qval
+			#	awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.qval
 			#fi 
-			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.assemblyStats
+			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.assemblyStats
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
-				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fa.gz && conda deactivate
+				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fa.gz && conda deactivate
+				if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fastq ]]
+				then
+					${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fq.gz && conda deactivate
+				fi
 			else 
-				gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fa.gz
+				gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fa.gz
+				if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fastq ]]
+				then
+					gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fa.gz
+				fi
 			fi
 		fi
 		if [[ -n ${PB_ARROW_A_HEADER} && -f ${PB_ARROW_A_HEADER} ]]
@@ -295,35 +303,43 @@ then
 				
 				if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID} ]]
 				then 
-					echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.elog
+					echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.elog
 					continue
 				fi  
 				
 				if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa ]]
 				then 
-				 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.elog
+				 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.elog
 					continue
 				fi  
 				
-				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta
+				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta
 				if [[ -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq ]]
 				then 
-					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq
+					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq
 				fi				        		
 			done 
-			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta
-#			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq ]]
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta
+#			if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq ]]
 #			then 
-				#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.qval
+				#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.qval
 #
-			#	awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.qval
+			#	awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.qval
 			#fi 
-			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.assemblyStats
+			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.assemblyStats
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
-				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fa.gz && conda deactivate
+				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fa.gz && conda deactivate
+				if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq ]]
+				then
+					${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fq.gz && conda deactivate
+				fi
 			else 
-				gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fa.gz
+				gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fa.gz
+				if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq ]]
+				then
+					gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fq.gz
+				fi
 			fi
 		fi
 		if [[ -n ${PB_ARROW_M_HEADER} && -f ${PB_ARROW_M_HEADER} ]]
@@ -336,96 +352,108 @@ then
 				
 				if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID} ]]
 				then 
-					echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.elog
+					echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.elog
 					continue
 				fi  
 				
 				if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa ]]
 				then 
-				 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.elog
+				 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.elog
 					continue
 				fi  
 				
-				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta
+				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fasta
 				if [[ -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq ]]
 				then 
-					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq
+					cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fastq
 				fi
 			done 
-			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta
-			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.assemblyStats
-			#if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq ]]
+			${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fasta
+			assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.assemblyStats
+			#if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fastq ]]
 			#then 
-			#	awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.qval
-				#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.qval
+			#	awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.qval
+				#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.qval
 			#fi 
 
 			if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 			then
-				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fa.gz && conda deactivate
+				${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fa.gz && conda deactivate
+				if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq ]]
+				then
+					${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fq.gz && conda deactivate
+				fi
 			else 
-				gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fa.gz
+				gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fa.gz
+				if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fastq ]]
+				then
+					gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fq.gz
+				fi
 			fi
 		fi
-		if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta ]]
+		if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta ]]
         then
-        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.stats
-        	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
-        	allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "Nn\n" | wc -m)
-        	allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGT\n" | wc -m)
-        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
+        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.stats
+        	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
+        	allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "Nn\n" | wc -m)
+        	allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGT\n" | wc -m)
+        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
         	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
         	fracNoN=$(echo "scale=4;${arrowedBases}*100/${allBasesNoN}" | bc)
-        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.stats
-        	${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.p.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.p.failed.fasta
-        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.p.stats
-			allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
-			allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "Nn\n" | wc -m)
-			allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGT\n" | wc -m)
-        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
+        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.stats
+        	${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.p.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.p.failed.fasta
+        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.p.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.p.stats
+			allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
+			allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "Nn\n" | wc -m)
+			allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGT\n" | wc -m)
+        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.p.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
         	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
         	fracNoN=$(echo "scale=4;${arrowedBases}*100/${allBasesNoN}" | bc)
-        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.p.stats
+        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.p.stats
     	fi 
        	
-        if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta ]]
+        if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta ]]
         then
-        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.stats
-        	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
-        	allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "nN\n" | wc -m)
-        	allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGT\n" | wc -m)
-        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
+        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.stats
+        	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
+        	allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "nN\n" | wc -m)
+        	allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGT\n" | wc -m)
+        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
         	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc )
         	fracNoN=$(echo "scale=4;${arrowedBases}*100/${allBasesNoN}" | bc)
-        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.stats
-        	${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.a.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.a.failed.fasta
-        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.a.stats
-			allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
-        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
+        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.stats
+        	${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.a.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.a.failed.fasta
+        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.a.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.a.stats
+			allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
+        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.a.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
         	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
         	fracNoN=$(echo "scale=4;${arrowedBases}*100/${allBasesNoN}" | bc)        	
-        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.a.stats
+        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.a.stats
     	fi	 
     	
     	## prepare files for another arrow run
-    	if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta ]]
+    	if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta ]]
     	then
-    		grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.p.header
+    		grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.p.header
     	fi
     	
-    	if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta ]]
+    	if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta ]]
     	then
-			grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.a.header
+			grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.a.header
 		fi
 
-    	if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta ]]
+    	if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fasta ]]
     	then
-    		grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.m.header
+    		grep -e ">" ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.fasta | awk '{print $1}' | sed -e 's:^>::' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.m.header
     	fi
 
-		
-				
 		## all		
+		# because of naming collision we have to check if the output file is already present, and if so skip this step
+		if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta ]]
+		then 
+			partExt=ALL
+		fi
+
 		for z in $(grep -e ">" ${PB_ARROW_REFFASTA} | awk -F '[> ]' '{print $2}')
 		do
 			name=$(echo ${z} | awk -F \_ '{$NF=""; OFS="_"; print $0}')
@@ -433,54 +461,54 @@ then
 			
 			if [[ ! -d ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID} ]]
 			then 
-				echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.elog
+				echo "WARNING - Missing directory ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.elog
 				continue
 			fi  
 			
 			if [[ ! -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa ]]
 			then 
-			 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.elog
+			 	echo "WARNING - Arrow failed. Missing file ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa." >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.elog
 				continue
 			fi
-			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta
+			cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fa	| sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta
 			if [[ -f ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq ]]
 			then 
-				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq
+				cat ${PB_ARROW_OUTDIR}/arrow_${PB_ARROW_RUNID}/${name}${pathID}/ALL_${name}${pathID}.arrow.fq | sed -e "s:[|_]arrow::g" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fastq
 			fi
 		done 
-		${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt} ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta
-		assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.assemblyStats
-		#if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq ]]
+		${QUAST_PATH}/quast.py -t 1 -s -e --fast --est-ref-size ${gsize} -o ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt} ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta
+		assemblyStats.pl -n 1 ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.assemblyStats
+		#if [[ -f ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fastq ]]
 		#then
-			#awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.qval 
-			#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.qval
+			#awk 'BEGIN{for(n=0;n<256;n++) {qual[n]=0; ord[sprintf("%c",n)]=n}} { if(NR%4==0) { split($0, chars, ""); for (i=1; i <= length($0); i++) { qual[ord[chars[i]]-33]++ }}} END{for(i=0;i<256;i++) {s+=qual[i]}; for(i=0;i<256;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/s};}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fastq > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.qval 
+			#awk '{if(NR%4==0) printf("%s",$0);}' ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fastq | od -A n -t u1 -v -w1048576 | tr -d "\n" | awk 'BEGIN{for(i=0;i<100;i++) {qual[i]=0}} { for(i=1;i<=NF;i++) {qual[$i-33]++;} } END{for(i=0;i<100;i++) {printf "%d %d %.5f\n", i, qual[i], qual[i]*100.0/NF};}' > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.qval
 		#fi 
 		if [[ -n ${PB_ARROW_BGZIP} && ${PB_ARROW_BGZIP} -gt 1 ]]
 		then
-			${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fa.gz && conda deactivate
+			${CONDA_BASE_ENV} && bgzip -@${PB_ARROW_BGZIP} -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fa.gz && conda deactivate
 		else
-			gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fa.gz
+			gzip -c ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fa.gz
        	fi
        
-        if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta ]]
+        if [[ -s ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta ]]
         then 
-        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.stats
-        	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
-        	allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "Nn\n" | wc -m)
-        	allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGT\n" | wc -m)
-        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
+        	cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.stats
+        	allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
+        	allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "Nn\n" | wc -m)
+        	allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "acgtACGT\n" | wc -m)
+        	arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
         	frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
         	fracNoN=$(echo "scale=4;${arrowedBases}*100/${allBasesNoN}" | bc)
-        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.stats
-			${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}a.${partExt}.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.${partExt}.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.${partExt}.failed.fasta
-			cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.${partExt}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.${partExt}.stats
-			allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
-			allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "Nn\n" | wc -m)
-			allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "ACGTacgt\n" | wc -m)
-			arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
+        	echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.stats
+			${SUBMIT_SCRIPTS_PATH}/trimLowerCaseTips.py ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}.${partExt}.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.${partExt}.fasta ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.${partExt}.failed.fasta
+			cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.${partExt}.fasta | ${SUBMIT_SCRIPTS_PATH}/n50.py ${gsize} > ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.${partExt}.stats
+			allBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\n" | wc -m)
+			allBasesNoN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "Nn\n" | wc -m)
+			allN=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "ACGTacgt\n" | wc -m)
+			arrowedBases=$(cat ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.${partExt}.fasta | awk '{ if ($1 ~ /^>/) ; else print $0;}' | tr -d "\nacgtnN" | wc -m)
 			frac=$(echo "scale=4;${arrowedBases}*100/${allBases}" | bc)
 			fracNoN=$(echo "scale=4;${arrowedBases}*100/${allBasesNoN}" | bc)
-			echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}aT.${partExt}.stats        	
+			echo "allBases ${allBases} N ${allN} arrowedBases ${arrowedBases} arrowedFraction ${frac}% arrowedFractionNoN ${fracNoN}%" >> ${arrowPath}/${PROJECT_ID}_${FIX_FILT_OUTDIR}.${pipelineExt}${fext}T.${partExt}.stats        	
     	fi		
 	else
 		(>&2 echo "ERROR - directory ${FIX_FILT_OUTDIR}/arrow_${PB_ARROW_RUNID} not available")
