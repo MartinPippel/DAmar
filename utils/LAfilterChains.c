@@ -2140,6 +2140,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				}
 			}
 
+			/*
 			if (ctx->nkeptChains == 0)
 			{
 				for (a = 1; a < ctx->curChains; a++)
@@ -2148,7 +2149,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						ctx->ovlChains[a].ovls[b]->flags |= OVL_DISCARD;
 						ctx->statsFiltInvalidChain++;
 					}
-			}
+			}*/
 
 			{
 				// create unique mask for b-read
@@ -2169,8 +2170,8 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				// check for proper chain
 				for (a = 0; a < ctx->curChains; a++)
 				{
-					if (ctx->nkeptChains == 0 && a > 0) // do not check, they are already discarded
-						break;
+					//if (ctx->nkeptChains == 0 && a > 0) // do not check, they are already discarded
+					//	break;
 
 					Chain *chain = ctx->ovlChains + a;
 
@@ -2350,8 +2351,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						}
 						count = 0;
 #ifdef DEBUG_FILTER
-
-
 						for (b = 0; b < chain->novl; b++)
 						{
 							if (!(chain->ovls[b]->flags & OVL_DISCARD))
@@ -2359,6 +2358,18 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						}
 						printf(" validLAS %d\n", count);
 #endif
+						// after the first valid chain is found, mark the rest as invalid if nkeptChains is 0
+						if (ctx->nkeptChains == 0)
+						{
+							for (a = a+1; a < ctx->curChains; a++)
+							{
+								for (b = 0; b < ctx->ovlChains[a].novl; b++)
+								{
+									ctx->ovlChains[a].ovls[b]->flags |= OVL_DISCARD;
+									ctx->statsFiltInvalidChain++;
+								}
+							}
+						}
 					}
 				}
 			}
