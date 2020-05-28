@@ -531,7 +531,10 @@ then
 		nblocks=$(getNumOfDbBlocks ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${PROJECT_ID}_CT_M.db)
         for x in $(seq 1 ${nblocks})
         do 
-            echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/daligner${CT_PURGEHAPLOTIGS_DALIGNER_OPT} ${PROJECT_ID}_CT_Z.${x} && cd ${myCWD}"
+			for y in $(seq ${x} ${nblocks})
+			do 
+            	echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/daligner${CT_PURGEHAPLOTIGS_DALIGNER_OPT} ${PROJECT_ID}_CT_Z.${x} ${PROJECT_ID}_CT_Z.${y} && cd ${myCWD}"
+			done
 		done > purgeHaplotigs_05_TCdaligner_block_${CONT_DB}.${slurmID}.plan
         echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > purgeHaplotigs_05_TCdaligner_block_${CONT_DB}.${slurmID}.version
 	else
