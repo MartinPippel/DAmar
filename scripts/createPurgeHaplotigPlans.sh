@@ -537,6 +537,22 @@ then
 			done
 		done > purgeHaplotigs_05_TCdaligner_block_${CONT_DB}.${slurmID}.plan
         echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > purgeHaplotigs_05_TCdaligner_block_${CONT_DB}.${slurmID}.version
+	### 06_TCLAmerge			("01_TCPrepInput, 02_TCDBdust, 03_TCdatander, 04_TCCatrack, 05_TCdaligner, 06_TCLAmerge, 07_TCLAfilterChain, 08_TCLAmerge, 09_TCCTtrim, 10_TCstatistics")
+    elif [[ ${currentStep} -eq 6 ]]		
+    then
+		### clean up plans 
+        for x in $(ls purgeHaplotigs_06_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+
+		### create datander commands
+		nblocks=$(getNumOfDbBlocks ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${PROJECT_ID}_CT_M.db)
+        for x in $(seq 1 ${nblocks})
+        do 
+		    	echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/LAmerge -v ${PROJECT_ID}_CT_Z.${x} ${PROJECT_ID}_CT_Z.${x}.${PROJECT_ID}_CT_Z.[0-9]*.las && cd ${myCWD}"		
+		done > purgeHaplotigs_06_TCLAmerge_block_${CONT_DB}.${slurmID}.plan
+        echo "DAZZLER LAmerge $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > purgeHaplotigs_06_TCLAmerge_block_${CONT_DB}.${slurmID}.version		
 	else
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PURGEHAPLOTIGS_TYPE}]}")
