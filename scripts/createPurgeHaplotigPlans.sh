@@ -471,7 +471,7 @@ then
 
 
 		# run TANmask 
-		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/TANmask ${PROJECT_ID}_CT_Z ${PROJECT_ID}_CT_Z.@.las && cd ${myCWD}" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/TANmask ${PROJECT_ID}_CT_Z TAN.${PROJECT_ID}_CT_Z.@.las && cd ${myCWD}" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
 		# run Catrack on dust and tan
 		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${PROJECT_ID}_CT_Z tan && cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
 		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${PROJECT_ID}_CT_Z dust && cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
@@ -482,7 +482,6 @@ then
       	echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/TKcombine ${PROJECT_ID}_CT_M tan_dust tan dust && cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
         		
 		echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version
-        echo "LASTOOLS viewmasks $(git --git-dir=${LASTOOLS_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version    
         echo "DAMAR txt2track $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version
         echo "DAMAR TKcombine $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version         			
     ### 02_PDminimap2			("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
