@@ -470,7 +470,7 @@ then
         done
 
 
-		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}}" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
 		# run TANmask 
 		echo "PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/TANmask ${PROJECT_ID}_CT_Z ${PROJECT_ID}_CT_Z.@.las" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
 		# run Catrack on dust and tan
