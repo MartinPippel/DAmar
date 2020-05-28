@@ -484,7 +484,49 @@ then
 		echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version
         echo "DAMAR txt2track $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version
         echo "DAMAR TKcombine $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version         			
-    ### 02_PDminimap2			("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
+	### 05_TCdaligner			("01_TCPrepInput, 02_TCDBdust, 03_TCdatander, 04_TCCatrack, 05_TCdaligner, 06_TCLAmerge, 07_TCLAfilterChain, 08_TCLAmerge, 09_TCCTtrim, 10_TCstatistics")
+    elif [[ ${currentStep} -eq 5 ]]		
+    then
+		### clean up plans 
+        for x in $(ls purgeHaplotigs_05_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+
+		 ### find and set datander options 
+    	CT_PURGEHAPLOTIGS_DALIGNER_OPT=""
+    	if [[ -n ${CT_PURGEHAPLOTIGS_DALIGNER_THREADS} ]]
+    	then
+        	CT_PURGEHAPLOTIGS_DALIGNER_OPT="${CT_PURGEHAPLOTIGS_DALIGNER_OPT} -T${CT_PURGEHAPLOTIGS_DALIGNER_THREADS}"
+    	fi
+    	if [[ -n ${CT_PURGEHAPLOTIGS_DALIGNER_MINLEN} ]]
+    	then
+        	CT_PURGEHAPLOTIGS_DALIGNER_OPT="${CT_PURGEHAPLOTIGS_DALIGNER_OPT} -l${CT_PURGEHAPLOTIGS_DALIGNER_MINLEN}"
+    	fi
+		if [[ -n ${CT_PURGEHAPLOTIGS_DALIGNER_VERBOSE} && ${CT_PURGEHAPLOTIGS_DALIGNER_VERBOSE} -ne "0" ]]
+    	then
+        	CT_PURGEHAPLOTIGS_DALIGNER_OPT="${CT_PURGEHAPLOTIGS_DALIGNER_OPT} -v"
+    	fi
+		if [[ -n ${CT_PURGEHAPLOTIGS_DALIGNER_KMER} ]]
+    	then
+        	CT_PURGEHAPLOTIGS_DALIGNER_OPT="${CT_PURGEHAPLOTIGS_DALIGNER_OPT} -k${CT_PURGEHAPLOTIGS_DALIGNER_KMER}"
+    	fi
+		if [[ -n ${CT_PURGEHAPLOTIGS_DALIGNER_WIDTH} ]]
+    	then
+        	CT_PURGEHAPLOTIGS_DALIGNER_OPT="${CT_PURGEHAPLOTIGS_DALIGNER_OPT} -w${CT_PURGEHAPLOTIGS_DALIGNER_WIDTH}"
+    	fi
+		if [[ -n ${CT_PURGEHAPLOTIGS_DALIGNER_BRIDGE} && ${CT_PURGEHAPLOTIGS_DALIGNER_BRIDGE} -ne 0 ]]
+    	then
+        	CT_PURGEHAPLOTIGS_DALIGNER_OPT="${CT_PURGEHAPLOTIGS_DALIGNER_OPT} -B"
+    	fi
+
+		### create datander commands
+		nblocks=$(getNumOfDbBlocks ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${PROJECT_ID}_CT_M.db)
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/daligner${CT_PURGEHAPLOTIGS_DALIGNER_OPT} ${PROJECT_ID}_CT_Z.${x} && cd ${myCWD}"
+		done > purgeHaplotigs_05_TCdaligner_block_${CONT_DB}.${slurmID}.plan
+        echo "DAZZLER daligner $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > purgeHaplotigs_05_TCdaligner_block_${CONT_DB}.${slurmID}.version
 	else
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
         (>&2 echo "valid steps are: ${myTypes[${CT_PURGEHAPLOTIGS_TYPE}]}")
