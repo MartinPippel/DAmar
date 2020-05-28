@@ -470,20 +470,17 @@ then
         done
 
 
-		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
 		# run TANmask 
-		echo "PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/TANmask ${PROJECT_ID}_CT_Z ${PROJECT_ID}_CT_Z.@.las" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/TANmask ${PROJECT_ID}_CT_Z ${PROJECT_ID}_CT_Z.@.las && cd ${myCWD}" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
 		# run Catrack on dust and tan
-		echo "${DAZZLER_PATH}/bin/Catrack -v -f -d ${PROJECT_ID}_CT_Z tan" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
-		echo "${DAZZLER_PATH}/bin/Catrack -v -f -d ${PROJECT_ID}_CT_Z dust" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
-		echo "${MARVEL_PATH}/bin/Catrack -v -f -d ${PROJECT_ID}_CT_M dust" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${PROJECT_ID}_CT_Z tan && cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${DAZZLER_PATH}/bin/Catrack -v -f -d ${PROJECT_ID}_CT_Z dust && cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/Catrack -v -f -d ${PROJECT_ID}_CT_M dust && cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
 		#  convert dazzler tan track to DAmar tan track
-		echo "${DAZZLER_PATH}/bin/DBdump -r -mtan ${PROJECT_ID}_CT_Z | awk '{if (\$1 == \"R\") {read=\$2}; if (\$1 == \"T0\" && \$2 > 0) {for (i = 3; i < 3+2*\$2; i+=2) print read-1\" \"\$i\" \"\$(i+1)} }' > ${PROJECT_ID}_CT_Z.tan.txt" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
-        echo "${MARVEL_PATH}/bin/txt2track -m ${PROJECT_ID}_CT_M ${PROJECT_ID}_CT_Z.tan.txt tan" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
-      	echo "${MARVEL_PATH}/bin/TKcombine ${PROJECT_ID}_CT_M tan_dust tan dust" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
-        
-		echo "cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
-        
+		echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${DAZZLER_PATH}/bin/DBdump -r -mtan ${PROJECT_ID}_CT_Z | awk '{if (\$1 == \"R\") {read=\$2}; if (\$1 == \"T0\" && \$2 > 0) {for (i = 3; i < 3+2*\$2; i+=2) print read-1\" \"\$i\" \"\$(i+1)} }' > ${PROJECT_ID}_CT_Z.tan.txt && cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+        echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/txt2track -m ${PROJECT_ID}_CT_M ${PROJECT_ID}_CT_Z.tan.txt tan && cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+      	echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${MARVEL_PATH}/bin/TKcombine ${PROJECT_ID}_CT_M tan_dust tan dust && cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+        		
 		echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version
         echo "LASTOOLS viewmasks $(git --git-dir=${LASTOOLS_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version    
         echo "DAMAR txt2track $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version
