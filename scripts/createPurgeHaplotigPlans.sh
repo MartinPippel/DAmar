@@ -421,6 +421,61 @@ then
     	done > purgeHaplotigs_02_TCDBdust_block_${CONT_DB}.${slurmID}.plan
         echo "DAmar $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > purgeHaplotigs_02_TCDBdust_block_${CONT_DB}.${slurmID}.version
     	echo "DAZZLER $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" >> purgeHaplotigs_02_TCDBdust_block_s${CONT_DB}.${slurmID}.version        	
+	### 03_TCdatander			("01_TCPrepInput, 02_TCDBdust, 03_TCdatander, 04_TCCatrack, 05_TCdaligner, 06_TCLAmerge, 07_TCLAfilterChain, 08_TCLAmerge, 09_TCCTtrim, 10_TCstatistics")
+    elif [[ ${currentStep} -eq 3 ]]		
+    then
+		### clean up plans 
+        for x in $(ls purgeHaplotigs_03_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+
+		 ### find and set datander options 
+    	CT_PURGEHAPLOTIGS_DATANDER_OPT=""
+    	if [[ -n ${CT_PURGEHAPLOTIGS_DATANDER_THREADS} ]]
+    	then
+        	CT_PURGEHAPLOTIGS_DATANDER_OPT="${CT_PURGEHAPLOTIGS_DATANDER_OPT} -T${FIX_CT_PURGEHAPLOTIGS_DATANDER_THREADS}"
+    	fi
+    	if [[ -n ${FIX_CT_PURGEHAPLOTIGS_DATANDER_MINLEN} ]]
+    	then
+        	CT_PURGEHAPLOTIGS_DATANDER_OPT="${CT_PURGEHAPLOTIGS_DATANDER_OPT} -l${FIX_CT_PURGEHAPLOTIGS_DATANDER_MINLEN}"
+    	fi
+
+		### create datander commands
+		nblocks=$(getNumOfDbBlocks ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${PROJECT_ID}_CT_M.db)
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/datander${CT_PURGEHAPLOTIGS_DATANDER_OPT} ${PROJECT_ID}_CT_Z.${x} && cd ${myCWD}"
+		done > purgeHaplotigs_03_TCdatander_block_${CONT_DB}.${slurmID}.plan
+        echo "DAZZLER datander $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > purgeHaplotigs_03_TCdatander_block_${CONT_DB}.${slurmID}.version
+ 	### 04_TCCatrack			("01_TCPrepInput, 02_TCDBdust, 03_TCdatander, 04_TCCatrack, 05_TCdaligner, 06_TCLAmerge, 07_TCLAfilterChain, 08_TCLAmerge, 09_TCCTtrim, 10_TCstatistics")
+    elif [[ ${currentStep} -eq 4 ]]		
+    then
+		### clean up plans 
+        for x in $(ls purgeHaplotigs_04_*_*_${CONT_DB}.${slurmID}.* 2> /dev/null)
+        do            
+            rm $x
+        done
+
+		### create datander commands
+		nblocks=$(getNumOfDbBlocks ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID}/${PROJECT_ID}_CT_M.db)
+
+		### create TANmask commands
+        for x in $(seq 1 ${fixblocks})
+        do 
+            echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && ${DAZZLER_PATH}/bin/TANmask ${PROJECT_ID}_CT_Z.${x} TAN.${PROJECT_ID}_CT_Z.${x}.las && cd ${myCWD}" 
+    	done > mask_${sID}_TANmask_block_${FIX_DB%.db}.${slurmID}.plan
+        echo "DAZZLER TANmask $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > mask_${sID}_TANmask_block_${FIX_DB%.db}.${slurmID}.version
+
+
+
+        for x in $(seq 1 ${nblocks})
+        do 
+            echo "cd ${CT_PURGEHAPLOTIGS_OUTDIR}/purgeHaplotigs_${CT_PURGEHAPLOTIGS_RUNID} && PATH=${DAZZLER_PATH}/bin:\${PATH} ${DAZZLER_PATH}/bin/datander${CT_PURGEHAPLOTIGS_DATANDER_OPT} ${PROJECT_ID}_CT_Z.${x} && cd ${myCWD}"
+		done > purgeHaplotigs_03_TCdatander_block_${CONT_DB}.${slurmID}.plan
+        echo "DAZZLER datander $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAMASKER/.git rev-parse --short HEAD)" > purgeHaplotigs_03_TCdatander_block_${CONT_DB}.${slurmID}.version
+ 
+				
     ### 02_PDminimap2			("01_PDprepInput, 02_PDminimap2, 03_PDcalcuts, 04_PDminimap2, 05_purgedups, 06_statistics")
 	else
         (>&2 echo "step ${currentStep} in CT_PURGEHAPLOTIGS_TYPE ${CT_PURGEHAPLOTIGS_TYPE} not supported")
