@@ -482,7 +482,7 @@ then
         echo "${MARVEL_PATH}/bin/txt2track -m ${PROJECT_ID}_CT_M ${PROJECT_ID}_CT_Z.tan.txt tan" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
       	echo "${MARVEL_PATH}/bin/TKcombine ${PROJECT_ID}_CT_M tan_dust tan dust" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
         
-		echo "cd ${myCWD}" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
+		echo "cd ${myCWD}" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.plan
         
 		echo "DAZZLER Catrack $(git --git-dir=${DAZZLER_SOURCE_PATH}/DAZZ_DB/.git rev-parse --short HEAD)" > purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version
         echo "LASTOOLS viewmasks $(git --git-dir=${LASTOOLS_SOURCE_PATH}/.git rev-parse --short HEAD)" >> purgeHaplotigs_04_TCCatrack_single_${CONT_DB}.${slurmID}.version    
