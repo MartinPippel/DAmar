@@ -319,7 +319,7 @@ int main(int argc, char* argv[])
 	pctx->load_trace = 1;
 	pctx->unpack_trace = 1;
 	pctx->data = &tctx;
-	pctx->write_overlaps = 1;
+	pctx->write_overlaps = 0;
 	pctx->purge_discarded = 0;
 
 	trim_pre(pctx, &tctx);
