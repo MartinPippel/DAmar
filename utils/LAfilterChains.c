@@ -981,8 +981,8 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 				{
 					for (j = 0; j < chain->novl; j++)
 					{
-						if ((chain->ovls[j]->path.abpos > ctx->ovlChains[i].ovls[0]->path.abpos && chain->ovls[j]->path.aepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.aepos)
-								|| (chain->ovls[j]->path.bbpos > ctx->ovlChains[i].ovls[0]->path.bbpos && chain->ovls[j]->path.bepos < ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.bepos))
+						if ((chain->ovls[j]->path.abpos >= ctx->ovlChains[i].ovls[0]->path.abpos && chain->ovls[j]->path.aepos <= ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.aepos)
+								|| (chain->ovls[j]->path.bbpos >= ctx->ovlChains[i].ovls[0]->path.bbpos && chain->ovls[j]->path.bepos <= ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.bepos))
 						{
 #ifdef DEBUG_CHAIN
 							printf("CHAIN is invalid - DISCARD\n");
