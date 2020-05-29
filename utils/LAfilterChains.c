@@ -988,51 +988,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		printChain(chain);
 #endif
 
-		// sanity check // there should be no intersection with other chains (with same orientation) possible
-		/*int valid = 1;
-		if (ctx->curChains)
-		{
-#ifdef DEBUG_CHAIN
-			printf("DO SANITY CHECK\n");
-#endif
-			int j;
-			for (i = 0; i < ctx->curChains && valid; i++)
-			{
-				if ((chain->ovls[0]->flags & OVL_COMP) == (ctx->ovlChains[i].ovls[0]->flags & OVL_COMP))
-				{
-					for (j = 0; j < chain->novl; j++)
-					{
-						if ((chain->ovls[j]->path.abpos >= ctx->ovlChains[i].ovls[0]->path.abpos && chain->ovls[j]->path.aepos <= ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.aepos)
-								|| (chain->ovls[j]->path.bbpos >= ctx->ovlChains[i].ovls[0]->path.bbpos && chain->ovls[j]->path.bepos <= ctx->ovlChains[i].ovls[ctx->ovlChains[i].novl - 1]->path.bepos))
-						{
-#ifdef DEBUG_CHAIN
-							printf("CHAIN is invalid - DISCARD\n");
-#endif
-							valid = 0;
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		if (valid)
-			ctx->curChains++;
-		else
-		{
-			for (i = 0; i < chain->novl; i++)
-			{
-				chain->ovls[i]->flags |= OVL_DISCARD;
-				ctx->statsFiltInvalidChain++;
-			}
-
-			chain->novl = 0;
-
-		}		*/
-		ctx->curChains++;
-#ifdef DEBUG_CHAIN
-		printf("curChain: %d, remain unchained OVls: %d\n", ctx->curChains, nremain);
-#endif
+	ctx->curChains++;
 	}
 
 	// sort chains according to alignment lengths
@@ -2335,7 +2291,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						validMinLen = 1;
 
 					int containedChain=0;
-					// check if they are contained in previous chains 
+					// check if they are contained in previous chains
 					{
 						int b;
 						for (b=0; b<a && !containedChain; b++)
@@ -2350,9 +2306,10 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 									if ((chain->ovls[j]->path.abpos >= ctx->ovlChains[b].ovls[0]->path.abpos && chain->ovls[j]->path.aepos <= ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.aepos)
 											|| (chain->ovls[j]->path.bbpos >= ctx->ovlChains[b].ovls[0]->path.bbpos && chain->ovls[j]->path.bepos <= ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.bepos))
 									{
-			
+#if CHAIN_DEBUG
 										printf("CHAIN is invalid - DISCARD\n");
 										printChain(chain);
+#endif										
 										containedChain = 1;
 										break;
 									}
