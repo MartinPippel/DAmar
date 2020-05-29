@@ -2338,7 +2338,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 					// check if they are contained in previous chains 
 					{
 						int b;
-						for (b=0; b<a; b++)
+						for (b=0; b<a && !containedChain; b++)
 						{
 							if(ctx->ovlChains[b].ovls[0]->flags & OVL_DISCARD)
 								continue;
@@ -2350,9 +2350,9 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 									if ((chain->ovls[j]->path.abpos >= ctx->ovlChains[b].ovls[0]->path.abpos && chain->ovls[j]->path.aepos <= ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.aepos)
 											|| (chain->ovls[j]->path.bbpos >= ctx->ovlChains[b].ovls[0]->path.bbpos && chain->ovls[j]->path.bepos <= ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.bepos))
 									{
-			#ifdef DEBUG_CHAIN
+			
 										printf("CHAIN is invalid - DISCARD\n");
-			#endif
+										printChain(chain);
 										containedChain = 1;
 										break;
 									}
