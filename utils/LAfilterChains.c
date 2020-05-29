@@ -1018,7 +1018,7 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 
 		if (valid)
 			ctx->curChains++;
-		else*/
+		else
 		{
 			for (i = 0; i < chain->novl; i++)
 			{
@@ -1028,8 +1028,8 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 
 			chain->novl = 0;
 
-		}
-
+		}		*/
+		ctx->curChains++;
 #ifdef DEBUG_CHAIN
 		printf("curChain: %d, remain unchained OVls: %d\n", ctx->curChains, nremain);
 #endif
