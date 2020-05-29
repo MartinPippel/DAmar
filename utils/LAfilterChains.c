@@ -231,7 +231,7 @@ static int cmp_ovls_abeg(const void* a, const void* b)
 	return cmp;
 }
 
-#ifdef DEBUG_CHAIN
+//#ifdef DEBUG_CHAIN
 static void printChain(Chain *chain)
 {
 	printf("CHAIN: nvols %d, %7d vs %7d %s\n", chain->novl, chain->ovls[0]->aread, chain->ovls[0]->bread, (chain->ovls[0]->flags & OVL_COMP) ? "COMP" : "NORM");
@@ -242,7 +242,7 @@ static void printChain(Chain *chain)
 				chain->ovls[i]->path.bepos, chain->ovls[i]->path.diffs * 100.0 / (chain->ovls[i]->path.aepos - chain->ovls[i]->path.abpos));
 	}
 }
-#endif
+//#endif
 
 static int contained(int ab, int ae, int bb, int be)
 {
