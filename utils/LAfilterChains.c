@@ -1149,13 +1149,14 @@ static void filter_pre(PassContext* pctx, FilterContext* fctx)
 	printf( ANSI_COLOR_RED "  nFuzzBases %d\n" ANSI_COLOR_RESET, fctx->nFuzzBases);
 	printf( ANSI_COLOR_RED "  nMinNonRepeatBases %d\n" ANSI_COLOR_RESET, fctx->nMinNonRepeatBases);
 	printf( ANSI_COLOR_RED "  repeatWindowLookBack %d\n" ANSI_COLOR_RESET, fctx->repeatWindowLookBack);
-      
-        if(fctx->trackRepeat)
+    printf( ANSI_COLOR_RED "  maxBasesAtContigTips %d\n" ANSI_COLOR_RESET, fctx->maxBasesAtContigTips);
+
+    if(fctx->trackRepeat)
 		printf( ANSI_COLOR_RED "  RepeatTrack %s\n" ANSI_COLOR_RESET, fctx->trackRepeat->name);
 	if(fctx->trackTrim)
-                printf( ANSI_COLOR_RED "  TrimTrack %s\n" ANSI_COLOR_RESET, fctx->trackTrim->name);
+        printf( ANSI_COLOR_RED "  TrimTrack %s\n" ANSI_COLOR_RESET, fctx->trackTrim->name);
 	if(fctx->trackLowCompl)
-                printf( ANSI_COLOR_RED "  LowComplexityTrack %s\n" ANSI_COLOR_RESET, fctx->trackLowCompl->name);
+        printf( ANSI_COLOR_RED "  LowComplexityTrack %s\n" ANSI_COLOR_RESET, fctx->trackLowCompl->name);
 #endif
 
 	fctx->twidth = pctx->twidth;
