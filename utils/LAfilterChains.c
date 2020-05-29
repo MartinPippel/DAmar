@@ -280,7 +280,8 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 
 		if(ctx->maxBasesAtContigTips > 0)
 		{
-			if((ovls->path.abpos > ctx->maxBasesAtContigTips && ovls->path.aepos < alen - ctx->maxBasesAtContigTips) || (ovls->path.bbpos > ctx->maxBasesAtContigTips && ovls->path.bepos < blen - ctx->maxBasesAtContigTips) )
+			if((ovls->path.abpos > ctx->maxBasesAtContigTips && ovls->path.aepos < alen - ctx->maxBasesAtContigTips) 
+			|| (ovls->path.bbpos > ctx->maxBasesAtContigTips && ovls->path.bepos < blen - ctx->maxBasesAtContigTips) )
 			{
 				ovls->flags |= OVL_DISCARD;
 				return;
@@ -315,10 +316,11 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 
 			if(ctx->maxBasesAtContigTips > 0)
 			{
-				if((ovl_i->path.abpos > ctx->maxBasesAtContigTips && ovl_i->path.aepos < alen - ctx->maxBasesAtContigTips) || (ovl_i->path.bbpos > ctx->maxBasesAtContigTips && ovl_i->path.bepos < blen - ctx->maxBasesAtContigTips) )
+				if((ovl_i->path.abpos > ctx->maxBasesAtContigTips && ovl_i->path.aepos < alen - ctx->maxBasesAtContigTips) ||
+				  (ovl_i->path.bbpos > ctx->maxBasesAtContigTips && ovl_i->path.bepos < blen - ctx->maxBasesAtContigTips) )
 				{
 					ovl_i->flags |= OVL_CONT;	// make use of OVL_CONT flag even they are not contained by defintion
-					return;
+					continue;
 				}
 			}
 
