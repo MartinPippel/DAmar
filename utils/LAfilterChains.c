@@ -271,6 +271,12 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 	alen = DB_READ_LEN(ctx->db, aread);
 	blen = DB_READ_LEN(ctx->db, bread);
 
+	if (ctx->ovlChains->ovls == NULL)
+	{
+		ctx->ovlChains->novl = 0;
+		ctx->ovlChains->maxOvl = 10;
+		ctx->ovlChains->ovls = (Overlap**) malloc(sizeof(Overlap*) * ctx->ovlChains->maxOvl);
+	}
 
 #ifdef DEBUG_CHAIN
 	printf("chain(%d,%d,%d) CHAIN: n%d m%d\n", ovls->aread, ovls->bread, n, ctx->curChains, ctx->maxChains);
@@ -286,13 +292,6 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 				ovls->flags |= OVL_DISCARD;
 				return;
 			}
-		}
-
-		if (ctx->ovlChains->ovls == NULL)
-		{
-			ctx->ovlChains->novl = 0;
-			ctx->ovlChains->maxOvl = 10;
-			ctx->ovlChains->ovls = (Overlap**) malloc(sizeof(Overlap*) * ctx->ovlChains->maxOvl);
 		}
 
 		ctx->ovlChains->ovls[0] = ovls;
