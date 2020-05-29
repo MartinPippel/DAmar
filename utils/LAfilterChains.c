@@ -32,7 +32,6 @@
 #define DEF_ARG_L TRACK_DUST
 #define DEF_ARG_F 0
 #define DEF_ARG_C 0
-#define DEF_ARG_U 2000
 #define DEF_ARG_M 2400
 #define DEF_ARG_W 600
 #define DEF_ARG_D 28
@@ -83,6 +82,7 @@ typedef struct
 	int purgeLAS;
 	int dazzlerFlags;
 	int keepIdentity;
+	int maxBasesAtContigTips;
 
 	int maxOverallDiff;		// add up all diffs from all chains divided by number of overlapping bases in A- and B-read
 
@@ -261,11 +261,31 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 	int MAX_OVL_LOOKAHEAD = 30000;
 	int STRIDE_OVL_LOOKAHEAD = 2000;
 
+	int aread, bread;
+	int alen, blen;
+	int i;
+
+	aread = ovls->aread;
+	bread = ovls->bread;
+
+	alen = DB_READ_LEN(ctx->db, aread);
+	blen = DB_READ_LEN(ctx->db, bread);
+
+
 #ifdef DEBUG_CHAIN
 	printf("chain(%d,%d,%d) CHAIN: n%d m%d\n", ovls->aread, ovls->bread, n, ctx->curChains, ctx->maxChains);
 #endif
 	if (n < 2)
 	{
+
+		if(ctx->maxBasesAtContigTips > 0)
+		{
+			if((ovls->path.abpos > ctx->maxBasesAtContigTips && ovls->path.aepos < alen - ctx->maxBasesAtContigTips) || (ovls->path.bbpos > ctx->maxBasesAtContigTips && ovls->path.bepos < blen - ctx->maxBasesAtContigTips) )
+			{
+				ovls->flags |= OVL_DISCARD;
+				return;
+			}
+		}
 
 		if (ctx->ovlChains->ovls == NULL)
 		{
@@ -288,10 +308,19 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 
 	{
 		int i, j;
-		// get rid of contained overlaps
+		// get rid of contained overlaps or overlaps that are not in region of interest (in case -u bases was set)
 		for (i = 0; i < n; i++)
 		{
 			Overlap *ovl_i = ovls + i;
+
+			if(ctx->maxBasesAtContigTips > 0)
+			{
+				if((ovl_i->path.abpos > ctx->maxBasesAtContigTips && ovl_i->path.aepos < alen - ctx->maxBasesAtContigTips) || (ovl_i->path.bbpos > ctx->maxBasesAtContigTips && ovl_i->path.bepos < blen - ctx->maxBasesAtContigTips) )
+				{
+					ovl_i->flags |= OVL_CONT;	// make use of OVL_CONT flag even they are not contained by defintion
+					return;
+				}
+			}
 
 			if (ovl_i->flags & (OVL_CONT))
 				continue;
@@ -309,20 +338,10 @@ static void chain(FilterContext *ctx, Overlap *ovls, int n)
 		}
 	}
 
-	int aread, bread;
-	int alen, blen;
-	int i;
-
-	aread = ovls->aread;
-	bread = ovls->bread;
-
-	alen = DB_READ_LEN(ctx->db, aread);
-	blen = DB_READ_LEN(ctx->db, bread);
-
 	int nremain = n;
 
 #ifdef DEBUG_CHAIN
-	printf("find detect already excluded overlaps\n");
+	printf("find already excluded overlaps\n");
 #endif
 	{
 		for (i = 0; i < n; i++)
@@ -2442,7 +2461,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 			for (i=0; i < n; i++)
 			{
-				int DAmarDiscard=0;
 				int newFlag=0;
 				Overlap *o = ovl+j+i;
 
@@ -2454,7 +2472,6 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 				if (o->flags & OVL_DISCARD)
 				{
 					newFlag |= ELIM_FLAG;
-					DAmarDiscard=1;
 				}
 				else if(start)
 				{
@@ -2479,7 +2496,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-vpiSDT] [-nkfcmwdyoULGOCMZ <int>] [-BR <file>][-rlt <track>] <db> <overlaps_in> <overlaps_out>\n");
+	fprintf(stderr, "[-vpiSDT] [-nkfcmwdyoULGOCMZu <int>] [-BR <file>][-rlt <track>] <db> <overlaps_in> <overlaps_out>\n");
 
 	fprintf(stderr, "options: -v        verbose\n");
 	fprintf(stderr, "         -i        keep identity overlaps\n");
@@ -2490,6 +2507,7 @@ static void usage()
 	fprintf(stderr, "         -t <trc>  trim-track (default: %s)\n", DEF_ARG_T);
 	fprintf(stderr, "         -T        trim all overlaps with given trim track. (Default: do not trim)\n");
 	fprintf(stderr, "         -k <int>  keep valid overlap chains: 0 ... best, 1 ... all\n");
+	fprintf(stderr, "         -u <int>  restrict chain detection to a maximum of -u bases near contig begin and end\n");
 
 	fprintf(stderr, "\n 1. Chain overlaps\n");
 	fprintf(stderr, "         -n <int>  at least one alignment of a valid chain must have n non-repetitive bases\n");
@@ -2571,12 +2589,13 @@ int main(int argc, char* argv[])
 	fctx.gapMinSpanners = 1;
 	fctx.fileOutFullyDiscardedAreads = NULL;
 	fctx.minLenOfFullyDiscardedAreads = DEF_ARG_Z;
-        fctx.areadID = -1;
-        fctx.trimLAS = 0;
+	fctx.maxBasesAtContigTips = -1; 
+    fctx.areadID = -1;
+    fctx.trimLAS = 0;
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:t:d:n:m:w:y:io:U:L:G:O:SC:B:E:M:N:R:Z:DI:T")) != -1)
+	while ((c = getopt(argc, argv, "vpn:k:r:f:c:l:t:d:n:m:w:y:io:U:L:G:O:SC:B:E:M:N:R:Z:DI:Tu:")) != -1)
 	{
 		switch (c)
 		{
@@ -2698,6 +2717,10 @@ int main(int argc, char* argv[])
 			case 'D':
 				fctx.dazzlerFlags=1;
 				break;
+
+			case 'u':
+				fctx.maxBasesAtContigTips = atoi(optarg);
+				break;				
 
 			default:
 				fprintf(stderr, "unknown option %c\n", optopt);
