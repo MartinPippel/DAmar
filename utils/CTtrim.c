@@ -133,7 +133,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
             apos = (apos / twidth + 1) * twidth;
             bpos += trace[j + 1];
             printf("apos %6d, bpos %6d\n", apos, bpos);
-
+            dist = apos - abeg; 
             j += 2;
         }
     }
