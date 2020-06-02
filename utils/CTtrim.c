@@ -114,7 +114,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
     if(pointA < abeg || pointA > aend)
         return 1;
 
-	printf("getTrimPositions %d x %d, a(%d, %d) %c b(%d, %d)\n", ovl->aread, ovl->bread, abeg, aend, (ovl->flags & OVL_COMP) ? 'C' : 'N', bbeg, bend);
+	printf("getTrimPositions %d x %d, a(%d, %d) %c b(%d, %d) pointA: %d\n", ovl->aread, ovl->bread, abeg, aend, (ovl->flags & OVL_COMP) ? 'C' : 'N', bbeg, bend, pointA);
 	
     int dist = pointA - abeg;
     int apos, bpos;
