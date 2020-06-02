@@ -128,7 +128,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
         while (j < ovl->path.tlen)
         {
             printf("apos %6d, bpos %6d, nextA: %6d, dist %6d\n", apos, bpos, pointA-((apos / twidth + 1) * twidth), dist);
-            if(dist >= abs(pointA - ((apos / twidth + 1) * twidth)))
+            if(dist < abs(pointA - ((apos / twidth + 1) * twidth)))
                 break;
             apos = (apos / twidth + 1) * twidth;
             bpos += trace[j + 1];
