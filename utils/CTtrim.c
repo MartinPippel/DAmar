@@ -29,6 +29,7 @@
 
 #define MIN_BIONANO_GAP_SIZE 13
 #define TRIM_OFFSET 100
+#define FUZZY_BASES 1500
 
 typedef struct
 {
@@ -57,6 +58,7 @@ typedef struct
     int maxTrimLength;
     int maxLowCompTrimPerc;
     int trimOffset;
+    int maxFuzzyBases;
 } TrimContext;
 
 static void trim_pre(PassContext* pctx, TrimContext* tctx)
@@ -71,6 +73,7 @@ static void trim_pre(PassContext* pctx, TrimContext* tctx)
 	    printf( ANSI_COLOR_RED "  maxTrimLength %d\n" ANSI_COLOR_RESET, tctx->maxTrimLength);
 	    printf( ANSI_COLOR_RED "  maxLowCompTrimPerc %d\n" ANSI_COLOR_RESET, tctx->maxLowCompTrimPerc);
 	    printf( ANSI_COLOR_RED "  trimOffset %d\n" ANSI_COLOR_RESET, tctx->trimOffset);
+        printf( ANSI_COLOR_RED "  maxFuzzyBases %d\n" ANSI_COLOR_RESET, tctx->maxFuzzyBases);
       
         if(tctx->trackDust)
 		    printf( ANSI_COLOR_RED "  dust Track %s\n" ANSI_COLOR_RESET, tctx->trackDust->name);
@@ -98,15 +101,116 @@ static void trim_post(TrimContext* ctx)
     }
 }
 
+static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cutA, int *cutB)
+{
+	int abeg = ovl->path.abpos;
+	int aend = ovl->path.aepos;
+
+	int bbeg = ovl->path.bbpos;
+	int bend = ovl->path.bepos;
+
+	int twidth = ctx->twidth;
+
+    if(pointA < abeg || pointA > aend)
+        return 1;
+
+	printf("getTrimPositions %d x %d, a(%d, %d) %c b(%d, %d)\n", ovl->aread, ovl->bread, abeg, aend, (ovl->flags & OVL_COMP) ? 'C' : 'N', bbeg, bend);
+	
+    int dist = pointA - abeg;
+    int apos, bpos;
+    if (ovl->path.tlen)
+    {		        	
+        ovl_trace* trace = ovl->path.trace;
+        apos = abeg;
+        bpos = ovl->path.bbpos;
+
+        int j = 0;
+        while (j < ovl->path.tlen)
+        {
+            if(dist >= abs(pointA - ((apos / twidth + 1) * twidth)))
+                break;
+            apos = (apos / twidth + 1) * twidth;
+            bpos += trace[j + 1];
+            printf("apos %6d, bpos %6d\n", apos, bpos);
+
+            j += 2;
+        }
+    }
+    else
+    {
+        apos = pointA;
+        bpos = bbeg + dist;  
+    }
+	
+    printf("apos: %d, bpos: %d\n", apos, bpos);
+    // add offset
+    *cutA = apos - ctx->trimOffset;
+    *cutB = bpos + ctx->trimOffset;
+
+    if(*cutA < abeg || *cutA > aend)
+        return 1;
+
+    if(*cutB < bbeg || *cutB > bend)
+        return 1;
+
+	printf("final range: %d, %d\n", *cutA, *cutB);
+    return 0;
+}
+
 static int trim_handler(void* _ctx, Overlap* ovl, int novl)
 {
 	TrimContext* ctx = (TrimContext*) _ctx;
 	int i, j, k;
 
+    int aLen = DB_READ_LEN(ctx->db, ovl->aread);
+    int bLen = DB_READ_LEN(ctx->db, ovl->bread);
 
-    // assumption: overlaps must be chained with LAfilterChains !!!
-    // there can be up to two chains possible -> one chain at the end and one chain at the beginning of the contig!!!
+    // assumption: input overlaps must be chained with LAfilterChains !!!
+    // one chain at the end and one chain at the beginning of a contig are possible!!!
     
+    // sanity check: orientation 
+    int numABasesN = 0;
+    int numABasesC = 0;
+    
+    int numBBasesN = 0;
+    int numBBasesC = 0;
+    
+    int numAGapBasesN = 0;
+    int numAGapBasesC = 0;
+    
+    // sanity check
+    Overlap *o1 = ovl;
+
+    if(novl == 1 )
+    {
+        if((o1->path.abpos > ctx->maxFuzzyBases && o1->path.aepos < aLen - ctx->maxFuzzyBases) || (o1->path.bbpos > ctx->maxFuzzyBases && o1->path.bepos < bLen - ctx->maxFuzzyBases))
+        {
+            if(ctx->verbose)
+            {
+                printf("[WARNGING] fuzzy base check failed! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n",o1->aread, o1->bread,o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos);
+            }
+            return 1;
+        }
+
+        int cutA = -1;
+        int cutB = -1;
+
+        getTrimPositions(ctx, o1, o1->path.abpos + (o1->path.aepos - o1->path.abpos)/2, &cutA, &cutB);
+    }
+    else
+    {
+    
+    }
+    
+    
+
+    for(i=1; i<novl;i++)
+    {
+        Overlap *o2 = ovl + i;
+        
+
+    }
+
     printf("trimHander Begin\n");
     printf(" r[%d, %d]\n", ovl->aread, ovl->bread);
     for(i=0; i<novl;i++)
@@ -123,7 +227,7 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
 
 static void usage()
 {
-	fprintf(stderr, "[-v] [-GTLO <int>] [-bsp <file>] [-dt <track>] <db> <overlaps_in> <contigs_out>\n");
+	fprintf(stderr, "[-v] [-GTLOF <int>] [-bsp <file>] [-dt <track>] <db> <overlaps_in> <contigs_out>\n");
 
 	fprintf(stderr, "options: -v        verbose\n");
 	fprintf(stderr, "         -d <trc>  low complexity track (e.g. dust)\n");
@@ -141,6 +245,8 @@ static void usage()
     fprintf(stderr, "         -O <int>  trim offset in bases (default %d), i.e. in best case (if we have single overlap between 2 contigs) a gap of size 2xtrim_offset is created )\n", TRIM_OFFSET);
     fprintf(stderr, "                   in case a valid alignment chain consisting of multiple alignments is present (representing heterozygous variations). The first last and the last alignment are used, (- trimOffset and + trimOffset, accordingly) \n");
     fprintf(stderr, "                   (- trimOffset and + trimOffset, accordingly) creates a larger gap size, but heopefully removes the heterozygous difference.\n");
+    fprintf(stderr, "         -F <int>  number of fuzzy bases (default: %d)\n", FUZZY_BASES);
+    
 }
 
 
@@ -181,7 +287,7 @@ int main(int argc, char* argv[])
     tctx.trimOffset = TRIM_OFFSET;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vd:t:b:G:T:L:s:p:O:")) != -1)
+	while ((c = getopt(argc, argv, "vd:t:b:G:T:L:s:p:O:F:")) != -1)
 	{
 		switch (c)
 		{
@@ -220,6 +326,9 @@ int main(int argc, char* argv[])
 				break;            
             case 'O':
 				tctx.trimOffset = atoi(optarg);
+				break;            
+            case 'F':
+				tctx.maxFuzzyBases = atoi(optarg);
 				break;            
 			default:
 				fprintf(stderr, "unknown option %c\n", optopt);
