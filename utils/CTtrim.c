@@ -117,7 +117,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
     if(pointA < abeg || pointA > aend)
         return 1;
 
-	printf("getTrimPositions %d x %d, a(%d, %d) %c b(%d, %d) pointA: %d\n", ovl->aread, ovl->bread, abeg, aend, (ovl->flags & OVL_COMP) ? 'C' : 'N', bbeg, bend, pointA);
+	//printf("getTrimPositions %d x %d, a(%d, %d) %c b(%d, %d) pointA: %d\n", ovl->aread, ovl->bread, abeg, aend, (ovl->flags & OVL_COMP) ? 'C' : 'N', bbeg, bend, pointA);
 	
     int dist = pointA - abeg;
     int apos, bpos;
@@ -130,7 +130,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
         int j = 0;
         while (j < ovl->path.tlen)
         {
-            printf("apos %6d, bpos %6d, oldDist %6d, newDist %6d\n", apos, bpos, dist, abs(pointA-((apos / twidth + 1) * twidth)));
+      //      printf("apos %6d, bpos %6d, oldDist %6d, newDist %6d\n", apos, bpos, dist, abs(pointA-((apos / twidth + 1) * twidth)));
             if(dist < abs(pointA - ((apos / twidth + 1) * twidth)))
                 break;
             apos = (apos / twidth + 1) * twidth;
@@ -146,7 +146,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
         bpos = bbeg + dist;  
     }
 	
-    printf("apos: %d, bpos: %d\n", apos, bpos);
+  //  printf("apos: %d, bpos: %d\n", apos, bpos);
     
     *cutA = apos;
     *cutB = bpos;
@@ -249,27 +249,25 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
     }
     else
     {
-    
-    }
-    
-    
+        // first: sanity check for LAS chain
+        for(i=1; i<novl;i++)
+        {
+            Overlap *o2 = ovl + i;
+            if (abs(o1->path.aepos - o2->path.abpos) > ctx->maxFuzzyBases || ((o1->flags & OVL_COMP) != (o2->flags & OVL_COMP))) 
+            {
+                printf("INVALID chain: [%d,%d] a[%d,%d] %c b[%d,%d]  [%d,%d] a[%d,%d] %c b[%d,%d] \n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos,
+                o2->aread, o2->bread, o2->path.abpos, o2->path.aepos, (o2->flags & OVL_COMP) ? 'c' : 'n',o2->path.bbpos, o2->path.bepos);
+                return 1;
+            }
 
-    for(i=1; i<novl;i++)
-    {
-        Overlap *o2 = ovl + i;
-        
-
-    }
-
-    printf("trimHander Begin\n");
-    printf(" r[%d, %d]\n", ovl->aread, ovl->bread);
-    for(i=0; i<novl;i++)
-    {
-        Overlap *o = ovl + i;
-        printf("   a[%d, %d] %c b[%d, %d]\n",o->path.abpos, o->path.aepos, (o->flags & OVL_COMP) ? 'c' : 'n', o->path.bbpos, o->path.bepos);        
+        }
 
     }
+    
+    
 
+    
+    
     printf("trimHander End\n");
     return 1;
 }
