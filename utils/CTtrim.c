@@ -49,8 +49,8 @@ typedef struct
 
 	ovl_header_twidth twidth;
 
-    // matrix to store overlapping contigs 
-    int ** LAStrimMatrix;
+    // vector to store overlapping contigs: length: #contigs x #contigs
+    int *LAStrimMatrix;
 
     // other options
     int verbose;
@@ -82,7 +82,9 @@ static void trim_pre(PassContext* pctx, TrimContext* tctx)
     }
 
 	tctx->twidth = pctx->twidth;
-
+    tctx->LAStrimMatrix = (int*)malloc(DB_READS(tctx->db)*sizeof(int)*DB_READS(tctx->db));
+    assert(tctx->LAStrimMatrix != NULL);
+    bzero(tctx->LAStrimMatrix,DB_READS(tctx->db)*sizeof(int)*DB_READS(tctx->db));
 }
 
 static void trim_post(TrimContext* ctx)
@@ -99,6 +101,7 @@ static void trim_post(TrimContext* ctx)
             printf("#trimmed bases: %d\n", ctx->statsTrimmedBases);
         }
     }
+    free(ctx->LAStrimMatrix);
 }
 
 static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cutA, int *cutB)
@@ -144,9 +147,9 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
     }
 	
     printf("apos: %d, bpos: %d\n", apos, bpos);
-    // add offset
-    *cutA = apos - ctx->trimOffset;
-    *cutB = bpos + ctx->trimOffset;
+    
+    *cutA = apos;
+    *cutB = bpos;
 
     if(*cutA < abeg || *cutA > aend)
         return 1;
@@ -195,8 +198,54 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
 
         int cutA = -1;
         int cutB = -1;
+        int pointA =  o1->path.abpos + (o1->path.aepos - o1->path.abpos)/2;
 
-        getTrimPositions(ctx, o1, o1->path.abpos + (o1->path.aepos - o1->path.abpos)/2, &cutA, &cutB);
+        if(getTrimPositions(ctx, o1, pointA, &cutA, &cutB))
+        {
+            printf("Unable to get cutPosition for OVL [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos, pointA);
+             return 1;
+        }   
+
+        assert((cutA - ctx->trimOffset > 0) && (cutA + ctx->trimOffset < aLen));
+        assert((cutB - ctx->trimOffset > 0) && (cutB + ctx->trimOffset < bLen));
+
+        // set cut position of contig_A
+        if(o1->path.abpos < aLen - o1->path.aepos) // trim off contig at begin 
+        {
+            ctx->LAStrimMatrix[o1->aread*DB_READS(ctx->db)+o1->bread] = -(cutA + ctx->trimOffset) ;
+        }
+        else if(o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end 
+        {
+            ctx->LAStrimMatrix[o1->aread*DB_READS(ctx->db)+o1->bread] = cutA - ctx->trimOffset;
+        }
+        else // containment 
+        {
+            printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos, pointA);
+            return 1;
+        }
+        
+        if(o1->path.bbpos < bLen - o1->path.bepos) // trim off contig at begin 
+        {
+            if(o1->flags & OVL_COMP)
+            {
+                ctx->LAStrimMatrix[o1->bread*DB_READS(ctx->db)+o1->aread] = bLen - (cutB + ctx->trimOffset);  
+            }
+            else
+            {
+                ctx->LAStrimMatrix[o1->bread*DB_READS(ctx->db)+o1->aread] = -(cutB + ctx->trimOffset);    
+            }                        
+        }
+        else if(o1->path.bbpos > bLen - o1->path.bepos) // trim off contig at end 
+        {
+            if(o1->flags & OVL_COMP)
+            {
+                ctx->LAStrimMatrix[o1->bread*DB_READS(ctx->db)+o1->aread] = -(bLen - (cutB - ctx->trimOffset));
+            }
+            else 
+            {
+                ctx->LAStrimMatrix[o1->bread*DB_READS(ctx->db)+o1->aread] = cutB - ctx->trimOffset;
+            }            
+        }    
     }
     else
     {
