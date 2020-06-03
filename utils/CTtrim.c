@@ -82,9 +82,9 @@ static void trim_pre(PassContext* pctx, TrimContext* tctx)
     }
 
 	tctx->twidth = pctx->twidth;
-    tctx->LAStrimMatrix = (int*)malloc(DB_READS(tctx->db)*sizeof(int)*DB_READS(tctx->db));
+    tctx->LAStrimMatrix = (int*)malloc(DB_NREADS(tctx->db)*sizeof(int)*DB_NREADS(tctx->db));
     assert(tctx->LAStrimMatrix != NULL);
-    bzero(tctx->LAStrimMatrix,DB_READS(tctx->db)*sizeof(int)*DB_READS(tctx->db));
+    bzero(tctx->LAStrimMatrix,DB_NREADS(tctx->db)*sizeof(int)*DB_NREADS(tctx->db));
 }
 
 static void trim_post(TrimContext* ctx)
@@ -212,11 +212,11 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
         // set cut position of contig_A
         if(o1->path.abpos < aLen - o1->path.aepos) // trim off contig at begin 
         {
-            ctx->LAStrimMatrix[o1->aread*DB_READS(ctx->db)+o1->bread] = -(cutA + ctx->trimOffset) ;
+            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = -(cutA + ctx->trimOffset) ;
         }
         else if(o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end 
         {
-            ctx->LAStrimMatrix[o1->aread*DB_READS(ctx->db)+o1->bread] = cutA - ctx->trimOffset;
+            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = cutA - ctx->trimOffset;
         }
         else // containment 
         {
@@ -228,22 +228,22 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
         {
             if(o1->flags & OVL_COMP)
             {
-                ctx->LAStrimMatrix[o1->bread*DB_READS(ctx->db)+o1->aread] = bLen - (cutB + ctx->trimOffset);  
+                ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = bLen - (cutB + ctx->trimOffset);  
             }
             else
             {
-                ctx->LAStrimMatrix[o1->bread*DB_READS(ctx->db)+o1->aread] = -(cutB + ctx->trimOffset);    
+                ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(cutB + ctx->trimOffset);    
             }                        
         }
         else if(o1->path.bbpos > bLen - o1->path.bepos) // trim off contig at end 
         {
             if(o1->flags & OVL_COMP)
             {
-                ctx->LAStrimMatrix[o1->bread*DB_READS(ctx->db)+o1->aread] = -(bLen - (cutB - ctx->trimOffset));
+                ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(bLen - (cutB - ctx->trimOffset));
             }
             else 
             {
-                ctx->LAStrimMatrix[o1->bread*DB_READS(ctx->db)+o1->aread] = cutB - ctx->trimOffset;
+                ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = cutB - ctx->trimOffset;
             }            
         }    
     }
