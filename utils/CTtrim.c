@@ -259,7 +259,7 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
                 o2->aread, o2->bread, o2->path.abpos, o2->path.aepos, (o2->flags & OVL_COMP) ? 'c' : 'n',o2->path.bbpos, o2->path.bepos);
                 return 1;
             }
-
+            o1=o2;
         }
 
     }
