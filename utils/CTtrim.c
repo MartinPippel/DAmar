@@ -32,6 +32,7 @@
 #define FUZZY_BASES 1500
 
 #define DEBUG_MASKING
+#undef DEBUG_MASKING2
 
 typedef struct
 {
@@ -416,7 +417,7 @@ static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int b
 
 		maskBases += intersect(beg, end, rBeg, rEnd);
 
-#ifdef DEBUG_MASKING
+#ifdef DEBUG_MASKING2
         printf("     repInterval: [%d, %d] intersection with [%d, %d] is %d. cum sum %d\n", rBeg, rEnd, beg, end, intersect(beg, end, rBeg, rEnd), maskBases);
 #endif
 
