@@ -31,8 +31,7 @@
 #define TRIM_OFFSET 100
 #define FUZZY_BASES 1500
 
-#define DEBUG_TRIM_POSITION
-#define DEBUG_ANALYZE_LAS
+#define DEBUG_MASKING
 
 typedef struct
 {
@@ -380,7 +379,17 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
 
 static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int beg, int end)
 {
-    assert(t!=NULL);
+#ifdef DEBUG_MASKING
+    printf("call getMaskedBases on track %s, contigID: %d, in: [%d, %d] ",t->name, contigID, beg, end);
+#endif
+    if(t == NULL)
+    {
+#ifdef DEBUG_MASKING        
+        printf(" --> masked bases 0 (track is Null)\n");
+#endif
+        return 0;
+    }
+
 	track_anno* mask_anno = t->anno;
 	track_data* mask_data = t->data;
 
@@ -409,6 +418,10 @@ static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int b
 
 		rb += 2;
 	}
+
+#ifdef DEBUG_MASKING
+    printf(" --> masked bases %d\m", maskBases);
+#endif
 
 	return maskBases;
 }
