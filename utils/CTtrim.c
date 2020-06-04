@@ -380,7 +380,7 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
 static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int beg, int end)
 {
 #ifdef DEBUG_MASKING
-    printf("call getMaskedBases on track %s, contigID: %d, in: [%d, %d] ",t->name, contigID, beg, end);
+    printf("call getMaskedBases on track %s, contigID: %d, in: [%d, %d]\n",t->name, contigID, beg, end);
 #endif
     if(t == NULL)
     {
@@ -415,6 +415,10 @@ static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int b
 		rEnd = mask_data[rb + 1];
 
 		maskBases += intersect(beg, end, rBeg, rEnd);
+
+#ifdef DEBUG_MASKING
+        printf("     repInterval: [rBeg, rEnd] intersection with [%d, %d] is %d. cum sum %d\n", rBeg, rEnd, beg, end, intersect(beg, end, rBeg, rEnd), maskBases);
+#endif
 
 		rb += 2;
 	}
