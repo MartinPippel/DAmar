@@ -420,7 +420,7 @@ static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int b
 	}
 
 #ifdef DEBUG_MASKING
-    printf(" --> masked bases %d\m", maskBases);
+    printf(" --> masked bases %d\n", maskBases);
 #endif
 
 	return maskBases;
