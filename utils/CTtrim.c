@@ -157,7 +157,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
     if(*cutB < bbeg || *cutB > bend)
         return 1;
 
-	printf("final range: %d, %d\n", *cutA, *cutB);
+	//printf("final range: %d, %d\n", *cutA, *cutB);
     return 0;
 }
 
@@ -591,10 +591,11 @@ int main(int argc, char* argv[])
 
         // debug report trim positions
     int nContigs = DB_NREADS(&db);
+    int i,j;
     for(i=0; i<nContigs; i++)
         for(j=0; j<nContigs; j++)
         {
-            int cutPos= ctx->LAStrimMatrix[i*nContigs+j];
+            int cutPos= tctx.LAStrimMatrix[i*nContigs+j];
             if(cutPos != 0)
                 printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n", i, cutPos, (cutPos < 0) ? abs(cutPos) : DB_READ_LEN(&db,i), j);
         }
