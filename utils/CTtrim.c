@@ -164,7 +164,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
 static int setTrimPositions(TrimContext *ctx, Overlap *ovl, int novl)
 {
     int i;
-    
+
     int aLen = DB_READ_LEN(ctx->db, ovl->aread);
     int bLen = DB_READ_LEN(ctx->db, ovl->bread);
 
@@ -372,17 +372,7 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
     // analyze overlaps and find contig trim position 
     if(setTrimPositions(ctx, ovl, novl))
         return 1;
-
-    // debug report trim positions
-    int nContigs = DB_NREADS(ctx->db);
-    for(i=0; i<nContigs; i++)
-        for(j=0; j<nContigs; j++)
-        {
-            if(ctx->LAStrimMatrix[i*nContigs+j] != 0)
-                printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, (OVL with: %d)\n", i, ctx->LAStrimMatrix[i*nContigs+j], j);
-        }
-    
-    
+        
     printf("trimHander End\n");
     return 1;
 }
@@ -598,6 +588,17 @@ int main(int argc, char* argv[])
 	trim_pre(pctx, &tctx);
 
 	pass(pctx, trim_handler);
+
+        // debug report trim positions
+    int nContigs = DB_NREADS(&db);
+    for(i=0; i<nContigs; i++)
+        for(j=0; j<nContigs; j++)
+        {
+            int cutPos= ctx->LAStrimMatrix[i*nContigs+j];
+            if(cutPos != 0)
+                printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n", i, cutPos, (cutPos < 0) ? abs(cutPos) : DB_READ_LEN(&db,i), j);
+        }
+
 
 	trim_post(&tctx);
 
