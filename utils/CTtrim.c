@@ -31,6 +31,9 @@
 #define TRIM_OFFSET 100
 #define FUZZY_BASES 1500
 
+#define DEBUG_TRIM_POSITION
+#define DEBUG_ANALYZE_LAS
+
 typedef struct
 {
 	// stats counters
@@ -161,7 +164,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
     return 0;
 }
 
-static int setTrimPositions(TrimContext *ctx, Overlap *ovl, int novl)
+static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 {
     int i;
 
@@ -370,10 +373,8 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
 	int i, j;
 
     // analyze overlaps and find contig trim position 
-    if(setTrimPositions(ctx, ovl, novl))
-        return 1;
-        
-    printf("trimHander End\n");
+    analyzeContigOverlaps(ctx, ovl, novl);
+                    
     return 1;
 }
 
@@ -597,7 +598,7 @@ int main(int argc, char* argv[])
         {
             int cutPos= tctx.LAStrimMatrix[i*nContigs+j];
             if(cutPos != 0)
-                printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n", i, cutPos, (cutPos < 0) ? abs(cutPos) : DB_READ_LEN(&db,i), j);
+                printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n", i, cutPos, (cutPos < 0) ? abs(cutPos) : DB_READ_LEN(&db,i)-cutPos, j);
         }
 
 
