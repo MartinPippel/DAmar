@@ -673,7 +673,7 @@ int main(int argc, char* argv[])
                 tanEndFract = getMaskedBases(&tctx, tctx.trackTan, i, minEnd, DB_READ_LEN(&db,i))*100.0/(DB_READ_LEN(&db,i)-minEnd);                
             }
 
-            printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f] tanFract(in %%) [%.2f]\n", maxBeg, minEnd, maxBeg, DB_READ_LEN(&db,i)-minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
+            printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, DB_READ_LEN(&db,i)-minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
         }
     }
 
