@@ -106,7 +106,7 @@ static void trim_post(TrimContext* ctx)
 
 static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cutA, int *cutB)
 {
-	int abeg = ovl->path.abpos;
+    int abeg = ovl->path.abpos;
 	int aend = ovl->path.aepos;
 
 	int bbeg = ovl->path.bbpos;
@@ -161,29 +161,20 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
     return 0;
 }
 
-static int trim_handler(void* _ctx, Overlap* ovl, int novl)
+static int setTrimPositions(TrimContext *ctx, Overlap *ovl, int novl)
 {
-	TrimContext* ctx = (TrimContext*) _ctx;
-	int i, j, k;
-
+    int i;
+    
     int aLen = DB_READ_LEN(ctx->db, ovl->aread);
     int bLen = DB_READ_LEN(ctx->db, ovl->bread);
 
     // assumption: input overlaps must be chained with LAfilterChains !!!
     // one chain at the end and one chain at the beginning of a contig are possible!!!
     
-    // sanity check: orientation 
-    int numABasesN = 0;
-    int numABasesC = 0;
-    
-    int numBBasesN = 0;
-    int numBBasesC = 0;
-    
-    int numAGapBasesN = 0;
-    int numAGapBasesC = 0;
-    
     // sanity check
     Overlap *o1 = ovl;
+    int cutA = -1;
+    int cutB = -1;
 
     if(novl == 1 )
     {
@@ -196,8 +187,6 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
             return 1;
         }
 
-        int cutA = -1;
-        int cutB = -1;
         int pointA =  o1->path.abpos + (o1->path.aepos - o1->path.abpos)/2;
 
         if(getTrimPositions(ctx, o1, pointA, &cutA, &cutB))
@@ -212,7 +201,7 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
         // set cut position of contig_A
         if(o1->path.abpos < aLen - o1->path.aepos) // trim off contig at begin 
         {
-            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = -(cutA + ctx->trimOffset) ;
+            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = -(cutA + ctx->trimOffset);
         }
         else if(o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end 
         {
@@ -224,6 +213,7 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
             return 1;
         }
         
+        // set cut position of contig_B
         if(o1->path.bbpos < bLen - o1->path.bepos) // trim off contig at begin 
         {
             if(o1->flags & OVL_COMP)
@@ -249,23 +239,148 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
     }
     else
     {
+        int validChain=1;
+        Overlap *o2;
         // first: sanity check for LAS chain
         for(i=1; i<novl;i++)
         {
-            Overlap *o2 = ovl + i;
+            o2 = ovl + i;
             if (abs(o1->path.aepos - o2->path.abpos) > ctx->maxFuzzyBases || ((o1->flags & OVL_COMP) != (o2->flags & OVL_COMP))) 
             {
-                printf("INVALID chain: [%d,%d] a[%d,%d] %c b[%d,%d]  [%d,%d] a[%d,%d] %c b[%d,%d] \n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos,
-                o2->aread, o2->bread, o2->path.abpos, o2->path.aepos, (o2->flags & OVL_COMP) ? 'c' : 'n',o2->path.bbpos, o2->path.bepos);
-                return 1;
+                validChain = 0;
+                break;
             }
             o1=o2;
         }
 
-    }
-    
-    
+        if (!validChain)
+        {
+            printf("INVALID chain: %d vs %d\n", ovl->aread, ovl->bread);
+   
+            for(i=0; i<novl;i++)
+            {
+                printf("   a[%d,%d] %c b[%d,%d]\n", ovl[i].path.abpos, ovl[i].path.aepos, (ovl[i].flags & OVL_COMP) ? 'c' : 'n',ovl[i].path.bbpos, ovl[i].path.bepos);
+   
+            }
+            return 1;
+        }
 
+        o1 = ovl;
+        o2 = ovl + (novl-1);
+
+        // set cut position of contig_A
+        if(o1->path.abpos < aLen - o2->path.aepos) // trim off contig at begin 
+        {
+            if(o2->path.abpos >= o1->path.aepos)
+            {
+                cutA = o2->path.abpos + ctx->trimOffset;
+            }       
+            else 
+            {
+                cutA = o1->path.aepos + ctx->trimOffset;
+            }
+            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = -(cutA);
+        }
+        else if(o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end 
+        {
+            if(o2->path.abpos >= o1->path.aepos)
+            {
+                cutA = o1->path.aepos - ctx->trimOffset;
+            }       
+            else 
+            {
+                cutA = o2->path.abpos - ctx->trimOffset;
+            }
+            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = cutA;            
+        }
+        else // containment 
+        {
+            printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos);
+            return 1;
+        }
+        // set cut position of contig_B
+
+        if(o1->path.bbpos < bLen - o2->path.bepos) // trim off contig at begin 
+        {
+            if(o2->path.bbpos >= o1->path.bepos)
+            {
+                cutB = o2->path.bbpos + ctx->trimOffset;
+                if(o1->flags & OVL_COMP)
+                {
+                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = bLen - cutB;
+                }
+                else
+                {
+                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(cutB);
+                }                
+            }
+            else 
+            {
+                cutB = o1->path.bepos + ctx->trimOffset;
+                if(o1->flags & OVL_COMP)
+                {
+                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = bLen - cutB;
+                }
+                else
+                {
+                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(cutB);
+                }                
+            }
+        }
+        else if(o1->path.bbpos > bLen - o2->path.bepos) // trim off contig at end 
+        {
+            if(o2->path.bbpos >= o1->path.bepos)
+            {
+                cutB = o1->path.bepos - ctx->trimOffset;
+                if(o1->flags & OVL_COMP)
+                {
+                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(bLen - cutB);
+                }
+                else 
+                {
+                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = cutB;   
+                }
+            }
+            else
+            {
+                cutB = o2->path.bbpos - ctx->trimOffset;   
+                if(o1->flags & OVL_COMP)
+                {
+                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(bLen - cutB);
+                }
+                else 
+                {
+                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = cutB;   
+                }
+
+            }
+        }
+        else // containment 
+        {
+            printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int trim_handler(void* _ctx, Overlap* ovl, int novl)
+{
+	TrimContext* ctx = (TrimContext*) _ctx;
+	int i, j;
+
+    // analyze overlaps and find contig trim position 
+    if(setTrimPositions(ctx, ovl, novl))
+        return 1;
+
+    // debug report trim positions
+    int nContigs = DB_NREADS(ctx->db);
+    for(i=0; i<nContigs; i++)
+        for(j=0; j<nContigs; j++)
+        {
+            if(ctx->LAStrimMatrix[i*nContigs+j] != 0)
+                printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, (OVL with: %d)\n", i, ctx->LAStrimMatrix[i*nContigs+j], j);
+        }
     
     
     printf("trimHander End\n");
@@ -333,6 +448,7 @@ int main(int argc, char* argv[])
     tctx.maxTrimLength = -1;
     tctx.maxLowCompTrimPerc = -1;
     tctx.trimOffset = TRIM_OFFSET;
+    tctx.maxFuzzyBases = FUZZY_BASES;
 
 	opterr = 0;
 	while ((c = getopt(argc, argv, "vd:t:b:G:T:L:s:p:O:F:")) != -1)
