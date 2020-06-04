@@ -417,7 +417,7 @@ static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int b
 		maskBases += intersect(beg, end, rBeg, rEnd);
 
 #ifdef DEBUG_MASKING
-        printf("     repInterval: [rBeg, rEnd] intersection with [%d, %d] is %d. cum sum %d\n", rBeg, rEnd, beg, end, intersect(beg, end, rBeg, rEnd), maskBases);
+        printf("     repInterval: [%d, %d] intersection with [%d, %d] is %d. cum sum %d\n", rBeg, rEnd, beg, end, intersect(beg, end, rBeg, rEnd), maskBases);
 #endif
 
 		rb += 2;
