@@ -590,17 +590,29 @@ int main(int argc, char* argv[])
 
 	pass(pctx, trim_handler);
 
+
         // debug report trim positions
     int nContigs = DB_NREADS(&db);
     int i,j;
     for(i=0; i<nContigs; i++)
+    {
+        int maxBeg=0;
+        int minEnd=DB_READ_LEN(&db,i);
         for(j=0; j<nContigs; j++)
         {
             int cutPos= tctx.LAStrimMatrix[i*nContigs+j];
+            if(cutPos < 0 && abs(cutPos) > maxBeg)
+                maxBeg = abs(cutPos);
+            if(cutPos > 0 && cutPos < minEnd)
+                minEnd = cutPos;
             if(cutPos != 0)
                 printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n", i, cutPos, (cutPos < 0) ? abs(cutPos) : DB_READ_LEN(&db,i)-cutPos, j);
         }
-
+        if(maxBeg > 0 || minEnd != DB_READ_LEN(&db,i))
+        {
+            printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d]\n", maxBeg, minEnd, maxBeg, DB_READ_LEN(&db,i)-minEnd);
+        }
+    }
 
 	trim_post(&tctx);
 
