@@ -378,6 +378,40 @@ static int trim_handler(void* _ctx, Overlap* ovl, int novl)
     return 1;
 }
 
+static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int beg, int end)
+{
+    assert(t!=NULL);
+	track_anno* mask_anno = t->anno;
+	track_data* mask_data = t->data;
+
+    if (contigID < 0 || contigID >= DB_NREADS(ctx->db))
+    {
+        fprintf(stderr, "[ERROR] - getMaskedBases contigID: %d out of bounds [0, %d]\n", contigID, DB_NREADS(ctx->db) - 1);
+        fflush(stderr);
+        exit(1);
+    }
+
+	track_anno rb, re;
+
+	int maskBases = 0;
+	int rBeg, rEnd;
+
+	// repeat bases in a-read
+	rb = mask_anno[contigID] / sizeof(track_data);
+	re = mask_anno[contigID + 1] / sizeof(track_data);
+
+	while (rb < re)
+	{
+		rBeg = mask_data[rb];
+		rEnd = mask_data[rb + 1];
+
+		maskBases += intersect(beg, end, rBeg, rEnd);
+
+		rb += 2;
+	}
+
+	return maskBases;
+}
 
 static void usage()
 {
@@ -399,10 +433,8 @@ static void usage()
     fprintf(stderr, "         -O <int>  trim offset in bases (default %d), i.e. in best case (if we have single overlap between 2 contigs) a gap of size 2xtrim_offset is created )\n", TRIM_OFFSET);
     fprintf(stderr, "                   in case a valid alignment chain consisting of multiple alignments is present (representing heterozygous variations). The first last and the last alignment are used, (- trimOffset and + trimOffset, accordingly) \n");
     fprintf(stderr, "                   (- trimOffset and + trimOffset, accordingly) creates a larger gap size, but heopefully removes the heterozygous difference.\n");
-    fprintf(stderr, "         -F <int>  number of fuzzy bases (default: %d)\n", FUZZY_BASES);
-    
+    fprintf(stderr, "         -F <int>  number of fuzzy bases (default: %d)\n", FUZZY_BASES);    
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -610,7 +642,20 @@ int main(int argc, char* argv[])
         }
         if(maxBeg > 0 || minEnd != DB_READ_LEN(&db,i))
         {
-            printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d]\n", maxBeg, minEnd, maxBeg, DB_READ_LEN(&db,i)-minEnd);
+            float dustBegFract,dustEndFract,tanBegFract,tanEndFract;
+            dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
+            if (maxBeg > 0)
+            {   
+                dustBegFract = getMaskedBases(&tctx, tctx.trackDust, i, 0, maxBeg)*100.0/maxBeg;
+                tanBegFract = getMaskedBases(&tctx, tctx.trackTan, i, 0, maxBeg)*100.0/maxBeg;
+            }
+            if(minEnd != DB_READ_LEN(&db,i))
+            {   
+                dustEndFract = getMaskedBases(&tctx, tctx.trackDust, i, minEnd, DB_READ_LEN(&db,i))*100.0/(DB_READ_LEN(&db,i)-minEnd);
+                tanEndFract = getMaskedBases(&tctx, tctx.trackTan, i, minEnd, DB_READ_LEN(&db,i))*100.0/(DB_READ_LEN(&db,i)-minEnd);                
+            }
+
+            printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f] tanFract(in %%) [%.2f]\n", maxBeg, minEnd, maxBeg, DB_READ_LEN(&db,i)-minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
         }
     }
 
