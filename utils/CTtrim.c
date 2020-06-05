@@ -912,7 +912,6 @@ static void trim_contigs(TrimContext *ctx)
 		}
 		// int flags, qv;
 		int map = 0;
-		HITS_READ *r = ctx->db->reads + i;
 		while (i < ctx->findx[map - 1])
 			map -= 1;
 		while (i >= ctx->findx[map])
@@ -971,6 +970,8 @@ static void trim_contigs(TrimContext *ctx)
 	fclose(trimmedContigsAll);
 	fclose(purgedContigsAll);
 	fclose(statsContigsAll);
+
+	free(read-1);
 }
 
 static void usage()
@@ -1159,6 +1160,21 @@ int main(int argc, char *argv[])
 
 	Close_DB(&db);
 	fclose(fileOvlIn);
+
+	if(tctx.BionanoAGPMatrix)
+		free(tctx.BionanoAGPMatrix);
+
+	free(tctx->LAStrimMatrix);
+
+	int i;
+	for (i = 0; i < tctx.nfiles; i++)
+	{
+		free(tctx.flist[i]);
+		free(tctx.hlist[i]);
+	}
+	free(tctx.flist);
+	free(tctx.hlist);
+	free(tctx.findx - 1);
 
 	return 0;
 }
