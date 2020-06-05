@@ -584,28 +584,25 @@ static void trim_contigs(TrimContext *ctx) {
 					maxBeg, minEnd, maxBeg, DB_READ_LEN(ctx->db,i) - minEnd,
 					dustBegFract, dustEndFract, tanBegFract, tanEndFract);
 
-			// trim contigs
-
-			int len;
-
-			// int flags, qv;
-			int map = 0;
-			HITS_READ *r = ctx->db->reads + i;
-			while (i < ctx->findx[map - 1])
-				map -= 1;
-			while (i >= ctx->findx[map])
-				map += 1;
-
-			fprintf(trimmedContigsAll,">%s", "hello world");
-			fprintf(trimmedContigsAll,"\n");
-
-			Load_Read(ctx->db, i, read, 2);
-
-			for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
-				fprintf(trimmedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
-			if (j < minEnd)
-				fprintf(trimmedContigsAll, "%.*s\n", minEnd - j, read + j);
 		}
+		// int flags, qv;
+		int map = 0;
+		HITS_READ *r = ctx->db->reads + i;
+		while (i < ctx->findx[map - 1])
+			map -= 1;
+		while (i >= ctx->findx[map])
+			map += 1;
+
+		fprintf(trimmedContigsAll,">%s", "hello world");
+		fprintf(trimmedContigsAll,"\n");
+
+		Load_Read(ctx->db, i, read, 2);
+
+		for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
+			fprintf(trimmedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
+		if (j < minEnd)
+			fprintf(trimmedContigsAll, "%.*s\n", minEnd - j, read + j);
+
 	}
 
 	fclose(trimmedContigsAll);
