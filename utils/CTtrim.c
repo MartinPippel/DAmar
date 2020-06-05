@@ -504,7 +504,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
 	int Obj_Start;
 	int Obj_End;
 	int PartNum;
-	char Compnt_Type[MAX_NAME];
+	char Compnt_Type;
 	char CompntId_GapLength[MAX_NAME];
 	int CompntStart_GapType;
 	int CompntEnd_Linkage;
@@ -524,22 +524,20 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
     {
         nline++;
 
-        printf("line %d: %s\n", nline, line);
         char *tline = trimwhitespace(line);
-        printf("line %d: \"%s\"\n", nline, tline);
 
         if (tline[0] == '#')
         	continue;
 
-        printf("run scanf\n");
-        r = sscanf(tline, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, &Obj_Start, &Obj_End, &PartNum, Compnt_Type, CompntId_GapLength, &CompntStart_GapType, &CompntEnd_Linkage, Orientation_LinkageEvidence);
-        printf("finish scanf: return %d\n",r);
+
+        r = sscanf(tline, "%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%s\n", Obj_Name, &Obj_Start, &Obj_End, &PartNum, &Compnt_Type, CompntId_GapLength, &CompntStart_GapType, &CompntEnd_Linkage, Orientation_LinkageEvidence);
 
         if( r != 9)
         {
         	fprintf(stderr, "[ERROR] invalid AGP file format %s. Expecting 9 columns, BUT parsed %d columns in line %d\n", pathInBionanoAGP, r, nline);
         	exit(1);
         }
+
         printf("line %d: %s\n", nline, tline);
 
         // try to match contig name with with DB contig ID
