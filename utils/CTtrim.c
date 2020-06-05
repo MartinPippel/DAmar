@@ -15,6 +15,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "lib/colors.h"
 #include "lib/oflags.h"
