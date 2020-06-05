@@ -603,8 +603,8 @@ static void trim_contigs(TrimContext *ctx) {
 
 			for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
 				fprintf(trimmedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
-			if (j < lst)
-				fprintf(trimmedContigsAll, "%.*s\n", lst - j, read + j);
+			if (j < minEnd)
+				fprintf(trimmedContigsAll, "%.*s\n", minEnd - j, read + j);
 		}
 	}
 
