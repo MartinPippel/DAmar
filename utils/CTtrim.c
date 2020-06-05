@@ -280,7 +280,20 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl) {
 
 		if (!validChain) {
 			ctx->statsNumInvalidChains++;
-			printf("INVALID chain: %d vs %d\n", ovl->aread, ovl->bread);
+
+			int mapA = 0;
+			while (ovl->aread < ctx->findx[mapA - 1])
+				mapA -= 1;
+			while (ovl->aread >= ctx->findx[mapA])
+				mapA += 1;
+
+			int mapB = 0;
+			while (ovl->bread < ctx->findx[mapB - 1])
+				mapB -= 1;
+			while (ovl->bread >= ctx->findx[mapB])
+				mapB += 1;
+
+			printf("INVALID chain: %d (%s) vs %d (%s)\n", ovl->aread, ctx->flist[mapA], ovl->bread, ctx->flist[mapB]);
 
 			for (i = 0; i < novl; i++) {
 				printf("   a[%d,%d] %c b[%d,%d]\n", ovl[i].path.abpos,
@@ -540,6 +553,8 @@ static void trim_contigs(TrimContext *ctx) {
 		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
 		exit(1);
 	}
+
+	fprintf(statsContigsAll, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
 
 	// debug report trim positions
 	int nContigs = DB_NREADS(ctx->db);
