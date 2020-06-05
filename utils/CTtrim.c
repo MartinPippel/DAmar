@@ -809,7 +809,7 @@ static void getDBFastaHeader(TrimContext *ctx, char *fullDBPath)
 		if ((ctx->flist[i] = Strdup(filename, "Adding to file list")) == NULL)
 			exit(1);
 
-		if ((ctx->flist[i] = Strdup(headername, "Adding to file list")) == NULL)
+		if ((ctx->hlist[i] = Strdup(headername, "Adding to file list")) == NULL)
 			exit(1);
 	}
 
