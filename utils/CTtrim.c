@@ -603,7 +603,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 			}
 			else
 			{
-				printf("found db contig id %d for agp contig name %s part?[%d, %d]", contigA, CompntId_GapLength, from, to);
+				printf("found db contig id %d for agp contig name %s part?[%d, %d]\n", contigA, CompntId_GapLength, from, to);
 			}
 		}
 		else
