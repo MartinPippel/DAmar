@@ -594,25 +594,26 @@ static void trim_contigs(TrimContext *ctx) {
 		Load_Read(ctx->db, i, read, 2);
 
 		// write out trimmed contigs
-		fprintf(trimmedContigsAll, ">%s", ctx->flist[map]);
-		fprintf(trimmedContigsAll, "\n");
+		fprintf(trimmedContigsAll, ">%s\n", ctx->flist[map]);
 		for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
 			fprintf(trimmedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
 		if (j < minEnd)
 			fprintf(trimmedContigsAll, "%.*s\n", minEnd - j, read + j);
 		// write out purged sequence at begin of contig
 		if (maxBeg > 0) {
+			fprintf(purgedContigsAll, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], 0, maxBeg, maxBeg);
 			for (j = 0; j + ctx->lineWidth < maxBeg; j += ctx->lineWidth)
-				fprintf(purgedContigsAll, "%.*s purged=%d,%d purgedLen=%d\n",
-						ctx->lineWidth, read + j, 0, maxBeg, maxBeg);
+				fprintf(purgedContigsAll, "%.*s\n",
+						ctx->lineWidth, read + j);
 			if (j < maxBeg)
 				fprintf(purgedContigsAll, "%.*s\n", maxBeg - j, read + j);
 		}
 		// write out purged sequence at end of contig
 		if (minEnd < cLen) {
+			fprintf(purgedContigsAll, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], minEnd, cLen, cLen - minEnd);
 			for (j = minEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
-				fprintf(purgedContigsAll, "%.*s purged=%d,%d purgedLen=%d\n",
-						ctx->lineWidth, read + j, minEnd, cLen, cLen - minEnd);
+				fprintf(purgedContigsAll, "%.*s\n",
+						ctx->lineWidth, read + j);
 			if (j < cLen)
 				fprintf(purgedContigsAll, "%.*s\n", cLen - j, read + j);
 		}
