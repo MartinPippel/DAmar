@@ -506,8 +506,8 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
 	int PartNum;
 	char Compnt_Type;
 	char CompntId_GapLength[MAX_NAME];
-	int CompntStart_GapType;
-	int CompntEnd_Linkage;
+	char CompntStart_GapType[MAX_NAME];
+	char CompntEnd_Linkage[MAX_NAME];
 	char Orientation_LinkageEvidence[MAX_NAME];
 
     char* line = NULL;
@@ -530,7 +530,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
         	continue;
 
 
-        r = sscanf(tline, "%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%s\n", Obj_Name, &Obj_Start, &Obj_End, &PartNum, &Compnt_Type, CompntId_GapLength, &CompntStart_GapType, &CompntEnd_Linkage, Orientation_LinkageEvidence);
+        r = sscanf(tline, "%s\t%d\t%d\t%d\t%c\t%s\t%s\t%s\t%s\n", Obj_Name, &Obj_Start, &Obj_End, &PartNum, &Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
 
         if( r != 9)
         {
