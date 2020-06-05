@@ -531,6 +531,7 @@ static int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 			*pchrl = ':';
 			*to = strtol(pchrl + 1, NULL, 10);
 
+			printf("found: from: %d and to: %d\n", *from, *to);
 			// sanity checks
 			if (*from < 1 || *from > *to || *from > DB_READ_LEN(ctx->db, i) || *to > DB_READ_LEN(ctx->db, i))
 			{
