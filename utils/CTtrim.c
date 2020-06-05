@@ -454,6 +454,28 @@ static int getMaskedBases(TrimContext *ctx, HITS_TRACK *t, int contigID,
 	return maskBases;
 }
 
+static char *trimwhitespace(char *str)
+{
+    char *end;
+
+    // Trim leading space
+    while (isspace(*str))
+        str++;
+
+    if (*str == 0)  // All spaces?
+        return str;
+
+    // Trim trailing space
+    end = str + strlen(str) - 1;
+    while (end > str && isspace(*end))
+        end--;
+
+    // Write new null terminator
+    *(end + 1) = '\0';
+
+    return str;
+}
+
 static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoGapCSV) {
 	FILE *fileInBionanoGaps = NULL;
 
@@ -485,12 +507,14 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoGapCSV) {
 
     while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
     {
-
-        printf("line %d: %s\n", nline, line);
-
         nline++;
 
+        char *tline = trimwhitespace(line);
 
+        if (tline[0] == "#")
+        	continue;
+
+        printf("line %d: %s", nline, line);
 //
 //	int r, line = 0, found = 0;
 //	r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
