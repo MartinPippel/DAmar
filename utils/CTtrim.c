@@ -535,11 +535,11 @@ static void trim_contigs(TrimContext *ctx) {
 		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
 		exit(1);
 	}
-//	sprintf(fout, "%s.trimmedContigs.stats", ctx->fileOutPattern);
-//	if ((statsContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
-//		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-//		exit(1);
-//	}
+	sprintf(fout, "%s.trimmedContigs.stats", ctx->fileOutPattern);
+	if ((statsContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
+		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+		exit(1);
+	}
 
 	// debug report trim positions
 	int nContigs = DB_NREADS(ctx->db);
@@ -547,23 +547,31 @@ static void trim_contigs(TrimContext *ctx) {
 	char *read = New_Read_Buffer(ctx->db);
 	for (i = 0; i < nContigs; i++) {
 		int maxBeg = 0;
+		int maxBegContigID = -1;
 		int cLen = DB_READ_LEN(ctx->db, i);
 		int minEnd = cLen;
+		int minEndContigID = -1;
 		for (j = 0; j < nContigs; j++) {
 			int cutPos = ctx->LAStrimMatrix[i * nContigs + j];
 			if (cutPos < 0 && abs(cutPos) > maxBeg)
+			{
 				maxBeg = abs(cutPos);
+				maxBegContigID = j;
+			}
 			if (cutPos > 0 && cutPos < minEnd)
+			{
 				minEnd = cutPos;
+				minEndContigID = j;
+			}
 			if (cutPos != 0)
 				printf(
 						"FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n",
 						i, cutPos, (cutPos < 0) ? abs(cutPos) : cLen - cutPos,
 						j);
 		}
+		float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
+		dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
 		if (maxBeg > 0 || minEnd != cLen) {
-			float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
-			dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
 			if (maxBeg > 0) {
 				dustBegFract = getMaskedBases(ctx, ctx->trackDust, i, 0, maxBeg)
 						* 100.0 / maxBeg;
@@ -617,11 +625,33 @@ static void trim_contigs(TrimContext *ctx) {
 			if (j < cLen)
 				fprintf(purgedContigsAll, "%.*s\n", cLen - j, read + j);
 		}
+		fprintf(statsContigsAll, "%d\t%s\t%d\t%d\t%d\ttrimBeg:LC=%.2f%%,TAN=%.2f%%;trimEnd=LC=%.2f%%,TAN=%.2f%%",i,ctx->flist[map],minEnd - maxBeg,maxBeg,cLen-minEnd,dustBegFract,tanBegFract,dustEndFract,tanEndFract);
+		// contig support for trimBegin
+		if(maxBeg != 0)
+		{
+			int bmap = 0;
+			while (maxBegContigID < ctx->findx[bmap - 1])
+				bmap -= 1;
+			while (maxBegContigID >= ctx->findx[bmap])
+				bmap += 1;
+			fprintf(statsContigsAll, ";trimBegSupport:ID=%d,name=%s", maxBegContigID, ctx->flist[bmap]);
+		}
+		// contig support for trimEnd
+		if(minEnd != cLen)
+		{
+			int bmap = 0;
+			while (minEndContigID < ctx->findx[bmap - 1])
+				bmap -= 1;
+			while (minEndContigID >= ctx->findx[bmap])
+				bmap += 1;
+			fprintf(statsContigsAll, ";trimEndSupport:ID=%d,name=%s", minEndContigID, ctx->flist[bmap]);
+		}
+		fprintf(statsContigsAll, "\n");
 	}
 
 	fclose(trimmedContigsAll);
 	fclose(purgedContigsAll);
-//	fclose(statsContigsAll);
+	fclose(statsContigsAll);
 }
 
 static void usage() {
