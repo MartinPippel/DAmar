@@ -1069,32 +1069,121 @@ static void trim_contigs(TrimContext *ctx)
 
 		fprintf(statsContigsBionano, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
 
-		// try to find a corresponding bionano - contig overlap matches
-
 		for (i = 0; i < nContigs; i++)
 		{
+			int maxBeg = 0;
+			int maxBegContigID = -1;
+			int cLen = DB_READ_LEN(ctx->db, i);
+			int minEnd = cLen;
+			int minEndContigID = -1;
 			for (j = 0; j < nContigs; j++)
 			{
-				int contigCut  = ctx->LAStrimMatrix[i * nContigs + j];
+				int cutPos  = ctx->LAStrimMatrix[i * nContigs + j];
 				int bionanoGap = ctx->BionanoAGPMatrix[i * nContigs + j];
 
-				if(bionanoGap != 0 && contigCut != 0)
+				if(bionanoGap != 0 && cutPos != 0 && abs(bionanoGap) <= ctx->minBionanoGapLen)
 				{
-					printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, contigCut, bionanoGap);
+					printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
 
-					// todo write out trimmed contigs
+					if (cutPos < 0 && abs(cutPos) > maxBeg)
+					{
+						maxBeg = abs(cutPos);
+						maxBegContigID = j;
+					}
+					if (cutPos > 0 && cutPos < minEnd)
+					{
+						minEnd = cutPos;
+						minEndContigID = j;
+					}
 				}
-				else if(bionanoGap != 0)
+				else
 				{
-					printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, contigCut, bionanoGap);
-				}
-				else if(contigCut != 0)
-				{
-					printf("found NO bionano gap butcontig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, contigCut, bionanoGap);
+					if(bionanoGap != 0)
+					{
+						printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
+					}
+					else if(cutPos != 0)
+					{
+						printf("found NO bionano gap butcontig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
+					}
 				}
 			}
-		}
+			float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
+			dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
+			if (maxBeg > 0 || minEnd != cLen)
+			{
+				if (maxBeg > 0)
+				{
+					dustBegFract = getMaskedBases(ctx, ctx->trackDust, i, 0, maxBeg) * 100.0 / maxBeg;
+					tanBegFract = getMaskedBases(ctx, ctx->trackTan, i, 0, maxBeg) * 100.0 / maxBeg;
+				}
+				if (minEnd != cLen)
+				{
+					dustEndFract = getMaskedBases(ctx, ctx->trackDust, i, minEnd, cLen * 100.0 / cLen - minEnd);
+					tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd, cLen * 100.0 / cLen - minEnd);
+				}
 
+				printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, cLen - minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
+
+			}
+			// int flags, qv;
+			int map = 0;
+			while (i < ctx->findx[map - 1])
+				map -= 1;
+			while (i >= ctx->findx[map])
+				map += 1;
+
+			Load_Read(ctx->db, i, read, 2);
+
+			// write out trimmed contigs
+			{
+				fprintf(trimmedContigsBionano, ">%s\n", ctx->flist[map]);
+				for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
+					fprintf(trimmedContigsBionano, "%.*s\n", ctx->lineWidth, read + j);
+				if (j < minEnd)
+					fprintf(trimmedContigsBionano, "%.*s\n", minEnd - j, read + j);
+				// write out purged sequence at begin of contig
+				if (maxBeg > 0)
+				{
+					fprintf(purgedContigsBionano, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], 0, maxBeg, maxBeg);
+					for (j = 0; j + ctx->lineWidth < maxBeg; j += ctx->lineWidth)
+						fprintf(purgedContigsBionano, "%.*s\n", ctx->lineWidth, read + j);
+					if (j < maxBeg)
+						fprintf(purgedContigsBionano, "%.*s\n", maxBeg - j, read + j);
+				}
+				// write out purged sequence at end of contig
+				if (minEnd < cLen)
+				{
+					fprintf(purgedContigsBionano, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], minEnd, cLen, cLen - minEnd);
+					for (j = minEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
+						fprintf(purgedContigsBionano, "%.*s\n", ctx->lineWidth, read + j);
+					if (j < cLen)
+						fprintf(purgedContigsBionano, "%.*s\n", cLen - j, read + j);
+				}
+				fprintf(statsContigsBionano, "%d\t%s\t%d\t%d\t%d\ttrimBeg:LC=%.2f%%,TAN=%.2f%%;trimEnd=LC=%.2f%%,TAN=%.2f%%", i, ctx->flist[map], minEnd - maxBeg, maxBeg, cLen - minEnd, dustBegFract, tanBegFract, dustEndFract, tanEndFract);
+				// contig support for trimBegin
+				if (maxBeg != 0)
+				{
+					int bmap = 0;
+					while (maxBegContigID < ctx->findx[bmap - 1])
+						bmap -= 1;
+					while (maxBegContigID >= ctx->findx[bmap])
+						bmap += 1;
+					fprintf(statsContigsBionano, ";trimBegSupport:ID=%d,name=%s", maxBegContigID, ctx->flist[bmap]);
+				}
+				// contig support for trimEnd
+				if (minEnd != cLen)
+				{
+					int bmap = 0;
+					while (minEndContigID < ctx->findx[bmap - 1])
+						bmap -= 1;
+					while (minEndContigID >= ctx->findx[bmap])
+						bmap += 1;
+					fprintf(statsContigsBionano, ";trimEndSupport:ID=%d,name=%s", minEndContigID, ctx->flist[bmap]);
+				}
+				fprintf(statsContigsBionano, "\n");
+			}
+		}
 		fclose(trimmedContigsBionano);
 		fclose(purgedContigsBionano);
 		fclose(statsContigsBionano);
@@ -1109,6 +1198,7 @@ static void trim_contigs(TrimContext *ctx)
 	fclose(statsContigsNoTandem);
 
 	free(read - 1);
+	free(fout);
 }
 
 static void usage()
