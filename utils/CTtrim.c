@@ -524,6 +524,7 @@ static void trim_contigs(TrimContext *ctx) {
 	assert(fout != NULL);
 
 	sprintf(fout, "%s.trimmedContigs.fasta", ctx->fileOutPattern);
+	printf("create file: %s\n", fout);
 	if ((trimmedContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
 		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
 		exit(1);
