@@ -518,6 +518,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
     int r;
     int contigA;
 
+    printf("parseBionanoAGPfile: %s\n", pathInBionanoAGP);
     while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
     {
         nline++;
