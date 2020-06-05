@@ -678,12 +678,12 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 						ctx->BionanoAGPMatrix[contigA*nContigs+contigB] = gapLen;
 						ctx->BionanoAGPMatrix[contigB*nContigs+contigA] = -gapLen;
 
-						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n",
 													contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 					}
 					else
 					{
-						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n",
 								contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 					}
 				}
@@ -693,12 +693,12 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					{
 						ctx->BionanoAGPMatrix[contigA*nContigs+contigB] = gapLen;
 						ctx->BionanoAGPMatrix[contigB*nContigs+contigA] = gapLen;
-						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n",
 													contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 					}
 					else
 					{
-						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n",
 								contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 					}
 				}
@@ -708,13 +708,13 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					{
 						ctx->BionanoAGPMatrix[contigA*nContigs+contigB] = -gapLen;
 						ctx->BionanoAGPMatrix[contigB*nContigs+contigA] = gapLen;
-						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n",
 													contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 
 					}
 					else
 					{
-						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n",
 								contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 					}
 				}
@@ -724,13 +724,13 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					{
 						ctx->BionanoAGPMatrix[contigA*nContigs+contigB] = -gapLen;
 						ctx->BionanoAGPMatrix[contigB*nContigs+contigA] = -gapLen;
-						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n",
 													contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 
 					}
 					else
 					{
-						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n",
 								contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 					}
 				}
