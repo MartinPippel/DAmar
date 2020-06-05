@@ -511,7 +511,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoGapCSV) {
 
         char *tline = trimwhitespace(line);
 
-        if (tline[0] == "#")
+        if (tline[0] == '#')
         	continue;
 
         printf("line %d: %s\n", nline, tline);
