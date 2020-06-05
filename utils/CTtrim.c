@@ -524,6 +524,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
     {
         nline++;
 
+        printf("line %d: %s\n", nline, line);
         char *tline = trimwhitespace(line);
 
         if (tline[0] == '#')
