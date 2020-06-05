@@ -123,7 +123,6 @@ static void trim_post(TrimContext *ctx)
 		}
 
 	}
-	free(ctx->LAStrimMatrix);
 }
 
 static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int *cutA, int *cutB)
