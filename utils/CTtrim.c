@@ -875,6 +875,7 @@ static void trim_contigs(TrimContext *ctx)
 	}
 
 	fprintf(statsContigsAll, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
+	fprintf(statsContigsNoTandem, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
 
 	// debug report trim positions
 	int nContigs = DB_NREADS(ctx->db);
@@ -982,11 +983,11 @@ static void trim_contigs(TrimContext *ctx)
 		{
 			int tanMaxBeg = maxBeg;
 			int tanMinEnd = minEnd;
-			if(dustBegFract > ctx->maxLowCompTrimPerc || tanBegFract > ctx->maxLowCompTrimPerc)
+			if (dustBegFract > ctx->maxLowCompTrimPerc || tanBegFract > ctx->maxLowCompTrimPerc)
 			{
 				tanMaxBeg = 0;
 			}
-			if(dustEndFract > ctx->maxLowCompTrimPerc || tanEndFract > ctx->maxLowCompTrimPerc)
+			if (dustEndFract > ctx->maxLowCompTrimPerc || tanEndFract > ctx->maxLowCompTrimPerc)
 			{
 				tanMinEnd = cLen;
 			}
@@ -1037,6 +1038,61 @@ static void trim_contigs(TrimContext *ctx)
 			}
 			fprintf(statsContigsNoTandem, "\n");
 		}
+	}
+
+	// write out bionano agp gaps
+	if (ctx->BionanoAGPMatrix != NULL)
+	{
+		FILE *trimmedContigsBionano = NULL;
+		FILE *purgedContigsBionano = NULL;
+		FILE *statsContigsBionano = NULL;
+
+		sprintf(fout, "%s.BionanoBasedTrimmedContigs.fasta", ctx->fileOutPattern);
+		printf("create file: %s\n", fout);
+		if ((trimmedContigsBionano = (FILE*) fopen(fout, "w")) == NULL)
+		{
+			fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+			exit(1);
+		}
+		sprintf(fout, "%s.BionanoBasedPurgedContigs.fasta", ctx->fileOutPattern);
+		if ((purgedContigsBionano = (FILE*) fopen(fout, "w")) == NULL)
+		{
+			fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+			exit(1);
+		}
+		sprintf(fout, "%s.BionanoBasedContigs.stats", ctx->fileOutPattern);
+		if ((statsContigsBionano = (FILE*) fopen(fout, "w")) == NULL)
+		{
+			fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+			exit(1);
+		}
+
+		fprintf(statsContigsBionano, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
+
+		// try to find a corresponding bionano - contig overlap matches
+
+		for (i = 0; i < nContigs; i++)
+		{
+			for (j = 0; j < nContigs; j++)
+			{
+				int contigCut  = ctx->LAStrimMatrix[i * nContigs + j];
+				int bionanoGap = ctx->BionanoAGPMatrix[i * nContigs + j];
+
+				if(bionanoGap != 0 && contigCut != 0)
+				{
+					printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, contigCut, bionanoGap);
+				}
+				else if(bionanoGap != 0)
+				{
+					printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, contigCut, bionanoGap);
+				}
+				else if(contigCut != 0)
+				{
+					printf("found NO bionano gap butcontig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, contigCut, bionanoGap);
+				}
+			}
+		}
+
 	}
 
 	fclose(trimmedContigsAll);
@@ -1243,7 +1299,7 @@ int main(int argc, char *argv[])
 	}
 	free(tctx.flist);
 	free(tctx.hlist);
-	free(&(tctx.findx[-1]));
+	free(tctx.findx-1);
 
 	return 0;
 }
