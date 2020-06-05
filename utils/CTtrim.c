@@ -30,86 +30,104 @@
 #define MIN_BIONANO_GAP_SIZE 13
 #define TRIM_OFFSET 100
 #define FUZZY_BASES 1500
+#define FASTA_LINEWIDTH 80
 
 #define DEBUG_MASKING
 #undef DEBUG_MASKING2
 
-typedef struct
-{
+typedef struct {
 	// stats counters
+	int statsNumInvalidChains;
+	int statsNumValidChains;
 	int statsTrimmedContigs;
-    int statsTrimmedBases;
+	int statsTrimmedBases;
 
-    // db and I/O files
-	HITS_DB* db;
-    HITS_TRACK* trackDust;
-	HITS_TRACK* trackTan;
+	// db and I/O files
+	HITS_DB *db;
+	HITS_TRACK *trackDust;
+	HITS_TRACK *trackTan;
 
-    FILE* fileInBionanoGaps;
-	FILE* fileOutTrimmedContigs;
-    FILE* fileOutTrimmedStats;
-    FILE* fileOutDicardedContigParts;
+	char *fileOutPattern;
+	FILE *fileInBionanoGaps;
 
 	ovl_header_twidth twidth;
 
-    // vector to store overlapping contigs: length: #contigs x #contigs
-    int *LAStrimMatrix;
+	// vector to store overlapping contigs: length: #contigs x #contigs
+	int *LAStrimMatrix;
 
-    // other options
-    int verbose;
-    int minBionanoGapLen;
-    int maxTrimLength;
-    int maxLowCompTrimPerc;
-    int trimOffset;
-    int maxFuzzyBases;
+	// other options
+	int verbose;
+	int minBionanoGapLen;
+	int maxTrimLength;
+	int maxLowCompTrimPerc;
+	int trimOffset;
+	int maxFuzzyBases;
+	int lineWidth;
+
+	// fasta header
+	int nfiles;
+	char **flist;
+	char **hlist;
+	int *findx;
 } TrimContext;
 
-static void trim_pre(PassContext* pctx, TrimContext* tctx)
-{
-    if(tctx->verbose)
-    {
-	    printf( ANSI_COLOR_GREEN "PASS contig trimming\n" ANSI_COLOR_RESET);
+static void trim_pre(PassContext *pctx, TrimContext *tctx) {
+	if (tctx->verbose) {
+		printf( ANSI_COLOR_GREEN "PASS contig trimming\n" ANSI_COLOR_RESET);
 
-	    printf( ANSI_COLOR_RED "OPTIONS\n" ANSI_COLOR_RESET);
-	    printf( ANSI_COLOR_RED "  verbose %d\n" ANSI_COLOR_RESET, tctx->verbose);
-	    printf( ANSI_COLOR_RED "  minBionanoGapLen %d\n" ANSI_COLOR_RESET, tctx->minBionanoGapLen);
-	    printf( ANSI_COLOR_RED "  maxTrimLength %d\n" ANSI_COLOR_RESET, tctx->maxTrimLength);
-	    printf( ANSI_COLOR_RED "  maxLowCompTrimPerc %d\n" ANSI_COLOR_RESET, tctx->maxLowCompTrimPerc);
-	    printf( ANSI_COLOR_RED "  trimOffset %d\n" ANSI_COLOR_RESET, tctx->trimOffset);
-        printf( ANSI_COLOR_RED "  maxFuzzyBases %d\n" ANSI_COLOR_RESET, tctx->maxFuzzyBases);
-      
-        if(tctx->trackDust)
-		    printf( ANSI_COLOR_RED "  dust Track %s\n" ANSI_COLOR_RESET, tctx->trackDust->name);
-	    if(tctx->trackTan)
-            printf( ANSI_COLOR_RED "  tandem Track %s\n" ANSI_COLOR_RESET, tctx->trackTan->name);
-    }
+		printf( ANSI_COLOR_RED "OPTIONS\n" ANSI_COLOR_RESET);
+		printf( ANSI_COLOR_RED "  verbose %d\n" ANSI_COLOR_RESET,
+				tctx->verbose);
+		printf( ANSI_COLOR_RED "  minBionanoGapLen %d\n" ANSI_COLOR_RESET,
+				tctx->minBionanoGapLen);
+		printf( ANSI_COLOR_RED "  maxTrimLength %d\n" ANSI_COLOR_RESET,
+				tctx->maxTrimLength);
+		printf( ANSI_COLOR_RED "  maxLowCompTrimPerc %d\n" ANSI_COLOR_RESET,
+				tctx->maxLowCompTrimPerc);
+		printf( ANSI_COLOR_RED "  trimOffset %d\n" ANSI_COLOR_RESET,
+				tctx->trimOffset);
+		printf( ANSI_COLOR_RED "  maxFuzzyBases %d\n" ANSI_COLOR_RESET,
+				tctx->maxFuzzyBases);
+
+		if (tctx->trackDust)
+			printf( ANSI_COLOR_RED "  dust Track %s\n" ANSI_COLOR_RESET,
+					tctx->trackDust->name);
+		if (tctx->trackTan)
+			printf( ANSI_COLOR_RED "  tandem Track %s\n" ANSI_COLOR_RESET,
+					tctx->trackTan->name);
+	}
 
 	tctx->twidth = pctx->twidth;
-    tctx->LAStrimMatrix = (int*)malloc(DB_NREADS(tctx->db)*sizeof(int)*DB_NREADS(tctx->db));
-    assert(tctx->LAStrimMatrix != NULL);
-    bzero(tctx->LAStrimMatrix,DB_NREADS(tctx->db)*sizeof(int)*DB_NREADS(tctx->db));
+	tctx->LAStrimMatrix = (int*) malloc(
+			DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
+	assert(tctx->LAStrimMatrix != NULL);
+	bzero(tctx->LAStrimMatrix,
+			DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
 }
 
-static void trim_post(TrimContext* ctx)
-{
-    if(ctx->verbose)
-    {
-        if (ctx->statsTrimmedContigs > 0)
-        {
-            printf("#trimmed contigs %d\n", ctx->statsTrimmedContigs);
-        }
+static void trim_post(TrimContext *ctx) {
+	if (ctx->verbose) {
+		if (ctx->statsTrimmedContigs > 0) {
+			printf("#trimmed contigs %d\n", ctx->statsTrimmedContigs);
+		}
 
-        if (ctx->statsTrimmedBases > 0)
-        {
-            printf("#trimmed bases: %d\n", ctx->statsTrimmedBases);
-        }
-    }
-    free(ctx->LAStrimMatrix);
+		if (ctx->statsTrimmedBases > 0) {
+			printf("#trimmed bases: %d\n", ctx->statsTrimmedBases);
+		}
+		if (ctx->statsNumValidChains > 0) {
+			printf("#valid chains %d\n", ctx->statsNumValidChains);
+		}
+		if (ctx->statsNumInvalidChains > 0) {
+			printf("#invalid chains %d\n", ctx->statsNumInvalidChains);
+		}
+
+	}
+	free(ctx->LAStrimMatrix);
 }
 
-static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cutA, int *cutB)
-{
-    int abeg = ovl->path.abpos;
+static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA,
+		int *cutA, int *cutB) {
+	int abeg = ovl->path.abpos;
 	int aend = ovl->path.aepos;
 
 	int bbeg = ovl->path.bbpos;
@@ -117,289 +135,283 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int* cut
 
 	int twidth = ctx->twidth;
 
-    if(pointA < abeg || pointA > aend)
-        return 1;
+	if (pointA < abeg || pointA > aend)
+		return 1;
 
 	//printf("getTrimPositions %d x %d, a(%d, %d) %c b(%d, %d) pointA: %d\n", ovl->aread, ovl->bread, abeg, aend, (ovl->flags & OVL_COMP) ? 'C' : 'N', bbeg, bend, pointA);
-	
-    int dist = pointA - abeg;
-    int apos, bpos;
-    if (ovl->path.tlen)
-    {		        	
-        ovl_trace* trace = ovl->path.trace;
-        apos = abeg;
-        bpos = ovl->path.bbpos;
 
-        int j = 0;
-        while (j < ovl->path.tlen)
-        {
-      //      printf("apos %6d, bpos %6d, oldDist %6d, newDist %6d\n", apos, bpos, dist, abs(pointA-((apos / twidth + 1) * twidth)));
-            if(dist < abs(pointA - ((apos / twidth + 1) * twidth)))
-                break;
-            apos = (apos / twidth + 1) * twidth;
-            bpos += trace[j + 1];
-            //printf("apos %6d, bpos %6d\n", apos, bpos);
-            dist = abs(pointA - apos); 
-            j += 2;
-        }
-    }
-    else
-    {
-        apos = pointA;
-        bpos = bbeg + dist;  
-    }
-	
-  //  printf("apos: %d, bpos: %d\n", apos, bpos);
-    
-    *cutA = apos;
-    *cutB = bpos;
+	int dist = pointA - abeg;
+	int apos, bpos;
+	if (ovl->path.tlen) {
+		ovl_trace *trace = ovl->path.trace;
+		apos = abeg;
+		bpos = ovl->path.bbpos;
 
-    if(*cutA < abeg || *cutA > aend)
-        return 1;
+		int j = 0;
+		while (j < ovl->path.tlen) {
+			//      printf("apos %6d, bpos %6d, oldDist %6d, newDist %6d\n", apos, bpos, dist, abs(pointA-((apos / twidth + 1) * twidth)));
+			if (dist < abs(pointA - ((apos / twidth + 1) * twidth)))
+				break;
+			apos = (apos / twidth + 1) * twidth;
+			bpos += trace[j + 1];
+			//printf("apos %6d, bpos %6d\n", apos, bpos);
+			dist = abs(pointA - apos);
+			j += 2;
+		}
+	} else {
+		apos = pointA;
+		bpos = bbeg + dist;
+	}
 
-    if(*cutB < bbeg || *cutB > bend)
-        return 1;
+	//  printf("apos: %d, bpos: %d\n", apos, bpos);
+
+	*cutA = apos;
+	*cutB = bpos;
+
+	if (*cutA < abeg || *cutA > aend)
+		return 1;
+
+	if (*cutB < bbeg || *cutB > bend)
+		return 1;
 
 	//printf("final range: %d, %d\n", *cutA, *cutB);
-    return 0;
+	return 0;
 }
 
-static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
-{
-    int i;
+static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl) {
+	int i;
 
-    int aLen = DB_READ_LEN(ctx->db, ovl->aread);
-    int bLen = DB_READ_LEN(ctx->db, ovl->bread);
+	int aLen = DB_READ_LEN(ctx->db, ovl->aread);
+	int bLen = DB_READ_LEN(ctx->db, ovl->bread);
 
-    // assumption: input overlaps must be chained with LAfilterChains !!!
-    // one chain at the end and one chain at the beginning of a contig are possible!!!
-    
-    // sanity check
-    Overlap *o1 = ovl;
-    int cutA = -1;
-    int cutB = -1;
+	// assumption: input overlaps must be chained with LAfilterChains !!!
+	// one chain at the end and one chain at the beginning of a contig are possible!!!
 
-    if(novl == 1 )
-    {
-        if((o1->path.abpos > ctx->maxFuzzyBases && o1->path.aepos < aLen - ctx->maxFuzzyBases) || (o1->path.bbpos > ctx->maxFuzzyBases && o1->path.bepos < bLen - ctx->maxFuzzyBases))
-        {
-            if(ctx->verbose)
-            {
-                printf("[WARNGING] fuzzy base check failed! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n",o1->aread, o1->bread,o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos);
-            }
-            return 1;
-        }
+	// sanity check
+	Overlap *o1 = ovl;
+	int cutA = -1;
+	int cutB = -1;
 
-        int pointA =  o1->path.abpos + (o1->path.aepos - o1->path.abpos)/2;
+	if (novl == 1) {
+		// check if overlaps is valid
 
-        if(getTrimPositions(ctx, o1, pointA, &cutA, &cutB))
-        {
-            printf("Unable to get cutPosition for OVL [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos, pointA);
-             return 1;
-        }   
+		if ((o1->path.abpos > ctx->maxFuzzyBases
+				&& o1->path.aepos < aLen - ctx->maxFuzzyBases)
+				|| (o1->path.bbpos > ctx->maxFuzzyBases
+						&& o1->path.bepos < bLen - ctx->maxFuzzyBases)) {
+			ctx->statsNumInvalidChains++;
+			if (ctx->verbose) {
+				printf(
+						"[WARNGING] fuzzy base check failed! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n",
+						o1->aread, o1->bread, o1->path.abpos, o1->path.aepos,
+						(o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos,
+						o1->path.bepos);
+			}
+			return 1;
+		}
 
-        assert((cutA - ctx->trimOffset > 0) && (cutA + ctx->trimOffset < aLen));
-        assert((cutB - ctx->trimOffset > 0) && (cutB + ctx->trimOffset < bLen));
+		ctx->statsNumValidChains++;
+		int pointA = o1->path.abpos + (o1->path.aepos - o1->path.abpos) / 2;
 
-        // set cut position of contig_A
-        if(o1->path.abpos < aLen - o1->path.aepos) // trim off contig at begin 
-        {
-            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = -(cutA + ctx->trimOffset);
-        }
-        else if(o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end 
-        {
-            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = cutA - ctx->trimOffset;
-        }
-        else // containment 
-        {
-            printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos, pointA);
-            return 1;
-        }
-        
-        // set cut position of contig_B
-        if(o1->path.bbpos < bLen - o1->path.bepos) // trim off contig at begin 
-        {
-            if(o1->flags & OVL_COMP)
-            {
-                ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = bLen - (cutB + ctx->trimOffset);  
-            }
-            else
-            {
-                ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(cutB + ctx->trimOffset);    
-            }                        
-        }
-        else if(o1->path.bbpos > bLen - o1->path.bepos) // trim off contig at end 
-        {
-            if(o1->flags & OVL_COMP)
-            {
-                ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(bLen - (cutB - ctx->trimOffset));
-            }
-            else 
-            {
-                ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = cutB - ctx->trimOffset;
-            }            
-        }    
-    }
-    else
-    {
-        int validChain=1;
-        Overlap *o2;
-        // first: sanity check for LAS chain
-        for(i=1; i<novl;i++)
-        {
-            o2 = ovl + i;
-            if (abs(o1->path.aepos - o2->path.abpos) > ctx->maxFuzzyBases || ((o1->flags & OVL_COMP) != (o2->flags & OVL_COMP))) 
-            {
-                validChain = 0;
-                break;
-            }
-            o1=o2;
-        }
+		if (getTrimPositions(ctx, o1, pointA, &cutA, &cutB)) {
+			printf(
+					"Unable to get cutPosition for OVL [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n",
+					o1->aread, o1->bread, o1->path.abpos, o1->path.aepos,
+					(o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos,
+					o1->path.bepos, pointA);
+			return 1;
+		}
 
-        if (!validChain)
-        {
-            printf("INVALID chain: %d vs %d\n", ovl->aread, ovl->bread);
-   
-            for(i=0; i<novl;i++)
-            {
-                printf("   a[%d,%d] %c b[%d,%d]\n", ovl[i].path.abpos, ovl[i].path.aepos, (ovl[i].flags & OVL_COMP) ? 'c' : 'n',ovl[i].path.bbpos, ovl[i].path.bepos);
-   
-            }
-            return 1;
-        }
+		assert((cutA - ctx->trimOffset > 0) && (cutA + ctx->trimOffset < aLen));
+		assert((cutB - ctx->trimOffset > 0) && (cutB + ctx->trimOffset < bLen));
 
-        o1 = ovl;
-        o2 = ovl + (novl-1);
+		// set cut position of contig_A
+		if (o1->path.abpos < aLen - o1->path.aepos) // trim off contig at begin
+				{
+			ctx->LAStrimMatrix[o1->aread * DB_NREADS(ctx->db) + o1->bread] =
+					-(cutA + ctx->trimOffset);
+		} else if (o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end
+				{
+			ctx->LAStrimMatrix[o1->aread * DB_NREADS(ctx->db) + o1->bread] =
+					cutA - ctx->trimOffset;
+		} else // containment
+		{
+			printf(
+					"Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n",
+					o1->aread, o1->bread, o1->path.abpos, o1->path.aepos,
+					(o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos,
+					o1->path.bepos, pointA);
+			return 1;
+		}
 
-        // set cut position of contig_A
-        if(o1->path.abpos < aLen - o2->path.aepos) // trim off contig at begin 
-        {
-            if(o2->path.abpos >= o1->path.aepos)
-            {
-                cutA = o2->path.abpos + ctx->trimOffset;
-            }       
-            else 
-            {
-                cutA = o1->path.aepos + ctx->trimOffset;
-            }
-            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = -(cutA);
-        }
-        else if(o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end 
-        {
-            if(o2->path.abpos >= o1->path.aepos)
-            {
-                cutA = o1->path.aepos - ctx->trimOffset;
-            }       
-            else 
-            {
-                cutA = o2->path.abpos - ctx->trimOffset;
-            }
-            ctx->LAStrimMatrix[o1->aread*DB_NREADS(ctx->db)+o1->bread] = cutA;            
-        }
-        else // containment 
-        {
-            printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos);
-            return 1;
-        }
-        // set cut position of contig_B
+		// set cut position of contig_B
+		if (o1->path.bbpos < bLen - o1->path.bepos) // trim off contig at begin
+				{
+			if (o1->flags & OVL_COMP) {
+				ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] =
+						bLen - (cutB + ctx->trimOffset);
+			} else {
+				ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] =
+						-(cutB + ctx->trimOffset);
+			}
+		} else if (o1->path.bbpos > bLen - o1->path.bepos) // trim off contig at end
+				{
+			if (o1->flags & OVL_COMP) {
+				ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] =
+						-(bLen - (cutB - ctx->trimOffset));
+			} else {
+				ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] =
+						cutB - ctx->trimOffset;
+			}
+		}
+	} else {
+		int validChain = 1;
+		Overlap *o2;
+		// first: sanity check for LAS chain
+		for (i = 1; i < novl; i++) {
+			o2 = ovl + i;
+			if (abs(o1->path.aepos - o2->path.abpos) > ctx->maxFuzzyBases
+					|| ((o1->flags & OVL_COMP) != (o2->flags & OVL_COMP))) {
+				validChain = 0;
+				break;
+			}
+			o1 = o2;
+		}
 
-        if(o1->path.bbpos < bLen - o2->path.bepos) // trim off contig at begin 
-        {
-            if(o2->path.bbpos >= o1->path.bepos)
-            {
-                cutB = o2->path.bbpos + ctx->trimOffset;
-                if(o1->flags & OVL_COMP)
-                {
-                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = bLen - cutB;
-                }
-                else
-                {
-                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(cutB);
-                }                
-            }
-            else 
-            {
-                cutB = o1->path.bepos + ctx->trimOffset;
-                if(o1->flags & OVL_COMP)
-                {
-                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = bLen - cutB;
-                }
-                else
-                {
-                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(cutB);
-                }                
-            }
-        }
-        else if(o1->path.bbpos > bLen - o2->path.bepos) // trim off contig at end 
-        {
-            if(o2->path.bbpos >= o1->path.bepos)
-            {
-                cutB = o1->path.bepos - ctx->trimOffset;
-                if(o1->flags & OVL_COMP)
-                {
-                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(bLen - cutB);
-                }
-                else 
-                {
-                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = cutB;   
-                }
-            }
-            else
-            {
-                cutB = o2->path.bbpos - ctx->trimOffset;   
-                if(o1->flags & OVL_COMP)
-                {
-                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = -(bLen - cutB);
-                }
-                else 
-                {
-                    ctx->LAStrimMatrix[o1->bread*DB_NREADS(ctx->db)+o1->aread] = cutB;   
-                }
+		if (!validChain) {
+			ctx->statsNumInvalidChains++;
+			printf("INVALID chain: %d vs %d\n", ovl->aread, ovl->bread);
 
-            }
-        }
-        else // containment 
-        {
-            printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n',o1->path.bbpos, o1->path.bepos);
-            return 1;
-        }
-    }
-    return 0;
+			for (i = 0; i < novl; i++) {
+				printf("   a[%d,%d] %c b[%d,%d]\n", ovl[i].path.abpos,
+						ovl[i].path.aepos,
+						(ovl[i].flags & OVL_COMP) ? 'c' : 'n',
+						ovl[i].path.bbpos, ovl[i].path.bepos);
+			}
+			return 1;
+		}
+		ctx->statsNumValidChains++;
+
+		o1 = ovl;
+		o2 = ovl + (novl - 1);
+
+		// set cut position of contig_A
+		if (o1->path.abpos < aLen - o2->path.aepos) // trim off contig at begin
+				{
+			if (o2->path.abpos >= o1->path.aepos) {
+				cutA = o2->path.abpos + ctx->trimOffset;
+			} else {
+				cutA = o1->path.aepos + ctx->trimOffset;
+			}
+			ctx->LAStrimMatrix[o1->aread * DB_NREADS(ctx->db) + o1->bread] =
+					-(cutA);
+		} else if (o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end
+				{
+			if (o2->path.abpos >= o1->path.aepos) {
+				cutA = o1->path.aepos - ctx->trimOffset;
+			} else {
+				cutA = o2->path.abpos - ctx->trimOffset;
+			}
+			ctx->LAStrimMatrix[o1->aread * DB_NREADS(ctx->db) + o1->bread] =
+					cutA;
+		} else // containment
+		{
+			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n",
+					o1->aread, o1->bread, o1->path.abpos, o1->path.aepos,
+					(o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos,
+					o1->path.bepos);
+			return 1;
+		}
+		// set cut position of contig_B
+
+		if (o1->path.bbpos < bLen - o2->path.bepos) // trim off contig at begin
+				{
+			if (o2->path.bbpos >= o1->path.bepos) {
+				cutB = o2->path.bbpos + ctx->trimOffset;
+				if (o1->flags & OVL_COMP) {
+					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db)
+							+ o1->aread] = bLen - cutB;
+				} else {
+					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db)
+							+ o1->aread] = -(cutB);
+				}
+			} else {
+				cutB = o1->path.bepos + ctx->trimOffset;
+				if (o1->flags & OVL_COMP) {
+					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db)
+							+ o1->aread] = bLen - cutB;
+				} else {
+					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db)
+							+ o1->aread] = -(cutB);
+				}
+			}
+		} else if (o1->path.bbpos > bLen - o2->path.bepos) // trim off contig at end
+				{
+			if (o2->path.bbpos >= o1->path.bepos) {
+				cutB = o1->path.bepos - ctx->trimOffset;
+				if (o1->flags & OVL_COMP) {
+					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db)
+							+ o1->aread] = -(bLen - cutB);
+				} else {
+					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db)
+							+ o1->aread] = cutB;
+				}
+			} else {
+				cutB = o2->path.bbpos - ctx->trimOffset;
+				if (o1->flags & OVL_COMP) {
+					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db)
+							+ o1->aread] = -(bLen - cutB);
+				} else {
+					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db)
+							+ o1->aread] = cutB;
+				}
+
+			}
+		} else // containment
+		{
+			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n",
+					o1->aread, o1->bread, o1->path.abpos, o1->path.aepos,
+					(o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos,
+					o1->path.bepos);
+			return 1;
+		}
+	}
+	return 0;
 }
 
-static int trim_handler(void* _ctx, Overlap* ovl, int novl)
-{
-	TrimContext* ctx = (TrimContext*) _ctx;
+static int trim_handler(void *_ctx, Overlap *ovl, int novl) {
+	TrimContext *ctx = (TrimContext*) _ctx;
 	int i, j;
 
-    // analyze overlaps and find contig trim position 
-    analyzeContigOverlaps(ctx, ovl, novl);
-                    
-    return 1;
+	// analyze overlaps and find contig trim position
+	analyzeContigOverlaps(ctx, ovl, novl);
+
+	return 1;
 }
 
-static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int beg, int end)
-{
+static int getMaskedBases(TrimContext *ctx, HITS_TRACK *t, int contigID,
+		int beg, int end) {
 #ifdef DEBUG_MASKING
-    printf("call getMaskedBases on track %s, contigID: %d, in: [%d, %d]\n",t->name, contigID, beg, end);
+	printf("call getMaskedBases on track %s, contigID: %d, in: [%d, %d]\n",
+			t->name, contigID, beg, end);
 #endif
-    if(t == NULL)
-    {
+	if (t == NULL) {
 #ifdef DEBUG_MASKING        
-        printf(" --> masked bases 0 (track is Null)\n");
+		printf(" --> masked bases 0 (track is Null)\n");
 #endif
-        return 0;
-    }
+		return 0;
+	}
 
-	track_anno* mask_anno = t->anno;
-	track_data* mask_data = t->data;
+	track_anno *mask_anno = t->anno;
+	track_data *mask_data = t->data;
 
-    if (contigID < 0 || contigID >= DB_NREADS(ctx->db))
-    {
-        fprintf(stderr, "[ERROR] - getMaskedBases contigID: %d out of bounds [0, %d]\n", contigID, DB_NREADS(ctx->db) - 1);
-        fflush(stderr);
-        exit(1);
-    }
+	if (contigID < 0 || contigID >= DB_NREADS(ctx->db)) {
+		fprintf(stderr,
+				"[ERROR] - getMaskedBases contigID: %d out of bounds [0, %d]\n",
+				contigID, DB_NREADS(ctx->db) - 1);
+		fflush(stderr);
+		exit(1);
+	}
 
 	track_anno rb, re;
 
@@ -410,8 +422,7 @@ static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int b
 	rb = mask_anno[contigID] / sizeof(track_data);
 	re = mask_anno[contigID + 1] / sizeof(track_data);
 
-	while (rb < re)
-	{
+	while (rb < re) {
 		rBeg = mask_data[rb];
 		rEnd = mask_data[rb + 1];
 
@@ -425,46 +436,227 @@ static int getMaskedBases(TrimContext * ctx, HITS_TRACK * t, int contigID, int b
 	}
 
 #ifdef DEBUG_MASKING
-    printf(" --> masked bases %d\n", maskBases);
+	printf(" --> masked bases %d\n", maskBases);
 #endif
 
 	return maskBases;
 }
 
-static void usage()
-{
-	fprintf(stderr, "[-v] [-GTLOF <int>] [-bsp <file>] [-dt <track>] <db> <overlaps_in> <contigs_out>\n");
+static void getDBFastaHeader(TrimContext *ctx, char *fullDBPath) {
+	char *pwd, *root;
+	FILE *dstub;
+	int i;
+
+	root = Root(fullDBPath, ".db");
+	pwd = PathTo(fullDBPath);
+	if (ctx->db->part > 0) {
+		fprintf(stderr, "[ERROR] - CTtrim can not work on blocks!");
+		exit(1);
+	}
+	dstub = Fopen(Catenate(pwd, "/", root, ".db"), "r");
+	if (dstub == NULL) {
+		fprintf(stderr, "[ERROR] - Cannot open database file: %s\n",
+				Catenate(pwd, "/", root, ".db"));
+		exit(1);
+	}
+	free(pwd);
+	free(root);
+
+	if (fscanf(dstub, DB_NFILE, &(ctx->nfiles)) != 1) {
+		fclose(dstub);
+		fprintf(stderr,
+				"[ERROR] - Cannot read files line '%s' in database file: %s\n",
+				DB_NFILE, Catenate(pwd, "/", root, ".db"));
+		exit(1);
+	}
+
+	ctx->flist = (char**) Malloc(sizeof(char*) * ctx->nfiles,
+			"Allocating file list");
+	ctx->hlist = (char**) Malloc(sizeof(char*) * ctx->nfiles,
+			"Allocating header list");
+	ctx->findx = (int*) Malloc(sizeof(int*) * (ctx->nfiles + 1),
+			"Allocating file index");
+	if (ctx->flist == NULL || ctx->findx == NULL || ctx->hlist == NULL) {
+		fclose(dstub);
+		fprintf(stderr,
+				"[ERROR] - Cannot allocate file name and file index buffers!");
+		exit(1);
+	}
+
+	ctx->findx += 1;
+	ctx->findx[-1] = 0;
+
+	for (i = 0; i < ctx->nfiles; i++) {
+		char headername[MAX_NAME], filename[MAX_NAME];
+
+		if (fscanf(dstub, DB_FDATA, ctx->findx + i, filename, headername) != 3) {
+			fclose(dstub);
+			fprintf(stderr,
+					"[ERROR] - Cannot read %d-th fasta entry in database file %s\n",
+					i + 1, Catenate(pwd, "/", root, ".db"));
+			exit(1);
+		}
+
+		if ((ctx->flist[i] = Strdup(filename, "Adding to file list")) == NULL)
+			exit(1);
+
+		if ((ctx->flist[i] = Strdup(headername, "Adding to file list")) == NULL)
+			exit(1);
+	}
+
+	fclose(dstub);
+}
+
+static void trim_contigs(TrimContext *ctx) {
+	// open file handler
+	FILE *trimmedContigsAll = NULL;
+	FILE *purgedContigsAll = NULL;
+	FILE *statsContigsAll = NULL;
+
+	FILE *trimmedContigsNoTandem = NULL;
+	FILE *purgedContigsNoTandem = NULL;
+	FILE *statsContigsNoTandem = NULL;
+
+	FILE *trimmedContigsBionano = NULL;
+	FILE *purgedContigsBionano = NULL;
+	FILE *statsContigsBionano = NULL;
+
+	char *fout = malloc(strlen(ctx->fileOutPattern) + 10);
+	assert(fout != NULL);
+
+	sprintf(fout, "%s.trimmedContigs.fasta", ctx->fileOutPattern);
+	if ((trimmedContigsAll = (FILE*) fopen(fout, 'w')) == NULL) {
+		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+		exit(1);
+	}
+	sprintf(fout, "%s.purgedContigs.fasta", ctx->fileOutPattern);
+	if ((purgedContigsAll = (FILE*) fopen(fout, 'w')) == NULL) {
+		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+		exit(1);
+	}
+	sprintf(fout, "%s.trimmedContigs.stats", ctx->fileOutPattern);
+	if ((statsContigsAll = (FILE*) fopen(fout, 'w')) == NULL) {
+		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+		exit(1);
+	}
+
+	// debug report trim positions
+	int nContigs = DB_NREADS(ctx->db);
+	int i, j;
+	char * read = New_Read_Buffer(ctx->db);
+	for (i = 0; i < nContigs; i++) {
+		int maxBeg = 0;
+		int minEnd = DB_READ_LEN(ctx->db, i);
+		for (j = 0; j < nContigs; j++) {
+			int cutPos = ctx->LAStrimMatrix[i * nContigs + j];
+			if (cutPos < 0 && abs(cutPos) > maxBeg)
+				maxBeg = abs(cutPos);
+			if (cutPos > 0 && cutPos < minEnd)
+				minEnd = cutPos;
+			if (cutPos != 0)
+				printf(
+						"FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n",
+						i, cutPos,
+						(cutPos < 0) ?
+								abs(cutPos) : DB_READ_LEN(ctx->db,i) - cutPos,
+						j);
+		}
+		if (maxBeg > 0 || minEnd != DB_READ_LEN(ctx->db, i)) {
+			float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
+			dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
+			if (maxBeg > 0) {
+				dustBegFract = getMaskedBases(ctx, ctx->trackDust, i, 0, maxBeg)
+						* 100.0 / maxBeg;
+				tanBegFract = getMaskedBases(ctx, ctx->trackTan, i, 0, maxBeg)
+						* 100.0 / maxBeg;
+			}
+			if (minEnd != DB_READ_LEN(ctx->db, i)) {
+				dustEndFract = getMaskedBases(ctx, ctx->trackDust, i, minEnd,
+						DB_READ_LEN(ctx->db, i)) * 100.0
+						/ (DB_READ_LEN(ctx->db,i) - minEnd);
+				tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd,
+						DB_READ_LEN(ctx->db, i)) * 100.0
+						/ (DB_READ_LEN(ctx->db,i) - minEnd);
+			}
+
+			printf(
+					" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n",
+					maxBeg, minEnd, maxBeg, DB_READ_LEN(ctx->db,i) - minEnd,
+					dustBegFract, dustEndFract, tanBegFract, tanEndFract);
+
+			// trim contigs
+
+			int len;
+			int fst, lst;
+			// int flags, qv;
+			int map = 0;
+			HITS_READ *r = ctx->db->reads + i;
+			while (i < ctx->findx[map - 1])
+				map -= 1;
+			while (i >= ctx->findx[map])
+				map += 1;
+
+			fprintf(trimmedContigsAll,">%s", ctx->hlist[map]);
+			fprintf(trimmedContigsAll,"\n");
+
+			Load_Read(ctx->db, i, read, 2);
+
+			for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
+				fprintf(trimmedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
+			if (j < lst)
+				fprintf(trimmedContigsAll, "%.*s\n", lst - j, read + j);
+		}
+	}
+
+	fclose(trimmedContigsAll);
+	fclose(purgedContigsAll);
+	fclose(statsContigsAll);
+}
+
+static void usage() {
+	fprintf(stderr,
+			"[-v] [-GTLOFw <int>] [-b <file>] [-dt <track>] <db> <overlaps_in> <contigs_out_prefix>\n");
 
 	fprintf(stderr, "options: -v        verbose\n");
 	fprintf(stderr, "         -d <trc>  low complexity track (e.g. dust)\n");
 	fprintf(stderr, "         -t <trc>  tandem repeat track  (e,f, tan)\n");
-	fprintf(stderr, "         -b <file> gap csv file i.e. based on bionano agp. Must be in following format: +|-<ContigID1> <gapLen> +|-<contigID2>\n");
-	fprintf(stderr, "                   where: ContigID1, and ContigID2 must refer to the DAmar seqeuence database (i.e. 0-based contig IDs)\n");
-    fprintf(stderr, "                   the mandatory +|- prefix of the ContigID describes the orientation of the contig\n");
-    fprintf(stderr, "                   If a bionano-gap file is given, then only gaps up the minimum gaps size of (default: %d) are trimmed\n", MIN_BIONANO_GAP_SIZE);
-    fprintf(stderr, "                   --> idea behind this: If Bionano inserts a 13bp gap, then it's most probable that the adjacent contigs overlap with each other\n");
-    fprintf(stderr, "         -G <int>  min Bionano gap size (default: %d)\n", MIN_BIONANO_GAP_SIZE);
-    fprintf(stderr, "         -T <int>  maximum trim length (default: -1)\n");
-    fprintf(stderr, "         -L <int>  do not trim contigs if trim length contains more then -S bases (in %%) of tandem repeats (default: -1, valid range: [0,100])\n");
-    fprintf(stderr, "         -s <file> some stats are written to the statistics file <file>\n");
-    fprintf(stderr, "         -p <file> write seqences that were trimmed off to -p file\n");
-    fprintf(stderr, "         -O <int>  trim offset in bases (default %d), i.e. in best case (if we have single overlap between 2 contigs) a gap of size 2xtrim_offset is created )\n", TRIM_OFFSET);
-    fprintf(stderr, "                   in case a valid alignment chain consisting of multiple alignments is present (representing heterozygous variations). The first last and the last alignment are used, (- trimOffset and + trimOffset, accordingly) \n");
-    fprintf(stderr, "                   (- trimOffset and + trimOffset, accordingly) creates a larger gap size, but heopefully removes the heterozygous difference.\n");
-    fprintf(stderr, "         -F <int>  number of fuzzy bases (default: %d)\n", FUZZY_BASES);    
+	fprintf(stderr,
+			"         -b <file> gap csv file i.e. based on bionano agp. Must be in following format: +|-<ContigID1> <gapLen> +|-<contigID2>\n");
+	fprintf(stderr,
+			"                   where: ContigID1, and ContigID2 must refer to the DAmar seqeuence database (i.e. 0-based contig IDs)\n");
+	fprintf(stderr,
+			"                   the mandatory +|- prefix of the ContigID describes the orientation of the contig\n");
+	fprintf(stderr,
+			"                   If a bionano-gap file is given, then only gaps up the minimum gaps size of (default: %d) are trimmed\n",
+			MIN_BIONANO_GAP_SIZE);
+	fprintf(stderr,
+			"                   --> idea behind this: If Bionano inserts a 13bp gap, then it's most probable that the adjacent contigs overlap with each other\n");
+	fprintf(stderr, "         -G <int>  min Bionano gap size (default: %d)\n",
+			MIN_BIONANO_GAP_SIZE);
+	fprintf(stderr, "         -T <int>  maximum trim length (default: -1)\n");
+	fprintf(stderr,
+			"         -L <int>  do not trim contigs if trim length contains more then -S bases (in %%) of tandem repeats (default: -1, valid range: [0,100])\n");
+	fprintf(stderr,
+			"         -O <int>  trim offset in bases (default %d), i.e. in best case (if we have single overlap between 2 contigs) a gap of size 2xtrim_offset is created )\n",
+			TRIM_OFFSET);
+	fprintf(stderr,
+			"                   in case a valid alignment chain consisting of multiple alignments is present (representing heterozygous variations). The first last and the last alignment are used, (- trimOffset and + trimOffset, accordingly) \n");
+	fprintf(stderr,
+			"                   (- trimOffset and + trimOffset, accordingly) creates a larger gap size, but heopefully removes the heterozygous difference.\n");
+	fprintf(stderr, "         -F <int>  number of fuzzy bases (default: %d)\n",
+			FUZZY_BASES);
+	fprintf(stderr,
+			"         -w <int>  specify number of characters per fasta line (default: %d)\n",
+			FASTA_LINEWIDTH);
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
 	HITS_DB db;
 	TrimContext tctx;
-	PassContext* pctx;
-	
-    FILE* fileOvlIn = NULL;
-    FILE* fileGapsIn = NULL;
-	FILE* fileCtgOut = NULL;
-    FILE* filePurgeOut = NULL;
-    FILE* fileStatsOut = NULL;
+	PassContext *pctx;
+
+	FILE *fileOvlIn = NULL;
+	FILE *fileGapsIn = NULL;
 
 	bzero(&tctx, sizeof(TrimContext));
 
@@ -472,158 +664,116 @@ int main(int argc, char* argv[])
 
 // args
 
-	char* pcTrackDust = NULL;
-	char* pcTrackTan = NULL;
+	char *pcTrackDust = NULL;
+	char *pcTrackTan = NULL;
 
-    char* pathInBionanoGapCSV = NULL;
-	char* pathOutStats = NULL;
-    char* pathOutPurged = NULL;
+	char *pathInBionanoGapCSV = NULL;
 
-	char* pcPathReadsIn = NULL;
-	char* pcPathOverlapsIn = NULL;
-	char* pcPathContigsOut = NULL;
+	char *pcPathReadsIn = NULL;
+	char *pcPathOverlapsIn = NULL;
 
-	int c,tmp;
+	int c, tmp;
 
-    tctx.minBionanoGapLen = MIN_BIONANO_GAP_SIZE;
-    tctx.maxTrimLength = -1;
-    tctx.maxLowCompTrimPerc = -1;
-    tctx.trimOffset = TRIM_OFFSET;
-    tctx.maxFuzzyBases = FUZZY_BASES;
+	tctx.minBionanoGapLen = MIN_BIONANO_GAP_SIZE;
+	tctx.maxTrimLength = -1;
+	tctx.maxLowCompTrimPerc = -1;
+	tctx.trimOffset = TRIM_OFFSET;
+	tctx.maxFuzzyBases = FUZZY_BASES;
+	tctx.lineWidth = FASTA_LINEWIDTH;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vd:t:b:G:T:L:s:p:O:F:")) != -1)
-	{
-		switch (c)
-		{
-			case 'v':
-				tctx.verbose = 1;
-				break;
-            case 'd':
-				pcTrackDust = optarg;
-				break;
-            case 't':
-				pcTrackTan = optarg;
-				break;            
-            case 'b':
-				pathInBionanoGapCSV = optarg;
-				break;             
-            case 'G':
-				tctx.minBionanoGapLen = atoi(optarg);
-				break;                           
-            case 'T':
-				tctx.maxTrimLength = atoi(optarg);
-				break;            
-            case 'L':
-                tmp = atoi(optarg);
-                if (tmp < 0 || tmp > 100)
-                {
-                    fprintf(stderr, "[ERROR] Invalid range for tandem repeat fraction %d. Must be in [0,100]\n", tmp);
-                    exit(1);
-                }
-				tctx.maxLowCompTrimPerc = tmp;
-				break;                                                           
-            case 's':
-				pathOutStats = optarg;
-				break;            
-            case 'p':
-				pathOutPurged = optarg;
-				break;            
-            case 'O':
-				tctx.trimOffset = atoi(optarg);
-				break;            
-            case 'F':
-				tctx.maxFuzzyBases = atoi(optarg);
-				break;            
-			default:
-				fprintf(stderr, "unknown option %c\n", optopt);
-				usage();
+	while ((c = getopt(argc, argv, "vd:t:b:G:T:L:O:F:w:")) != -1) {
+		switch (c) {
+		case 'v':
+			tctx.verbose = 1;
+			break;
+		case 'd':
+			pcTrackDust = optarg;
+			break;
+		case 't':
+			pcTrackTan = optarg;
+			break;
+		case 'b':
+			pathInBionanoGapCSV = optarg;
+			break;
+		case 'G':
+			tctx.minBionanoGapLen = atoi(optarg);
+			break;
+		case 'T':
+			tctx.maxTrimLength = atoi(optarg);
+			break;
+		case 'L':
+			tmp = atoi(optarg);
+			if (tmp < 0 || tmp > 100) {
+				fprintf(stderr,
+						"[ERROR] Invalid range for tandem repeat fraction %d. Must be in [0,100]\n",
+						tmp);
 				exit(1);
+			}
+			tctx.maxLowCompTrimPerc = tmp;
+			break;
+		case 'O':
+			tctx.trimOffset = atoi(optarg);
+			break;
+		case 'F':
+			tctx.maxFuzzyBases = atoi(optarg);
+			break;
+		case 'w':
+			tctx.lineWidth = atoi(optarg);
+			break;
+
+		default:
+			fprintf(stderr, "unknown option %c\n", optopt);
+			usage();
+			exit(1);
 		}
 	}
 
-	if (argc - optind != 3)
-	{
+	if (argc - optind != 3) {
 		usage();
 		exit(1);
 	}
 
 	pcPathReadsIn = argv[optind++];
 	pcPathOverlapsIn = argv[optind++];
-	pcPathContigsOut = argv[optind++];
+	tctx.fileOutPattern = argv[optind++];
 
-	if ((fileOvlIn = fopen(pcPathOverlapsIn, "r")) == NULL)
-	{
+	if ((fileOvlIn = fopen(pcPathOverlapsIn, "r")) == NULL) {
 		fprintf(stderr, "[ERROR] - could not open %s\n", pcPathOverlapsIn);
 		exit(1);
 	}
 
-	if ((fileCtgOut = fopen(pcPathContigsOut, "w")) == NULL)
-	{
-		fprintf(stderr, "[ERROR] - could not open %s\n", pcPathContigsOut);
-		exit(1);
-	}
-
-	if (Open_DB(pcPathReadsIn, &db))
-	{
+	if (Open_DB(pcPathReadsIn, &db)) {
 		fprintf(stderr, "[ERROR] - could not open %s\n", pcPathReadsIn);
 		exit(1);
 	}
 
-    if (pcTrackDust)
-    {
-        tctx.trackDust = track_load(&db, pcTrackDust);
-	    if (! tctx.trackDust)
-		{
-            fprintf(stderr, "[ERROR] - could not load track %s\n", pcTrackDust);
-            exit(1);
-        }
-    }
-
-    if (pcTrackTan)
-    {
-        tctx.trackTan = track_load(&db, pcTrackTan);
-	    if (! tctx.trackTan)
-		{
-            fprintf(stderr, "[ERROR] - could not load track %s\n", pcTrackTan);
-            exit(1);
-        }
-    }
-
-	if (pathOutStats)
-	{
-		tctx.fileOutTrimmedStats = fopen(pathOutStats, "w");
-
-		if (tctx.fileOutTrimmedStats == NULL)
-		{
-			fprintf(stderr, "could not open %s\n", pathOutStats);
-			exit(1);
-		}		
-	}
-
-    if (pathOutPurged)
-	{
-		tctx.fileOutDicardedContigParts = fopen(pathOutPurged, "w");
-
-		if (tctx.fileOutDicardedContigParts == NULL)
-		{
-			fprintf(stderr, "could not open %s\n", pathOutPurged);
+	if (pcTrackDust) {
+		tctx.trackDust = track_load(&db, pcTrackDust);
+		if (!tctx.trackDust) {
+			fprintf(stderr, "[ERROR] - could not load track %s\n", pcTrackDust);
 			exit(1);
 		}
 	}
 
-    if (pathInBionanoGapCSV)
-	{
+	if (pcTrackTan) {
+		tctx.trackTan = track_load(&db, pcTrackTan);
+		if (!tctx.trackTan) {
+			fprintf(stderr, "[ERROR] - could not load track %s\n", pcTrackTan);
+			exit(1);
+		}
+	}
+
+	getDBFastaHeader(&tctx, pcPathReadsIn);
+
+	if (pathInBionanoGapCSV) {
 		tctx.fileInBionanoGaps = fopen(pathInBionanoGapCSV, "r");
 
-		if (tctx.fileInBionanoGaps == NULL)
-		{
+		if (tctx.fileInBionanoGaps == NULL) {
 			fprintf(stderr, "could not open %s\n", pathInBionanoGapCSV);
 			exit(1);
 		}
 	}
-
-
 
 // passes
 
@@ -640,48 +790,18 @@ int main(int argc, char* argv[])
 
 	pass(pctx, trim_handler);
 
+	// todo
+	// 1. do the trimming + create the stats + different outpu files + do not trim if tandem repeat dfraction is above a certain threshold
+	// 2. read in bionano agp file + do the trimming based on short gaps
+	// 3. cleanup + testing
 
-        // debug report trim positions
-    int nContigs = DB_NREADS(&db);
-    int i,j;
-    for(i=0; i<nContigs; i++)
-    {
-        int maxBeg=0;
-        int minEnd=DB_READ_LEN(&db,i);
-        for(j=0; j<nContigs; j++)
-        {
-            int cutPos= tctx.LAStrimMatrix[i*nContigs+j];
-            if(cutPos < 0 && abs(cutPos) > maxBeg)
-                maxBeg = abs(cutPos);
-            if(cutPos > 0 && cutPos < minEnd)
-                minEnd = cutPos;
-            if(cutPos != 0)
-                printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n", i, cutPos, (cutPos < 0) ? abs(cutPos) : DB_READ_LEN(&db,i)-cutPos, j);
-        }
-        if(maxBeg > 0 || minEnd != DB_READ_LEN(&db,i))
-        {
-            float dustBegFract,dustEndFract,tanBegFract,tanEndFract;
-            dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
-            if (maxBeg > 0)
-            {   
-                dustBegFract = getMaskedBases(&tctx, tctx.trackDust, i, 0, maxBeg)*100.0/maxBeg;
-                tanBegFract = getMaskedBases(&tctx, tctx.trackTan, i, 0, maxBeg)*100.0/maxBeg;
-            }
-            if(minEnd != DB_READ_LEN(&db,i))
-            {   
-                dustEndFract = getMaskedBases(&tctx, tctx.trackDust, i, minEnd, DB_READ_LEN(&db,i))*100.0/(DB_READ_LEN(&db,i)-minEnd);
-                tanEndFract = getMaskedBases(&tctx, tctx.trackTan, i, minEnd, DB_READ_LEN(&db,i))*100.0/(DB_READ_LEN(&db,i)-minEnd);                
-            }
-
-            printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, DB_READ_LEN(&db,i)-minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
-        }
-    }
+	trim_contigs(&tctx);
 
 	trim_post(&tctx);
 
 	pass_free(pctx);
 
-    //todo cleanup
+	//todo cleanup
 
 	Close_DB(&db);
 	fclose(fileOvlIn);
