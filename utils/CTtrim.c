@@ -455,37 +455,33 @@ static int getMaskedBases(TrimContext *ctx, HITS_TRACK *t, int contigID,
 	return maskBases;
 }
 
-static char *trimwhitespace(char *str)
-{
-	printf("trimwhitespace: %s\n",str);
-    char *end;
+static char* trimwhitespace(char *str) {
+	printf("trimwhitespace: %s\n", str);
+	char *end;
 
-    // Trim leading space
-    while (isspace(*str))
-        str++;
+	// Trim leading space
+	while (isspace(*str))
+		str++;
 
-    if (*str == 0)  // All spaces?
-        return str;
+	if (*str == 0)  // All spaces?
+		return str;
 
-    // Trim trailing space
-    end = str + strlen(str) - 1;
-    while (end > str && isspace(*end))
-        end--;
+	// Trim trailing space
+	end = str + strlen(str) - 1;
+	while (end > str && isspace(*end))
+		end--;
 
-    // Write new null terminator
-    *(end + 1) = '\0';
+	// Write new null terminator
+	*(end + 1) = '\0';
 
-    return str;
+	return str;
 }
 
-static int getDBcontigID(TrimContext *ctx, char* contigName)
-{
+static int getDBcontigID(TrimContext *ctx, char *contigName) {
 	printf("getDBcontigID(%s)\n", contigName);
 	int i;
-	for (i = 0; i < ctx->nfiles; i++)
-	{
-		if(strcmp(ctx->flist[i], contigName) == 0)
-		{
+	for (i = 0; i < ctx->nfiles; i++) {
+		if (strcmp(ctx->flist[i], contigName) == 0) {
 			return i;
 		}
 	}
@@ -510,47 +506,55 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
 	char CompntEnd_Linkage[MAX_NAME];
 	char Orientation_LinkageEvidence[MAX_NAME];
 
-    char* line = NULL;
-    size_t maxline = 0;
+	char *line = NULL;
+	size_t maxline = 0;
 
-    int nline = 0;
-    int len;
+	int nline = 0;
+	int len;
 
-    int r;
-    int contigA;
+	int r;
+	int contigA;
 
-    printf("parseBionanoAGPfile: %s\n", pathInBionanoAGP);
-    while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
-    {
-        nline++;
+	printf("parseBionanoAGPfile: %s\n", pathInBionanoAGP);
+	while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0) {
+		nline++;
 
-        char *tline = trimwhitespace(line);
+		char *tline = trimwhitespace(line);
 
-        if (tline[0] == '#')
-        	continue;
+		if (tline[0] == '#')
+			continue;
 
+		r = sscanf(tline, "%s\t%d\t%d\t%d\t%c\t%s\t%s\t%s\t%s\n", Obj_Name,
+				&Obj_Start, &Obj_End, &PartNum, &Compnt_Type,
+				CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage,
+				Orientation_LinkageEvidence);
 
-        r = sscanf(tline, "%s\t%d\t%d\t%d\t%c\t%s\t%s\t%s\t%s\n", Obj_Name, &Obj_Start, &Obj_End, &PartNum, &Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
+		if (r != 9) {
+			fprintf(stderr,
+					"[ERROR] invalid AGP file format %s. Expecting 9 columns, BUT parsed %d columns in line %d\n",
+					pathInBionanoAGP, r, nline);
+			exit(1);
+		}
 
-        if( r != 9)
-        {
-        	fprintf(stderr, "[ERROR] invalid AGP file format %s. Expecting 9 columns, BUT parsed %d columns in line %d\n", pathInBionanoAGP, r, nline);
-        	exit(1);
-        }
+		printf("line %d: %s\n", nline, tline);
 
-        printf("line %d: %s\n", nline, tline);
-
-        // try to match contig name with with DB contig ID
-        contigA = getDBcontigID(ctx, CompntId_GapLength);
-        if(contigA < 0)
-        {
-        	printf("Could not match agp contig name: %s in current db! Ignore AGP file.\n", CompntId_GapLength);
-        	return;
-        }
-        else
-        {
-        	printf("found db contig id %d for agp contig name %s", contigA, CompntId_GapLength);
-        }
+		// try to match contig name with with DB contig ID
+		if (Compnt_Type == 'W') {
+			contigA = getDBcontigID(ctx, CompntId_GapLength);
+			if (contigA < 0) {
+				printf(
+						"Could not match agp contig name: %s in current db! Ignore AGP file.\n",
+						CompntId_GapLength);
+				return;
+			} else {
+				printf("found db contig id %d for agp contig name %s", contigA,
+						CompntId_GapLength);
+			}
+		}
+		else
+		{
+			printf("found gap\n");
+		}
 
 	}
 
