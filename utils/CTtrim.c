@@ -532,7 +532,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
         	continue;
 
         printf("run scanf\n");
-        r = scanf(tline, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\0", Obj_Name, &Obj_Start, &Obj_End, &PartNum, Compnt_Type, CompntId_GapLength, &CompntStart_GapType, &CompntEnd_Linkage, Orientation_LinkageEvidence);
+        r = scanf(tline, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", Obj_Name, &Obj_Start, &Obj_End, &PartNum, Compnt_Type, CompntId_GapLength, &CompntStart_GapType, &CompntEnd_Linkage, Orientation_LinkageEvidence);
         printf("finish scanf: return %d\n",r);
 
         if( r != 9)
