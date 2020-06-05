@@ -528,16 +528,16 @@ static void trim_contigs(TrimContext *ctx) {
 		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
 		exit(1);
 	}
-	sprintf(fout, "%s.purgedContigs.fasta", ctx->fileOutPattern);
-	if ((purgedContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
-		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-		exit(1);
-	}
-	sprintf(fout, "%s.trimmedContigs.stats", ctx->fileOutPattern);
-	if ((statsContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
-		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-		exit(1);
-	}
+//	sprintf(fout, "%s.purgedContigs.fasta", ctx->fileOutPattern);
+//	if ((purgedContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
+//		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+//		exit(1);
+//	}
+//	sprintf(fout, "%s.trimmedContigs.stats", ctx->fileOutPattern);
+//	if ((statsContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
+//		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+//		exit(1);
+//	}
 
 	// debug report trim positions
 	int nContigs = DB_NREADS(ctx->db);
@@ -608,8 +608,8 @@ static void trim_contigs(TrimContext *ctx) {
 	}
 
 	fclose(trimmedContigsAll);
-	fclose(purgedContigsAll);
-	fclose(statsContigsAll);
+//	fclose(purgedContigsAll);
+//	fclose(statsContigsAll);
 }
 
 static void usage() {
