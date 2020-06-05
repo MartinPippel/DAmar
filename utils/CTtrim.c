@@ -1164,7 +1164,7 @@ int main(int argc, char *argv[])
 	if(tctx.BionanoAGPMatrix)
 		free(tctx.BionanoAGPMatrix);
 
-	free(tctx->LAStrimMatrix);
+	free(tctx.LAStrimMatrix);
 
 	int i;
 	for (i = 0; i < tctx.nfiles; i++)
