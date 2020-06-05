@@ -862,6 +862,7 @@ static void trim_contigs(TrimContext *ctx)
 		exit(1);
 	}
 
+
 	fprintf(statsContigsAll, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
 
 	// debug report trim positions
@@ -1144,11 +1145,6 @@ int main(int argc, char *argv[])
 
 	pass(pctx, trim_handler);
 
-	// todo
-	// 1. do the trimming + create the stats + different outpu files + do not trim if tandem repeat dfraction is above a certain threshold
-	// 2. read in bionano agp file + do the trimming based on short gaps
-	// 3. cleanup + testing
-
 	trim_contigs(&tctx);
 
 	trim_post(&tctx);
@@ -1173,7 +1169,7 @@ int main(int argc, char *argv[])
 	}
 	free(tctx.flist);
 	free(tctx.hlist);
-	free(tctx.findx - 1);
+	free(&(tctx.findx[-1]));
 
 	return 0;
 }
