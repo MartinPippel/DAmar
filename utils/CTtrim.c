@@ -526,7 +526,9 @@ static int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 		if (agpCNameLen == cNameLen && strncmp(ctx->flist[i], contigName, cNameLen) == 0)
 		{
 
+			*pchrl = '\0';
 			*from = strtol(pchrf + 8, NULL, 10);
+			*pchrl = ':';
 			*to = strtol(pchrl + 1, NULL, 10);
 
 			// sanity checks
