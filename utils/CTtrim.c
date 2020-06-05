@@ -55,6 +55,8 @@ typedef struct
 
 	// vector to store overlapping contigs: length: #contigs x #contigs
 	int *LAStrimMatrix;
+	// bionano AGP vector!
+	int *BionanoAGPMatrix;
 
 	// other options
 	int verbose;
@@ -93,11 +95,9 @@ static void trim_pre(PassContext *pctx, TrimContext *tctx)
 	}
 
 	tctx->twidth = pctx->twidth;
-	tctx->LAStrimMatrix = (int*) malloc(
-	DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
+	tctx->LAStrimMatrix = (int*) malloc(DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
 	assert(tctx->LAStrimMatrix != NULL);
-	bzero(tctx->LAStrimMatrix,
-	DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
+	bzero(tctx->LAStrimMatrix, DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
 }
 
 static void trim_post(TrimContext *ctx)
@@ -507,13 +507,13 @@ static int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 
 	pchrf = strstr(contigName, "_subseq_");
 
-	if(pchrf == NULL)
+	if (pchrf == NULL)
 		return -1;
 
 	pchrl = strstr(pchrf, ":");
 
-	if(pchrl == NULL)
-			return -1;
+	if (pchrl == NULL)
+		return -1;
 
 	int agpCNameLen = pchrf - contigName;
 
@@ -523,11 +523,19 @@ static int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 	{
 		cNameLen = strlen(ctx->flist[i]);
 
-		if(agpCNameLen == cNameLen && strncmp(ctx->flist[i], contigName, cNameLen) == 0)
+		if (agpCNameLen == cNameLen && strncmp(ctx->flist[i], contigName, cNameLen) == 0)
 		{
 
-			*from = strtol (pchrf+8,NULL,10);
-			*to = strtol (pchrl+1,NULL,10);
+			*from = strtol(pchrf + 8, NULL, 10);
+			*to = strtol(pchrl + 1, NULL, 10);
+
+			// sanity checks
+			if (*from < 1 || *from > *to || *from > DB_READ_LEN(ctx->db, i) || *to > DB_READ_LEN(ctx->db, i))
+			{
+				*from = -1;
+				*to = -1;
+				return -1;
+			}
 
 			return i;
 		}
@@ -546,6 +554,13 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 		exit(1);
 	}
 
+	int nContigs = DB_NREADS(ctx->db);
+
+	ctx->BionanoAGPMatrix = (int*) malloc(nContigs * sizeof(int) * nContigs);
+	assert(ctx->BionanoAGPMatrix != NULL);
+	bzero(ctx->BionanoAGPMatrix, nContigs * sizeof(int) * nContigs);
+
+	char Prev_Obj_Name[MAX_NAME];
 	char Obj_Name[MAX_NAME];
 	int Obj_Start;
 	int Obj_End;
@@ -564,10 +579,15 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 	int r;
 	int contigA = -1;
-	int contigB = -1;
-	int gapLen = -1;
 	int oriA = 0;
+	int fromA, toA;
+	char contigNameA[MAX_NAME];
+	int gapLen = -1;
+
+	int contigB = -1;
 	int oriB = 0;
+	int fromB, toB;
+	char contigNameB[MAX_NAME];
 
 	printf("parseBionanoAGPfile: %s\n", pathInBionanoAGP);
 	while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
@@ -594,21 +614,141 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 		{
 			int from = -1;
 			int to = -1;
-			contigA = getDBcontigID(ctx, CompntId_GapLength, &from, &to);
 
-			if (contigA < 0)
+			if (strcmp(Prev_Obj_Name, Obj_Name) != 0)
 			{
-				printf("Could not match agp contig name: %s in current db! Ignore AGP file.\n", CompntId_GapLength);
-				return;
+				strcpy(Prev_Obj_Name, Obj_Name);
+				contigA = getDBcontigID(ctx, CompntId_GapLength, &from, &to);
+				strcpy(contigNameA, CompntId_GapLength);
+				if (contigA < 0)
+				{
+					printf("[WARNING] Could not match agp contig name: %s in current db! Ignore AGP file.\n", CompntId_GapLength);
+					return;
+				}
+
+				if (strcmp(Orientation_LinkageEvidence, "+") == 0)
+				{
+					oriA = 1;
+				}
+				else if (strcmp(Orientation_LinkageEvidence, "-") == 0)
+				{
+					oriA = -1;
+				}
+				else
+				{
+					fprintf(stderr, "[ERROR] invalid AGP file format %s. Unknown orientation %s in line %d\n", pathInBionanoAGP, Orientation_LinkageEvidence, nline);
+				}
+				fromA = from;
+				toA = to;
 			}
 			else
 			{
-				printf("found db contig id %d for agp contig name %s part?[%d, %d]\n", contigA, CompntId_GapLength, from, to);
+				contigB = getDBcontigID(ctx, CompntId_GapLength, &from, &to);
+				strcpy(contigNameB, CompntId_GapLength);
+				if (contigB < 0)
+				{
+					printf("[WARNING] Could not match agp contig name: %s in current db! Ignore AGP file.\n", CompntId_GapLength);
+					return;
+				}
+				if (strcmp(Orientation_LinkageEvidence, "+") == 0)
+				{
+					oriB = 1;
+				}
+				else if (strcmp(Orientation_LinkageEvidence, "-") == 0)
+				{
+					oriB = -1;
+				}
+				else
+				{
+					fprintf(stderr, "[ERROR] invalid AGP file format %s. Unknown orientation %s in line %d\n", pathInBionanoAGP, Orientation_LinkageEvidence, nline);
+				}
+				fromB = from;
+				toB = to;
+
+				int aLen = DB_READ_LEN(ctx->db, contigA);
+				int bLen = DB_READ_LEN(ctx->db, contigB);
+
+				if (oriA == 1 && oriB == 1)	// A-------->_GAP_B--------->
+				{
+					if ((toA == -1 || toA == aLen) && (fromB == -1 || fromB == 1))
+					{
+						ctx->BionanoAGPMatrix[contigA*nContigs+contigB] = gapLen;
+						ctx->BionanoAGPMatrix[contigB*nContigs+contigA] = -gapLen;
+
+						fprintf(stderr, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+													contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+					}
+					else
+					{
+						fprintf(stderr, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+								contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+					}
+				}
+				else if(oriA == 1 && oriB == -1) // A-------->_GAP_B<---------
+				{
+					if ((toA == -1 || toA == aLen) && (toB == -1 || toB == bLen))
+					{
+						ctx->BionanoAGPMatrix[contigA*nContigs+contigB] = gapLen;
+						ctx->BionanoAGPMatrix[contigB*nContigs+contigA] = gapLen;
+						fprintf(stderr, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+													contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+					}
+					else
+					{
+						fprintf(stderr, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+								contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+					}
+				}
+				else if(oriA == -1 && oriB == -1) // A<--------_GAP_B<---------
+				{
+					if ((fromA == -1 || fromA == 1) && (toB == -1 || toB == bLen))
+					{
+						ctx->BionanoAGPMatrix[contigA*nContigs+contigB] = -gapLen;
+						ctx->BionanoAGPMatrix[contigB*nContigs+contigA] = gapLen;
+						fprintf(stderr, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+													contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+
+					}
+					else
+					{
+						fprintf(stderr, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+								contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+					}
+				}
+				else /*if(oriA == -1 && oriB == 1)*/ // A<--------_GAP_B--------->
+				{
+					if ((fromA == -1 || fromA == 1) && (fromB == -1 || fromB == 1))
+					{
+						ctx->BionanoAGPMatrix[contigA*nContigs+contigB] = -gapLen;
+						ctx->BionanoAGPMatrix[contigB*nContigs+contigA] = -gapLen;
+						fprintf(stderr, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+													contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+
+					}
+					else
+					{
+						fprintf(stderr, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d%d] - GAP [%d] - ContigB[%d,%s,%d,%d%d]\n",
+								contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+					}
+				}
+
+				contigA = contigB;
+				strcpy(contigNameB, contigNameA);
+				oriA = oriB;
+				fromA = fromB;
+				toA = toB;
+				// reset gap size
+				gapLen = -1;
 			}
 		}
-		else
+		else if (Compnt_Type == 'N')
 		{
 			printf("found gap\n");
+			gapLen = strtol(CompntId_GapLength, NULL, 10);
+			if (gapLen < 1)
+			{
+				fprintf(stderr, "[ERROR] invalid AGP file format %s. Negative gap length: %s in line %d\n", pathInBionanoAGP, CompntId_GapLength, nline);
+			}
 		}
 
 	}
