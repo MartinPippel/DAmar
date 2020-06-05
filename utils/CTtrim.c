@@ -457,6 +457,7 @@ static int getMaskedBases(TrimContext *ctx, HITS_TRACK *t, int contigID,
 
 static char *trimwhitespace(char *str)
 {
+	printf("trimwhitespace: %s\n",str);
     char *end;
 
     // Trim leading space
@@ -526,6 +527,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
 
         printf("line %d: %s\n", nline, line);
         char *tline = trimwhitespace(line);
+        printf("line %d: %s\n", nline, tline);
 
         if (tline[0] == '#')
         	continue;
