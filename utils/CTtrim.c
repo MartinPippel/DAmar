@@ -99,10 +99,10 @@ static void trim_pre(PassContext *pctx, TrimContext *tctx) {
 
 	tctx->twidth = pctx->twidth;
 	tctx->LAStrimMatrix = (int*) malloc(
-			DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
+	DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
 	assert(tctx->LAStrimMatrix != NULL);
 	bzero(tctx->LAStrimMatrix,
-			DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
+	DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
 }
 
 static void trim_post(TrimContext *ctx) {
@@ -488,7 +488,8 @@ static void getDBFastaHeader(TrimContext *ctx, char *fullDBPath) {
 	for (i = 0; i < ctx->nfiles; i++) {
 		char headername[MAX_NAME], filename[MAX_NAME];
 
-		if (fscanf(dstub, DB_FDATA, ctx->findx + i, filename, headername) != 3) {
+		if (fscanf(dstub, DB_FDATA, ctx->findx + i, filename, headername)
+				!= 3) {
 			fclose(dstub);
 			fprintf(stderr,
 					"[ERROR] - Cannot read %d-th fasta entry in database file %s\n",
@@ -529,11 +530,11 @@ static void trim_contigs(TrimContext *ctx) {
 		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
 		exit(1);
 	}
-//	sprintf(fout, "%s.purgedContigs.fasta", ctx->fileOutPattern);
-//	if ((purgedContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
-//		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-//		exit(1);
-//	}
+	sprintf(fout, "%s.purgedContigs.fasta", ctx->fileOutPattern);
+	if ((purgedContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
+		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+		exit(1);
+	}
 //	sprintf(fout, "%s.trimmedContigs.stats", ctx->fileOutPattern);
 //	if ((statsContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
 //		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
@@ -543,10 +544,11 @@ static void trim_contigs(TrimContext *ctx) {
 	// debug report trim positions
 	int nContigs = DB_NREADS(ctx->db);
 	int i, j;
-	char * read = New_Read_Buffer(ctx->db);
+	char *read = New_Read_Buffer(ctx->db);
 	for (i = 0; i < nContigs; i++) {
 		int maxBeg = 0;
-		int minEnd = DB_READ_LEN(ctx->db, i);
+		int cLen = DB_READ_LEN(ctx->db, i);
+		int minEnd = cLen;
 		for (j = 0; j < nContigs; j++) {
 			int cutPos = ctx->LAStrimMatrix[i * nContigs + j];
 			if (cutPos < 0 && abs(cutPos) > maxBeg)
@@ -558,10 +560,10 @@ static void trim_contigs(TrimContext *ctx) {
 						"FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n",
 						i, cutPos,
 						(cutPos < 0) ?
-								abs(cutPos) : DB_READ_LEN(ctx->db,i) - cutPos,
+								abs(cutPos) : cLen - cutPos,
 						j);
 		}
-		if (maxBeg > 0 || minEnd != DB_READ_LEN(ctx->db, i)) {
+		if (maxBeg > 0 || minEnd != cLen) {
 			float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
 			dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
 			if (maxBeg > 0) {
@@ -570,18 +572,18 @@ static void trim_contigs(TrimContext *ctx) {
 				tanBegFract = getMaskedBases(ctx, ctx->trackTan, i, 0, maxBeg)
 						* 100.0 / maxBeg;
 			}
-			if (minEnd != DB_READ_LEN(ctx->db, i)) {
+			if (minEnd != cLen) {
 				dustEndFract = getMaskedBases(ctx, ctx->trackDust, i, minEnd,
-						DB_READ_LEN(ctx->db, i)) * 100.0
-						/ (DB_READ_LEN(ctx->db,i) - minEnd);
+						cLen) * 100.0
+						/ cLen - minEnd);
 				tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd,
-						DB_READ_LEN(ctx->db, i)) * 100.0
-						/ (DB_READ_LEN(ctx->db,i) - minEnd);
+						cLen) * 100.0
+						/ cLen - minEnd);
 			}
 
 			printf(
 					" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n",
-					maxBeg, minEnd, maxBeg, DB_READ_LEN(ctx->db,i) - minEnd,
+					maxBeg, minEnd, maxBeg, cLen - minEnd,
 					dustBegFract, dustEndFract, tanBegFract, tanEndFract);
 
 		}
@@ -593,20 +595,33 @@ static void trim_contigs(TrimContext *ctx) {
 		while (i >= ctx->findx[map])
 			map += 1;
 
-		fprintf(trimmedContigsAll,">%s", "hello world");
-		fprintf(trimmedContigsAll,"\n");
-
 		Load_Read(ctx->db, i, read, 2);
 
+		// write out trimmed contigs
+		fprintf(trimmedContigsAll, ">%s", ctx->flist[map]);
+		fprintf(trimmedContigsAll, "\n");
 		for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
 			fprintf(trimmedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
 		if (j < minEnd)
 			fprintf(trimmedContigsAll, "%.*s\n", minEnd - j, read + j);
-
+		// write out purged sequence at begin of contig
+		if (maxBeg > 0) {
+			for (j = 0; j + ctx->lineWidth < maxBeg; j += ctx->lineWidth)
+				fprintf(purgedContigsAll, "%.*s purged=%d,%d purgedLen=%d\n", ctx->lineWidth, read + j, 0, maxBeg, maxBeg);
+			if (j < maxBeg)
+				fprintf(purgedContigsAll, "%.*s\n", maxBeg - j, read + j);
+		}
+		// write out purged sequence at end of contig
+		if (minEnd < cLen) {
+			for (j = minEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
+				fprintf(purgedContigsAll, "%.*s purged=%d,%d purgedLen=%d\n", ctx->lineWidth, read + j, minEnd, cLen, cLen - minEnd);
+			if (j < cLen)
+				fprintf(purgedContigsAll, "%.*s\n", cLen - j, read + j);
+		}
 	}
 
 	fclose(trimmedContigsAll);
-//	fclose(purgedContigsAll);
+	fclose(purgedContigsAll);
 //	fclose(statsContigsAll);
 }
 
@@ -629,7 +644,7 @@ static void usage() {
 	fprintf(stderr,
 			"                   --> idea behind this: If Bionano inserts a 13bp gap, then it's most probable that the adjacent contigs overlap with each other\n");
 	fprintf(stderr, "         -G <int>  min Bionano gap size (default: %d)\n",
-			MIN_BIONANO_GAP_SIZE);
+	MIN_BIONANO_GAP_SIZE);
 	fprintf(stderr, "         -T <int>  maximum trim length (default: -1)\n");
 	fprintf(stderr,
 			"         -L <int>  do not trim contigs if trim length contains more then -S bases (in %%) of tandem repeats (default: -1, valid range: [0,100])\n");
@@ -641,7 +656,7 @@ static void usage() {
 	fprintf(stderr,
 			"                   (- trimOffset and + trimOffset, accordingly) creates a larger gap size, but heopefully removes the heterozygous difference.\n");
 	fprintf(stderr, "         -F <int>  number of fuzzy bases (default: %d)\n",
-			FUZZY_BASES);
+	FUZZY_BASES);
 	fprintf(stderr,
 			"         -w <int>  specify number of characters per fasta line (default: %d)\n",
 			FASTA_LINEWIDTH);
