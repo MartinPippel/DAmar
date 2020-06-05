@@ -485,24 +485,24 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoGapCSV) {
 
     while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
     {
-#if DEBUG
-        printf("line: %s\n", line);
-#endif
+
+        printf("line %d: %s\n", nline, line);
+
         nline++;
 
 
-
-	int r, line = 0, found = 0;
-	r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
-	while (r != EOF)
-	{
-		line++;
-		if ( r == 9)
-		{
-			printf("line %d: %s\n",line,Obj_Name);
-		}
-
-		r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
+//
+//	int r, line = 0, found = 0;
+//	r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
+//	while (r != EOF)
+//	{
+//		line++;
+//		if ( r == 9)
+//		{
+//			printf("line %d: %s\n",line,Obj_Name);
+//		}
+//
+//		r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
 	}
 
 }
