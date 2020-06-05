@@ -515,7 +515,7 @@ static int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 	if(pchrl == NULL)
 			return -1;
 
-	int agpCNameLen = pchrl - contigName;
+	int agpCNameLen = pchrf - contigName;
 
 	printf("contigNameLen from %s is %d\n", contigName, agpCNameLen);
 
