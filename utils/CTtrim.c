@@ -827,10 +827,6 @@ static void trim_contigs(TrimContext *ctx)
 	FILE *purgedContigsNoTandem = NULL;
 	FILE *statsContigsNoTandem = NULL;
 
-	FILE *trimmedContigsBionano = NULL;
-	FILE *purgedContigsBionano = NULL;
-	FILE *statsContigsBionano = NULL;
-
 	char *fout = malloc(strlen(ctx->fileOutPattern) + 50);
 	assert(fout != NULL);
 
