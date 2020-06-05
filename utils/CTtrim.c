@@ -558,9 +558,7 @@ static void trim_contigs(TrimContext *ctx) {
 			if (cutPos != 0)
 				printf(
 						"FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n",
-						i, cutPos,
-						(cutPos < 0) ?
-								abs(cutPos) : cLen - cutPos,
+						i, cutPos, (cutPos < 0) ? abs(cutPos) : cLen - cutPos,
 						j);
 		}
 		if (maxBeg > 0 || minEnd != cLen) {
@@ -574,17 +572,15 @@ static void trim_contigs(TrimContext *ctx) {
 			}
 			if (minEnd != cLen) {
 				dustEndFract = getMaskedBases(ctx, ctx->trackDust, i, minEnd,
-						cLen) * 100.0
-						/ cLen - minEnd);
+						cLen * 100.0 / cLen - minEnd);
 				tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd,
-						cLen) * 100.0
-						/ cLen - minEnd);
+						cLen * 100.0 / cLen - minEnd);
 			}
 
 			printf(
 					" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n",
-					maxBeg, minEnd, maxBeg, cLen - minEnd,
-					dustBegFract, dustEndFract, tanBegFract, tanEndFract);
+					maxBeg, minEnd, maxBeg, cLen - minEnd, dustBegFract,
+					dustEndFract, tanBegFract, tanEndFract);
 
 		}
 		// int flags, qv;
@@ -607,14 +603,16 @@ static void trim_contigs(TrimContext *ctx) {
 		// write out purged sequence at begin of contig
 		if (maxBeg > 0) {
 			for (j = 0; j + ctx->lineWidth < maxBeg; j += ctx->lineWidth)
-				fprintf(purgedContigsAll, "%.*s purged=%d,%d purgedLen=%d\n", ctx->lineWidth, read + j, 0, maxBeg, maxBeg);
+				fprintf(purgedContigsAll, "%.*s purged=%d,%d purgedLen=%d\n",
+						ctx->lineWidth, read + j, 0, maxBeg, maxBeg);
 			if (j < maxBeg)
 				fprintf(purgedContigsAll, "%.*s\n", maxBeg - j, read + j);
 		}
 		// write out purged sequence at end of contig
 		if (minEnd < cLen) {
 			for (j = minEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
-				fprintf(purgedContigsAll, "%.*s purged=%d,%d purgedLen=%d\n", ctx->lineWidth, read + j, minEnd, cLen, cLen - minEnd);
+				fprintf(purgedContigsAll, "%.*s purged=%d,%d purgedLen=%d\n",
+						ctx->lineWidth, read + j, minEnd, cLen, cLen - minEnd);
 			if (j < cLen)
 				fprintf(purgedContigsAll, "%.*s\n", cLen - j, read + j);
 		}
