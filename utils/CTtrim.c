@@ -521,7 +521,7 @@ static void trim_contigs(TrimContext *ctx) {
 	FILE *purgedContigsBionano = NULL;
 	FILE *statsContigsBionano = NULL;
 
-	char *fout = malloc(strlen(ctx->fileOutPattern) + 10);
+	char *fout = malloc(strlen(ctx->fileOutPattern) + 30);
 	assert(fout != NULL);
 
 	sprintf(fout, "%s.trimmedContigs.fasta", ctx->fileOutPattern);
