@@ -587,7 +587,7 @@ static void trim_contigs(TrimContext *ctx) {
 			// trim contigs
 
 			int len;
-			int fst, lst;
+
 			// int flags, qv;
 			int map = 0;
 			HITS_READ *r = ctx->db->reads + i;
@@ -596,7 +596,7 @@ static void trim_contigs(TrimContext *ctx) {
 			while (i >= ctx->findx[map])
 				map += 1;
 
-			fprintf(trimmedContigsAll,">%s", ctx->hlist[map]);
+			fprintf(trimmedContigsAll,">%s", "hello world");
 			fprintf(trimmedContigsAll,"\n");
 
 			Load_Read(ctx->db, i, read, 2);
