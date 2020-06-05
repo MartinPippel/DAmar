@@ -476,6 +476,19 @@ static char *trimwhitespace(char *str)
     return str;
 }
 
+static int getDBcontigID(TrimContext *ctx, char* contigName)
+{
+	int i;
+	for (i = 0; i < ctx->nfiles; i++)
+	{
+		if(strcmp(ctx->flist[i], contigName) == 0)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
 static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
 	FILE *fileInBionanoGaps = NULL;
 
@@ -502,6 +515,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
     char *pchrf, *pchrl;
 
     int r;
+    int contigA;
 
     while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
     {
@@ -520,18 +534,19 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
         	exit(1);
         }
         printf("line %d: %s\n", nline, tline);
-//
-//	int r, line = 0, found = 0;
-//	r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
-//	while (r != EOF)
-//	{
-//		line++;
-//		if ( r == 9)
-//		{
-//			printf("line %d: %s\n",line,Obj_Name);
-//		}
-//
-//		r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
+
+        // try to match contig name with with DB contig ID
+        contigA = getDBcontigID(ctx, CompntId_GapLength);
+        if(contigA < 0)
+        {
+        	printf("Could not match agp contig name: %s in current db! Ignore AGP file.\n", CompntId_GapLength);
+        	return;
+        }
+        else
+        {
+        	printf("found db contig id %d for agp contig name %s", contigA, CompntId_GapLength);
+        }
+
 	}
 
 }
