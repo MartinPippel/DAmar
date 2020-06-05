@@ -742,6 +742,9 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				toA = toB;
 				// reset gap size
 				gapLen = -1;
+
+				fprintf(stdout, "Assign B to A: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n",
+																	contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 			}
 		}
 		else if (Compnt_Type == 'N')
