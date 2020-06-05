@@ -831,7 +831,7 @@ static void trim_contigs(TrimContext *ctx)
 	FILE *purgedContigsBionano = NULL;
 	FILE *statsContigsBionano = NULL;
 
-	char *fout = malloc(strlen(ctx->fileOutPattern) + 30);
+	char *fout = malloc(strlen(ctx->fileOutPattern) + 50);
 	assert(fout != NULL);
 
 	sprintf(fout, "%s.trimmedContigs.fasta", ctx->fileOutPattern);
@@ -1081,6 +1081,8 @@ static void trim_contigs(TrimContext *ctx)
 				if(bionanoGap != 0 && contigCut != 0)
 				{
 					printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, contigCut, bionanoGap);
+
+					// todo write out trimmed contigs
 				}
 				else if(bionanoGap != 0)
 				{
@@ -1093,6 +1095,9 @@ static void trim_contigs(TrimContext *ctx)
 			}
 		}
 
+		fclose(trimmedContigsBionano);
+		fclose(purgedContigsBionano);
+		fclose(statsContigsBionano);
 	}
 
 	fclose(trimmedContigsAll);
