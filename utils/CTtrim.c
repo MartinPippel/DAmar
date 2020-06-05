@@ -469,7 +469,7 @@ static int getMaskedBases(TrimContext *ctx, HITS_TRACK *t, int contigID, int beg
 
 static char* trimwhitespace(char *str)
 {
-	printf("trimwhitespace: %s\n", str);
+	//printf("trimwhitespace: %s\n", str);
 	char *end;
 
 	// Trim leading space
