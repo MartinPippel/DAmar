@@ -472,13 +472,35 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoGapCSV) {
 	char CompntEnd_Linkage[MAX_NAME];
 	char Orientation_LinkageEvidence[MAX_NAME];
 
+    char* line = NULL;
+    size_t maxline = 0;
+
+    int nline = 0;
+    int len;
+    char *pchrf, *pchrl;
+
+    int nodeId;
+    int maxNodeAttributes = 0;
+    int maxEdgeAttributes = 0;
+
+    while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
+    {
+#if DEBUG
+        printf("line: %s\n", line);
+#endif
+        nline++;
+
+
 
 	int r, line = 0, found = 0;
 	r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
-	while (r != EOF) {
+	while (r != EOF)
+	{
 		line++;
 		if ( r == 9)
+		{
 			printf("line %d: %s\n",line,Obj_Name);
+		}
 
 		r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
 	}
