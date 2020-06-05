@@ -1151,8 +1151,6 @@ int main(int argc, char *argv[])
 
 	pass_free(pctx);
 
-	//todo cleanup
-
 	Close_DB(&db);
 	fclose(fileOvlIn);
 
