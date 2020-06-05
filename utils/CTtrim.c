@@ -736,7 +736,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				}
 
 				contigA = contigB;
-				strcpy(contigNameB, contigNameA);
+				strcpy(contigNameA, contigNameB);
 				oriA = oriB;
 				fromA = fromB;
 				toA = toB;
