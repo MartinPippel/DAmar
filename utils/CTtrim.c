@@ -478,6 +478,7 @@ static char *trimwhitespace(char *str)
 
 static int getDBcontigID(TrimContext *ctx, char* contigName)
 {
+	printf("getDBcontigID(%s)\n", contigName);
 	int i;
 	for (i = 0; i < ctx->nfiles; i++)
 	{
@@ -811,7 +812,6 @@ int main(int argc, char *argv[]) {
 	PassContext *pctx;
 
 	FILE *fileOvlIn = NULL;
-	FILE *fileGapsIn = NULL;
 
 	bzero(&tctx, sizeof(TrimContext));
 
