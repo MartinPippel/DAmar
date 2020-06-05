@@ -514,7 +514,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoGapCSV) {
         if (tline[0] == "#")
         	continue;
 
-        printf("line %d: %s", nline, line);
+        printf("line %d: %s\n", nline, tline);
 //
 //	int r, line = 0, found = 0;
 //	r = fscanf(fileInBionanoGaps, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, Obj_Start, Obj_End, PartNum, Compnt_Type, CompntId_GapLength, CompntStart_GapType, CompntEnd_Linkage, Orientation_LinkageEvidence);
