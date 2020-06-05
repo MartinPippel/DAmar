@@ -476,22 +476,22 @@ static char *trimwhitespace(char *str)
     return str;
 }
 
-static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoGapCSV) {
+static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP) {
 	FILE *fileInBionanoGaps = NULL;
 
-	if ((fileInBionanoGaps = fopen(pathInBionanoGapCSV, "r")) == NULL) {
-		fprintf(stderr, "[ERROR] could not open %s\n", pathInBionanoGapCSV);
+	if ((fileInBionanoGaps = fopen(pathInBionanoAGP, "r")) == NULL) {
+		fprintf(stderr, "[ERROR] could not open %s\n", pathInBionanoAGP);
 		exit(1);
 	}
 
 	char Obj_Name[MAX_NAME];
-	char Obj_Start[MAX_NAME];
-	char Obj_End[MAX_NAME];
-	char PartNum[MAX_NAME];
-	char Compnt_Type[MAX_NAME];
+	int Obj_Start;
+	int Obj_End;
+	int PartNum;
+	char Compnt_Type;
 	char CompntId_GapLength[MAX_NAME];
-	char CompntStart_GapType[MAX_NAME];
-	char CompntEnd_Linkage[MAX_NAME];
+	int CompntStart_GapType;
+	int CompntEnd_Linkage;
 	char Orientation_LinkageEvidence[MAX_NAME];
 
     char* line = NULL;
@@ -501,9 +501,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoGapCSV) {
     int len;
     char *pchrf, *pchrl;
 
-    int nodeId;
-    int maxNodeAttributes = 0;
-    int maxEdgeAttributes = 0;
+    int r;
 
     while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
     {
@@ -514,6 +512,13 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoGapCSV) {
         if (tline[0] == '#')
         	continue;
 
+        r = scanf(tline, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", Obj_Name, &Obj_Start, &Obj_End, &PartNum, &Compnt_Type, CompntId_GapLength, &CompntStart_GapType, &CompntEnd_Linkage, Orientation_LinkageEvidence);
+
+        if( r != 9)
+        {
+        	fprintf(stderr, "[ERROR] invalid AGP file format %s. Expecting 9 columns, BUT parsed %d columns in line %d\n", pathInBionanoAGP, r, nline);
+        	exit(1);
+        }
         printf("line %d: %s\n", nline, tline);
 //
 //	int r, line = 0, found = 0;
@@ -802,7 +807,7 @@ int main(int argc, char *argv[]) {
 	char *pcTrackDust = NULL;
 	char *pcTrackTan = NULL;
 
-	char *pathInBionanoGapCSV = NULL;
+	char *pathInBionanoAGP = NULL;
 
 	char *pcPathReadsIn = NULL;
 	char *pcPathOverlapsIn = NULL;
@@ -829,7 +834,7 @@ int main(int argc, char *argv[]) {
 			pcTrackTan = optarg;
 			break;
 		case 'b':
-			pathInBionanoGapCSV = optarg;
+			pathInBionanoAGP = optarg;
 			break;
 		case 'G':
 			tctx.minBionanoGapLen = atoi(optarg);
@@ -901,8 +906,8 @@ int main(int argc, char *argv[]) {
 
 	getDBFastaHeader(&tctx, pcPathReadsIn);
 
-	if (pathInBionanoGapCSV) {
-		parseBionanoAGPfile(&tctx, pathInBionanoGapCSV);
+	if (pathInBionanoAGP) {
+		parseBionanoAGPfile(&tctx, pathInBionanoAGP);
 	}
 
 // passes
