@@ -381,7 +381,6 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl) {
 
 static int trim_handler(void *_ctx, Overlap *ovl, int novl) {
 	TrimContext *ctx = (TrimContext*) _ctx;
-	int i, j;
 
 	// analyze overlaps and find contig trim position
 	analyzeContigOverlaps(ctx, ovl, novl);
@@ -525,17 +524,17 @@ static void trim_contigs(TrimContext *ctx) {
 	assert(fout != NULL);
 
 	sprintf(fout, "%s.trimmedContigs.fasta", ctx->fileOutPattern);
-	if ((trimmedContigsAll = (FILE*) fopen(fout, 'w')) == NULL) {
+	if ((trimmedContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
 		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
 		exit(1);
 	}
 	sprintf(fout, "%s.purgedContigs.fasta", ctx->fileOutPattern);
-	if ((purgedContigsAll = (FILE*) fopen(fout, 'w')) == NULL) {
+	if ((purgedContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
 		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
 		exit(1);
 	}
 	sprintf(fout, "%s.trimmedContigs.stats", ctx->fileOutPattern);
-	if ((statsContigsAll = (FILE*) fopen(fout, 'w')) == NULL) {
+	if ((statsContigsAll = (FILE*) fopen(fout, "w")) == NULL) {
 		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
 		exit(1);
 	}
