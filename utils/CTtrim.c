@@ -49,6 +49,9 @@ typedef struct
 	int statsBionanoGapsMissed;
 	int statsBionanoTrimmedBases;
 
+	int statsBionanoGapsLtMinThresh;
+	int statsBionanoGapsAll;
+
 	// db and I/O files
 	HITS_DB *db;
 	HITS_TRACK *trackDust;
@@ -135,6 +138,10 @@ static void trim_post(TrimContext *ctx)
 			printf("#not trimmed bionano gaps < %d: %d\n", ctx->minBionanoGapLen, ctx->statsBionanoGapsMissed);
 		}
 
+		if (ctx->statsBionanoGapsAll > 0)
+		{
+			printf("binano agp file: #ALL gaps: %d; #gaps (<= %d bases): %d\n", ctx->statsBionanoGapsAll, ctx->minBionanoGapLen, ctx->statsBionanoGapsLtMinThresh);
+		}
 	}
 }
 
@@ -682,6 +689,12 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 				int aLen = DB_READ_LEN(ctx->db, contigA);
 				int bLen = DB_READ_LEN(ctx->db, contigB);
+
+				assert(gapLen > -1);
+
+				if(gapLen < ctx->minBionanoGapLen)
+					ctx->statsBionanoGapsLtMinThresh++;
+				ctx->statsBionanoGapsAll++;
 
 				if (oriA == 1 && oriB == 1)	// A-------->_GAP_B--------->
 				{
