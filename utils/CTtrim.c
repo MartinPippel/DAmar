@@ -1359,13 +1359,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	getDBFastaHeader(&tctx, pcPathReadsIn);
-
-	if (pathInBionanoAGP)
-	{
-		parseBionanoAGPfile(&tctx, pathInBionanoAGP);
-	}
-
 // passes
 
 	pctx = pass_init(fileOvlIn, NULL);
@@ -1378,6 +1371,13 @@ int main(int argc, char *argv[])
 	pctx->purge_discarded = 0;
 
 	trim_pre(pctx, &tctx);
+
+	getDBFastaHeader(&tctx, pcPathReadsIn);
+
+	if (pathInBionanoAGP)
+	{
+		parseBionanoAGPfile(&tctx, pathInBionanoAGP);
+	}
 
 	pass(pctx, trim_handler);
 
