@@ -2299,19 +2299,18 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							if(ctx->ovlChains[b].ovls[0]->flags & OVL_DISCARD)
 								continue;
 							
+							if(intersect(chain->ovls[0]->path.abpos, chain->ovls[chain->novl - 1]->path.aepos, ctx->ovlChains[b].ovls[0]->path.abpos, ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.aepos) > MIN(ctx->nFuzzBases, 1000) ||
+									intersect(chain->ovls[0]->path.bbpos, chain->ovls[chain->novl - 1]->path.bepos, ctx->ovlChains[b].ovls[0]->path.bbpos, ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.bepos) > MIN(ctx->nFuzzBases, 1000))
+							{
+								printf("CHAIN is invalid (overlaps with previous chain) - DISCARD\n");
+								printChain(chain);
+
+								containedChain = 1;
+								break;
+							}
+
 							if ((chain->ovls[0]->flags & OVL_COMP) == (ctx->ovlChains[b].ovls[0]->flags & OVL_COMP))
 							{
-
-								if(intersect(chain->ovls[0]->path.abpos, chain->ovls[chain->novl - 1]->path.aepos, ctx->ovlChains[b].ovls[0]->path.abpos, ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.aepos) > MIN(ctx->nFuzzBases, 1000) ||
-										intersect(chain->ovls[0]->path.bbpos, chain->ovls[chain->novl - 1]->path.bepos, ctx->ovlChains[b].ovls[0]->path.bbpos, ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.bepos) > MIN(ctx->nFuzzBases, 1000))
-								{
-									printf("CHAIN is invalid (overlaps with previous chain) - DISCARD\n");
-									printChain(chain);
-
-									containedChain = 1;
-									break;
-								}
-
 								for (j = 0; j < chain->novl; j++)
 								{
 									if ((chain->ovls[j]->path.abpos >= ctx->ovlChains[b].ovls[0]->path.abpos && chain->ovls[j]->path.aepos <= ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.aepos)
