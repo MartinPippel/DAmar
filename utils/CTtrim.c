@@ -692,7 +692,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 				assert(gapLen > -1);
 
-				if(gapLen < ctx->minBionanoGapLen)
+				if(gapLen <= ctx->minBionanoGapLen)
 					ctx->statsBionanoGapsLtMinThresh++;
 				ctx->statsBionanoGapsAll++;
 
@@ -1126,7 +1126,7 @@ static void trim_contigs(TrimContext *ctx)
 					}
 					else if(cutPos != 0)
 					{
-						printf("found NO bionano gap butcontig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
+						printf("found NO bionano gap but contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
 					}
 				}
 			}
