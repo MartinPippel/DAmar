@@ -135,7 +135,7 @@ static void trim_post(TrimContext *ctx)
 		}
 		if (ctx->statsBionanoGapsMissed > 0)
 		{
-			printf("#not trimmed bionano gaps < %d: %d\n", ctx->minBionanoGapLen, ctx->statsBionanoGapsMissed);
+			printf("#not trimmed bionano gaps <= %d: %d\n", ctx->minBionanoGapLen, ctx->statsBionanoGapsMissed);
 		}
 
 		if (ctx->statsBionanoGapsAll > 0)
@@ -692,7 +692,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 				assert(gapLen > -1);
 
-				if(gapLen <= ctx->minBionanoGapLen)
+				if (gapLen <= ctx->minBionanoGapLen)
 					ctx->statsBionanoGapsLtMinThresh++;
 				ctx->statsBionanoGapsAll++;
 
@@ -1099,32 +1099,42 @@ static void trim_contigs(TrimContext *ctx)
 			int minEndContigID = -1;
 			for (j = 0; j < nContigs; j++)
 			{
-				int cutPos  = ctx->LAStrimMatrix[i * nContigs + j];
+				int cutPos = ctx->LAStrimMatrix[i * nContigs + j];
 				int bionanoGap = ctx->BionanoAGPMatrix[i * nContigs + j];
 
-				if(bionanoGap != 0 && cutPos != 0 && abs(bionanoGap) <= ctx->minBionanoGapLen)
+				if (bionanoGap != 0 && cutPos != 0)
 				{
-					printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
+					if (abs(bionanoGap) <= ctx->minBionanoGapLen)
+					{
+						printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
 
-					if (cutPos < 0 && abs(cutPos) > maxBeg)
-					{
-						maxBeg = abs(cutPos);
-						maxBegContigID = j;
+						if (cutPos < 0 && abs(cutPos) > maxBeg)
+						{
+							maxBeg = abs(cutPos);
+							maxBegContigID = j;
+						}
+						if (cutPos > 0 && cutPos < minEnd)
+						{
+							minEnd = cutPos;
+							minEndContigID = j;
+						}
 					}
-					if (cutPos > 0 && cutPos < minEnd)
+					else
 					{
-						minEnd = cutPos;
-						minEndContigID = j;
+						printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d - BUT GAP IS TO LARGE\n", i, j, cutPos, bionanoGap);
 					}
 				}
 				else
 				{
-					if(bionanoGap != 0)
+					if (bionanoGap != 0)
 					{
-						printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
-						ctx->statsBionanoGapsMissed++;
+						if (abs(bionanoGap) <= ctx->minBionanoGapLen)
+						{
+							printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
+							ctx->statsBionanoGapsMissed++;
+						}
 					}
-					else if(cutPos != 0)
+					else if (cutPos != 0)
 					{
 						printf("found NO bionano gap but contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
 					}
@@ -1145,7 +1155,7 @@ static void trim_contigs(TrimContext *ctx)
 					tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd, cLen * 100.0 / cLen - minEnd);
 				}
 				ctx->statsBionanoTrimmedContigs++;
-				ctx->statsBionanoTrimmedBases+=abs(maxBeg)+minEnd;
+				ctx->statsBionanoTrimmedBases += abs(maxBeg) + (cLen-minEnd);
 				printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, cLen - minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
 			}
 
@@ -1416,7 +1426,7 @@ int main(int argc, char *argv[])
 	}
 	free(tctx.flist);
 	free(tctx.hlist);
-	free(tctx.findx-1);
+	free(tctx.findx - 1);
 
 	return 0;
 }
