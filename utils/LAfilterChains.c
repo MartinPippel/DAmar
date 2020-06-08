@@ -2110,7 +2110,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 #endif
 			int a, b;
 
-			// discard all overlaps, that are not part of a valid chain
+			// discard all overlaps, that are not part of a putatively valid chain
 			for (i = j; i <= k; i++)
 			{
 				if (!(ovl[i].flags & OVL_TEMP))
@@ -2291,7 +2291,7 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 						validMinLen = 1;
 
 					int containedChain=0;
-					// check if they are contained in previous chains
+					// check if they are contained or overlapping by more then -fuzzy base pairs with previous chains
 					{
 						int b;
 						for (b=0; b<a && !containedChain; b++)
@@ -2301,6 +2301,17 @@ static int filter_handler(void* _ctx, Overlap* ovl, int novl)
 							
 							if ((chain->ovls[0]->flags & OVL_COMP) == (ctx->ovlChains[b].ovls[0]->flags & OVL_COMP))
 							{
+
+								if(intersect(chain->ovls[0]->path.abpos, chain->ovls[chain->novl - 1]->path.aepos, ctx->ovlChains[b].ovls[0]->path.abpos, ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.aepos) > MIN(ctx->nFuzzBases, 1000) ||
+										intersect(chain->ovls[0]->path.bbpos, chain->ovls[chain->novl - 1]->path.bepos, ctx->ovlChains[b].ovls[0]->path.bbpos, ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.bepos) > MIN(ctx->nFuzzBases, 1000))
+								{
+									printf("CHAIN is invalid (overlaps with previous chain) - DISCARD\n");
+									printChain(chain);
+
+									containedChain = 1;
+									break;
+								}
+
 								for (j = 0; j < chain->novl; j++)
 								{
 									if ((chain->ovls[j]->path.abpos >= ctx->ovlChains[b].ovls[0]->path.abpos && chain->ovls[j]->path.aepos <= ctx->ovlChains[b].ovls[ctx->ovlChains[b].novl - 1]->path.aepos)
