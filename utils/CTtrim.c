@@ -42,8 +42,12 @@ typedef struct
 	// stats counters
 	int statsNumInvalidChains;
 	int statsNumValidChains;
+
 	int statsTrimmedContigs;
 	int statsTrimmedBases;
+	int statsBionanoTrimmedContigs;
+	int statsBionanoGapsMissed;
+	int statsBionanoTrimmedBases;
 
 	// db and I/O files
 	HITS_DB *db;
@@ -121,6 +125,14 @@ static void trim_post(TrimContext *ctx)
 		if (ctx->statsNumInvalidChains > 0)
 		{
 			printf("#invalid chains %d\n", ctx->statsNumInvalidChains);
+		}
+		if (ctx->statsBionanoTrimmedContigs > 0)
+		{
+			printf("#Bionano Gaps trimmed: %d; #trimmed bases: %d\n", ctx->statsBionanoTrimmedContigs, ctx->statsBionanoTrimmedBases);
+		}
+		if (ctx->statsBionanoGapsMissed > 0)
+		{
+			printf("#not trimmed bionano gaps < %d: %d\n", ctx->minBionanoGapLen, ctx->statsBionanoGapsMissed);
 		}
 
 	}
@@ -1097,6 +1109,7 @@ static void trim_contigs(TrimContext *ctx)
 					if(bionanoGap != 0)
 					{
 						printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
+						ctx->statsBionanoGapsMissed++;
 					}
 					else if(cutPos != 0)
 					{
@@ -1106,7 +1119,7 @@ static void trim_contigs(TrimContext *ctx)
 			}
 			float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
 			dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
-			if (maxBeg > 0 || minEnd != cLen)
+			if (maxBeg > 0 || minEnd != cLen)	// contig i must be trimmed either at end or at begin, this corresponds with the Bionano AGP file
 			{
 				if (maxBeg > 0)
 				{
@@ -1118,11 +1131,11 @@ static void trim_contigs(TrimContext *ctx)
 					dustEndFract = getMaskedBases(ctx, ctx->trackDust, i, minEnd, cLen * 100.0 / cLen - minEnd);
 					tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd, cLen * 100.0 / cLen - minEnd);
 				}
-
+				ctx->statsBionanoTrimmedContigs++;
+				ctx->statsBionanoTrimmedBases+=abs(maxBeg)+minEnd;
 				printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, cLen - minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
-
 			}
-			// int flags, qv;
+
 			int map = 0;
 			while (i < ctx->findx[map - 1])
 				map -= 1;
