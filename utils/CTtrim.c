@@ -1142,7 +1142,7 @@ static void trim_contigs(TrimContext *ctx)
 						{
 							printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
 							if (abs(bionanoGap) < 3000)
-								printf("BIONANO GAP TO SMALL to find chains!\n");
+								printf("BIONANO GAP TO SMALL to find chains %d!\n", abs(bionanoGap));
 							if(i<j)
 								ctx->statsBionanoGapsMissed++;
 						}
