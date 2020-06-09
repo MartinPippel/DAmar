@@ -1141,7 +1141,8 @@ static void trim_contigs(TrimContext *ctx)
 						if (abs(bionanoGap) <= ctx->minBionanoGapLen)
 						{
 							printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
-							ctx->statsBionanoGapsMissed++;
+							if(i<j)
+								ctx->statsBionanoGapsMissed++;
 						}
 					}
 					else if (cutPos != 0)
