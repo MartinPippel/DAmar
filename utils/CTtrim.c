@@ -141,7 +141,7 @@ static void trim_post(TrimContext *ctx)
 
 		if (ctx->statsBionanoGapsAll > 0)
 		{
-			printf("binano agp file: #ALL gaps: %d; #gaps (<= %d bases): %d\n", ctx->statsBionanoGapsAll, ctx->minBionanoGapLen, ctx->statsBionanoGapsLtMinThresh);
+			printf("binano agp file: #ALL gaps: %d; #gaps (<= %d bases): %d, #gaps (<= %d bases at ContigBreaks): %d \n", ctx->statsBionanoGapsAll, ctx->minBionanoGapLen, ctx->statsBionanoGapsLtMinThresh, ctx->minBionanoGapLen, ctx->statsBionanoGapsLtMinThreshContigBreak);
 		}
 	}
 }
