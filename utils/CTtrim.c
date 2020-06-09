@@ -50,6 +50,7 @@ typedef struct
 	int statsBionanoTrimmedBases;
 
 	int statsBionanoGapsLtMinThresh;
+	int statsBionanoGapsLtMinThreshContigBreak;
 	int statsBionanoGapsAll;
 
 	// db and I/O files
@@ -707,6 +708,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					}
 					else
 					{
+						ctx->statsBionanoGapsLtMinThreshContigBreak++;
 						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 					}
 				}
@@ -721,6 +723,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					else
 					{
 						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+						ctx->statsBionanoGapsLtMinThreshContigBreak++;
 					}
 				}
 				else if (oriA == -1 && oriB == -1) // A<--------_GAP_B<---------
@@ -735,6 +738,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					else
 					{
 						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+						ctx->statsBionanoGapsLtMinThreshContigBreak++;
 					}
 				}
 				else /*if(oriA == -1 && oriB == 1)*/ // A<--------_GAP_B--------->
@@ -749,6 +753,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					else
 					{
 						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+						ctx->statsBionanoGapsLtMinThreshContigBreak++;
 					}
 				}
 
