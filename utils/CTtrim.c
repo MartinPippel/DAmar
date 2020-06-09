@@ -132,7 +132,7 @@ static void trim_post(TrimContext *ctx)
 		}
 		if (ctx->statsBionanoTrimmedContigs > 0)
 		{
-			printf("#Bionano Gaps trimmed: %d; #trimmed bases: %d\n", ctx->statsBionanoTrimmedContigs, ctx->statsBionanoTrimmedBases);
+			printf("Bionano Gaps # contigs trimmed: %d; #trimmed bases: %d\n", ctx->statsBionanoTrimmedContigs, ctx->statsBionanoTrimmedBases);
 		}
 		if (ctx->statsBionanoGapsMissed > 0)
 		{
@@ -693,8 +693,6 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 				assert(gapLen > -1);
 
-				if (gapLen <= ctx->minBionanoGapLen)
-					ctx->statsBionanoGapsLtMinThresh++;
 				ctx->statsBionanoGapsAll++;
 
 				if (oriA == 1 && oriB == 1)	// A-------->_GAP_B--------->
@@ -705,6 +703,8 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 						ctx->BionanoAGPMatrix[contigB * nContigs + contigA] = -gapLen;
 
 						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+						if(gapLen <= ctx->minBionanoGapLen)
+							ctx->statsBionanoGapsLtMinThresh++;
 					}
 					else
 					{
@@ -719,6 +719,8 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 						ctx->BionanoAGPMatrix[contigA * nContigs + contigB] = gapLen;
 						ctx->BionanoAGPMatrix[contigB * nContigs + contigA] = gapLen;
 						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+						if(gapLen <= ctx->minBionanoGapLen)
+							ctx->statsBionanoGapsLtMinThresh++;
 					}
 					else
 					{
@@ -733,7 +735,8 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 						ctx->BionanoAGPMatrix[contigA * nContigs + contigB] = -gapLen;
 						ctx->BionanoAGPMatrix[contigB * nContigs + contigA] = gapLen;
 						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
-
+						if(gapLen <= ctx->minBionanoGapLen)
+							ctx->statsBionanoGapsLtMinThresh++;
 					}
 					else
 					{
@@ -748,6 +751,8 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 						ctx->BionanoAGPMatrix[contigA * nContigs + contigB] = -gapLen;
 						ctx->BionanoAGPMatrix[contigB * nContigs + contigA] = -gapLen;
 						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
+						if(gapLen <= ctx->minBionanoGapLen)
+							ctx->statsBionanoGapsLtMinThresh++;
 
 					}
 					else
