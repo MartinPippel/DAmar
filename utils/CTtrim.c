@@ -38,10 +38,9 @@
 #define DEBUG_MASKING
 #undef DEBUG_MASKING2
 
-
 void ensureLASchainBuffer(TrimEvidence *t, int numNewElements)
 {
-	assert(t!= NULL);
+	assert(t != NULL);
 
 	if (t->nLASchains + abs(numNewElements) > t->maxLASchains)
 	{
@@ -53,10 +52,9 @@ void ensureLASchainBuffer(TrimEvidence *t, int numNewElements)
 	}
 }
 
-
 void ensureBionanoGapBuffer(TrimEvidence *t, int numNewElements)
 {
-	assert(t!= NULL);
+	assert(t != NULL);
 
 	if (t->nBioNanoGaps + abs(numNewElements) > t->maxBionanoGaps)
 	{
@@ -73,13 +71,13 @@ void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg
 	TrimEvidence *ta = find_TrimEvidence(ctx, contigA, contigB);
 	TrimEvidence *tb = find_TrimEvidence(ctx, contigB, contigA);
 
-	if(ta == NULL)
+	if (ta == NULL)
 	{
 		printf("[Warning] addBionanoGAPInfoToTrimEvidence: Could not find Bionano gap feature between contig %d and contig %d.\n", contigA, contigB);
 		return;
 	}
 
-	if(tb == NULL)
+	if (tb == NULL)
 	{
 		printf("[Warning] addBionanoGAPInfoToTrimEvidence: Could not find Bionano gap feature between contig %d and contig %d.\n", contigB, contigA);
 		return;
@@ -92,16 +90,13 @@ void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg
 	{
 		b = ta->gaps + i;
 
-		if(
-				((b->aBeg == aPartBeg && b->aEnd == aPartEnd) || (b->aBeg == aPartEnd && b->aEnd == aPartBeg))
-			 && ((b->bBeg == bPartBeg && b->bEnd == bPartEnd) || (b->bBeg == bPartEnd && b->bEnd == bPartBeg))
-			)
+		if (((b->aBeg == aPartBeg && b->aEnd == aPartEnd) || (b->aBeg == aPartEnd && b->aEnd == aPartBeg)) && ((b->bBeg == bPartBeg && b->bEnd == bPartEnd) || (b->bBeg == bPartEnd && b->bEnd == bPartBeg)))
 		{
 			break;
 		}
 	}
 
-	if(i == ta->nBioNanoGaps)
+	if (i == ta->nBioNanoGaps)
 	{
 		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 1: Cannot find bionano gap feature: Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d\n", contigA, contigB, aPartBeg, aPartEnd, bPartBeg, bPartEnd, AdjustedGapLength);
 		return;
@@ -112,16 +107,13 @@ void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg
 	{
 		b = tb->gaps + i;
 
-		if(
-				((b->aBeg == bPartEnd && b->aEnd == bPartBeg) || (b->aBeg == bPartBeg && b->aEnd == bPartEnd))
-			 && ((b->bBeg == aPartBeg && b->bEnd == aPartEnd) || (b->bBeg == aPartEnd && b->bEnd == aPartBeg))
-			)
+		if (((b->aBeg == bPartEnd && b->aEnd == bPartBeg) || (b->aBeg == bPartBeg && b->aEnd == bPartEnd)) && ((b->bBeg == aPartBeg && b->bEnd == aPartEnd) || (b->bBeg == aPartEnd && b->bEnd == aPartBeg)))
 		{
 			break;
 		}
 	}
 
-	if(i == tb->nBioNanoGaps)
+	if (i == tb->nBioNanoGaps)
 	{
 		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 2: Cannot find bionano gap feature: Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d\n", contigB, contigA, bPartEnd, bPartBeg, aPartEnd, aPartBeg, AdjustedGapLength);
 		return;
@@ -222,11 +214,11 @@ void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int a
 	{
 		c = t->chains + i;
 
-		if((c->trimPos < 0 && cutPosInA < 0) || (c->trimPos > 0 && cutPosInA > 0))
+		if ((c->trimPos < 0 && cutPosInA < 0) || (c->trimPos > 0 && cutPosInA > 0))
 		{
-			printf("[ERROR] addLASchainInfoToTrimEvidence: ambiguous contig %d vs contig overlap present %d!\n",aread, bread);
-			printf("                                       new LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d collides with: previously added LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d ",
-					alnLen, unAlnLen, erate, cutPosInA, c->alnLen, c->unalignedBases, c->eRate, c->trimPos);
+			printf("[ERROR] addLASchainInfoToTrimEvidence: ambiguous contig %d vs contig overlap present %d!\n", aread, bread);
+			printf("                                       new LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d collides with: previously added LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d ", alnLen, unAlnLen, erate, cutPosInA, c->alnLen, c->unalignedBases, c->eRate,
+					c->trimPos);
 			return;
 		}
 	}
@@ -446,16 +438,16 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		assert((cutA - ctx->trimOffset > 0) && (cutA + ctx->trimOffset < aLen));
 		assert((cutB - ctx->trimOffset > 0) && (cutB + ctx->trimOffset < bLen));
 
-		float erate=(200.*ovl->path.diffs) /((ovl->path.aepos - ovl->path.abpos) + (ovl->path.bepos - ovl->path.bbpos));
+		float erate = (200. * ovl->path.diffs) / ((ovl->path.aepos - ovl->path.abpos) + (ovl->path.bepos - ovl->path.bbpos));
 
 		// set cut position of contig_A
 		if (o1->path.abpos < aLen - o1->path.aepos) // trim off contig at begin
 		{
-			addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, ovl->path.abpos,erate, -(cutA + ctx->trimOffset));
+			addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, ovl->path.abpos, erate, -(cutA + ctx->trimOffset));
 		}
 		else if (o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end
 		{
-			addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, aLen - ovl->path.aepos,erate, cutA - ctx->trimOffset);
+			addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, aLen - ovl->path.aepos, erate, cutA - ctx->trimOffset);
 		}
 		else // containment
 		{
@@ -493,7 +485,7 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 	else
 	{
 		int validChain = 1;
-		float avgErate = (200.*o1->path.diffs) /((o1->path.aepos - o1->path.abpos) + (o1->path.bepos - o1->path.bbpos));
+		float avgErate = (200. * o1->path.diffs) / ((o1->path.aepos - o1->path.abpos) + (o1->path.bepos - o1->path.bbpos));
 		int alignedBasesInA = o1->path.aepos - o1->path.abpos;
 		int alignedBasesInB = o1->path.bepos - o1->path.bbpos;
 		int unalignedBasesInA = MIN(o1->path.abpos, aLen - o1->path.aepos);
@@ -513,23 +505,23 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			alignedBasesInA += (o2->path.aepos - o2->path.abpos);
 			alignedBasesInB += (o2->path.bepos - o2->path.bbpos);
 
-			if(o1->path.aepos > o2->path.abpos)
+			if (o1->path.aepos > o2->path.abpos)
 			{
 				alignedBasesInA -= (o1->path.aepos - o2->path.abpos);
 			}
 			else
 			{
-				unalignedBasesInA += (o2->path.abpos-o1->path.aepos);
+				unalignedBasesInA += (o2->path.abpos - o1->path.aepos);
 			}
-			if(o1->path.bepos > o2->path.bbpos)
+			if (o1->path.bepos > o2->path.bbpos)
 			{
 				alignedBasesInA -= (o1->path.bepos - o2->path.bbpos);
 			}
 			else
 			{
-				unalignedBasesInA += (o2->path.bbpos-o1->path.bepos);
+				unalignedBasesInA += (o2->path.bbpos - o1->path.bepos);
 			}
-			avgErate += (200.*o2->path.diffs) /((o2->path.aepos - o2->path.abpos) + (o2->path.bepos - o2->path.bbpos));
+			avgErate += (200. * o2->path.diffs) / ((o2->path.aepos - o2->path.abpos) + (o2->path.bepos - o2->path.bbpos));
 
 			o1 = o2;
 		}
@@ -559,7 +551,7 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			return 1;
 		}
 
-		avgErate/=novl;
+		avgErate /= novl;
 
 		o1 = ovl;
 		o2 = ovl + (novl - 1);
@@ -790,7 +782,7 @@ int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 			*pchrl = ':';
 			*to = strtol(pchrl + 1, NULL, 10);
 
-		//	printf("found: from: %d and to: %d\n", *from, *to);
+			//	printf("found: from: %d and to: %d\n", *from, *to);
 			// sanity checks
 			if (*from < 1 || *from > *to || *from > DB_READ_LEN(ctx->db, i) || *to > DB_READ_LEN(ctx->db, i))
 			{
@@ -873,13 +865,13 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 		}
 
 		// contig orientation is unknown !!!!
-		if(aPartBeg < 0 || aPartEnd < 0)
+		if (aPartBeg < 0 || aPartEnd < 0)
 		{
 			aPartBeg = 1;
 			aPartEnd = DB_READ_LEN(ctx->db, contigA);
 		}
 
-		if(bPartBeg < 0 || bPartEnd < 0)
+		if (bPartBeg < 0 || bPartEnd < 0)
 		{
 			bPartBeg = 1;
 			bPartEnd = DB_READ_LEN(ctx->db, contigB);
@@ -931,7 +923,11 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 	int fromB, toB;
 	char contigNameB[MAX_NAME];
 
-	printf("parseBionanoAGPfile: %s\n", pathInBionanoAGP);
+	if (ctx->verbose)
+		printf("[INFO] parseBionanoAGPfile: %s\n", pathInBionanoAGP);
+
+	int numInvalidLines = 0;
+
 	while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
 	{
 		nline++;
@@ -966,6 +962,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				{
 					printf("[WARNING] Could not match agp contig name: %s in current db! Ignore AGP file.\n", CompntId_GapLength);
 					Prev_Obj_Name[0] = '\0'; // restart from scratch
+					numInvalidLines++;
 					continue;
 				}
 
@@ -980,6 +977,9 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				else
 				{
 					fprintf(stderr, "[ERROR] invalid AGP file format %s. Unknown orientation %s in line %d\n", pathInBionanoAGP, Orientation_LinkageEvidence, nline);
+					Prev_Obj_Name[0] = '\0'; // restart from scratch
+					numInvalidLines++;
+					continue;
 				}
 
 				if (from == -1)
@@ -1008,6 +1008,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				{
 					printf("[WARNING] Could not match agp contig name: %s in current db! Ignore AGP file.\n", CompntId_GapLength);
 					Prev_Obj_Name[0] = '\0'; // restart from scratch
+					numInvalidLines++;
 					continue;
 				}
 				if (strcmp(Orientation_LinkageEvidence, "+") == 0)
@@ -1021,6 +1022,9 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				else
 				{
 					fprintf(stderr, "[ERROR] invalid AGP file format %s. Unknown orientation %s in line %d\n", pathInBionanoAGP, Orientation_LinkageEvidence, nline);
+					Prev_Obj_Name[0] = '\0'; // restart from scratch
+					numInvalidLines++;
+					continue;
 				}
 
 				if (from == -1)
@@ -1042,6 +1046,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 				assert(gapLen > -1);
 
+				// add trim evidence symmetrically: i.e. contigA-gap-contigB and contigB-gap-contigA
 				addBionanoAGPInfoToTrimEvidence(ctx, contigA, fromA, toA, contigB, fromB, toB, gapLen);
 
 				contigA = contigB;
@@ -1067,6 +1072,52 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 	}
 
+	if (ctx->verbose)
+	{
+		printf(" Number of invalid lines: %d (either format issues, or AGB contig names could not be matched to DB contig names.)\n", numInvalidLines);
+
+		int numGaps = 0;
+		int numGapsSmallerThreshold = 0;
+		int numContigBreaksPartOfAGap = 0;
+		int numContigBreaksNotClosable = 0;
+		int i, j;
+		for (i = 0; i < ctx->numTrimEvidence; i++)
+		{
+			TrimEvidence *t = ctx->trimEvid + i;
+
+			if (t->contigA > t->contigB)
+				continue;
+
+			int aLen = DB_READ_LEN(ctx->db, t->contigA);
+			int bLen = DB_READ_LEN(ctx->db, t->contigB);
+
+			for (j = 0; j < t->nBioNanoGaps; j++)
+			{
+				BionanoGap *b = t->gaps + j;
+				numGaps++;
+				if (b->agpGapSize <= ctx->minBionanoGapLen)
+				{
+					numGapsSmallerThreshold++;
+				}
+				if (b->aBeg != 1 || b->aEnd != aLen)
+				{
+					numContigBreaksPartOfAGap++;
+				}
+				if (b->bBeg != 1 || b->bEnd != aLen)
+				{
+					numContigBreaksPartOfAGap++;
+				}
+				if((b->aEnd != 1 && b->aEnd != aLen) || (b->bEnd != 1 && b->bEnd != bLen))
+				{
+					numContigBreaksNotClosable++;
+				}
+			}
+		}
+		printf("  #BionanoGaps: %d\n", numGaps);
+		printf("  #BionanoGaps (<= %d): %d\n", ctx->minBionanoGapLen, numGapsSmallerThreshold);
+		printf("  #ContigBreaksPartOfAGap: %d\n", numContigBreaksPartOfAGap);
+		printf("  #ContigBreaksNotClosable: %d\n", numContigBreaksNotClosable);
+	}
 }
 
 void getDBFastaHeader(TrimContext *ctx, char *fullDBPath)
@@ -1135,397 +1186,397 @@ void getDBFastaHeader(TrimContext *ctx, char *fullDBPath)
 
 void trim_contigs(TrimContext *ctx)
 {/*
-	// open file handler
-	FILE *trimmedContigsAll = NULL;
-	FILE *purgedContigsAll = NULL;
-	FILE *statsContigsAll = NULL;
+ // open file handler
+ FILE *trimmedContigsAll = NULL;
+ FILE *purgedContigsAll = NULL;
+ FILE *statsContigsAll = NULL;
 
-	FILE *trimmedContigsNoTandem = NULL;
-	FILE *purgedContigsNoTandem = NULL;
-	FILE *statsContigsNoTandem = NULL;
+ FILE *trimmedContigsNoTandem = NULL;
+ FILE *purgedContigsNoTandem = NULL;
+ FILE *statsContigsNoTandem = NULL;
 
-	char *fout = malloc(strlen(ctx->fileOutPattern) + 50);
-	assert(fout != NULL);
+ char *fout = malloc(strlen(ctx->fileOutPattern) + 50);
+ assert(fout != NULL);
 
-	sprintf(fout, "%s.trimmedContigs.fasta", ctx->fileOutPattern);
-	printf("create file: %s\n", fout);
-	if ((trimmedContigsAll = (FILE*) fopen(fout, "w")) == NULL)
-	{
-		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-		exit(1);
-	}
-	sprintf(fout, "%s.purgedContigs.fasta", ctx->fileOutPattern);
-	if ((purgedContigsAll = (FILE*) fopen(fout, "w")) == NULL)
-	{
-		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-		exit(1);
-	}
-	sprintf(fout, "%s.trimmedContigs.stats", ctx->fileOutPattern);
-	if ((statsContigsAll = (FILE*) fopen(fout, "w")) == NULL)
-	{
-		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-		exit(1);
-	}
+ sprintf(fout, "%s.trimmedContigs.fasta", ctx->fileOutPattern);
+ printf("create file: %s\n", fout);
+ if ((trimmedContigsAll = (FILE*) fopen(fout, "w")) == NULL)
+ {
+ fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+ exit(1);
+ }
+ sprintf(fout, "%s.purgedContigs.fasta", ctx->fileOutPattern);
+ if ((purgedContigsAll = (FILE*) fopen(fout, "w")) == NULL)
+ {
+ fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+ exit(1);
+ }
+ sprintf(fout, "%s.trimmedContigs.stats", ctx->fileOutPattern);
+ if ((statsContigsAll = (FILE*) fopen(fout, "w")) == NULL)
+ {
+ fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+ exit(1);
+ }
 
-	sprintf(fout, "%s.ignoreTANtrimmedContigs.fasta", ctx->fileOutPattern);
-	printf("create file: %s\n", fout);
-	if ((trimmedContigsNoTandem = (FILE*) fopen(fout, "w")) == NULL)
-	{
-		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-		exit(1);
-	}
-	sprintf(fout, "%s.ignoreTANpurgedContigs.fasta", ctx->fileOutPattern);
-	if ((purgedContigsNoTandem = (FILE*) fopen(fout, "w")) == NULL)
-	{
-		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-		exit(1);
-	}
-	sprintf(fout, "%s.ignoreTANtrimmedContigs.stats", ctx->fileOutPattern);
-	if ((statsContigsNoTandem = (FILE*) fopen(fout, "w")) == NULL)
-	{
-		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-		exit(1);
-	}
+ sprintf(fout, "%s.ignoreTANtrimmedContigs.fasta", ctx->fileOutPattern);
+ printf("create file: %s\n", fout);
+ if ((trimmedContigsNoTandem = (FILE*) fopen(fout, "w")) == NULL)
+ {
+ fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+ exit(1);
+ }
+ sprintf(fout, "%s.ignoreTANpurgedContigs.fasta", ctx->fileOutPattern);
+ if ((purgedContigsNoTandem = (FILE*) fopen(fout, "w")) == NULL)
+ {
+ fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+ exit(1);
+ }
+ sprintf(fout, "%s.ignoreTANtrimmedContigs.stats", ctx->fileOutPattern);
+ if ((statsContigsNoTandem = (FILE*) fopen(fout, "w")) == NULL)
+ {
+ fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+ exit(1);
+ }
 
-	fprintf(statsContigsAll, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
-	fprintf(statsContigsNoTandem, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
+ fprintf(statsContigsAll, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
+ fprintf(statsContigsNoTandem, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
 
-	// debug report trim positions
-	int nContigs = DB_NREADS(ctx->db);
-	int i, j;
-	char *read = New_Read_Buffer(ctx->db);
-	for (i = 0; i < nContigs; i++)
-	{
-		int maxBeg = 0;
-		int maxBegContigID = -1;
-		int cLen = DB_READ_LEN(ctx->db, i);
-		int minEnd = cLen;
-		int minEndContigID = -1;
-		for (j = 0; j < nContigs; j++)
-		{
-			int cutPos = ctx->LAStrimMatrix[i * nContigs + j];
-			if (cutPos < 0 && abs(cutPos) > maxBeg)
-			{
-				maxBeg = abs(cutPos);
-				maxBegContigID = j;
-			}
-			if (cutPos > 0 && cutPos < minEnd)
-			{
-				minEnd = cutPos;
-				minEndContigID = j;
-			}
-			if (cutPos != 0)
-				printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n", i, cutPos, (cutPos < 0) ? abs(cutPos) : cLen - cutPos, j);
-		}
-		float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
-		dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
-		if (maxBeg > 0 || minEnd != cLen)
-		{
-			if (maxBeg > 0)
-			{
-				dustBegFract = getMaskedBases(ctx, ctx->trackDust, i, 0, maxBeg) * 100.0 / maxBeg;
-				tanBegFract = getMaskedBases(ctx, ctx->trackTan, i, 0, maxBeg) * 100.0 / maxBeg;
-			}
-			if (minEnd != cLen)
-			{
-				dustEndFract = getMaskedBases(ctx, ctx->trackDust, i, minEnd, cLen * 100.0 / cLen - minEnd);
-				tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd, cLen * 100.0 / cLen - minEnd);
-			}
+ // debug report trim positions
+ int nContigs = DB_NREADS(ctx->db);
+ int i, j;
+ char *read = New_Read_Buffer(ctx->db);
+ for (i = 0; i < nContigs; i++)
+ {
+ int maxBeg = 0;
+ int maxBegContigID = -1;
+ int cLen = DB_READ_LEN(ctx->db, i);
+ int minEnd = cLen;
+ int minEndContigID = -1;
+ for (j = 0; j < nContigs; j++)
+ {
+ int cutPos = ctx->LAStrimMatrix[i * nContigs + j];
+ if (cutPos < 0 && abs(cutPos) > maxBeg)
+ {
+ maxBeg = abs(cutPos);
+ maxBegContigID = j;
+ }
+ if (cutPos > 0 && cutPos < minEnd)
+ {
+ minEnd = cutPos;
+ minEndContigID = j;
+ }
+ if (cutPos != 0)
+ printf("FOUND CONTIG TRIM POSITION: CONTIG %d; TRIM: %d, TRIMLEN (%d) (OVL with: %d)\n", i, cutPos, (cutPos < 0) ? abs(cutPos) : cLen - cutPos, j);
+ }
+ float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
+ dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
+ if (maxBeg > 0 || minEnd != cLen)
+ {
+ if (maxBeg > 0)
+ {
+ dustBegFract = getMaskedBases(ctx, ctx->trackDust, i, 0, maxBeg) * 100.0 / maxBeg;
+ tanBegFract = getMaskedBases(ctx, ctx->trackTan, i, 0, maxBeg) * 100.0 / maxBeg;
+ }
+ if (minEnd != cLen)
+ {
+ dustEndFract = getMaskedBases(ctx, ctx->trackDust, i, minEnd, cLen * 100.0 / cLen - minEnd);
+ tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd, cLen * 100.0 / cLen - minEnd);
+ }
 
-			printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, cLen - minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
+ printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, cLen - minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
 
-		}
-		// int flags, qv;
-		int map = 0;
-		while (i < ctx->findx[map - 1])
-			map -= 1;
-		while (i >= ctx->findx[map])
-			map += 1;
+ }
+ // int flags, qv;
+ int map = 0;
+ while (i < ctx->findx[map - 1])
+ map -= 1;
+ while (i >= ctx->findx[map])
+ map += 1;
 
-		Load_Read(ctx->db, i, read, 2);
+ Load_Read(ctx->db, i, read, 2);
 
-		// write out trimmed contigs
-		{
-			fprintf(trimmedContigsAll, ">%s\n", ctx->flist[map]);
-			for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
-				fprintf(trimmedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
-			if (j < minEnd)
-				fprintf(trimmedContigsAll, "%.*s\n", minEnd - j, read + j);
-			// write out purged sequence at begin of contig
-			if (maxBeg > 0)
-			{
-				fprintf(purgedContigsAll, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], 0, maxBeg, maxBeg);
-				for (j = 0; j + ctx->lineWidth < maxBeg; j += ctx->lineWidth)
-					fprintf(purgedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
-				if (j < maxBeg)
-					fprintf(purgedContigsAll, "%.*s\n", maxBeg - j, read + j);
-			}
-			// write out purged sequence at end of contig
-			if (minEnd < cLen)
-			{
-				fprintf(purgedContigsAll, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], minEnd, cLen, cLen - minEnd);
-				for (j = minEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
-					fprintf(purgedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
-				if (j < cLen)
-					fprintf(purgedContigsAll, "%.*s\n", cLen - j, read + j);
-			}
-			fprintf(statsContigsAll, "%d\t%s\t%d\t%d\t%d\ttrimBeg:LC=%.2f%%,TAN=%.2f%%;trimEnd=LC=%.2f%%,TAN=%.2f%%", i, ctx->flist[map], minEnd - maxBeg, maxBeg, cLen - minEnd, dustBegFract, tanBegFract, dustEndFract, tanEndFract);
-			// contig support for trimBegin
-			if (maxBeg != 0)
-			{
-				int bmap = 0;
-				while (maxBegContigID < ctx->findx[bmap - 1])
-					bmap -= 1;
-				while (maxBegContigID >= ctx->findx[bmap])
-					bmap += 1;
-				fprintf(statsContigsAll, ";trimBegSupport:ID=%d,name=%s", maxBegContigID, ctx->flist[bmap]);
-			}
-			// contig support for trimEnd
-			if (minEnd != cLen)
-			{
-				int bmap = 0;
-				while (minEndContigID < ctx->findx[bmap - 1])
-					bmap -= 1;
-				while (minEndContigID >= ctx->findx[bmap])
-					bmap += 1;
-				fprintf(statsContigsAll, ";trimEndSupport:ID=%d,name=%s", minEndContigID, ctx->flist[bmap]);
-			}
-			fprintf(statsContigsAll, "\n");
-		}
-		// write out trimmed contigs but ignore tandem-induced overlaps
-		{
-			int tanMaxBeg = maxBeg;
-			int tanMinEnd = minEnd;
-			if (dustBegFract > ctx->maxLowCompTrimPerc || tanBegFract > ctx->maxLowCompTrimPerc)
-			{
-				tanMaxBeg = 0;
-			}
-			if (dustEndFract > ctx->maxLowCompTrimPerc || tanEndFract > ctx->maxLowCompTrimPerc)
-			{
-				tanMinEnd = cLen;
-			}
+ // write out trimmed contigs
+ {
+ fprintf(trimmedContigsAll, ">%s\n", ctx->flist[map]);
+ for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
+ fprintf(trimmedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
+ if (j < minEnd)
+ fprintf(trimmedContigsAll, "%.*s\n", minEnd - j, read + j);
+ // write out purged sequence at begin of contig
+ if (maxBeg > 0)
+ {
+ fprintf(purgedContigsAll, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], 0, maxBeg, maxBeg);
+ for (j = 0; j + ctx->lineWidth < maxBeg; j += ctx->lineWidth)
+ fprintf(purgedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
+ if (j < maxBeg)
+ fprintf(purgedContigsAll, "%.*s\n", maxBeg - j, read + j);
+ }
+ // write out purged sequence at end of contig
+ if (minEnd < cLen)
+ {
+ fprintf(purgedContigsAll, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], minEnd, cLen, cLen - minEnd);
+ for (j = minEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
+ fprintf(purgedContigsAll, "%.*s\n", ctx->lineWidth, read + j);
+ if (j < cLen)
+ fprintf(purgedContigsAll, "%.*s\n", cLen - j, read + j);
+ }
+ fprintf(statsContigsAll, "%d\t%s\t%d\t%d\t%d\ttrimBeg:LC=%.2f%%,TAN=%.2f%%;trimEnd=LC=%.2f%%,TAN=%.2f%%", i, ctx->flist[map], minEnd - maxBeg, maxBeg, cLen - minEnd, dustBegFract, tanBegFract, dustEndFract, tanEndFract);
+ // contig support for trimBegin
+ if (maxBeg != 0)
+ {
+ int bmap = 0;
+ while (maxBegContigID < ctx->findx[bmap - 1])
+ bmap -= 1;
+ while (maxBegContigID >= ctx->findx[bmap])
+ bmap += 1;
+ fprintf(statsContigsAll, ";trimBegSupport:ID=%d,name=%s", maxBegContigID, ctx->flist[bmap]);
+ }
+ // contig support for trimEnd
+ if (minEnd != cLen)
+ {
+ int bmap = 0;
+ while (minEndContigID < ctx->findx[bmap - 1])
+ bmap -= 1;
+ while (minEndContigID >= ctx->findx[bmap])
+ bmap += 1;
+ fprintf(statsContigsAll, ";trimEndSupport:ID=%d,name=%s", minEndContigID, ctx->flist[bmap]);
+ }
+ fprintf(statsContigsAll, "\n");
+ }
+ // write out trimmed contigs but ignore tandem-induced overlaps
+ {
+ int tanMaxBeg = maxBeg;
+ int tanMinEnd = minEnd;
+ if (dustBegFract > ctx->maxLowCompTrimPerc || tanBegFract > ctx->maxLowCompTrimPerc)
+ {
+ tanMaxBeg = 0;
+ }
+ if (dustEndFract > ctx->maxLowCompTrimPerc || tanEndFract > ctx->maxLowCompTrimPerc)
+ {
+ tanMinEnd = cLen;
+ }
 
-			fprintf(trimmedContigsNoTandem, ">%s\n", ctx->flist[map]);
-			for (j = tanMaxBeg; j + ctx->lineWidth < tanMinEnd; j += ctx->lineWidth)
-				fprintf(trimmedContigsNoTandem, "%.*s\n", ctx->lineWidth, read + j);
-			if (j < tanMinEnd)
-				fprintf(trimmedContigsNoTandem, "%.*s\n", tanMinEnd - j, read + j);
-			// write out purged sequence at begin of contig
-			if (tanMaxBeg > 0)
-			{
-				fprintf(purgedContigsNoTandem, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], 0, tanMaxBeg, tanMaxBeg);
-				for (j = 0; j + ctx->lineWidth < tanMaxBeg; j += ctx->lineWidth)
-					fprintf(purgedContigsNoTandem, "%.*s\n", ctx->lineWidth, read + j);
-				if (j < tanMaxBeg)
-					fprintf(purgedContigsNoTandem, "%.*s\n", tanMaxBeg - j, read + j);
-			}
-			// write out purged sequence at end of contig
-			if (tanMinEnd < cLen)
-			{
-				fprintf(purgedContigsNoTandem, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], tanMinEnd, cLen, cLen - tanMinEnd);
-				for (j = tanMinEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
-					fprintf(purgedContigsNoTandem, "%.*s\n", ctx->lineWidth, read + j);
-				if (j < cLen)
-					fprintf(purgedContigsNoTandem, "%.*s\n", cLen - j, read + j);
-			}
-			fprintf(statsContigsNoTandem, "%d\t%s\t%d\t%d\t%d\ttrimBeg:LC=%.2f%%,TAN=%.2f%%;trimEnd=LC=%.2f%%,TAN=%.2f%%", i, ctx->flist[map], tanMinEnd - tanMaxBeg, tanMaxBeg, cLen - tanMinEnd, dustBegFract, tanBegFract, dustEndFract, tanEndFract);
-			// contig support for trimBegin
-			if (tanMaxBeg != 0)
-			{
-				int bmap = 0;
-				while (maxBegContigID < ctx->findx[bmap - 1])
-					bmap -= 1;
-				while (maxBegContigID >= ctx->findx[bmap])
-					bmap += 1;
-				fprintf(statsContigsNoTandem, ";trimBegSupport:ID=%d,name=%s", maxBegContigID, ctx->flist[bmap]);
-			}
-			// contig support for trimEnd
-			if (tanMinEnd != cLen)
-			{
-				int bmap = 0;
-				while (minEndContigID < ctx->findx[bmap - 1])
-					bmap -= 1;
-				while (minEndContigID >= ctx->findx[bmap])
-					bmap += 1;
-				fprintf(statsContigsNoTandem, ";trimEndSupport:ID=%d,name=%s", minEndContigID, ctx->flist[bmap]);
-			}
-			fprintf(statsContigsNoTandem, "\n");
-		}
-	}
+ fprintf(trimmedContigsNoTandem, ">%s\n", ctx->flist[map]);
+ for (j = tanMaxBeg; j + ctx->lineWidth < tanMinEnd; j += ctx->lineWidth)
+ fprintf(trimmedContigsNoTandem, "%.*s\n", ctx->lineWidth, read + j);
+ if (j < tanMinEnd)
+ fprintf(trimmedContigsNoTandem, "%.*s\n", tanMinEnd - j, read + j);
+ // write out purged sequence at begin of contig
+ if (tanMaxBeg > 0)
+ {
+ fprintf(purgedContigsNoTandem, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], 0, tanMaxBeg, tanMaxBeg);
+ for (j = 0; j + ctx->lineWidth < tanMaxBeg; j += ctx->lineWidth)
+ fprintf(purgedContigsNoTandem, "%.*s\n", ctx->lineWidth, read + j);
+ if (j < tanMaxBeg)
+ fprintf(purgedContigsNoTandem, "%.*s\n", tanMaxBeg - j, read + j);
+ }
+ // write out purged sequence at end of contig
+ if (tanMinEnd < cLen)
+ {
+ fprintf(purgedContigsNoTandem, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], tanMinEnd, cLen, cLen - tanMinEnd);
+ for (j = tanMinEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
+ fprintf(purgedContigsNoTandem, "%.*s\n", ctx->lineWidth, read + j);
+ if (j < cLen)
+ fprintf(purgedContigsNoTandem, "%.*s\n", cLen - j, read + j);
+ }
+ fprintf(statsContigsNoTandem, "%d\t%s\t%d\t%d\t%d\ttrimBeg:LC=%.2f%%,TAN=%.2f%%;trimEnd=LC=%.2f%%,TAN=%.2f%%", i, ctx->flist[map], tanMinEnd - tanMaxBeg, tanMaxBeg, cLen - tanMinEnd, dustBegFract, tanBegFract, dustEndFract, tanEndFract);
+ // contig support for trimBegin
+ if (tanMaxBeg != 0)
+ {
+ int bmap = 0;
+ while (maxBegContigID < ctx->findx[bmap - 1])
+ bmap -= 1;
+ while (maxBegContigID >= ctx->findx[bmap])
+ bmap += 1;
+ fprintf(statsContigsNoTandem, ";trimBegSupport:ID=%d,name=%s", maxBegContigID, ctx->flist[bmap]);
+ }
+ // contig support for trimEnd
+ if (tanMinEnd != cLen)
+ {
+ int bmap = 0;
+ while (minEndContigID < ctx->findx[bmap - 1])
+ bmap -= 1;
+ while (minEndContigID >= ctx->findx[bmap])
+ bmap += 1;
+ fprintf(statsContigsNoTandem, ";trimEndSupport:ID=%d,name=%s", minEndContigID, ctx->flist[bmap]);
+ }
+ fprintf(statsContigsNoTandem, "\n");
+ }
+ }
 
-	// write out bionano agp gaps
-	if (ctx->BionanoAGPMatrix != NULL)
-	{
-		FILE *trimmedContigsBionano = NULL;
-		FILE *purgedContigsBionano = NULL;
-		FILE *statsContigsBionano = NULL;
+ // write out bionano agp gaps
+ if (ctx->BionanoAGPMatrix != NULL)
+ {
+ FILE *trimmedContigsBionano = NULL;
+ FILE *purgedContigsBionano = NULL;
+ FILE *statsContigsBionano = NULL;
 
-		sprintf(fout, "%s.BionanoBasedTrimmedContigs.fasta", ctx->fileOutPattern);
-		printf("create file: %s\n", fout);
-		if ((trimmedContigsBionano = (FILE*) fopen(fout, "w")) == NULL)
-		{
-			fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-			exit(1);
-		}
-		sprintf(fout, "%s.BionanoBasedPurgedContigs.fasta", ctx->fileOutPattern);
-		if ((purgedContigsBionano = (FILE*) fopen(fout, "w")) == NULL)
-		{
-			fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-			exit(1);
-		}
-		sprintf(fout, "%s.BionanoBasedContigs.stats", ctx->fileOutPattern);
-		if ((statsContigsBionano = (FILE*) fopen(fout, "w")) == NULL)
-		{
-			fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
-			exit(1);
-		}
+ sprintf(fout, "%s.BionanoBasedTrimmedContigs.fasta", ctx->fileOutPattern);
+ printf("create file: %s\n", fout);
+ if ((trimmedContigsBionano = (FILE*) fopen(fout, "w")) == NULL)
+ {
+ fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+ exit(1);
+ }
+ sprintf(fout, "%s.BionanoBasedPurgedContigs.fasta", ctx->fileOutPattern);
+ if ((purgedContigsBionano = (FILE*) fopen(fout, "w")) == NULL)
+ {
+ fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+ exit(1);
+ }
+ sprintf(fout, "%s.BionanoBasedContigs.stats", ctx->fileOutPattern);
+ if ((statsContigsBionano = (FILE*) fopen(fout, "w")) == NULL)
+ {
+ fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
+ exit(1);
+ }
 
-		fprintf(statsContigsBionano, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
+ fprintf(statsContigsBionano, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
 
-		for (i = 0; i < nContigs; i++)
-		{
-			int maxBeg = 0;
-			int maxBegContigID = -1;
-			int cLen = DB_READ_LEN(ctx->db, i);
-			int minEnd = cLen;
-			int minEndContigID = -1;
-			for (j = 0; j < nContigs; j++)
-			{
-				int cutPos = ctx->LAStrimMatrix[i * nContigs + j];
-				int bionanoGap = ctx->BionanoAGPMatrix[i * nContigs + j];
+ for (i = 0; i < nContigs; i++)
+ {
+ int maxBeg = 0;
+ int maxBegContigID = -1;
+ int cLen = DB_READ_LEN(ctx->db, i);
+ int minEnd = cLen;
+ int minEndContigID = -1;
+ for (j = 0; j < nContigs; j++)
+ {
+ int cutPos = ctx->LAStrimMatrix[i * nContigs + j];
+ int bionanoGap = ctx->BionanoAGPMatrix[i * nContigs + j];
 
-				if (bionanoGap != 0 && cutPos != 0)
-				{
-					if (abs(bionanoGap) <= ctx->minBionanoGapLen)
-					{
-						printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
+ if (bionanoGap != 0 && cutPos != 0)
+ {
+ if (abs(bionanoGap) <= ctx->minBionanoGapLen)
+ {
+ printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
 
-						if (cutPos < 0 && abs(cutPos) > maxBeg)
-						{
-							maxBeg = abs(cutPos);
-							maxBegContigID = j;
-						}
-						if (cutPos > 0 && cutPos < minEnd)
-						{
-							minEnd = cutPos;
-							minEndContigID = j;
-						}
-					}
-					else
-					{
-						printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d - BUT GAP IS TO LARGE\n", i, j, cutPos, bionanoGap);
-					}
-				}
-				else
-				{
-					if (bionanoGap != 0)
-					{
-						if (abs(bionanoGap) <= ctx->minBionanoGapLen)
-						{
-							printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
-							if (abs(bionanoGap) < 3000)
-								printf("BIONANO GAP TO SMALL to find chains %d!\n", abs(bionanoGap));
-							if (i < j)
-								ctx->statsBionanoGapsMissed++;
-						}
-					}
-					else if (cutPos != 0)
-					{
-						printf("found NO bionano gap but contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
-					}
-				}
-			}
-			float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
-			dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
-			if (maxBeg > 0 || minEnd != cLen)	// contig i must be trimmed either at end or at begin, this corresponds with the Bionano AGP file
-			{
-				if (maxBeg > 0)
-				{
-					dustBegFract = getMaskedBases(ctx, ctx->trackDust, i, 0, maxBeg) * 100.0 / maxBeg;
-					tanBegFract = getMaskedBases(ctx, ctx->trackTan, i, 0, maxBeg) * 100.0 / maxBeg;
-				}
-				if (minEnd != cLen)
-				{
-					dustEndFract = getMaskedBases(ctx, ctx->trackDust, i, minEnd, cLen * 100.0 / cLen - minEnd);
-					tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd, cLen * 100.0 / cLen - minEnd);
-				}
-				ctx->statsBionanoTrimmedContigs++;
-				ctx->statsBionanoTrimmedBases += abs(maxBeg) + (cLen - minEnd);
-				printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, cLen - minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
-			}
+ if (cutPos < 0 && abs(cutPos) > maxBeg)
+ {
+ maxBeg = abs(cutPos);
+ maxBegContigID = j;
+ }
+ if (cutPos > 0 && cutPos < minEnd)
+ {
+ minEnd = cutPos;
+ minEndContigID = j;
+ }
+ }
+ else
+ {
+ printf("found matching bionano gap and contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d - BUT GAP IS TO LARGE\n", i, j, cutPos, bionanoGap);
+ }
+ }
+ else
+ {
+ if (bionanoGap != 0)
+ {
+ if (abs(bionanoGap) <= ctx->minBionanoGapLen)
+ {
+ printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
+ if (abs(bionanoGap) < 3000)
+ printf("BIONANO GAP TO SMALL to find chains %d!\n", abs(bionanoGap));
+ if (i < j)
+ ctx->statsBionanoGapsMissed++;
+ }
+ }
+ else if (cutPos != 0)
+ {
+ printf("found NO bionano gap but contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
+ }
+ }
+ }
+ float dustBegFract, dustEndFract, tanBegFract, tanEndFract;
+ dustBegFract = dustEndFract = tanBegFract = tanEndFract = 0.0;
+ if (maxBeg > 0 || minEnd != cLen)	// contig i must be trimmed either at end or at begin, this corresponds with the Bionano AGP file
+ {
+ if (maxBeg > 0)
+ {
+ dustBegFract = getMaskedBases(ctx, ctx->trackDust, i, 0, maxBeg) * 100.0 / maxBeg;
+ tanBegFract = getMaskedBases(ctx, ctx->trackTan, i, 0, maxBeg) * 100.0 / maxBeg;
+ }
+ if (minEnd != cLen)
+ {
+ dustEndFract = getMaskedBases(ctx, ctx->trackDust, i, minEnd, cLen * 100.0 / cLen - minEnd);
+ tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd, cLen * 100.0 / cLen - minEnd);
+ }
+ ctx->statsBionanoTrimmedContigs++;
+ ctx->statsBionanoTrimmedBases += abs(maxBeg) + (cLen - minEnd);
+ printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, cLen - minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
+ }
 
-			int map = 0;
-			while (i < ctx->findx[map - 1])
-				map -= 1;
-			while (i >= ctx->findx[map])
-				map += 1;
+ int map = 0;
+ while (i < ctx->findx[map - 1])
+ map -= 1;
+ while (i >= ctx->findx[map])
+ map += 1;
 
-			Load_Read(ctx->db, i, read, 2);
+ Load_Read(ctx->db, i, read, 2);
 
-			// write out trimmed contigs
-			{
-				fprintf(trimmedContigsBionano, ">%s\n", ctx->flist[map]);
-				for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
-					fprintf(trimmedContigsBionano, "%.*s\n", ctx->lineWidth, read + j);
-				if (j < minEnd)
-					fprintf(trimmedContigsBionano, "%.*s\n", minEnd - j, read + j);
-				// write out purged sequence at begin of contig
-				if (maxBeg > 0)
-				{
-					fprintf(purgedContigsBionano, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], 0, maxBeg, maxBeg);
-					for (j = 0; j + ctx->lineWidth < maxBeg; j += ctx->lineWidth)
-						fprintf(purgedContigsBionano, "%.*s\n", ctx->lineWidth, read + j);
-					if (j < maxBeg)
-						fprintf(purgedContigsBionano, "%.*s\n", maxBeg - j, read + j);
-				}
-				// write out purged sequence at end of contig
-				if (minEnd < cLen)
-				{
-					fprintf(purgedContigsBionano, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], minEnd, cLen, cLen - minEnd);
-					for (j = minEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
-						fprintf(purgedContigsBionano, "%.*s\n", ctx->lineWidth, read + j);
-					if (j < cLen)
-						fprintf(purgedContigsBionano, "%.*s\n", cLen - j, read + j);
-				}
-				fprintf(statsContigsBionano, "%d\t%s\t%d\t%d\t%d\ttrimBeg:LC=%.2f%%,TAN=%.2f%%;trimEnd=LC=%.2f%%,TAN=%.2f%%", i, ctx->flist[map], minEnd - maxBeg, maxBeg, cLen - minEnd, dustBegFract, tanBegFract, dustEndFract, tanEndFract);
-				// contig support for trimBegin
-				if (maxBeg != 0)
-				{
-					int bmap = 0;
-					while (maxBegContigID < ctx->findx[bmap - 1])
-						bmap -= 1;
-					while (maxBegContigID >= ctx->findx[bmap])
-						bmap += 1;
-					fprintf(statsContigsBionano, ";trimBegSupport:ID=%d,name=%s", maxBegContigID, ctx->flist[bmap]);
-				}
-				// contig support for trimEnd
-				if (minEnd != cLen)
-				{
-					int bmap = 0;
-					while (minEndContigID < ctx->findx[bmap - 1])
-						bmap -= 1;
-					while (minEndContigID >= ctx->findx[bmap])
-						bmap += 1;
-					fprintf(statsContigsBionano, ";trimEndSupport:ID=%d,name=%s", minEndContigID, ctx->flist[bmap]);
-				}
-				fprintf(statsContigsBionano, "\n");
-			}
-		}
-		fclose(trimmedContigsBionano);
-		fclose(purgedContigsBionano);
-		fclose(statsContigsBionano);
-	}
+ // write out trimmed contigs
+ {
+ fprintf(trimmedContigsBionano, ">%s\n", ctx->flist[map]);
+ for (j = maxBeg; j + ctx->lineWidth < minEnd; j += ctx->lineWidth)
+ fprintf(trimmedContigsBionano, "%.*s\n", ctx->lineWidth, read + j);
+ if (j < minEnd)
+ fprintf(trimmedContigsBionano, "%.*s\n", minEnd - j, read + j);
+ // write out purged sequence at begin of contig
+ if (maxBeg > 0)
+ {
+ fprintf(purgedContigsBionano, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], 0, maxBeg, maxBeg);
+ for (j = 0; j + ctx->lineWidth < maxBeg; j += ctx->lineWidth)
+ fprintf(purgedContigsBionano, "%.*s\n", ctx->lineWidth, read + j);
+ if (j < maxBeg)
+ fprintf(purgedContigsBionano, "%.*s\n", maxBeg - j, read + j);
+ }
+ // write out purged sequence at end of contig
+ if (minEnd < cLen)
+ {
+ fprintf(purgedContigsBionano, ">%s purged=%d,%d purgedLen=%d\n", ctx->flist[map], minEnd, cLen, cLen - minEnd);
+ for (j = minEnd; j + ctx->lineWidth < cLen; j += ctx->lineWidth)
+ fprintf(purgedContigsBionano, "%.*s\n", ctx->lineWidth, read + j);
+ if (j < cLen)
+ fprintf(purgedContigsBionano, "%.*s\n", cLen - j, read + j);
+ }
+ fprintf(statsContigsBionano, "%d\t%s\t%d\t%d\t%d\ttrimBeg:LC=%.2f%%,TAN=%.2f%%;trimEnd=LC=%.2f%%,TAN=%.2f%%", i, ctx->flist[map], minEnd - maxBeg, maxBeg, cLen - minEnd, dustBegFract, tanBegFract, dustEndFract, tanEndFract);
+ // contig support for trimBegin
+ if (maxBeg != 0)
+ {
+ int bmap = 0;
+ while (maxBegContigID < ctx->findx[bmap - 1])
+ bmap -= 1;
+ while (maxBegContigID >= ctx->findx[bmap])
+ bmap += 1;
+ fprintf(statsContigsBionano, ";trimBegSupport:ID=%d,name=%s", maxBegContigID, ctx->flist[bmap]);
+ }
+ // contig support for trimEnd
+ if (minEnd != cLen)
+ {
+ int bmap = 0;
+ while (minEndContigID < ctx->findx[bmap - 1])
+ bmap -= 1;
+ while (minEndContigID >= ctx->findx[bmap])
+ bmap += 1;
+ fprintf(statsContigsBionano, ";trimEndSupport:ID=%d,name=%s", minEndContigID, ctx->flist[bmap]);
+ }
+ fprintf(statsContigsBionano, "\n");
+ }
+ }
+ fclose(trimmedContigsBionano);
+ fclose(purgedContigsBionano);
+ fclose(statsContigsBionano);
+ }
 
-	fclose(trimmedContigsAll);
-	fclose(purgedContigsAll);
-	fclose(statsContigsAll);
+ fclose(trimmedContigsAll);
+ fclose(purgedContigsAll);
+ fclose(statsContigsAll);
 
-	fclose(trimmedContigsNoTandem);
-	fclose(purgedContigsNoTandem);
-	fclose(statsContigsNoTandem);
+ fclose(trimmedContigsNoTandem);
+ fclose(purgedContigsNoTandem);
+ fclose(statsContigsNoTandem);
 
-	free(read - 1);
-	free(fout);*/
+ free(read - 1);
+ free(fout);*/
 }
 
 void usage()
