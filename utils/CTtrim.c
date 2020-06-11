@@ -892,6 +892,12 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 		assert(aPartBeg < aPartEnd);
 		assert(bPartBeg < bPartEnd);
 
+		// ignore lines were contigA equals contigB. Why do they exist?
+		if(contigA == contigB)
+		{
+			continue;
+		}
+
 		addBionanoGAPInfoToTrimEvidence(ctx, contigA, aPartBeg, aPartEnd, contigB, bPartBeg, bPartEnd, AdjustedGapLength);
 	}
 
