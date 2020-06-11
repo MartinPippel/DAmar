@@ -258,7 +258,7 @@ void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int a
 		if ((c->trimPos < 0 && cutPosInA < 0) || (c->trimPos > 0 && cutPosInA > 0))
 		{
 			printf("[ERROR] addLASchainInfoToTrimEvidence: ambiguous contig %d vs contig overlap present %d!\n", aread, bread);
-			printf("                                       new LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d collides with: previously added LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d ", alnLen, unAlnLen, erate, cutPosInA, c->alnLen, c->unalignedBases, c->eRate,
+			printf("                                       new LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d collides with: previously added LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d\n", alnLen, unAlnLen, erate, cutPosInA, c->alnLen, c->unalignedBases, c->eRate,
 					c->trimPos);
 			return;
 		}
@@ -941,8 +941,7 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 		}
 	}
 	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", numInvalidLines);
-	printf("[INFO]  #Bionano gaps < 0: %12d\n", negativeGaps);
-
+	printf("[INFO]  #Bionano gaps < 0: %10d\n", negativeGaps);
 }
 
 void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g)
