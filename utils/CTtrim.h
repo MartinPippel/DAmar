@@ -217,4 +217,13 @@ void trim_contigs(TrimContext *ctx);
  */
 void usage();
 
+/*
+ * print bionano gap information
+ */
 void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g);
+
+
+/*
+ * get Contig Name
+ */
+char * getContigName(TrimContext *ctx, int id);

@@ -98,7 +98,10 @@ void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg
 
 	if (i == ta->nBioNanoGaps)
 	{
-		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 1: Cannot find bionano gap feature: Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d\n", contigA, contigB, aPartBeg, aPartEnd, bPartBeg, bPartEnd, AdjustedGapLength);
+		char *aName = getContigName(ctx, contigA);
+		char *bName = getContigName(ctx, contigB);
+
+		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 1: Cannot find bionano gap feature: Contig %d (%s) and Contig %d (%s): a[%d, %d] b[%d, %d] gapLen %d\n", contigA, aName, contigB, bName, aPartBeg, aPartEnd, bPartBeg, bPartEnd, AdjustedGapLength);
 		return;
 	}
 	b->bionanoGapSize = AdjustedGapLength;
@@ -115,10 +118,28 @@ void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg
 
 	if (i == tb->nBioNanoGaps)
 	{
-		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 2: Cannot find bionano gap feature: Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d\n", contigB, contigA, bPartEnd, bPartBeg, aPartEnd, aPartBeg, AdjustedGapLength);
+		char *aName = getContigName(ctx, contigA);
+		char *bName = getContigName(ctx, contigB);
+
+		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 2: Cannot find bionano gap feature: Contig %d (%s) and Contig %d (%s): a[%d, %d] b[%d, %d] gapLen %d\n", contigB, aName, contigA, bName, bPartEnd, bPartBeg, aPartEnd, aPartBeg, AdjustedGapLength);
 		return;
 	}
 	b->bionanoGapSize = AdjustedGapLength;
+}
+
+char * getContigName(TrimContext *ctx, int id)
+{
+
+	assert(id >= 0);
+	assert(id < DB_NREADS(ctx->db));
+
+	int map = 0;
+	while (id < ctx->findx[map - 1])
+		map -= 1;
+	while (id >= ctx->findx[map])
+		map += 1;
+
+	return ctx->flist[map];
 }
 
 void addBionanoAGPInfoToTrimEvidence(TrimContext *ctx, int contigA, int fromA, int toA, int contigB, int fromB, int toB, int gapLen)
@@ -530,19 +551,10 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		{
 			ctx->statsNumInvalidChains++;
 
-			int mapA = 0;
-			while (ovl->aread < ctx->findx[mapA - 1])
-				mapA -= 1;
-			while (ovl->aread >= ctx->findx[mapA])
-				mapA += 1;
+			char *aName = getContigName(ctx, ovl->aread);
+			char *bName = getContigName(ctx, ovl->bread);
 
-			int mapB = 0;
-			while (ovl->bread < ctx->findx[mapB - 1])
-				mapB -= 1;
-			while (ovl->bread >= ctx->findx[mapB])
-				mapB += 1;
-
-			printf("INVALID chain: %d (%s) vs %d (%s)\n", ovl->aread, ctx->flist[mapA], ovl->bread, ctx->flist[mapB]);
+			printf("INVALID chain: %d (%s) vs %d (%s)\n", ovl->aread, aName, ovl->bread, bName);
 
 			for (i = 0; i < novl; i++)
 			{
@@ -911,20 +923,10 @@ void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g)
 {
 	assert(g != NULL);
 
-	int mapA = 0;
-	int mapB = 0;
+	char *aName = getContigName(ctx, contigA);
+	char *bName = getContigName(ctx, contigB);
 
-	while (contigA < ctx->findx[mapA - 1])
-		mapA -= 1;
-	while (contigA >= ctx->findx[mapA])
-		mapA += 1;
-
-	while (contigB < ctx->findx[mapB - 1])
-		mapB -= 1;
-	while (contigB >= ctx->findx[mapB])
-		mapB += 1;
-
-	printf("Bionano Gap: %d(%s)[%d,%d]-------GAP[%d, %d]------%d(%s)[%d,%d]\n", contigA, ctx->flist[mapA], g->aBeg, g->aEnd, g->agpGapSize, g->bionanoGapSize, contigB, ctx->flist[mapB], g->bBeg, g->bEnd);
+	printf("Bionano Gap: %d(%s)[%d,%d]-------GAP[%d, %d]------%d(%s)[%d,%d]\n", contigA, aName, g->aBeg, g->aEnd, g->agpGapSize, g->bionanoGapSize, contigB, bName, g->bBeg, g->bEnd);
 }
 
 void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
