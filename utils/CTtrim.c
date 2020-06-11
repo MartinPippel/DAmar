@@ -56,7 +56,6 @@ void ensureBionanoGapBuffer(TrimEvidence *t, int numNewElements)
 {
 	assert(t != NULL);
 
-	printf("ensureBionanoGapBuffer %d vs %d, nBioNanoGaps: %d maxBionanoGaps: %d numNewElements: %d\n", t->contigA, t->contigB, t->nBioNanoGaps, t->maxBionanoGaps,numNewElements);
 	if (t->nBioNanoGaps + abs(numNewElements) >= t->maxBionanoGaps)
 	{
 		int i = t->maxBionanoGaps * 1.1 + MAX(numNewElements, 10);
@@ -295,8 +294,6 @@ find_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
 TrimEvidence*
 insert_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
 {
-	printf("insert_TrimEvidence %d vs %d, numTrimEvidence: %d maxTrimEvidence: %d\n", contigA, contigB, ctx->numTrimEvidence, ctx->maxTrimEvidence);
-
 	if (ctx->numTrimEvidence + 3 >= ctx->maxTrimEvidence)
 	{
 		int i = ctx->maxTrimEvidence * 1.2 + 10;
@@ -314,7 +311,6 @@ insert_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
 	result->contigA = contigA;
 	result->contigB = contigB;
 
-	printf("insert_TrimEvidence %d vs %d, numTrimEvidence: %d maxTrimEvidence: %d\n", contigA, contigB, ctx->numTrimEvidence, ctx->maxTrimEvidence);
 	return result;
 }
 
