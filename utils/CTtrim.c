@@ -884,6 +884,26 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 	}
 }
 
+void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g)
+{
+	assert(g!= NULL);
+
+	int mapA = 0;
+	int mapB = 0;
+
+	while (contigA < ctx->findx[mapA - 1])
+	 mapA -= 1;
+	while (contigA >= ctx->findx[mapA])
+	 mapA += 1;
+
+	while (contigB < ctx->findx[mapB- 1])
+	 mapB -= 1;
+	while (contigB >= ctx->findx[mapB])
+	 mapB += 1;
+
+	printf("Bionano Gap: %d(%s)[%d,%d]-------GAP[%d, %d]------%d(%s)[%d,%d]\n",contigA, ctx->flist[mapA], g->aBeg,g->aEnd,g->agpGapSize,g->bionanoGapSize, contigA, ctx->flist[mapA],g->bBeg, g->bEnd);
+}
+
 void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 {
 	FILE *fileInBionanoGaps = NULL;
@@ -1102,18 +1122,24 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				if ((b->aBeg != 1 && b->aBeg != aLen) || (b->aEnd != 1 && b->aEnd != aLen))
 				{
 					numContigBreaksPartOfAGap++;
+					printf("if ((b->aBeg != 1 && b->aBeg != aLen) || (b->aEnd != 1 && b->aEnd != aLen))\n");
+					printBionanpGap(ctx, t->contigA, t->contigB, b);
 				}
 				if ((b->bBeg != 1 && b->bBeg != aLen) || (b->bEnd != 1 && b->bEnd != aLen))
 				{
+					printf("if ((b->bBeg != 1 && b->bBeg != aLen) || (b->bEnd != 1 && b->bEnd != aLen))\n");
+					printBionanpGap(ctx, t->contigA, t->contigB, b);
 					numContigBreaksPartOfAGap++;
 				}
 				if((b->aEnd != 1 && b->aEnd != aLen) || (b->bEnd != 1 && b->bEnd != bLen))
 				{
+					printf("if((b->aEnd != 1 && b->aEnd != aLen) || (b->bEnd != 1 && b->bEnd != bLen))\n");
+					printBionanpGap(ctx, t->contigA, t->contigB, b);
 					numContigBreaksNotClosable++;
 				}
 			}
 		}
-		printf("[INFO]  #BionanoGaps: %12d\n", numGaps);
+		printf("[INFO]  #BionanoGaps: %15d\n", numGaps);
 		printf("[INFO]  #BionanoGaps (<= %d): %7d\n", ctx->minBionanoGapLen, numGapsSmallerThreshold);
 		printf("[INFO]  #ContigBreaksPartOfAGap: %4d\n", numContigBreaksPartOfAGap);
 		printf("[INFO]  #ContigBreaksNotClosable: %3d\n", numContigBreaksNotClosable);
