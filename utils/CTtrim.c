@@ -200,7 +200,7 @@ void addBionanoAGPInfoToTrimEvidence(TrimContext *ctx, int contigA, int fromA, i
 	if (t == NULL)
 	{
 		sort = 1;
-		b = insert_TrimEvidence(ctx, contigB, contigA);
+		t = insert_TrimEvidence(ctx, contigB, contigA);
 	}
 
 	assert(t != NULL);
