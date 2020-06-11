@@ -306,6 +306,7 @@ insert_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
 	result->contigA = contigA;
 	result->contigB = contigB;
 
+	printf("insert_TrimEvidence %d vs %d, numTrimEvidence: %d maxTrimEvidence: %d\n", contigA, contigB, ctx->numTrimEvidence, ctx->maxTrimEvidence);
 	return result;
 }
 
