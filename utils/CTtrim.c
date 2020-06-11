@@ -27,6 +27,7 @@
 
 #include "dalign/align.h"
 #include "db/DB.h"
+#include "CTtrim.h"
 
 #define MIN_BIONANO_GAP_SIZE 13
 #define TRIM_OFFSET 100
@@ -37,51 +38,246 @@
 #define DEBUG_MASKING
 #undef DEBUG_MASKING2
 
-typedef struct
+
+void ensureLASchainBuffer(TrimEvidence *t, int numNewElements)
 {
-	// stats counters
-	int statsNumInvalidChains;
-	int statsNumValidChains;
+	assert(t!= NULL);
 
-	int statsTrimmedContigs;
-	int statsTrimmedBases;
-	int statsBionanoTrimmedContigs;
-	int statsBionanoGapsMissed;
-	int statsBionanoTrimmedBases;
+	if (t->nLASchains + abs(numNewElements) > t->maxLASchains)
+	{
+		int i = t->maxLASchains * 1.1 + MAX(numNewElements, 10);
+		t->chains = (LASchain*) realloc(t->chains, sizeof(LASchain) * i);
+		assert(t->chains != NULL);
+		bzero(t->chains + t->maxLASchains, sizeof(LASchain) * (i - t->maxLASchains));
+		t->maxLASchains = i;
+	}
+}
 
-	int statsBionanoGapsLtMinThresh;
-	int statsBionanoGapsLtMinThreshContigBreak;
-	int statsBionanoGapsAll;
 
-	// db and I/O files
-	HITS_DB *db;
-	HITS_TRACK *trackDust;
-	HITS_TRACK *trackTan;
+void ensureBionanoGapBuffer(TrimEvidence *t, int numNewElements)
+{
+	assert(t!= NULL);
 
-	char *fileOutPattern;
+	if (t->nBioNanoGaps + abs(numNewElements) > t->maxBionanoGaps)
+	{
+		int i = t->maxBionanoGaps * 1.1 + MAX(numNewElements, 10);
+		t->gaps = (BionanoGap*) realloc(t->gaps, sizeof(BionanoGap) * i);
+		assert(t->gaps != NULL);
+		bzero(t->gaps + t->maxBionanoGaps, sizeof(BionanoGap) * (i - t->maxBionanoGaps));
+		t->maxBionanoGaps = i;
+	}
+}
 
-	ovl_header_twidth twidth;
+void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg, int aPartEnd, int contigB, int bPartBeg, int bPartEnd, int AdjustedGapLength)
+{
+	TrimEvidence *ta = find_TrimEvidence(ctx, contigA, contigB);
+	TrimEvidence *tb = find_TrimEvidence(ctx, contigB, contigA);
 
-	// vector to store overlapping contigs: length: #contigs x #contigs
-	int *LAStrimMatrix;
-	// bionano AGP vector!
-	int *BionanoAGPMatrix;
+	if(ta == NULL)
+	{
+		printf("[Warning] addBionanoGAPInfoToTrimEvidence: Could not find Bionano gap feature between contig %d and contig %d.\n", contigA, contigB);
+		return;
+	}
 
-	// other options
-	int verbose;
-	int minBionanoGapLen;
-	int maxTrimLength;
-	int maxLowCompTrimPerc;
-	int trimOffset;
-	int maxFuzzyBases;
-	int lineWidth;
+	if(tb == NULL)
+	{
+		printf("[Warning] addBionanoGAPInfoToTrimEvidence: Could not find Bionano gap feature between contig %d and contig %d.\n", contigB, contigA);
+		return;
+	}
 
-	// fasta header
-	int nfiles;
-	char **flist;
-	char **hlist;
-	int *findx;
-} TrimContext;
+	// check if the same gap feature is already present: it must be present;
+	int i;
+	BionanoGap *b;
+	for (i = 0; i < ta->nBioNanoGaps; i++)
+	{
+		b = ta->gaps + i;
+
+		if(
+				((b->aBeg == aPartBeg && b->aEnd == aPartEnd) || (b->aBeg == aPartEnd && b->aEnd == aPartBeg))
+			 && ((b->bBeg == bPartBeg && b->bEnd == bPartEnd) || (b->bBeg == bPartEnd && b->bEnd == bPartBeg))
+			)
+		{
+			break;
+		}
+	}
+
+	if(i == ta->nBioNanoGaps)
+	{
+		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 1: Cannot find bionano gap feature: Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d\n", contigA, contigB, aPartBeg, aPartEnd, bPartBeg, bPartEnd, AdjustedGapLength);
+		return;
+	}
+	b->bionanoGapSize = AdjustedGapLength;
+
+	for (i = 0; i < tb->nBioNanoGaps; i++)
+	{
+		b = tb->gaps + i;
+
+		if(
+				((b->aBeg == bPartEnd && b->aEnd == bPartBeg) || (b->aBeg == bPartBeg && b->aEnd == bPartEnd))
+			 && ((b->bBeg == aPartBeg && b->bEnd == aPartEnd) || (b->bBeg == aPartEnd && b->bEnd == aPartBeg))
+			)
+		{
+			break;
+		}
+	}
+
+	if(i == tb->nBioNanoGaps)
+	{
+		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 2: Cannot find bionano gap feature: Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d\n", contigB, contigA, bPartEnd, bPartBeg, aPartEnd, aPartBeg, AdjustedGapLength);
+		return;
+	}
+	b->bionanoGapSize = AdjustedGapLength;
+}
+
+void addBionanoAGPInfoToTrimEvidence(TrimContext *ctx, int contigA, int fromA, int toA, int contigB, int fromB, int toB, int gapLen)
+{
+
+	TrimEvidence *ta = find_TrimEvidence(ctx, contigA, contigB);
+	TrimEvidence *tb = find_TrimEvidence(ctx, contigB, contigA);
+
+	assert((ta == NULL && tb == NULL) || (ta != NULL && tb != NULL));
+
+	int sort = 0;
+	if (ta == NULL)
+	{
+		sort = 1;
+		ta = insert_TrimEvidence(ctx, contigA, contigB);
+		tb = insert_TrimEvidence(ctx, contigB, contigA);
+	}
+
+	assert(ta != NULL && tb != NULL);
+
+	// add contigA vs contigB
+	ensureBionanoGapBuffer(ta, 1);
+	// check if the same gap feature is already present
+	int i;
+	BionanoGap *b;
+	for (i = 0; i < ta->nBioNanoGaps; i++)
+	{
+		b = ta->gaps + i;
+
+		if (intersect(b->aBeg, b->aEnd, fromA, toA) > 0 || intersect(b->bBeg, b->bEnd, fromB, toB) != 0)
+		{
+			printf("[ERROR] - 1: ambiguous Bioano gap for Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d, "
+					"collides witrh existing gap: Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d\n", contigA, contigB, fromA, toA, fromB, toB, gapLen, contigA, contigB, b->aBeg, b->aEnd, b->bBeg, b->bEnd, b->agpGapSize);
+			exit(1); // todo remove later, for now check if this occurs
+		}
+	}
+	// add gap feature
+	b = ta->gaps + ta->nBioNanoGaps;
+	b->aBeg = fromA;
+	b->aEnd = toA;
+	b->bBeg = fromB;
+	b->bEnd = toB;
+	b->agpGapSize = gapLen;
+	ta->nBioNanoGaps++;
+
+	// add contigB vs contigA
+	ensureBionanoGapBuffer(tb, 1);
+	for (i = 0; i < tb->nBioNanoGaps; i++)
+	{
+		b = tb->gaps + i;
+
+		if (intersect(b->aBeg, b->aEnd, toB, fromB) > 0 || intersect(b->bBeg, b->bEnd, toA, fromA) != 0)
+		{
+			printf("[ERROR] - 2: ambiguous Bioano gap for Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d, "
+					"collides witrh existing gap: Contig %d and Contig %d: a[%d, %d] b[%d, %d] gapLen %d\n", contigB, contigA, toB, fromB, toA, fromA, gapLen, contigB, contigA, b->aBeg, b->aEnd, b->bBeg, b->bEnd, b->agpGapSize);
+			exit(1); // todo remove later, for now check if this occurs
+		}
+	}
+	// add gap feature
+	b = tb->gaps + tb->nBioNanoGaps;
+	b->aBeg = toB;
+	b->aEnd = fromB;
+	b->bBeg = toA;
+	b->bEnd = fromA;
+	b->agpGapSize = gapLen;
+	tb->nBioNanoGaps++;
+
+	// ensure sort order
+	if (sort)
+	{
+		qsort(ctx->trimEvid, ctx->numTrimEvidence, sizeof(TrimEvidence), TrimEvidence_cmp);
+	}
+}
+
+void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int alnLen, int unAlnLen, float erate, int cutPosInA)
+{
+	TrimEvidence *t = find_TrimEvidence(ctx, aread, bread);
+
+	int sort = 0;
+	if (t == NULL)
+	{
+		sort = 1;
+		t = insert_TrimEvidence(ctx, aread, bread);
+	}
+
+	assert(t != NULL);
+
+	// add contigA vs contigB
+	ensureLASchainBuffer(t, 1);
+	int i;
+	LASchain *c;
+	for (i = 0; i < t->nLASchains; i++)
+	{
+		c = t->chains + i;
+
+		if((c->trimPos < 0 && cutPosInA < 0) || (c->trimPos > 0 && cutPosInA > 0))
+		{
+			printf("[ERROR] addLASchainInfoToTrimEvidence: ambiguous contig %d vs contig overlap present %d!\n",aread, bread);
+			printf("                                       new LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d collides with: previously added LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d ",
+					alnLen, unAlnLen, erate, cutPosInA, c->alnLen, c->unalignedBases, c->eRate, c->trimPos);
+			return;
+		}
+	}
+
+	c = t->chains + t->nLASchains;
+	c->alnLen = alnLen;
+	c->eRate = erate;
+	c->unalignedBases = unAlnLen;
+	c->trimPos = cutPosInA;
+
+	t->nLASchains++;
+	// ensure sort order
+	if (sort)
+	{
+		qsort(ctx->trimEvid, ctx->numTrimEvidence, sizeof(TrimEvidence), TrimEvidence_cmp);
+	}
+
+}
+
+TrimEvidence*
+find_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
+{
+	TrimEvidence target;
+	target.contigA = contigA;
+	target.contigB = contigB;
+
+	return bsearch(&target, ctx->trimEvid, ctx->numTrimEvidence, sizeof(TrimEvidence), TrimEvidence_cmp);
+}
+
+TrimEvidence*
+insert_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
+{
+	if (ctx->numTrimEvidence + 3 > ctx->maxTrimEvidence)
+	{
+		int i = ctx->maxTrimEvidence * 1.2 + 10;
+		ctx->trimEvid = (TrimEvidence*) realloc(ctx->trimEvid, sizeof(TrimEvidence) * i);
+		assert(ctx->trimEvid != NULL);
+		bzero(ctx->trimEvid + ctx->maxTrimEvidence, sizeof(TrimEvidence) * (i - ctx->maxTrimEvidence));
+		ctx->maxTrimEvidence = i;
+	}
+
+	assert(ctx->trimEvid != NULL);
+
+	TrimEvidence *result = ctx->trimEvid + ctx->numTrimEvidence;
+	ctx->numTrimEvidence++;
+
+	result->contigA = contigA;
+	result->contigB = contigB;
+
+	return result;
+}
 
 static void trim_pre(PassContext *pctx, TrimContext *tctx)
 {
@@ -104,9 +300,15 @@ static void trim_pre(PassContext *pctx, TrimContext *tctx)
 	}
 
 	tctx->twidth = pctx->twidth;
-	tctx->LAStrimMatrix = (int*) malloc(DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
-	assert(tctx->LAStrimMatrix != NULL);
-	bzero(tctx->LAStrimMatrix, DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
+
+	tctx->maxTrimEvidence = 100;
+	tctx->numTrimEvidence = 0;
+	tctx->trimEvid = (TrimEvidence*) malloc(sizeof(TrimEvidence) * tctx->maxTrimEvidence);
+	assert(tctx->trimEvid != NULL);
+	bzero(tctx->trimEvid, sizeof(TrimEvidence) * tctx->maxTrimEvidence);
+	//tctx->LAStrimMatrix = (int*) malloc(DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
+	//assert(tctx->LAStrimMatrix != NULL);
+	//bzero(tctx->LAStrimMatrix, DB_NREADS(tctx->db) * sizeof(int) * DB_NREADS(tctx->db));
 }
 
 static void trim_post(TrimContext *ctx)
@@ -146,7 +348,7 @@ static void trim_post(TrimContext *ctx)
 	}
 }
 
-static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int *cutA, int *cutB)
+int getTrimPositionsFromLAS(TrimContext *ctx, Overlap *ovl, int pointA, int *cutA, int *cutB)
 {
 	int abeg = ovl->path.abpos;
 	int aend = ovl->path.aepos;
@@ -203,7 +405,7 @@ static int getTrimPositions(TrimContext *ctx, Overlap *ovl, int pointA, int *cut
 	return 0;
 }
 
-static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
+int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 {
 	int i;
 
@@ -211,7 +413,7 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 	int bLen = DB_READ_LEN(ctx->db, ovl->bread);
 
 	// assumption: input overlaps must be chained with LAfilterChains !!!
-	// one chain at the end and one chain at the beginning of a contig are possible!!!
+	// one chain at the end and one chain at the beginning of a contig are possible! But BOT with the same contigA and contigB
 
 	// sanity check
 	Overlap *o1 = ovl;
@@ -224,38 +426,41 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 
 		if ((o1->path.abpos > ctx->maxFuzzyBases && o1->path.aepos < aLen - ctx->maxFuzzyBases) || (o1->path.bbpos > ctx->maxFuzzyBases && o1->path.bepos < bLen - ctx->maxFuzzyBases))
 		{
-			ctx->statsNumInvalidChains++;
 			if (ctx->verbose)
 			{
 				printf("[WARNGING] fuzzy base check failed! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			}
+			ctx->statsNumInvalidChains++;
 			return 1;
 		}
 
-		ctx->statsNumValidChains++;
 		int pointA = o1->path.abpos + (o1->path.aepos - o1->path.abpos) / 2;
 
-		if (getTrimPositions(ctx, o1, pointA, &cutA, &cutB))
+		if (getTrimPositionsFromLAS(ctx, o1, pointA, &cutA, &cutB))
 		{
 			printf("Unable to get cutPosition for OVL [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos, pointA);
+			ctx->statsNumInvalidChains++;
 			return 1;
 		}
 
 		assert((cutA - ctx->trimOffset > 0) && (cutA + ctx->trimOffset < aLen));
 		assert((cutB - ctx->trimOffset > 0) && (cutB + ctx->trimOffset < bLen));
 
+		float erate=(200.*ovl->path.diffs) /((ovl->path.aepos - ovl->path.abpos) + (ovl->path.bepos - ovl->path.bbpos));
+
 		// set cut position of contig_A
 		if (o1->path.abpos < aLen - o1->path.aepos) // trim off contig at begin
 		{
-			ctx->LAStrimMatrix[o1->aread * DB_NREADS(ctx->db) + o1->bread] = -(cutA + ctx->trimOffset);
+			addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, ovl->path.abpos,erate, -(cutA + ctx->trimOffset));
 		}
 		else if (o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end
 		{
-			ctx->LAStrimMatrix[o1->aread * DB_NREADS(ctx->db) + o1->bread] = cutA - ctx->trimOffset;
+			addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, aLen - ovl->path.aepos,erate, cutA - ctx->trimOffset);
 		}
 		else // containment
 		{
 			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos, pointA);
+			ctx->statsNumInvalidChains++;
 			return 1;
 		}
 
@@ -264,28 +469,36 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		{
 			if (o1->flags & OVL_COMP)
 			{
-				ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = bLen - (cutB + ctx->trimOffset);
+				addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, ovl->path.bbpos, erate, bLen - (cutB + ctx->trimOffset));
 			}
 			else
 			{
-				ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = -(cutB + ctx->trimOffset);
+				addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, ovl->path.bbpos, erate, -(cutB + ctx->trimOffset));
 			}
 		}
 		else if (o1->path.bbpos > bLen - o1->path.bepos) // trim off contig at end
 		{
 			if (o1->flags & OVL_COMP)
 			{
-				ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = -(bLen - (cutB - ctx->trimOffset));
+
+				addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, bLen - ovl->path.bepos, erate, -(bLen - (cutB - ctx->trimOffset)));
 			}
 			else
 			{
-				ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = cutB - ctx->trimOffset;
+				addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, bLen - ovl->path.bepos, erate, cutB - ctx->trimOffset);
 			}
 		}
+		ctx->statsNumValidChains++;
 	}
 	else
 	{
 		int validChain = 1;
+		float avgErate = (200.*o1->path.diffs) /((o1->path.aepos - o1->path.abpos) + (o1->path.bepos - o1->path.bbpos));
+		int alignedBasesInA = o1->path.aepos - o1->path.abpos;
+		int alignedBasesInB = o1->path.bepos - o1->path.bbpos;
+		int unalignedBasesInA = MIN(o1->path.abpos, aLen - o1->path.aepos);
+		int unalignedBasesInB = MIN(o1->path.bbpos, bLen - o1->path.bepos);
+
 		Overlap *o2;
 		// first: sanity check for LAS chain
 		for (i = 1; i < novl; i++)
@@ -296,6 +509,28 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				validChain = 0;
 				break;
 			}
+
+			alignedBasesInA += (o2->path.aepos - o2->path.abpos);
+			alignedBasesInB += (o2->path.bepos - o2->path.bbpos);
+
+			if(o1->path.aepos > o2->path.abpos)
+			{
+				alignedBasesInA -= (o1->path.aepos - o2->path.abpos);
+			}
+			else
+			{
+				unalignedBasesInA += (o2->path.abpos-o1->path.aepos);
+			}
+			if(o1->path.bepos > o2->path.bbpos)
+			{
+				alignedBasesInA -= (o1->path.bepos - o2->path.bbpos);
+			}
+			else
+			{
+				unalignedBasesInA += (o2->path.bbpos-o1->path.bepos);
+			}
+			avgErate += (200.*o2->path.diffs) /((o2->path.aepos - o2->path.abpos) + (o2->path.bepos - o2->path.bbpos));
+
 			o1 = o2;
 		}
 
@@ -323,7 +558,8 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			}
 			return 1;
 		}
-		ctx->statsNumValidChains++;
+
+		avgErate/=novl;
 
 		o1 = ovl;
 		o2 = ovl + (novl - 1);
@@ -339,7 +575,8 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			{
 				cutA = o1->path.aepos + ctx->trimOffset;
 			}
-			ctx->LAStrimMatrix[o1->aread * DB_NREADS(ctx->db) + o1->bread] = -(cutA);
+			ctx->statsNumValidChains++;
+			addLASchainInfoToTrimEvidence(ctx, o1->aread, o1->bread, alignedBasesInA, unalignedBasesInA, avgErate, -(cutA));
 		}
 		else if (o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end
 		{
@@ -351,10 +588,12 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			{
 				cutA = o2->path.abpos - ctx->trimOffset;
 			}
-			ctx->LAStrimMatrix[o1->aread * DB_NREADS(ctx->db) + o1->bread] = cutA;
+			ctx->statsNumValidChains++;
+			addLASchainInfoToTrimEvidence(ctx, o1->aread, o1->bread, alignedBasesInA, unalignedBasesInA, avgErate, cutA);
 		}
 		else // containment
 		{
+			ctx->statsNumInvalidChains++;
 			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			return 1;
 		}
@@ -367,11 +606,11 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				cutB = o2->path.bbpos + ctx->trimOffset;
 				if (o1->flags & OVL_COMP)
 				{
-					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = bLen - cutB;
+					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, bLen - cutB);
 				}
 				else
 				{
-					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = -(cutB);
+					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(cutB));
 				}
 			}
 			else
@@ -379,11 +618,11 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				cutB = o1->path.bepos + ctx->trimOffset;
 				if (o1->flags & OVL_COMP)
 				{
-					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = bLen - cutB;
+					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, bLen - cutB);
 				}
 				else
 				{
-					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = -(cutB);
+					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(cutB));
 				}
 			}
 		}
@@ -394,11 +633,11 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				cutB = o1->path.bepos - ctx->trimOffset;
 				if (o1->flags & OVL_COMP)
 				{
-					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = -(bLen - cutB);
+					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(bLen - cutB));
 				}
 				else
 				{
-					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = cutB;
+					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, cutB);
 				}
 			}
 			else
@@ -406,11 +645,11 @@ static int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				cutB = o2->path.bbpos - ctx->trimOffset;
 				if (o1->flags & OVL_COMP)
 				{
-					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = -(bLen - cutB);
+					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(bLen - cutB));
 				}
 				else
 				{
-					ctx->LAStrimMatrix[o1->bread * DB_NREADS(ctx->db) + o1->aread] = cutB;
+					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, cutB);
 				}
 
 			}
@@ -434,7 +673,7 @@ static int trim_handler(void *_ctx, Overlap *ovl, int novl)
 	return 1;
 }
 
-static int getMaskedBases(TrimContext *ctx, HITS_TRACK *t, int contigID, int beg, int end)
+int getMaskedBases(TrimContext *ctx, HITS_TRACK *t, int contigID, int beg, int end)
 {
 #ifdef DEBUG_MASKING
 	printf("call getMaskedBases on track %s, contigID: %d, in: [%d, %d]\n", t->name, contigID, beg, end);
@@ -487,7 +726,7 @@ static int getMaskedBases(TrimContext *ctx, HITS_TRACK *t, int contigID, int beg
 	return maskBases;
 }
 
-static char* trimwhitespace(char *str)
+char* trimwhitespace(char *str)
 {
 	//printf("trimwhitespace: %s\n", str);
 	char *end;
@@ -510,7 +749,7 @@ static char* trimwhitespace(char *str)
 	return str;
 }
 
-static int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
+int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 {
 	printf("getDBcontigID(%s)\n", contigName);
 	int i;
@@ -567,7 +806,93 @@ static int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 	return -1;
 }
 
-static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
+void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
+{
+	FILE *fileInBionanoGaps = NULL;
+
+	if ((fileInBionanoGaps = fopen(pathInBionanoGAP, "r")) == NULL)
+	{
+		fprintf(stderr, "[ERROR] could not open %s\n", pathInBionanoGAP);
+		exit(1);
+	}
+
+	char NGSId1[MAX_NAME];
+	char NGSId2[MAX_NAME];
+	int SuperScaffoldId;
+	int XmapGapLength;
+	int AdjustedGapLength;
+	float NGSLength1;
+	float NGSLength2;
+
+	char *line = NULL;
+	size_t maxline = 0;
+
+	int nline = 0;
+	int len;
+
+	int r;
+	int contigA = -1;
+
+	int contigB = -1;
+
+	printf("parseBionanoGapfile: %s\n", pathInBionanoGAP);
+	while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
+	{
+		nline++;
+
+		char *tline = trimwhitespace(line);
+
+		if (tline[0] == '#')
+			continue;
+
+		r = sscanf(tline, "%s\t%s\t%d\t%d\t%d\t%f\t%f\n", NGSId1, NGSId2, &SuperScaffoldId, &XmapGapLength, &AdjustedGapLength, &NGSLength1, &NGSLength2);
+
+		if (r != 7)
+		{
+			fprintf(stderr, "[ERROR] invalid bionano GAP file format %s. Expecting 7 columns, BUT parsed %d columns in line %d\n", pathInBionanoGAP, r, nline);
+			exit(1);
+		}
+
+		printf("line %d: %s\n", nline, tline);
+
+		// try to match contig name with with DB contig ID
+
+		int aPartBeg = -1;
+		int aPartEnd = -1;
+
+		int bPartBeg = -1;
+		int bPartEnd = -1;
+
+		contigA = getDBcontigID(ctx, NGSId1, &aPartBeg, &aPartEnd);
+		contigB = getDBcontigID(ctx, NGSId2, &bPartBeg, &bPartEnd);
+
+		if (contigA < 0 || contigB < 0)
+		{
+			printf("[WARNING] Could not match GAP contig names: %s and/or %s in current db! Ignore line %d in GAP file %s.\n", NGSId1, NGSId2, nline, pathInBionanoGAP);
+			continue;
+		}
+
+		// contig orientation is unknown !!!!
+		if(aPartBeg < 0 || aPartEnd < 0)
+		{
+			aPartBeg = 1;
+			aPartEnd = DB_READ_LEN(ctx->db, contigA);
+		}
+
+		if(bPartBeg < 0 || bPartEnd < 0)
+		{
+			bPartBeg = 1;
+			bPartEnd = DB_READ_LEN(ctx->db, contigB);
+		}
+
+		assert(aPartBeg < aPartEnd);
+		assert(bPartBeg < bPartEnd);
+
+		addBionanoGAPInfoToTrimEvidence(ctx, contigA, aPartBeg, aPartEnd, contigB, bPartBeg, bPartEnd, AdjustedGapLength);
+	}
+}
+
+void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 {
 	FILE *fileInBionanoGaps = NULL;
 
@@ -576,12 +901,6 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 		fprintf(stderr, "[ERROR] could not open %s\n", pathInBionanoAGP);
 		exit(1);
 	}
-
-	int nContigs = DB_NREADS(ctx->db);
-
-	ctx->BionanoAGPMatrix = (int*) malloc(nContigs * sizeof(int) * nContigs);
-	assert(ctx->BionanoAGPMatrix != NULL);
-	bzero(ctx->BionanoAGPMatrix, nContigs * sizeof(int) * nContigs);
 
 	char Prev_Obj_Name[MAX_NAME];
 	char Obj_Name[MAX_NAME];
@@ -646,7 +965,8 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				if (contigA < 0)
 				{
 					printf("[WARNING] Could not match agp contig name: %s in current db! Ignore AGP file.\n", CompntId_GapLength);
-					return;
+					Prev_Obj_Name[0] = '\0'; // restart from scratch
+					continue;
 				}
 
 				if (strcmp(Orientation_LinkageEvidence, "+") == 0)
@@ -661,17 +981,34 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				{
 					fprintf(stderr, "[ERROR] invalid AGP file format %s. Unknown orientation %s in line %d\n", pathInBionanoAGP, Orientation_LinkageEvidence, nline);
 				}
-				fromA = from;
-				toA = to;
+
+				if (from == -1)
+				{
+					from = 1;
+					to = DB_READ_LEN(ctx->db, contigA);
+				}
+
+				if (oriA < 0)
+				{
+					fromA = to;
+					toA = from;
+				}
+				else
+				{
+					fromA = from;
+					toA = to;
+				}
 			}
 			else
 			{
 				contigB = getDBcontigID(ctx, CompntId_GapLength, &from, &to);
 				strcpy(contigNameB, CompntId_GapLength);
+
 				if (contigB < 0)
 				{
 					printf("[WARNING] Could not match agp contig name: %s in current db! Ignore AGP file.\n", CompntId_GapLength);
-					return;
+					Prev_Obj_Name[0] = '\0'; // restart from scratch
+					continue;
 				}
 				if (strcmp(Orientation_LinkageEvidence, "+") == 0)
 				{
@@ -685,82 +1022,27 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				{
 					fprintf(stderr, "[ERROR] invalid AGP file format %s. Unknown orientation %s in line %d\n", pathInBionanoAGP, Orientation_LinkageEvidence, nline);
 				}
-				fromB = from;
-				toB = to;
 
-				int aLen = DB_READ_LEN(ctx->db, contigA);
-				int bLen = DB_READ_LEN(ctx->db, contigB);
+				if (from == -1)
+				{
+					from = 1;
+					to = DB_READ_LEN(ctx->db, contigB);
+				}
+
+				if (oriB < 0)
+				{
+					fromB = to;
+					toB = from;
+				}
+				else
+				{
+					fromB = from;
+					toB = to;
+				}
 
 				assert(gapLen > -1);
 
-				ctx->statsBionanoGapsAll++;
-
-				if (oriA == 1 && oriB == 1)	// A-------->_GAP_B--------->
-				{
-					if ((toA == -1 || toA == aLen) && (fromB == -1 || fromB == 1))
-					{
-						ctx->BionanoAGPMatrix[contigA * nContigs + contigB] = gapLen;
-						ctx->BionanoAGPMatrix[contigB * nContigs + contigA] = -gapLen;
-
-						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
-						if(gapLen <= ctx->minBionanoGapLen)
-							ctx->statsBionanoGapsLtMinThresh++;
-					}
-					else
-					{
-						ctx->statsBionanoGapsLtMinThreshContigBreak++;
-						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
-					}
-				}
-				else if (oriA == 1 && oriB == -1) // A-------->_GAP_B<---------
-				{
-					if ((toA == -1 || toA == aLen) && (toB == -1 || toB == bLen))
-					{
-						ctx->BionanoAGPMatrix[contigA * nContigs + contigB] = gapLen;
-						ctx->BionanoAGPMatrix[contigB * nContigs + contigA] = gapLen;
-						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
-						if(gapLen <= ctx->minBionanoGapLen)
-							ctx->statsBionanoGapsLtMinThresh++;
-					}
-					else
-					{
-						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
-						ctx->statsBionanoGapsLtMinThreshContigBreak++;
-					}
-				}
-				else if (oriA == -1 && oriB == -1) // A<--------_GAP_B<---------
-				{
-					if ((fromA == -1 || fromA == 1) && (toB == -1 || toB == bLen))
-					{
-						ctx->BionanoAGPMatrix[contigA * nContigs + contigB] = -gapLen;
-						ctx->BionanoAGPMatrix[contigB * nContigs + contigA] = gapLen;
-						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
-						if(gapLen <= ctx->minBionanoGapLen)
-							ctx->statsBionanoGapsLtMinThresh++;
-					}
-					else
-					{
-						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
-						ctx->statsBionanoGapsLtMinThreshContigBreak++;
-					}
-				}
-				else /*if(oriA == -1 && oriB == 1)*/ // A<--------_GAP_B--------->
-				{
-					if ((fromA == -1 || fromA == 1) && (fromB == -1 || fromB == 1))
-					{
-						ctx->BionanoAGPMatrix[contigA * nContigs + contigB] = -gapLen;
-						ctx->BionanoAGPMatrix[contigB * nContigs + contigA] = -gapLen;
-						fprintf(stdout, "[INFO] Add Bionano Gap: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
-						if(gapLen <= ctx->minBionanoGapLen)
-							ctx->statsBionanoGapsLtMinThresh++;
-
-					}
-					else
-					{
-						fprintf(stdout, "[WARNING] Cannot add Bionano Gap, because contigs were splitted by Bionano. ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
-						ctx->statsBionanoGapsLtMinThreshContigBreak++;
-					}
-				}
+				addBionanoAGPInfoToTrimEvidence(ctx, contigA, fromA, toA, contigB, fromB, toB, gapLen);
 
 				contigA = contigB;
 				strcpy(contigNameA, contigNameB);
@@ -787,7 +1069,7 @@ static void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 }
 
-static void getDBFastaHeader(TrimContext *ctx, char *fullDBPath)
+void getDBFastaHeader(TrimContext *ctx, char *fullDBPath)
 {
 	char *pwd, *root;
 	FILE *dstub;
@@ -851,8 +1133,8 @@ static void getDBFastaHeader(TrimContext *ctx, char *fullDBPath)
 	fclose(dstub);
 }
 
-static void trim_contigs(TrimContext *ctx)
-{
+void trim_contigs(TrimContext *ctx)
+{/*
 	// open file handler
 	FILE *trimmedContigsAll = NULL;
 	FILE *purgedContigsAll = NULL;
@@ -1143,7 +1425,7 @@ static void trim_contigs(TrimContext *ctx)
 							printf("found bionano gap BUT NO contig ovl for contigs: %d vs %d, OVL: %d, GAP: %d\n", i, j, cutPos, bionanoGap);
 							if (abs(bionanoGap) < 3000)
 								printf("BIONANO GAP TO SMALL to find chains %d!\n", abs(bionanoGap));
-							if(i<j)
+							if (i < j)
 								ctx->statsBionanoGapsMissed++;
 						}
 					}
@@ -1168,7 +1450,7 @@ static void trim_contigs(TrimContext *ctx)
 					tanEndFract = getMaskedBases(ctx, ctx->trackTan, i, minEnd, cLen * 100.0 / cLen - minEnd);
 				}
 				ctx->statsBionanoTrimmedContigs++;
-				ctx->statsBionanoTrimmedBases += abs(maxBeg) + (cLen-minEnd);
+				ctx->statsBionanoTrimmedBases += abs(maxBeg) + (cLen - minEnd);
 				printf(" --> final trim Interval: [%d, %d] -> trimmed [%d, %d] dustFract(in %%) [%.2f, %.2f] tanFract(in %%) [%.2f,%.2f]\n", maxBeg, minEnd, maxBeg, cLen - minEnd, dustBegFract, dustEndFract, tanBegFract, tanEndFract);
 			}
 
@@ -1243,34 +1525,27 @@ static void trim_contigs(TrimContext *ctx)
 	fclose(statsContigsNoTandem);
 
 	free(read - 1);
-	free(fout);
+	free(fout);*/
 }
 
-static void usage()
+void usage()
 {
-	fprintf(stderr, "[-v] [-GTLOFw <int>] [-b <file>] [-dt <track>] <db> <overlaps_in> <contigs_out_prefix>\n");
+	fprintf(stderr, "[-v] [-GTLOFw <int>] [-bg <file>] [-dt <track>] <db> <overlaps_in> <contigs_out_prefix>\n");
 
 	fprintf(stderr, "options: -v        verbose\n");
 	fprintf(stderr, "         -d <trc>  low complexity track (e.g. dust)\n");
 	fprintf(stderr, "         -t <trc>  tandem repeat track  (e,f, tan)\n");
-	fprintf(stderr, "         -b <file> gap csv file i.e. based on bionano agp. Must be in following format: +|-<ContigID1> <gapLen> +|-<contigID2>\n");
-	fprintf(stderr, "                   where: ContigID1, and ContigID2 must refer to the DAmar seqeuence database (i.e. 0-based contig IDs)\n");
-	fprintf(stderr, "                   the mandatory +|- prefix of the ContigID describes the orientation of the contig\n");
-	fprintf(stderr, "                   If a bionano-gap file is given, then only gaps up the minimum gaps size of (default: %d) are trimmed\n",
-	MIN_BIONANO_GAP_SIZE);
-	fprintf(stderr, "                   --> idea behind this: If Bionano inserts a 13bp gap, then it's most probable that the adjacent contigs overlap with each other\n");
-	fprintf(stderr, "         -G <int>  min Bionano gap size (default: %d)\n",
-	MIN_BIONANO_GAP_SIZE);
+	fprintf(stderr, "         -b <file> bionano agp file");
+	fprintf(stderr, "                   If a bionano-agp file is given, then only gaps up the minimum gaps size of (default: %d) and a valid overlap chain are trimmed\n", MIN_BIONANO_GAP_SIZE);
+	fprintf(stderr, "         -g <file> bionano gap file");
+	fprintf(stderr, "         -G <int>  min Bionano gap size (default: %d)\n", MIN_BIONANO_GAP_SIZE);
 	fprintf(stderr, "         -T <int>  maximum trim length (default: -1)\n");
 	fprintf(stderr, "         -L <int>  do not trim contigs if trim length contains more then -S bases (in %%) of tandem repeats (default: %d, valid range: [0,100])\n", MAX_TANDEMTRIM_PERC);
-	fprintf(stderr, "         -O <int>  trim offset in bases (default %d), i.e. in best case (if we have single overlap between 2 contigs) a gap of size 2xtrim_offset is created )\n",
-	TRIM_OFFSET);
+	fprintf(stderr, "         -O <int>  trim offset in bases (default %d), i.e. in best case (if we have single overlap between 2 contigs) a gap of size 2xtrim_offset is created )\n", TRIM_OFFSET);
 	fprintf(stderr, "                   in case a valid alignment chain consisting of multiple alignments is present (representing heterozygous variations). The first last and the last alignment are used, (- trimOffset and + trimOffset, accordingly) \n");
 	fprintf(stderr, "                   (- trimOffset and + trimOffset, accordingly) creates a larger gap size, but heopefully removes the heterozygous difference.\n");
-	fprintf(stderr, "         -F <int>  number of fuzzy bases (default: %d)\n",
-	FUZZY_BASES);
-	fprintf(stderr, "         -w <int>  specify number of characters per fasta line (default: %d)\n",
-	FASTA_LINEWIDTH);
+	fprintf(stderr, "         -F <int>  number of fuzzy bases (default: %d)\n", FUZZY_BASES);
+	fprintf(stderr, "         -w <int>  specify number of characters per fasta line (default: %d)\n", FASTA_LINEWIDTH);
 }
 
 int main(int argc, char *argv[])
@@ -1291,6 +1566,7 @@ int main(int argc, char *argv[])
 	char *pcTrackTan = NULL;
 
 	char *pathInBionanoAGP = NULL;
+	char *pathInBionanoGAP = NULL;
 
 	char *pcPathReadsIn = NULL;
 	char *pcPathOverlapsIn = NULL;
@@ -1305,7 +1581,7 @@ int main(int argc, char *argv[])
 	tctx.lineWidth = FASTA_LINEWIDTH;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "vd:t:b:G:T:L:O:F:w:")) != -1)
+	while ((c = getopt(argc, argv, "vd:t:b:g:G:T:L:O:F:w:")) != -1)
 	{
 		switch (c)
 		{
@@ -1320,6 +1596,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'b':
 				pathInBionanoAGP = optarg;
+				break;
+			case 'g':
+				pathInBionanoGAP = optarg;
 				break;
 			case 'G':
 				tctx.minBionanoGapLen = atoi(optarg);
@@ -1414,6 +1693,10 @@ int main(int argc, char *argv[])
 	{
 		parseBionanoAGPfile(&tctx, pathInBionanoAGP);
 	}
+	if (pathInBionanoGAP)
+	{
+		parseBionanoGAPfile(&tctx, pathInBionanoGAP);
+	}
 
 	pass(pctx, trim_handler);
 
@@ -1425,11 +1708,6 @@ int main(int argc, char *argv[])
 
 	Close_DB(&db);
 	fclose(fileOvlIn);
-
-	if (tctx.BionanoAGPMatrix)
-		free(tctx.BionanoAGPMatrix);
-
-	free(tctx.LAStrimMatrix);
 
 	int i;
 	for (i = 0; i < tctx.nfiles; i++)
