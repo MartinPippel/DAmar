@@ -42,7 +42,7 @@ void ensureLASchainBuffer(TrimEvidence *t, int numNewElements)
 {
 	assert(t != NULL);
 
-	if (t->nLASchains + abs(numNewElements) > t->maxLASchains)
+	if (t->nLASchains + abs(numNewElements) >= t->maxLASchains)
 	{
 		int i = t->maxLASchains * 1.1 + MAX(numNewElements, 10);
 		t->chains = (LASchain*) realloc(t->chains, sizeof(LASchain) * i);
@@ -56,7 +56,7 @@ void ensureBionanoGapBuffer(TrimEvidence *t, int numNewElements)
 {
 	assert(t != NULL);
 
-	if (t->nBioNanoGaps + abs(numNewElements) > t->maxBionanoGaps)
+	if (t->nBioNanoGaps + abs(numNewElements) >= t->maxBionanoGaps)
 	{
 		int i = t->maxBionanoGaps * 1.1 + MAX(numNewElements, 10);
 		t->gaps = (BionanoGap*) realloc(t->gaps, sizeof(BionanoGap) * i);
@@ -934,7 +934,7 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 				negativeGaps++;
 		}
 	}
-	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", ctx->minBionanoGapLen, numInvalidLines);
+	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", numInvalidLines);
 	printf("[INFO]  #Bionano gaps < 0: %12d\n", negativeGaps);
 
 }
