@@ -531,8 +531,8 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		float avgErate = (200. * o1->path.diffs) / ((o1->path.aepos - o1->path.abpos) + (o1->path.bepos - o1->path.bbpos));
 		int alignedBasesInA = o1->path.aepos - o1->path.abpos;
 		int alignedBasesInB = o1->path.bepos - o1->path.bbpos;
-		int unalignedBasesInA = MIN(o1->path.abpos, aLen - o1->path.aepos);
-		int unalignedBasesInB = MIN(o1->path.bbpos, bLen - o1->path.bepos);
+		int unalignedBasesInA = MIN(o1->path.abpos, aLen - ovl[novl-1].path.aepos);
+		int unalignedBasesInB = MIN(o1->path.bbpos, bLen - ovl[novl-1].path.bepos);
 
 		Overlap *o2;
 		// first: sanity check for LAS chain
