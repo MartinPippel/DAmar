@@ -102,6 +102,13 @@ void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg
 		char *bName = getContigName(ctx, contigB);
 
 		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 1: Cannot find bionano gap feature: Contig %d (%s) and Contig %d (%s): a[%d, %d] b[%d, %d] gapLen %d\n", contigA, aName, contigB, bName, aPartBeg, aPartEnd, bPartBeg, bPartEnd, AdjustedGapLength);
+
+		for (i = 0; i < ta->nBioNanoGaps; i++)
+		{
+			b = ta->gaps + i;
+			printBionanpGap(ctx, contigA, contigB, b);
+		}
+
 		return;
 	}
 	b->bionanoGapSize = AdjustedGapLength;
@@ -122,12 +129,19 @@ void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg
 		char *bName = getContigName(ctx, contigB);
 
 		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 2: Cannot find bionano gap feature: Contig %d (%s) and Contig %d (%s): a[%d, %d] b[%d, %d] gapLen %d\n", contigB, aName, contigA, bName, bPartEnd, bPartBeg, aPartEnd, aPartBeg, AdjustedGapLength);
+
+		for (i = 0; i < ta->nBioNanoGaps; i++)
+		{
+			b = ta->gaps + i;
+			printBionanpGap(ctx, contigA, contigB, b);
+		}
+
 		return;
 	}
 	b->bionanoGapSize = AdjustedGapLength;
 }
 
-char * getContigName(TrimContext *ctx, int id)
+char* getContigName(TrimContext *ctx, int id)
 {
 
 	assert(id >= 0);
@@ -837,7 +851,7 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 	int r;
 	int contigA = -1;
 	int contigB = -1;
-	int numInvalidLines=0;
+	int numInvalidLines = 0;
 	printf("parseBionanoGapfile: %s\n", pathInBionanoGAP);
 	while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
 	{
@@ -893,7 +907,7 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 		assert(bPartBeg < bPartEnd);
 
 		// ignore lines were contigA equals contigB. Why do they exist?
-		if(contigA == contigB)
+		if (contigA == contigB)
 		{
 			continue;
 		}
@@ -920,7 +934,7 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 				negativeGaps++;
 		}
 	}
-	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", numInvalidLines);
+	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", ctx->minBionanoGapLen, numInvalidLines);
 	printf("[INFO]  #Bionano gaps < 0: %12d\n", negativeGaps);
 
 }
