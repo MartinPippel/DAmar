@@ -1159,7 +1159,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 			BionanoGap *b = t->gaps + j;
 
 			if(ctx->verbose)
-				 printBionanpGap(ctx, contigA, contigB, b);
+				 printBionanpGap(ctx, t->contigA, t->contigB, b);
 
 			numGaps++;
 			if (b->agpGapSize <= ctx->minBionanoGapLen)
