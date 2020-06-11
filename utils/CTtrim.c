@@ -56,7 +56,7 @@ void ensureBionanoGapBuffer(TrimEvidence *t, int numNewElements)
 {
 	assert(t != NULL);
 
-	printf("ensureBionanoGapBuffer %d vs %s, nBioNanoGaps: %d maxBionanoGaps: %d numNewElements: %d\n", t->contigA, t->contigB, t->nBioNanoGaps, t->maxBionanoGaps,numNewElements);
+	printf("ensureBionanoGapBuffer %d vs %d, nBioNanoGaps: %d maxBionanoGaps: %d numNewElements: %d\n", t->contigA, t->contigB, t->nBioNanoGaps, t->maxBionanoGaps,numNewElements);
 	if (t->nBioNanoGaps + abs(numNewElements) >= t->maxBionanoGaps)
 	{
 		int i = t->maxBionanoGaps * 1.1 + MAX(numNewElements, 10);
