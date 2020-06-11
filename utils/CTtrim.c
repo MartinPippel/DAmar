@@ -287,7 +287,7 @@ find_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
 TrimEvidence*
 insert_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
 {
-	printf("insert_TrimEvidence %d vs %s, numTrimEvidence: %d maxTrimEvidence: %d\n", contigA, contigB, ctx->numTrimEvidence, ctx->maxTrimEvidence);
+	printf("insert_TrimEvidence %d vs %d, numTrimEvidence: %d maxTrimEvidence: %d\n", contigA, contigB, ctx->numTrimEvidence, ctx->maxTrimEvidence);
 
 	if (ctx->numTrimEvidence + 3 >= ctx->maxTrimEvidence)
 	{
