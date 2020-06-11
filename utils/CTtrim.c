@@ -130,9 +130,9 @@ void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg
 
 		printf("[ERROR] - addBionanoGAPInfoToTrimEvidence 2: Cannot find bionano gap feature: Contig %d (%s) and Contig %d (%s): a[%d, %d] b[%d, %d] gapLen %d\n", contigB, aName, contigA, bName, bPartEnd, bPartBeg, aPartEnd, aPartBeg, AdjustedGapLength);
 
-		for (i = 0; i < ta->nBioNanoGaps; i++)
+		for (i = 0; i < tb->nBioNanoGaps; i++)
 		{
-			b = ta->gaps + i;
+			b = tb->gaps + i;
 			printBionanpGap(ctx, contigA, contigB, b);
 		}
 
@@ -1009,7 +1009,8 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 			exit(1);
 		}
 
-		// printf("line %d: %s\n", nline, tline);
+		if (ctx->verbose > 2)
+			printf("line %d: %s\n", nline, tline);
 
 		// try to match contig name with with DB contig ID
 		if (Compnt_Type == 'W')
@@ -1720,7 +1721,7 @@ int main(int argc, char *argv[])
 		switch (c)
 		{
 			case 'v':
-				tctx.verbose = 1;
+				tctx.verbose++;
 				break;
 			case 'd':
 				pcTrackDust = optarg;
