@@ -170,10 +170,9 @@ void addBionanoAGPInfoToTrimEvidence(TrimContext *ctx, int contigA, int fromA, i
 	{
 		sort = 1;
 		ta = insert_TrimEvidence(ctx, contigA, contigB);
-		tb = insert_TrimEvidence(ctx, contigB, contigA);
 	}
 
-	assert(ta != NULL && tb != NULL);
+	assert(ta != NULL);
 
 	// add contigA vs contigB
 	ensureBionanoGapBuffer(ta, 1);
@@ -199,6 +198,15 @@ void addBionanoAGPInfoToTrimEvidence(TrimContext *ctx, int contigA, int fromA, i
 	b->bEnd = toB;
 	b->agpGapSize = gapLen;
 	ta->nBioNanoGaps++;
+
+	// after this insertTrimEvidence the ta might be a dangling pointer!
+	if (tb == NULL)
+	{
+		sort = 1;
+		tb = insert_TrimEvidence(ctx, contigA, contigB);
+	}
+
+	assert(tb != NULL);
 
 	// add contigB vs contigA
 	ensureBionanoGapBuffer(tb, 1);
