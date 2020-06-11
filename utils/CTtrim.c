@@ -886,22 +886,22 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 
 void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g)
 {
-	assert(g!= NULL);
+	assert(g != NULL);
 
 	int mapA = 0;
 	int mapB = 0;
 
 	while (contigA < ctx->findx[mapA - 1])
-	 mapA -= 1;
+		mapA -= 1;
 	while (contigA >= ctx->findx[mapA])
-	 mapA += 1;
+		mapA += 1;
 
-	while (contigB < ctx->findx[mapB- 1])
-	 mapB -= 1;
+	while (contigB < ctx->findx[mapB - 1])
+		mapB -= 1;
 	while (contigB >= ctx->findx[mapB])
-	 mapB += 1;
+		mapB += 1;
 
-	printf("Bionano Gap: %d(%s)[%d,%d]-------GAP[%d, %d]------%d(%s)[%d,%d]\n",contigA, ctx->flist[mapA], g->aBeg,g->aEnd,g->agpGapSize,g->bionanoGapSize, contigB, ctx->flist[mapB],g->bBeg, g->bEnd);
+	printf("Bionano Gap: %d(%s)[%d,%d]-------GAP[%d, %d]------%d(%s)[%d,%d]\n", contigA, ctx->flist[mapA], g->aBeg, g->aEnd, g->agpGapSize, g->bionanoGapSize, contigB, ctx->flist[mapB], g->bBeg, g->bEnd);
 }
 
 void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
@@ -1092,58 +1092,65 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 	}
 
-	if (ctx->verbose)
+	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", numInvalidLines);
+
+	int numGaps = 0;
+	int numGapsSmallerThreshold = 0;
+	int numContigBreaksPartOfAGap = 0;
+	int numContigBreaksNotClosable = 0;
+	int i, j;
+	for (i = 0; i < ctx->numTrimEvidence; i++)
 	{
-		printf("[INFO]  Number of invalid lines: %d (either format issues, or AGB contig names could not be matched to DB contig names.)\n", numInvalidLines);
+		TrimEvidence *t = ctx->trimEvid + i;
 
-		int numGaps = 0;
-		int numGapsSmallerThreshold = 0;
-		int numContigBreaksPartOfAGap = 0;
-		int numContigBreaksNotClosable = 0;
-		int i, j;
-		for (i = 0; i < ctx->numTrimEvidence; i++)
+		if (t->contigA > t->contigB)
+			continue;
+
+		int aLen = DB_READ_LEN(ctx->db, t->contigA);
+		int bLen = DB_READ_LEN(ctx->db, t->contigB);
+
+		for (j = 0; j < t->nBioNanoGaps; j++)
 		{
-			TrimEvidence *t = ctx->trimEvid + i;
-
-			if (t->contigA > t->contigB)
-				continue;
-
-			int aLen = DB_READ_LEN(ctx->db, t->contigA);
-			int bLen = DB_READ_LEN(ctx->db, t->contigB);
-
-			for (j = 0; j < t->nBioNanoGaps; j++)
+			BionanoGap *b = t->gaps + j;
+			numGaps++;
+			if (b->agpGapSize <= ctx->minBionanoGapLen)
 			{
-				BionanoGap *b = t->gaps + j;
-				numGaps++;
-				if (b->agpGapSize <= ctx->minBionanoGapLen)
-				{
-					numGapsSmallerThreshold++;
-				}
-				if ((b->aBeg != 1 && b->aBeg != aLen) || (b->aEnd != 1 && b->aEnd != aLen))
-				{
-					numContigBreaksPartOfAGap++;
+				numGapsSmallerThreshold++;
+			}
+			if ((b->aBeg != 1 && b->aBeg != aLen) || (b->aEnd != 1 && b->aEnd != aLen))
+			{
+				numContigBreaksPartOfAGap++;
+				if (ctx->verbose)
 					printf("BreaksPartOfAGap: if ((b->aBeg != 1 && b->aBeg != aLen) || (b->aEnd != 1 && b->aEnd != aLen))\n");
-					printBionanpGap(ctx, t->contigA, t->contigB, b);
-				}
-				else if ((b->bBeg != 1 && b->bBeg != bLen) || (b->bEnd != 1 && b->bEnd != bLen))
-				{
+				printBionanpGap(ctx, t->contigA, t->contigB, b);
+			}
+			else if ((b->bBeg != 1 && b->bBeg != bLen) || (b->bEnd != 1 && b->bEnd != bLen))
+			{
+				if (ctx->verbose)
 					printf("BreaksPartOfAGap: if ((b->bBeg != 1 && b->bBeg != bLen) || (b->bEnd != 1 && b->bEnd != bLen))\n");
-					printBionanpGap(ctx, t->contigA, t->contigB, b);
-					numContigBreaksPartOfAGap++;
-				}
-				if((b->aEnd != 1 && b->aEnd != aLen) || (b->bBeg != 1 && b->bBeg != bLen))
-				{
+				printBionanpGap(ctx, t->contigA, t->contigB, b);
+				numContigBreaksPartOfAGap++;
+			}
+			if ((b->aEnd != 1 && b->aEnd != aLen) || (b->bBeg != 1 && b->bBeg != bLen))
+			{
+				if (ctx->verbose)
 					printf("NotClosable: if((b->aEnd != 1 && b->aEnd != aLen) || (b->bBeg != 1 && b->bBeg != bLen))\n");
-					printBionanpGap(ctx, t->contigA, t->contigB, b);
-					numContigBreaksNotClosable++;
-				}
+				printBionanpGap(ctx, t->contigA, t->contigB, b);
+				numContigBreaksNotClosable++;
 			}
 		}
-		printf("[INFO]  #BionanoGaps: %15d\n", numGaps);
-		printf("[INFO]  #BionanoGaps (<= %d): %7d\n", ctx->minBionanoGapLen, numGapsSmallerThreshold);
-		printf("[INFO]  #ContigBreaksPartOfAGap: %4d\n", numContigBreaksPartOfAGap);
-		printf("[INFO]  #ContigBreaksNotClosable: %3d\n", numContigBreaksNotClosable);
 	}
+
+	ctx->statsBionanoGapsAll = numGaps;
+	ctx->statsBionanoGapsLtMinThresh = numGapsSmallerThreshold;
+	ctx->statsBionanoContigBreaksPartOfAGap = numContigBreaksPartOfAGap;
+	ctx->statsBionanoContigBreaksNotClosable = numContigBreaksNotClosable;
+
+	printf("[INFO]  #BionanoGaps: %15d\n", numGaps);
+	printf("[INFO]  #BionanoGaps (<= %d): %7d\n", ctx->minBionanoGapLen, numGapsSmallerThreshold);
+	printf("[INFO]  #ContigBreaksPartOfAGap: %4d\n", numContigBreaksPartOfAGap);
+	printf("[INFO]  #ContigBreaksNotClosable: %3d\n", numContigBreaksNotClosable);
+
 }
 
 void getDBFastaHeader(TrimContext *ctx, char *fullDBPath)

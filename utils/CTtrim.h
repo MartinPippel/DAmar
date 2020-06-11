@@ -77,6 +77,8 @@ typedef struct
 	int statsBionanoGapsLtMinThresh;
 	int statsBionanoGapsLtMinThreshContigBreak;
 	int statsBionanoGapsAll;
+	int statsBionanoContigBreaksPartOfAGap;
+	int statsBionanoContigBreaksNotClosable;
 
 	int numTrimEvidence;
 	int maxTrimEvidence;
