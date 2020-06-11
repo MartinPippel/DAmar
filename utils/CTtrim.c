@@ -47,7 +47,7 @@ void ensureLASchainBuffer(TrimEvidence *t, int numNewElements)
 		int i = t->maxLASchains * 1.1 + MAX(numNewElements, 10);
 		t->chains = (LASchain*) realloc(t->chains, sizeof(LASchain) * i);
 		assert(t->chains != NULL);
-		bzero(t->chains + t->maxLASchains, sizeof(LASchain) * (i - t->maxLASchains));
+		bzero(t->chains + t->nLASchains, sizeof(LASchain) * (i - t->maxLASchains));
 		t->maxLASchains = i;
 	}
 }
@@ -62,7 +62,7 @@ void ensureBionanoGapBuffer(TrimEvidence *t, int numNewElements)
 		int i = t->maxBionanoGaps * 1.1 + MAX(numNewElements, 10);
 		t->gaps = (BionanoGap*) realloc(t->gaps, sizeof(BionanoGap) * i);
 		assert(t->gaps != NULL);
-		bzero(t->gaps + t->maxBionanoGaps, sizeof(BionanoGap) * (i - t->maxBionanoGaps));
+		bzero(t->gaps + t->nBioNanoGaps, sizeof(BionanoGap) * (i - t->maxBionanoGaps));
 		t->maxBionanoGaps = i;
 	}
 }
@@ -294,7 +294,7 @@ insert_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
 		int i = ctx->maxTrimEvidence * 1.2 + 10;
 		ctx->trimEvid = (TrimEvidence*) realloc(ctx->trimEvid, sizeof(TrimEvidence) * i);
 		assert(ctx->trimEvid != NULL);
-		bzero(ctx->trimEvid + ctx->maxTrimEvidence, sizeof(TrimEvidence) * (i - ctx->maxTrimEvidence));
+		bzero(ctx->trimEvid + ctx->numTrimEvidence, sizeof(TrimEvidence) * (i - ctx->maxTrimEvidence));
 		ctx->maxTrimEvidence = i;
 	}
 
