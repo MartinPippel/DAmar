@@ -751,7 +751,7 @@ char* trimwhitespace(char *str)
 
 int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 {
-	printf("getDBcontigID(%s)\n", contigName);
+//	printf("getDBcontigID(%s)\n", contigName);
 	int i;
 	for (i = 0; i < ctx->nfiles; i++)
 	{
@@ -776,7 +776,7 @@ int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 
 	int agpCNameLen = pchrf - contigName;
 
-	printf("contigNameLen from %s is %d\n", contigName, agpCNameLen);
+	// printf("contigNameLen from %s is %d\n", contigName, agpCNameLen);
 
 	for (i = 0; i < ctx->nfiles; i++)
 	{
@@ -790,7 +790,7 @@ int getDBcontigID(TrimContext *ctx, char *contigName, int *from, int *to)
 			*pchrl = ':';
 			*to = strtol(pchrl + 1, NULL, 10);
 
-			printf("found: from: %d and to: %d\n", *from, *to);
+		//	printf("found: from: %d and to: %d\n", *from, *to);
 			// sanity checks
 			if (*from < 1 || *from > *to || *from > DB_READ_LEN(ctx->db, i) || *to > DB_READ_LEN(ctx->db, i))
 			{
