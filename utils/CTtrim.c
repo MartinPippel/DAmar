@@ -286,7 +286,7 @@ find_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
 TrimEvidence*
 insert_TrimEvidence(TrimContext *ctx, const int contigA, const int contigB)
 {
-	if (ctx->numTrimEvidence + 3 > ctx->maxTrimEvidence)
+	if (ctx->numTrimEvidence + 3 >= ctx->maxTrimEvidence)
 	{
 		int i = ctx->maxTrimEvidence * 1.2 + 10;
 		ctx->trimEvid = (TrimEvidence*) realloc(ctx->trimEvid, sizeof(TrimEvidence) * i);
