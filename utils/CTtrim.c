@@ -824,9 +824,8 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 
 	int r;
 	int contigA = -1;
-
 	int contigB = -1;
-
+	int numInvalidLines=0;
 	printf("parseBionanoGapfile: %s\n", pathInBionanoGAP);
 	while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
 	{
@@ -845,7 +844,7 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 			exit(1);
 		}
 
-		printf("line %d: %s\n", nline, tline);
+//		printf("line %d: %s\n", nline, tline);
 
 		// try to match contig name with with DB contig ID
 
@@ -861,6 +860,7 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 		if (contigA < 0 || contigB < 0)
 		{
 			printf("[WARNING] Could not match GAP contig names: %s and/or %s in current db! Ignore line %d in GAP file %s.\n", NGSId1, NGSId2, nline, pathInBionanoGAP);
+			numInvalidLines++;
 			continue;
 		}
 
@@ -882,6 +882,29 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 
 		addBionanoGAPInfoToTrimEvidence(ctx, contigA, aPartBeg, aPartEnd, contigB, bPartBeg, bPartEnd, AdjustedGapLength);
 	}
+
+	int negativeGaps = 0;
+	int i, j;
+	for (i = 0; i < ctx->numTrimEvidence; i++)
+	{
+		TrimEvidence *t = ctx->trimEvid + i;
+
+		if (t->contigA > t->contigB)
+			continue;
+
+		int aLen = DB_READ_LEN(ctx->db, t->contigA);
+		int bLen = DB_READ_LEN(ctx->db, t->contigB);
+
+		for (j = 0; j < t->nBioNanoGaps; j++)
+		{
+			BionanoGap *b = t->gaps + j;
+			if (b->bionanoGapSize < 0)
+				negativeGaps++;
+		}
+	}
+	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", numInvalidLines);
+	printf("[INFO]  #Bionano gaps < 0: %12d\n", negativeGaps);
+
 }
 
 void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g)
@@ -943,8 +966,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 	int fromB, toB;
 	char contigNameB[MAX_NAME];
 
-	if (ctx->verbose)
-		printf("[INFO] parseBionanoAGPfile: %s\n", pathInBionanoAGP);
+	printf("[INFO] parseBionanoAGPfile: %s\n", pathInBionanoAGP);
 
 	int numInvalidLines = 0;
 
