@@ -159,28 +159,26 @@ char* getContigName(TrimContext *ctx, int id)
 void addBionanoAGPInfoToTrimEvidence(TrimContext *ctx, int contigA, int fromA, int toA, int contigB, int fromB, int toB, int gapLen)
 {
 
-	TrimEvidence *ta = find_TrimEvidence(ctx, contigA, contigB);
-	TrimEvidence *tb = find_TrimEvidence(ctx, contigB, contigA);
-
-	assert((ta == NULL && tb == NULL) || (ta != NULL && tb != NULL));
+	TrimEvidence *t;
+	t = find_TrimEvidence(ctx, contigA, contigB);
 
 	int sort = 0;
-	if (ta == NULL)
+	if (t == NULL)
 	{
 		sort = 1;
-		ta = insert_TrimEvidence(ctx, contigA, contigB);
+		t = insert_TrimEvidence(ctx, contigA, contigB);
 	}
 
-	assert(ta != NULL);
+	assert(t != NULL);
 
 	// add contigA vs contigB
-	ensureBionanoGapBuffer(ta, 1);
+	ensureBionanoGapBuffer(t, 1);
 	// check if the same gap feature is already present
 	int i;
 	BionanoGap *b;
-	for (i = 0; i < ta->nBioNanoGaps; i++)
+	for (i = 0; i < t->nBioNanoGaps; i++)
 	{
-		b = ta->gaps + i;
+		b = t->gaps + i;
 
 		if (intersect(b->aBeg, b->aEnd, fromA, toA) > 0 || intersect(b->bBeg, b->bEnd, fromB, toB) != 0)
 		{
@@ -190,28 +188,28 @@ void addBionanoAGPInfoToTrimEvidence(TrimContext *ctx, int contigA, int fromA, i
 		}
 	}
 	// add gap feature
-	b = ta->gaps + ta->nBioNanoGaps;
+	b = t->gaps + t->nBioNanoGaps;
 	b->aBeg = fromA;
 	b->aEnd = toA;
 	b->bBeg = fromB;
 	b->bEnd = toB;
 	b->agpGapSize = gapLen;
-	ta->nBioNanoGaps++;
+	t->nBioNanoGaps++;
 
-	// after this insertTrimEvidence the ta might be a dangling pointer!
-	if (tb == NULL)
+	t = find_TrimEvidence(ctx, contigB, contigA);
+	if (t == NULL)
 	{
 		sort = 1;
-		tb = insert_TrimEvidence(ctx, contigA, contigB);
+		b = insert_TrimEvidence(ctx, contigB, contigA);
 	}
 
-	assert(tb != NULL);
+	assert(t != NULL);
 
 	// add contigB vs contigA
-	ensureBionanoGapBuffer(tb, 1);
-	for (i = 0; i < tb->nBioNanoGaps; i++)
+	ensureBionanoGapBuffer(t, 1);
+	for (i = 0; i < t->nBioNanoGaps; i++)
 	{
-		b = tb->gaps + i;
+		b = t->gaps + i;
 
 		if (intersect(b->aBeg, b->aEnd, toB, fromB) > 0 || intersect(b->bBeg, b->bEnd, toA, fromA) != 0)
 		{
@@ -221,13 +219,13 @@ void addBionanoAGPInfoToTrimEvidence(TrimContext *ctx, int contigA, int fromA, i
 		}
 	}
 	// add gap feature
-	b = tb->gaps + tb->nBioNanoGaps;
+	b = t->gaps + t->nBioNanoGaps;
 	b->aBeg = toB;
 	b->aEnd = fromB;
 	b->bBeg = toA;
 	b->bEnd = fromA;
 	b->agpGapSize = gapLen;
-	tb->nBioNanoGaps++;
+	t->nBioNanoGaps++;
 
 	// ensure sort order
 	if (sort)
