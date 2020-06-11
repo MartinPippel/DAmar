@@ -1057,7 +1057,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 		}
 		else if (Compnt_Type == 'N')
 		{
-			printf("found gap\n");
+			//printf("found gap\n");
 			gapLen = strtol(CompntId_GapLength, NULL, 10);
 			if (gapLen < 1)
 			{
