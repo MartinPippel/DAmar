@@ -21,6 +21,7 @@ kmers
 TKtrim
 CTanalyze
 LAfilterMito
-/LAfilterCTchains
-/txt2track
-/LAfilterChains
+LAfilterCTchains
+txt2track
+LAfilterChains
+CTtrim
