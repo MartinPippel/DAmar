@@ -1074,7 +1074,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 	if (ctx->verbose)
 	{
-		printf(" Number of invalid lines: %d (either format issues, or AGB contig names could not be matched to DB contig names.)\n", numInvalidLines);
+		printf("[INFO]  Number of invalid lines: %d (either format issues, or AGB contig names could not be matched to DB contig names.)\n", numInvalidLines);
 
 		int numGaps = 0;
 		int numGapsSmallerThreshold = 0;
@@ -1099,11 +1099,11 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				{
 					numGapsSmallerThreshold++;
 				}
-				if (b->aBeg != 1 || b->aEnd != aLen)
+				if ((b->aBeg != 1 && b->aBeg != aLen) || (b->aEnd != 1 && b->aEnd != aLen))
 				{
 					numContigBreaksPartOfAGap++;
 				}
-				if (b->bBeg != 1 || b->bEnd != aLen)
+				if ((b->bBeg != 1 && b->bBeg != aLen) || (b->bEnd != 1 && b->bEnd != aLen))
 				{
 					numContigBreaksPartOfAGap++;
 				}
@@ -1113,10 +1113,10 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				}
 			}
 		}
-		printf("  #BionanoGaps: %d\n", numGaps);
-		printf("  #BionanoGaps (<= %d): %d\n", ctx->minBionanoGapLen, numGapsSmallerThreshold);
-		printf("  #ContigBreaksPartOfAGap: %d\n", numContigBreaksPartOfAGap);
-		printf("  #ContigBreaksNotClosable: %d\n", numContigBreaksNotClosable);
+		printf("[INFO]  #BionanoGaps: %12d\n", numGaps);
+		printf("[INFO]  #BionanoGaps (<= %d): %7d\n", ctx->minBionanoGapLen, numGapsSmallerThreshold);
+		printf("[INFO]  #ContigBreaksPartOfAGap: %4d\n", numContigBreaksPartOfAGap);
+		printf("[INFO]  #ContigBreaksNotClosable: %3d\n", numContigBreaksNotClosable);
 	}
 }
 
