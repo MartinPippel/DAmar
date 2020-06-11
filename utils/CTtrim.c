@@ -901,7 +901,7 @@ void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g)
 	while (contigB >= ctx->findx[mapB])
 	 mapB += 1;
 
-	printf("Bionano Gap: %d(%s)[%d,%d]-------GAP[%d, %d]------%d(%s)[%d,%d]\n",contigA, ctx->flist[mapA], g->aBeg,g->aEnd,g->agpGapSize,g->bionanoGapSize, contigA, ctx->flist[mapA],g->bBeg, g->bEnd);
+	printf("Bionano Gap: %d(%s)[%d,%d]-------GAP[%d, %d]------%d(%s)[%d,%d]\n",contigA, ctx->flist[mapA], g->aBeg,g->aEnd,g->agpGapSize,g->bionanoGapSize, contigB, ctx->flist[mapB],g->bBeg, g->bEnd);
 }
 
 void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
