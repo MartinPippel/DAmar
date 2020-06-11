@@ -251,13 +251,15 @@ void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int a
 	ensureLASchainBuffer(t, 1);
 	int i;
 	LASchain *c;
+	char * aName = getContigName(ctx, aread);
+	char * bName = getContigName(ctx, bread);
 	for (i = 0; i < t->nLASchains; i++)
 	{
 		c = t->chains + i;
 
 		if ((c->trimPos < 0 && cutPosInA < 0) || (c->trimPos > 0 && cutPosInA > 0))
 		{
-			printf("[ERROR] addLASchainInfoToTrimEvidence: ambiguous contig %d vs contig overlap present %d!\n", aread, bread);
+			printf("[ERROR] addLASchainInfoToTrimEvidence: ambiguous contig %d (%s) vs contig %d (%s) overlap present!\n", aread, aName, bread, bName);
 			printf("                                       new LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d collides with: previously added LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d\n", alnLen, unAlnLen, erate, cutPosInA, c->alnLen, c->unalignedBases, c->eRate,
 					c->trimPos);
 			return;
