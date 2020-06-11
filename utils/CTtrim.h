@@ -214,3 +214,5 @@ void trim_contigs(TrimContext *ctx);
  * print out how to use CTtrim tool
  */
 void usage();
+
+void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g);
