@@ -1121,22 +1121,28 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 			{
 				numContigBreaksPartOfAGap++;
 				if (ctx->verbose)
+				{
 					printf("BreaksPartOfAGap: if ((b->aBeg != 1 && b->aBeg != aLen) || (b->aEnd != 1 && b->aEnd != aLen))\n");
-				printBionanpGap(ctx, t->contigA, t->contigB, b);
+					printBionanpGap(ctx, t->contigA, t->contigB, b);
+				}
 			}
 			else if ((b->bBeg != 1 && b->bBeg != bLen) || (b->bEnd != 1 && b->bEnd != bLen))
 			{
-				if (ctx->verbose)
-					printf("BreaksPartOfAGap: if ((b->bBeg != 1 && b->bBeg != bLen) || (b->bEnd != 1 && b->bEnd != bLen))\n");
-				printBionanpGap(ctx, t->contigA, t->contigB, b);
 				numContigBreaksPartOfAGap++;
+				if (ctx->verbose)
+				{
+					printf("BreaksPartOfAGap: if ((b->bBeg != 1 && b->bBeg != bLen) || (b->bEnd != 1 && b->bEnd != bLen))\n");
+					printBionanpGap(ctx, t->contigA, t->contigB, b);
+				}
 			}
 			if ((b->aEnd != 1 && b->aEnd != aLen) || (b->bBeg != 1 && b->bBeg != bLen))
 			{
-				if (ctx->verbose)
-					printf("NotClosable: if((b->aEnd != 1 && b->aEnd != aLen) || (b->bBeg != 1 && b->bBeg != bLen))\n");
-				printBionanpGap(ctx, t->contigA, t->contigB, b);
 				numContigBreaksNotClosable++;
+				if (ctx->verbose)
+				{
+					printf("NotClosable: if((b->aEnd != 1 && b->aEnd != aLen) || (b->bBeg != 1 && b->bBeg != bLen))\n");
+					printBionanpGap(ctx, t->contigA, t->contigB, b);
+				}
 			}
 		}
 	}
