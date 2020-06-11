@@ -1125,7 +1125,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					printf("numContigBreaksPartOfAGap: if ((b->aBeg != 1 && b->aBeg != aLen) || (b->aEnd != 1 && b->aEnd != aLen))\n");
 					printBionanpGap(ctx, t->contigA, t->contigB, b);
 				}
-				if ((b->bBeg != 1 && b->bBeg != bLen) || (b->bEnd != 1 && b->bEnd != bLen))
+				else if ((b->bBeg != 1 && b->bBeg != bLen) || (b->bEnd != 1 && b->bEnd != bLen))
 				{
 					printf("numContigBreaksPartOfAGap: if ((b->bBeg != 1 && b->bBeg != bLen) || (b->bEnd != 1 && b->bEnd != bLen))\n");
 					printBionanpGap(ctx, t->contigA, t->contigB, b);
