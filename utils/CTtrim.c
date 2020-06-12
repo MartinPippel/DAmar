@@ -1966,7 +1966,7 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 	}
-	if (tctx.purgeOpt == 2 || tctx.purgeOpt == 3)
+	else if (tctx.purgeOpt == 2 || tctx.purgeOpt == 3)
 	{
 		if (fileOvlIn == NULL )
 		{
@@ -1979,7 +1979,7 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 	}
-	if (tctx.purgeOpt == 4 || tctx.purgeOpt == 5)
+	else if (tctx.purgeOpt == 4 || tctx.purgeOpt == 5)
 	{
 		if (fileOvlIn == NULL || pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
 		{
