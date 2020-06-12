@@ -65,8 +65,14 @@ int TrimEvidence_cmp(const void *x, const void *y)
 typedef struct
 {
 	// stats counters
-	int statsNumInvalidChains;
-	int statsNumValidChains;
+	int statsNumValidLASchains;
+	int statsNumValidLASchainOverlaps;
+	int statsNumInValidLASchains;
+	int statsNumInValidLASchainOverlaps;
+	int statsNumDuplicatedChains;
+	int statsNumDuplicatedChainOverlaps;
+	int statsNumLASChainsWithBionanoSupport;
+	int statsNumLASChainsWithoutBionanoSupport;
 
 	int statsTrimmedContigs;
 	int statsTrimmedBases;
@@ -142,8 +148,12 @@ void addBionanoGAPInfoToTrimEvidence(TrimContext *ctx, int contigA, int aPartBeg
 
 /*
  * add/create Contig-Vs-Contig overlap to an existing/a new TrimEvidence in an aymmetric way
+ * return
+ * 		1: add LAS chain to an existing Bionano TrimEvidence
+ *  	2: LAS-chain could not be added (e.g. already present due to symmetric overlaps)
+ *  	0: create an TrimEvidence feature and add LASchain (no Bionano evidence available)
  */
-void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int alnLen, int unAlnLen, float erate, int cutPosInA);
+int addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int alnLen, int unAlnLen, float erate, int cutPosInA);
 
 /*
  * find if a TrimEvidence entity between contigA and contigB is present.
@@ -227,3 +237,8 @@ void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g);
  * get Contig Name
  */
 char * getContigName(TrimContext *ctx, int id);
+
+/*
+ * do some sanity checks of all trim evidence
+ */
+void validate_trimEvidence(TrimContext *ctx);

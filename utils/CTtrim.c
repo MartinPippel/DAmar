@@ -234,18 +234,19 @@ void addBionanoAGPInfoToTrimEvidence(TrimContext *ctx, int contigA, int fromA, i
 	}
 }
 
-void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int alnLen, int unAlnLen, float erate, int cutPosInA)
+int addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int alnLen, int unAlnLen, float erate, int cutPosInA)
 {
 	TrimEvidence *t = find_TrimEvidence(ctx, aread, bread);
+
+	int result = 1;
 
 	int sort = 0;
 	if (t == NULL)
 	{
 		sort = 1;
 		t = insert_TrimEvidence(ctx, aread, bread);
+		result = 0; // create new TrimEvidence (i.e. no bionano evidence avaliable)
 	}
-
-
 
 	assert(t != NULL);
 
@@ -253,10 +254,10 @@ void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int a
 	ensureLASchainBuffer(t, 1);
 	int i;
 	LASchain *c;
-	char * aName = getContigName(ctx, aread);
-	char * bName = getContigName(ctx, bread);
+	char *aName = getContigName(ctx, aread);
+	char *bName = getContigName(ctx, bread);
 
-	printf("addLASchainInfoToTrimEvidence %d (%s) vs %d (%s), aln %d, unAln: %d, err: %.3f, cut: %d\n", aread,aName, bread, bName, alnLen, unAlnLen, erate, cutPosInA);
+	printf("addLASchainInfoToTrimEvidence %d (%s) vs %d (%s), aln %d, unAln: %d, err: %.3f, cut: %d\n", aread, aName, bread, bName, alnLen, unAlnLen, erate, cutPosInA);
 	for (i = 0; i < t->nLASchains; i++)
 	{
 		c = t->chains + i;
@@ -266,7 +267,7 @@ void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int a
 			printf("[ERROR] addLASchainInfoToTrimEvidence: ambiguous contig %d (%s) vs contig %d (%s) overlap present!\n", aread, aName, bread, bName);
 			printf("                                       new LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d collides with: previously added LASchain evidence: alnLen %d unAlnLen: %d, erate %f, cutPos: %d\n", alnLen, unAlnLen, erate, cutPosInA, c->alnLen, c->unalignedBases, c->eRate,
 					c->trimPos);
-			return;
+			return 2;
 		}
 	}
 
@@ -282,7 +283,7 @@ void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int a
 	{
 		qsort(ctx->trimEvid, ctx->numTrimEvidence, sizeof(TrimEvidence), TrimEvidence_cmp);
 	}
-
+	return result;
 }
 
 TrimEvidence*
@@ -469,7 +470,8 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			{
 				printf("[WARNGING] fuzzy base check failed! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			}
-			ctx->statsNumInvalidChains++;
+			ctx->statsNumInValidLASchains++;
+			ctx->statsNumInValidLASchainOverlaps += novl;
 			return 1;
 		}
 
@@ -478,7 +480,8 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		if (getTrimPositionsFromLAS(ctx, o1, pointA, &cutA, &cutB))
 		{
 			printf("Unable to get cutPosition for OVL [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos, pointA);
-			ctx->statsNumInvalidChains++;
+			ctx->statsNumInValidLASchains++;
+			ctx->statsNumInValidLASchainOverlaps += novl;
 			return 1;
 		}
 
@@ -486,33 +489,36 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		assert((cutB - ctx->trimOffset > 0) && (cutB + ctx->trimOffset < bLen));
 
 		float erate = (200. * ovl->path.diffs) / ((ovl->path.aepos - ovl->path.abpos) + (ovl->path.bepos - ovl->path.bbpos));
+		int resA = 2;
 
 		// set cut position of contig_A
 		if (o1->path.abpos < aLen - o1->path.aepos) // trim off contig at begin
 		{
-			addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, ovl->path.abpos, erate, -(cutA + ctx->trimOffset));
+			resA = addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, ovl->path.abpos, erate, -(cutA + ctx->trimOffset));
 		}
 		else if (o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end
 		{
-			addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, aLen - ovl->path.aepos, erate, cutA - ctx->trimOffset);
+			resA = addLASchainInfoToTrimEvidence(ctx, ovl->aread, ovl->bread, ovl->path.aepos - ovl->path.abpos, aLen - ovl->path.aepos, erate, cutA - ctx->trimOffset);
 		}
 		else // containment
 		{
 			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos, pointA);
-			ctx->statsNumInvalidChains++;
+			ctx->statsNumInValidLASchains++;
+			ctx->statsNumInValidLASchainOverlaps += novl;
 			return 1;
 		}
 
+		int resB = 2;
 		// set cut position of contig_B
 		if (o1->path.bbpos < bLen - o1->path.bepos) // trim off contig at begin
 		{
 			if (o1->flags & OVL_COMP)
 			{
-				addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, ovl->path.bbpos, erate, bLen - (cutB + ctx->trimOffset));
+				resB = addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, ovl->path.bbpos, erate, bLen - (cutB + ctx->trimOffset));
 			}
 			else
 			{
-				addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, ovl->path.bbpos, erate, -(cutB + ctx->trimOffset));
+				resB = addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, ovl->path.bbpos, erate, -(cutB + ctx->trimOffset));
 			}
 		}
 		else if (o1->path.bbpos > bLen - o1->path.bepos) // trim off contig at end
@@ -520,14 +526,36 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			if (o1->flags & OVL_COMP)
 			{
 
-				addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, bLen - ovl->path.bepos, erate, -(bLen - (cutB - ctx->trimOffset)));
+				resB = addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, bLen - ovl->path.bepos, erate, -(bLen - (cutB - ctx->trimOffset)));
 			}
 			else
 			{
-				addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, bLen - ovl->path.bepos, erate, cutB - ctx->trimOffset);
+				resB = addLASchainInfoToTrimEvidence(ctx, ovl->bread, ovl->aread, ovl->path.bepos - ovl->path.bbpos, bLen - ovl->path.bepos, erate, cutB - ctx->trimOffset);
 			}
 		}
-		ctx->statsNumValidChains++;
+
+		assert(resA == resB);
+
+		// check return value of res and update stats
+		if (resA == 2)
+		{
+			ctx->statsNumValidLASchains++;
+			ctx->statsNumValidLASchainOverlaps += novl;
+			ctx->statsNumDuplicatedChains++;
+			ctx->statsNumDuplicatedChains += novl;
+		}
+		else if (resA == 1)
+		{
+			ctx->statsNumValidLASchains++;
+			ctx->statsNumValidLASchainOverlaps += novl;
+			ctx->statsNumLASChainsWithBionanoSupport++;
+		}
+		else
+		{
+			ctx->statsNumValidLASchains++;
+			ctx->statsNumValidLASchainOverlaps += novl;
+			ctx->statsNumLASChainsWithoutBionanoSupport++;
+		}
 	}
 	else
 	{
@@ -535,9 +563,11 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		float avgErate = (200. * o1->path.diffs) / ((o1->path.aepos - o1->path.abpos) + (o1->path.bepos - o1->path.bbpos));
 		int alignedBasesInA = o1->path.aepos - o1->path.abpos;
 		int alignedBasesInB = o1->path.bepos - o1->path.bbpos;
-		int unalignedBasesInA = MIN(o1->path.abpos, aLen - ovl[novl-1].path.aepos);
-		int unalignedBasesInB = MIN(o1->path.bbpos, bLen - ovl[novl-1].path.bepos);
+		int unalignedBasesInA = MIN(o1->path.abpos, aLen - ovl[novl - 1].path.aepos);
+		int unalignedBasesInB = MIN(o1->path.bbpos, bLen - ovl[novl - 1].path.bepos);
 
+		int resA = 2;
+		int resB = 2;
 		Overlap *o2;
 		// first: sanity check for LAS chain
 		for (i = 1; i < novl; i++)
@@ -575,16 +605,20 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 
 		if (!validChain)
 		{
-			ctx->statsNumInvalidChains++;
+			ctx->statsNumInValidLASchains++;
+			ctx->statsNumInValidLASchainOverlaps += novl;
 
 			char *aName = getContigName(ctx, ovl->aread);
 			char *bName = getContigName(ctx, ovl->bread);
 
-			printf("INVALID chain: %d (%s) vs %d (%s)\n", ovl->aread, aName, ovl->bread, bName);
-
-			for (i = 0; i < novl; i++)
+			if (ctx->verbose)
 			{
-				printf("   a[%d,%d] %c b[%d,%d]\n", ovl[i].path.abpos, ovl[i].path.aepos, (ovl[i].flags & OVL_COMP) ? 'c' : 'n', ovl[i].path.bbpos, ovl[i].path.bepos);
+				printf("INVALID chain: %d (%s) vs %d (%s)\n", ovl->aread, aName, ovl->bread, bName);
+
+				for (i = 0; i < novl; i++)
+				{
+					printf("   a[%d,%d] %c b[%d,%d]\n", ovl[i].path.abpos, ovl[i].path.aepos, (ovl[i].flags & OVL_COMP) ? 'c' : 'n', ovl[i].path.bbpos, ovl[i].path.bepos);
+				}
 			}
 			return 1;
 		}
@@ -605,8 +639,8 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			{
 				cutA = o1->path.aepos + ctx->trimOffset;
 			}
-			ctx->statsNumValidChains++;
-			addLASchainInfoToTrimEvidence(ctx, o1->aread, o1->bread, alignedBasesInA, unalignedBasesInA, avgErate, -(cutA));
+
+			resA = addLASchainInfoToTrimEvidence(ctx, o1->aread, o1->bread, alignedBasesInA, unalignedBasesInA, avgErate, -(cutA));
 		}
 		else if (o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end
 		{
@@ -618,13 +652,14 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			{
 				cutA = o2->path.abpos - ctx->trimOffset;
 			}
-			ctx->statsNumValidChains++;
-			addLASchainInfoToTrimEvidence(ctx, o1->aread, o1->bread, alignedBasesInA, unalignedBasesInA, avgErate, cutA);
+
+			resA = addLASchainInfoToTrimEvidence(ctx, o1->aread, o1->bread, alignedBasesInA, unalignedBasesInA, avgErate, cutA);
 		}
 		else // containment
 		{
-			ctx->statsNumInvalidChains++;
 			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
+			ctx->statsNumInValidLASchains++;
+			ctx->statsNumInValidLASchainOverlaps += novl;
 			return 1;
 		}
 		// set cut position of contig_B
@@ -636,11 +671,11 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				cutB = o2->path.bbpos + ctx->trimOffset;
 				if (o1->flags & OVL_COMP)
 				{
-					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, bLen - cutB);
+					resB = addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, bLen - cutB);
 				}
 				else
 				{
-					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(cutB));
+					resB = addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(cutB));
 				}
 			}
 			else
@@ -648,11 +683,11 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				cutB = o1->path.bepos + ctx->trimOffset;
 				if (o1->flags & OVL_COMP)
 				{
-					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, bLen - cutB);
+					resB = addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, bLen - cutB);
 				}
 				else
 				{
-					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(cutB));
+					resB = addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(cutB));
 				}
 			}
 		}
@@ -663,11 +698,11 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				cutB = o1->path.bepos - ctx->trimOffset;
 				if (o1->flags & OVL_COMP)
 				{
-					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(bLen - cutB));
+					resB = addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(bLen - cutB));
 				}
 				else
 				{
-					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, cutB);
+					resB = addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, cutB);
 				}
 			}
 			else
@@ -675,11 +710,11 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				cutB = o2->path.bbpos - ctx->trimOffset;
 				if (o1->flags & OVL_COMP)
 				{
-					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(bLen - cutB));
+					resB = addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, -(bLen - cutB));
 				}
 				else
 				{
-					addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, cutB);
+					resB = addLASchainInfoToTrimEvidence(ctx, o1->bread, o1->aread, alignedBasesInB, unalignedBasesInB, avgErate, cutB);
 				}
 
 			}
@@ -687,8 +722,34 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		else // containment
 		{
 			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
+			ctx->statsNumInValidLASchains++;
+			ctx->statsNumInValidLASchainOverlaps += novl;
 			return 1;
 		}
+
+		assert(resA == resB);
+
+		// check return value of res and update stats
+		if (resA == 2)
+		{
+			ctx->statsNumValidLASchains++;
+			ctx->statsNumValidLASchainOverlaps += novl;
+			ctx->statsNumDuplicatedChains++;
+			ctx->statsNumDuplicatedChains += novl;
+		}
+		else if (resA == 1)
+		{
+			ctx->statsNumValidLASchains++;
+			ctx->statsNumValidLASchainOverlaps += novl;
+			ctx->statsNumLASChainsWithBionanoSupport++;
+		}
+		else
+		{
+			ctx->statsNumValidLASchains++;
+			ctx->statsNumValidLASchainOverlaps += novl;
+			ctx->statsNumLASChainsWithoutBionanoSupport++;
+		}
+
 	}
 	return 0;
 }
@@ -1169,8 +1230,8 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 		{
 			BionanoGap *b = t->gaps + j;
 
-			if(ctx->verbose)
-				 printBionanpGap(ctx, t->contigA, t->contigB, b);
+			if (ctx->verbose)
+				printBionanpGap(ctx, t->contigA, t->contigB, b);
 
 			numGaps++;
 			if (b->agpGapSize <= ctx->minBionanoGapLen)
@@ -1678,6 +1739,12 @@ void trim_contigs(TrimContext *ctx)
  free(fout);*/
 }
 
+void validate_trimEvidence(TrimContext *ctx)
+{
+	TrimEvidence * te;
+	printf("[INFO] num trim evidence: %d\n", ctx->numTrimEvidence);
+}
+
 void usage()
 {
 	fprintf(stderr, "[-v] [-GTLOFw <int>] [-bg <file>] [-dt <track>] <db> <overlaps_in> <contigs_out_prefix>\n");
@@ -1850,6 +1917,7 @@ int main(int argc, char *argv[])
 
 	pass(pctx, trim_handler);
 
+	validate_trimEvidence(&tctx);
 	trim_contigs(&tctx);
 
 	trim_post(&tctx);
