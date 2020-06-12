@@ -339,7 +339,8 @@ static void trim_pre(PassContext *pctx, TrimContext *tctx)
 			printf( ANSI_COLOR_RED "  tandem Track %s\n" ANSI_COLOR_RESET, tctx->trackTan->name);
 	}
 
-	tctx->twidth = pctx->twidth;
+	if(pctx != NULL)
+		tctx->twidth = pctx->twidth;
 
 	tctx->maxTrimEvidence = 100;
 	tctx->numTrimEvidence = 0;
@@ -1968,12 +1969,12 @@ int main(int argc, char *argv[])
 	}
 	else if (tctx.purgeOpt == 2 || tctx.purgeOpt == 3)
 	{
-		if (fileOvlIn == NULL )
+		if (fileOvlIn == NULL)
 		{
 			fprintf(stderr, "[ERROR] - trim option -p 2 and -p 3: requires a chain filtered LAS file\n");
 			exit(1);
 		}
-		if(tctx.purgeOpt == 3 && tctx.trackTan == NULL)
+		if (tctx.purgeOpt == 3 && tctx.trackTan == NULL)
 		{
 			fprintf(stderr, "[ERROR] - trim option -p 3: requires a chain filtered LAS file and a tandem repeat file!\n");
 			exit(1);
@@ -2017,9 +2018,12 @@ int main(int argc, char *argv[])
 		pctx->data = &tctx;
 		pctx->write_overlaps = 0;
 		pctx->purge_discarded = 0;
+	}
 
-		trim_pre(pctx, &tctx);
+	trim_pre(pctx, &tctx);
 
+	if (fileOvlIn)
+	{
 		pass(pctx, trim_handler);
 	}
 
