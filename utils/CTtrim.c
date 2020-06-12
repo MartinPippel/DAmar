@@ -1902,6 +1902,9 @@ int main(int argc, char *argv[])
 			case 'w':
 				tctx.lineWidth = atoi(optarg);
 				break;
+			case 'p':
+				tctx.purgeOpt = atoi(optarg);
+				break;
 
 			default:
 				fprintf(stderr, "unknown option %c\n", optopt);
@@ -1950,6 +1953,32 @@ int main(int argc, char *argv[])
 		if (!tctx.trackTan)
 		{
 			fprintf(stderr, "[ERROR] - could not load track %s\n", pcTrackTan);
+			exit(1);
+		}
+	}
+
+	// check if purge options are valid
+	if (tctx.purgeOpt == 0 || tctx.purgeOpt == 1)
+	{
+		if (pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
+		{
+			fprintf(stderr, "[ERROR] - trim option -t 0 and -t 1: requires a bionano.agp and bionano.gap file\n");
+			exit(1);
+		}
+	}
+	if (tctx.purgeOpt == 2 || tctx.purgeOpt == 3)
+	{
+		if (fileOvlIn == NULL )
+		{
+			fprintf(stderr, "[ERROR] - trim option -t 2 and -t 3: requires a chain filtered LAS file\n");
+			exit(1);
+		}
+	}
+	if (tctx.purgeOpt == 4 || tctx.purgeOpt == 5)
+	{
+		if (fileOvlIn == NULL || pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
+		{
+			fprintf(stderr, "[ERROR] - trim option -t 4 and -t 5: requires a chain filtered LAS file and a bionano.agp and a bionano.gap file\n");
 			exit(1);
 		}
 	}

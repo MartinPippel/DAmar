@@ -126,6 +126,7 @@ typedef struct
 	int trimOffset;
 	int maxFuzzyBases;
 	int lineWidth;
+	int purgeOpt;
 
 	// fasta header
 	int nfiles;
