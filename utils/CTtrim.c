@@ -2069,7 +2069,7 @@ int main(int argc, char *argv[])
 	{
 		if(tctx.trimEvid->nLASchains)
 			free(tctx.trimEvid[i].chains);
-		if(tctx.trimEvid->nLASchains)
+		if(tctx.trimEvid->nBioNanoGaps)
 			free(tctx.trimEvid[i].gaps);
 	}
 	free(tctx.trimEvid);
