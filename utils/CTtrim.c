@@ -2067,9 +2067,9 @@ int main(int argc, char *argv[])
 	int j;
 	for (i = 0; i < tctx.numTrimEvidence; i++)
 	{
-		for (j = 0; j < tctx.trimEvid->nLASchains; j++)
+		if(tctx.trimEvid->nLASchains)
 			free(tctx.trimEvid[j].chains);
-		for (j = 0; j < tctx.trimEvid->nBioNanoGaps; j++)
+		if(tctx.trimEvid->nLASchains)
 			free(tctx.trimEvid[j].gaps);
 	}
 	free(tctx.trimEvid);
