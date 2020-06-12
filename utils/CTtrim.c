@@ -1813,20 +1813,6 @@ void trim_contigs(TrimContext *ctx)
 		}
 		printf("[INFO] num trim evidence: %d\n", ctx->numTrimEvidence);
 	}
-
-	TrimEvidence *te;
-	printf("[INFO] num trim evidence: %d\n", ctx->numTrimEvidence);
-
-	int i, j;
-	for (i = 0; i < ctx->numTrimEvidence; i++)
-	{
-		te = ctx->trimEvid + i;
-		printf("[DEBUG] %5d: TE %3d vs %3d numLASchains: %3d numBionanoEvidence: %3d\n", i, te->contigA, te->contigB, te->nLASchains, te->nBioNanoGaps);
-		for (j = 0; j < te->nLASchains; j++)
-			printLASchain(ctx, te->contigA, te->contigB, te->chains + j);
-		for (j = 0; j < te->nBioNanoGaps; j++)
-			printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + j);
-	}
 }
 
 void usage()
