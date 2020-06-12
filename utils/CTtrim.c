@@ -613,7 +613,7 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		}
 
 		// check for containment
-		if (validChain && ((o1->path.abpos <= aLen / 2 && ovl[novl-1].path.aepos >= aLen / 2) || (o1->path.bbpos <= bLen / 2 && ovl[novl-1].path.bepos >= bLen / 2)))
+		if (validChain && ((o1->path.abpos <= aLen / 2 && (aLen - ovl[novl-1].path.aepos) <= aLen / 2) || (o1->path.bbpos <= bLen / 2 && (bLen - ovl[novl-1].path.bepos) <= bLen / 2)))
 		{
 			validChain = 0;
 			printf("[WARNGING] Containment found! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->aread, aName, o1->bread, bName, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
