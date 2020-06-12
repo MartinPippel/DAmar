@@ -622,12 +622,12 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			if (o1->path.abpos <= aLen / 2 && (aLen - ovl[novl - 1].path.aepos) <= aLen / 2)
 			{
 				validChain = 0;
-				printf("[WARNGING] Containment found %d in %d! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, o1->aread, aName, o1->bread, bName, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
+				printf("[WARNGING] Containment found %d in %d (e %.2f, unaln: %d aln: %d)! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, avgErate, alignedBasesInA, unalignedBasesInA, o1->aread, aName, o1->bread, bName, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			}
 			else if (o1->path.bbpos <= bLen / 2 && (bLen - ovl[novl - 1].path.bepos) <= bLen / 2)
 			{
 				validChain = 0;
-				printf("[WARNGING] Containment found %d in %d! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->bread, o1->aread, o1->aread, aName, o1->bread, bName, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
+				printf("[WARNGING] Containment found %d in %d (e %.2f, unaln: %d aln: %d)! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->bread, o1->aread, avgErate, alignedBasesInA, unalignedBasesInA, o1->aread, aName, o1->bread, bName, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			}
 		}
 
