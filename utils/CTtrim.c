@@ -452,6 +452,9 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 	int aLen = DB_READ_LEN(ctx->db, ovl->aread);
 	int bLen = DB_READ_LEN(ctx->db, ovl->bread);
 
+	char *aName = getContigName(ctx, ovl->aread);
+	char *bName = getContigName(ctx, ovl->bread);
+
 	// assumption: input overlaps must be chained with LAfilterChains !!!
 	// one chain at the end and one chain at the beginning of a contig are possible! But BOT with the same contigA and contigB
 
@@ -510,7 +513,7 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		}
 		else // containment
 		{
-			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos, pointA);
+			printf("[WARNGING] Containment found! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->aread, aName, o1->bread, bName, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			exit(1);
 		}
 
@@ -608,9 +611,6 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 
 			o1 = o2;
 		}
-
-		char *aName = getContigName(ctx, ovl->aread);
-		char *bName = getContigName(ctx, ovl->bread);
 
 		// check for containment
 		if (validChain && ((o1->path.abpos <= aLen / 2 && ovl[novl-1].path.aepos >= aLen / 2) || (o1->path.bbpos <= bLen / 2 && ovl[novl-1].path.bepos >= bLen / 2)))
