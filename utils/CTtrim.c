@@ -245,6 +245,8 @@ void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int a
 		t = insert_TrimEvidence(ctx, aread, bread);
 	}
 
+
+
 	assert(t != NULL);
 
 	// add contigA vs contigB
@@ -253,6 +255,8 @@ void addLASchainInfoToTrimEvidence(TrimContext *ctx, int aread, int bread, int a
 	LASchain *c;
 	char * aName = getContigName(ctx, aread);
 	char * bName = getContigName(ctx, bread);
+
+	printf("addLASchainInfoToTrimEvidence %d (%s) vs %d (%s), aln %d, unAln: %d, err: %.3f, cut: %d\n", aread,aName, bread, bName, alnLen, unAlnLen, erate, cutPosInA);
 	for (i = 0; i < t->nLASchains; i++)
 	{
 		c = t->chains + i;
