@@ -1803,7 +1803,7 @@ void trim_contigs(TrimContext *ctx)
 			{
 				TrimEvidence *te = ctx->trimEvid + j + i;
 				for (l = 0; l < te->nBioNanoGaps; l++)
-					printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + j);
+					printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + l);
 			}
 			k++;
 			j = k;
