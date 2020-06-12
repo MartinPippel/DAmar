@@ -609,20 +609,20 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			o1 = o2;
 		}
 
+		char *aName = getContigName(ctx, ovl->aread);
+		char *bName = getContigName(ctx, ovl->bread);
+
 		// check for containment
 		if (validChain && ((o1->path.abpos <= aLen / 2 && ovl[novl-1].path.aepos >= aLen / 2) || (o1->path.bbpos <= bLen / 2 && ovl[novl-1].path.bepos >= bLen / 2)))
 		{
 			validChain = 0;
-			printf("[WARNGING] Containment found! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
+			printf("[WARNGING] Containment found! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->aread, aName, o1->bread, bName, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 		}
 
 		if (!validChain)
 		{
 			ctx->statsNumInValidLASchains++;
 			ctx->statsNumInValidLASchainOverlaps += novl;
-
-			char *aName = getContigName(ctx, ovl->aread);
-			char *bName = getContigName(ctx, ovl->bread);
 
 			if (ctx->verbose)
 			{
