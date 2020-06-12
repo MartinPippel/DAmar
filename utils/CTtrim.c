@@ -1995,20 +1995,9 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	getDBFastaHeader(&tctx, pcPathReadsIn);
-
-	if (pathInBionanoAGP)
-	{
-		parseBionanoAGPfile(&tctx, pathInBionanoAGP);
-	}
-	if (pathInBionanoGAP)
-	{
-		parseBionanoGAPfile(&tctx, pathInBionanoGAP);
-	}
-
 	if (fileOvlIn)
 	{
-// passes
+		// passes
 
 		pctx = pass_init(fileOvlIn, NULL);
 
@@ -2021,6 +2010,17 @@ int main(int argc, char *argv[])
 	}
 
 	trim_pre(pctx, &tctx);
+
+	getDBFastaHeader(&tctx, pcPathReadsIn);
+
+	if (pathInBionanoAGP)
+	{
+		parseBionanoAGPfile(&tctx, pathInBionanoAGP);
+	}
+	if (pathInBionanoGAP)
+	{
+		parseBionanoGAPfile(&tctx, pathInBionanoGAP);
+	}
 
 	if (fileOvlIn)
 	{
