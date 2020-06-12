@@ -2064,6 +2064,16 @@ int main(int argc, char *argv[])
 		free(tctx.flist[i]);
 		free(tctx.hlist[i]);
 	}
+	int j;
+	for (i = 0; i < tctx.numTrimEvidence; i++)
+	{
+		for (j = 0; j < tctx.trimEvid->nLASchains; j++)
+			free(tctx.trimEvid[j].chains);
+		for (j = 0; j < tctx.trimEvid->nBioNanoGaps; j++)
+			free(tctx.trimEvid[j].gaps);
+	}
+	free(tctx.trimEvid);
+
 	free(tctx.flist);
 	free(tctx.hlist);
 	free(tctx.findx - 1);
