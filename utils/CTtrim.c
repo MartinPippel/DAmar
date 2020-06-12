@@ -1962,7 +1962,7 @@ int main(int argc, char *argv[])
 	{
 		if (pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
 		{
-			fprintf(stderr, "[ERROR] - trim option -t 0 and -t 1: requires a bionano.agp and bionano.gap file\n");
+			fprintf(stderr, "[ERROR] - trim option -p 0 and -p 1: requires a bionano.agp and bionano.gap file\n");
 			exit(1);
 		}
 	}
@@ -1970,7 +1970,12 @@ int main(int argc, char *argv[])
 	{
 		if (fileOvlIn == NULL )
 		{
-			fprintf(stderr, "[ERROR] - trim option -t 2 and -t 3: requires a chain filtered LAS file\n");
+			fprintf(stderr, "[ERROR] - trim option -p 2 and -p 3: requires a chain filtered LAS file\n");
+			exit(1);
+		}
+		if(tctx.purgeOpt == 3 && tctx.trackTan ==NULL)
+		{
+			fprintf(stderr, "[ERROR] - trim option -p 3: requires a chain filtered LAS file and a tandem repeat file!\n");
 			exit(1);
 		}
 	}
@@ -1978,9 +1983,15 @@ int main(int argc, char *argv[])
 	{
 		if (fileOvlIn == NULL || pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
 		{
-			fprintf(stderr, "[ERROR] - trim option -t 4 and -t 5: requires a chain filtered LAS file and a bionano.agp and a bionano.gap file\n");
+			fprintf(stderr, "[ERROR] - trim option -p 4 and -p 5: requires a chain filtered LAS file and a bionano.agp and a bionano.gap file\n");
 			exit(1);
 		}
+	}
+	else
+	{
+		fprintf(stderr, "[ERROR] - unknown trim option -p %d\n", tctx.purgeOpt);
+		usage();
+		exit(1);
 	}
 
 	getDBFastaHeader(&tctx, pcPathReadsIn);
