@@ -339,7 +339,7 @@ static void trim_pre(PassContext *pctx, TrimContext *tctx)
 			printf( ANSI_COLOR_RED "  tandem Track %s\n" ANSI_COLOR_RESET, tctx->trackTan->name);
 	}
 
-	if(pctx != NULL)
+	if (pctx != NULL)
 		tctx->twidth = pctx->twidth;
 
 	tctx->maxTrimEvidence = 100;
@@ -1781,6 +1781,36 @@ void getDBFastaHeader(TrimContext *ctx, char *fullDBPath)
 
 void trim_contigs(TrimContext *ctx)
 {
+	assert(ctx != NULL);
+
+	// split bionano gaps only
+	if (ctx->purgeOpt == 0)
+	{
+		int i, j, k, l;
+		j = k = 0;
+
+		while (j < ctx->numTrimEvidence)
+		{
+			while (k < ctx->numTrimEvidence - 1 && ctx->trimEvid[j].contigA == ctx->trimEvid[k + 1].contigA)
+			{
+				k++;
+			}
+
+			int n = k - j + 1;
+			int start = 1;
+
+			for (i = 0; i < n; i++)
+			{
+				TrimEvidence *te = ctx->trimEvid + j + i;
+				for (l = 0; l < te->nBioNanoGaps; l++)
+					printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + j);
+			}
+			k++;
+			j = k;
+		}
+		printf("[INFO] num trim evidence: %d\n", ctx->numTrimEvidence);
+	}
+
 	TrimEvidence *te;
 	printf("[INFO] num trim evidence: %d\n", ctx->numTrimEvidence);
 
