@@ -2064,13 +2064,13 @@ int main(int argc, char *argv[])
 		free(tctx.flist[i]);
 		free(tctx.hlist[i]);
 	}
-	int j;
+
 	for (i = 0; i < tctx.numTrimEvidence; i++)
 	{
 		if(tctx.trimEvid->nLASchains)
-			free(tctx.trimEvid[j].chains);
+			free(tctx.trimEvid[i].chains);
 		if(tctx.trimEvid->nLASchains)
-			free(tctx.trimEvid[j].gaps);
+			free(tctx.trimEvid[i].gaps);
 	}
 	free(tctx.trimEvid);
 
