@@ -632,12 +632,12 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 				if (avgErate < 2.0 && unalignedBasesInA < ctx->maxFuzzyBases && unalignedBasesInB < ctx->maxFuzzyBases && (o1->path.abpos >= aLen / 3 || (aLen - o2->path.aepos) >= aLen / 3) && (o1->path.bbpos >= bLen / 3 || (bLen - o2->path.bepos) >= bLen / 3))
 				{
 					validChain = 1;
-					printf("[WARNGING] Containment found BUT IS KEPT %d in %d (e %.2f, aln: %d unaln: %d)! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, avgErate, alignedBasesInA, unalignedBasesInA, o1->aread, aName, o1->bread, bName, o1->path.abpos, o2->path.aepos,
+					printf("[WARNING] Containment found BUT IS KEPT %d in %d (e %.2f, aln: %d unaln: %d)! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, avgErate, alignedBasesInA, unalignedBasesInA, o1->aread, aName, o1->bread, bName, o1->path.abpos, o2->path.aepos,
 							(o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o2->path.bepos);
 				}
 				else
 				{
-					printf("[WARNGING] Containment found %d in %d (e %.2f, aln: %d unaln: %d)! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, avgErate, alignedBasesInA, unalignedBasesInA, o1->aread, aName, o1->bread, bName, o1->path.abpos, o2->path.aepos,
+					printf("[WARNING] Containment found %d in %d (e %.2f, aln: %d unaln: %d)! Ignore invalid chain [%d (%s), %d (%s)]  a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, avgErate, alignedBasesInA, unalignedBasesInA, o1->aread, aName, o1->bread, bName, o1->path.abpos, o2->path.aepos,
 										(o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o2->path.bepos);
 				}
 			}
@@ -1775,6 +1775,13 @@ void validate_trimEvidence(TrimContext *ctx)
 {
 	TrimEvidence *te;
 	printf("[INFO] num trim evidence: %d\n", ctx->numTrimEvidence);
+
+	int i;
+	for(i=0; i<ctx->numTrimEvidence; i++)
+	{
+		te = ctx->trimEvid + i;
+		printf("[DEBUG] %5d: TE %3d vs %3d numLASchains: %3d numBionanoEvidence: %3d\ns",i, te->contigA, te->contigB, te->nLASchains, te->nBioNanoGaps);
+	}
 }
 
 void usage()
