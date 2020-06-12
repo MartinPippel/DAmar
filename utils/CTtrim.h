@@ -243,6 +243,10 @@ void usage();
  */
 void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g);
 
+/*
+ * print LASchain information
+ */
+void printLASchain(TrimContext *ctx, int contigA, int contigB, LASchain *c);
 
 /*
  * get Contig Name

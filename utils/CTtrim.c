@@ -1053,6 +1053,17 @@ void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g)
 	printf("Bionano Gap: %d(%s)[%d,%d]-------GAP[%d, %d]------%d(%s)[%d,%d]\n", contigA, aName, g->aBeg, g->aEnd, g->agpGapSize, g->bionanoGapSize, contigB, bName, g->bBeg, g->bEnd);
 }
 
+void printLASchain(TrimContext *ctx, int contigA, int contigB, LASchain *c)
+{
+	assert(c != NULL);
+
+	char *aName = getContigName(ctx, contigA);
+	char *bName = getContigName(ctx, contigB);
+
+	printf("LASchain: %3d (%s) vs %3d (%s): #alnBases: %6d #unalnBases: %6d eRate: %5.2f trimPosOfA: %6d\n", contigA, aName, contigB, bName, c->alnLen, c->unalignedBases, c->eRate, c->trimPos);
+}
+
+
 void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 {
 	FILE *fileInBionanoGaps = NULL;
@@ -1776,11 +1787,15 @@ void validate_trimEvidence(TrimContext *ctx)
 	TrimEvidence *te;
 	printf("[INFO] num trim evidence: %d\n", ctx->numTrimEvidence);
 
-	int i;
+	int i, j;
 	for(i=0; i<ctx->numTrimEvidence; i++)
 	{
 		te = ctx->trimEvid + i;
-		printf("[DEBUG] %5d: TE %3d vs %3d numLASchains: %3d numBionanoEvidence: %3d\ns",i, te->contigA, te->contigB, te->nLASchains, te->nBioNanoGaps);
+		printf("[DEBUG] %5d: TE %3d vs %3d numLASchains: %3d numBionanoEvidence: %3d\n",i, te->contigA, te->contigB, te->nLASchains, te->nBioNanoGaps);
+		for(j=0; j<te->nLASchains; j++)
+			printLASchain(ctx, te->contigA, te->contigB, te->chains+j);
+		for(j=0; j<te->nBioNanoGaps; j++)
+			printBionanpGap(ctx, te->contigA, te->contigB, te->gaps+j);
 	}
 }
 
