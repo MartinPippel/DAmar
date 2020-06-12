@@ -478,7 +478,7 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			return 1;
 		}
 		// 2. check if one contig is contained within another one!!
-		else if ((o1->path.abpos <= aLen / 2 && o1->path.aepos >= aLen / 2) || (o1->path.bbpos <= bLen / 2 && o1->path.bepos >= bLen / 2))
+		else if ((o1->path.abpos <= aLen / 2 && (aLen - o1->path.aepos) <= aLen / 2) || (o1->path.bbpos <= bLen / 2 && (bLen - o1->path.bepos) <= bLen / 2))
 		{
 			printf("[WARNGING] Containment found! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			ctx->statsNumInValidLASchains++;
