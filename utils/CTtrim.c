@@ -670,7 +670,7 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		}
 		else // containment
 		{
-			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
+			printf("Contained overlap (c1): [%d (%s),%d (%s)] a[%d,%d] %c b[%d,%d]\n", o1->aread, aName, o1->bread, bName, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			ctx->statsNumInValidLASchains++;
 			ctx->statsNumInValidLASchainOverlaps += novl;
 			return 1;
@@ -734,7 +734,7 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		}
 		else // containment
 		{
-			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d]\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
+			printf("Contained overlap (c2): [%d (%s),%d (%s)] a[%d,%d] %c b[%d,%d]\n", o1->aread, aName, o1->bread, bName, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			ctx->statsNumInValidLASchains++;
 			ctx->statsNumInValidLASchainOverlaps += novl;
 			return 1;
