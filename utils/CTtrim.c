@@ -655,7 +655,7 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 
 			resA = addLASchainInfoToTrimEvidence(ctx, o1->aread, o1->bread, alignedBasesInA, unalignedBasesInA, avgErate, -(cutA));
 		}
-		else if (o1->path.abpos > aLen - o1->path.aepos) // trim off contig at end
+		else if (o1->path.abpos > aLen - o2->path.aepos) // trim off contig at end
 		{
 			if (o2->path.abpos >= o1->path.aepos)
 			{
