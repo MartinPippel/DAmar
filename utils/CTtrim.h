@@ -14,6 +14,13 @@
 
 typedef struct
 {
+		int flag;
+		int contigA;
+		int ContigB;
+} ContigBlackList;
+
+typedef struct
+{
 	int alnLen;
 	float eRate;
 	int unalignedBases;
@@ -89,6 +96,10 @@ typedef struct
 	int numTrimEvidence;
 	int maxTrimEvidence;
 	TrimEvidence *trimEvid;
+
+	int numBlackList;
+	int maxBlackList;
+	ContigBlackList *blacklist;
 
 	// db and I/O files
 	HITS_DB *db;

@@ -463,13 +463,21 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 	if (novl == 1)
 	{
 		// check if overlaps is valid
-
+		// 1. check if overlap is a valid chain!!
 		if ((o1->path.abpos > ctx->maxFuzzyBases && o1->path.aepos < aLen - ctx->maxFuzzyBases) || (o1->path.bbpos > ctx->maxFuzzyBases && o1->path.bepos < bLen - ctx->maxFuzzyBases))
 		{
 			if (ctx->verbose)
 			{
 				printf("[WARNGING] fuzzy base check failed! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			}
+			ctx->statsNumInValidLASchains++;
+			ctx->statsNumInValidLASchainOverlaps += novl;
+			return 1;
+		}
+		// 2. check if one contig is contained within another one!!
+		else if ((o1->path.abpos <= aLen / 2 && o1->path.aepos >= aLen / 2) || (o1->path.bbpos <= bLen / 2 && o1->path.bepos >= bLen / 2))
+		{
+			printf("[WARNGING] Containment found! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 			ctx->statsNumInValidLASchains++;
 			ctx->statsNumInValidLASchainOverlaps += novl;
 			return 1;
@@ -503,9 +511,7 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		else // containment
 		{
 			printf("Contained overlap: [%d,%d] a[%d,%d] %c b[%d,%d] and pointA: %d\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos, pointA);
-			ctx->statsNumInValidLASchains++;
-			ctx->statsNumInValidLASchainOverlaps += novl;
-			return 1;
+			exit(1);
 		}
 
 		int resB = 2;
@@ -601,6 +607,13 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			avgErate += (200. * o2->path.diffs) / ((o2->path.aepos - o2->path.abpos) + (o2->path.bepos - o2->path.bbpos));
 
 			o1 = o2;
+		}
+
+		// check for containment
+		if (validChain && ((o1->path.abpos <= aLen / 2 && ovl[novl-1].path.aepos >= aLen / 2) || (o1->path.bbpos <= bLen / 2 && ovl[novl-1].path.bepos >= bLen / 2)))
+		{
+			validChain = 0;
+			printf("[WARNGING] Containment found! Ignore invalid chain [%d, %d] a[%d,%d] %c b[%d,%d]!\n", o1->aread, o1->bread, o1->path.abpos, o1->path.aepos, (o1->flags & OVL_COMP) ? 'c' : 'n', o1->path.bbpos, o1->path.bepos);
 		}
 
 		if (!validChain)
@@ -1741,7 +1754,7 @@ void trim_contigs(TrimContext *ctx)
 
 void validate_trimEvidence(TrimContext *ctx)
 {
-	TrimEvidence * te;
+	TrimEvidence *te;
 	printf("[INFO] num trim evidence: %d\n", ctx->numTrimEvidence);
 }
 
