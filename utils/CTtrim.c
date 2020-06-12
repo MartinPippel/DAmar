@@ -601,11 +601,11 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			}
 			if (o1->path.bepos > o2->path.bbpos)
 			{
-				alignedBasesInA -= (o1->path.bepos - o2->path.bbpos);
+				alignedBasesInB -= (o1->path.bepos - o2->path.bbpos);
 			}
 			else
 			{
-				unalignedBasesInA += (o2->path.bbpos - o1->path.bepos);
+				unalignedBasesInB += (o2->path.bbpos - o1->path.bepos);
 			}
 			avgErate += (200. * o2->path.diffs) / ((o2->path.aepos - o2->path.abpos) + (o2->path.bepos - o2->path.bbpos));
 
