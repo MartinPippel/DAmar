@@ -1027,9 +1027,6 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 		if (t->contigA > t->contigB)
 			continue;
 
-		int aLen = DB_READ_LEN(ctx->db, t->contigA);
-		int bLen = DB_READ_LEN(ctx->db, t->contigB);
-
 		for (j = 0; j < t->nBioNanoGaps; j++)
 		{
 			BionanoGap *b = t->gaps + j;
@@ -1797,7 +1794,6 @@ void trim_contigs(TrimContext *ctx)
 			}
 
 			int n = k - j + 1;
-			int start = 1;
 
 			for (i = 0; i < n; i++)
 			{
@@ -1847,7 +1843,7 @@ int main(int argc, char *argv[])
 {
 	HITS_DB db;
 	TrimContext tctx;
-	PassContext *pctx;
+	PassContext *pctx = NULL;
 
 	FILE *fileOvlIn = NULL;
 
