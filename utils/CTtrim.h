@@ -253,7 +253,3 @@ void printLASchain(TrimContext *ctx, int contigA, int contigB, LASchain *c);
  */
 char * getContigName(TrimContext *ctx, int id);
 
-/*
- * do some sanity checks of all trim evidence
- */
-void validate_trimEvidence(TrimContext *ctx);
