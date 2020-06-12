@@ -612,6 +612,10 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 			o1 = o2;
 		}
 
+		// reset overlap pointer o1 and o2 to first and last overlap of LASchain respectively
+		o1 = ovl;
+		o2 = ovl + (novl - 1);
+
 		// check for containment
 		if (validChain)
 		{
@@ -645,9 +649,6 @@ int analyzeContigOverlaps(TrimContext *ctx, Overlap *ovl, int novl)
 		}
 
 		avgErate /= novl;
-
-		o1 = ovl;
-		o2 = ovl + (novl - 1);
 
 		// set cut position of contig_A
 		if (o1->path.abpos < aLen - o2->path.aepos) // trim off contig at begin
