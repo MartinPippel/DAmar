@@ -364,13 +364,13 @@ static void trim_post(TrimContext *ctx)
 		{
 			printf("#trimmed bases: %d\n", ctx->statsTrimmedBases);
 		}
-		if (ctx->statsNumValidChains > 0)
+		if (ctx->statsNumValidLASchains > 0)
 		{
-			printf("#valid chains %d\n", ctx->statsNumValidChains);
+			printf("#valid chains %d\n", ctx->statsNumValidLASchains);
 		}
-		if (ctx->statsNumInvalidChains > 0)
+		if (ctx->statsNumInValidLASchains > 0)
 		{
-			printf("#invalid chains %d\n", ctx->statsNumInvalidChains);
+			printf("#invalid chains %d\n", ctx->statsNumInValidLASchains);
 		}
 		if (ctx->statsBionanoTrimmedContigs > 0)
 		{
