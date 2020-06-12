@@ -1973,7 +1973,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "[ERROR] - trim option -p 2 and -p 3: requires a chain filtered LAS file\n");
 			exit(1);
 		}
-		if(tctx.purgeOpt == 3 && tctx.trackTan ==NULL)
+		if(tctx.purgeOpt == 3 && tctx.trackTan == NULL)
 		{
 			fprintf(stderr, "[ERROR] - trim option -p 3: requires a chain filtered LAS file and a tandem repeat file!\n");
 			exit(1);
