@@ -1036,6 +1036,9 @@ void parseBionanoGAPfile(TrimContext *ctx, char *pathInBionanoGAP)
 	}
 	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", numInvalidLines);
 	printf("[INFO]  #Bionano gaps < 0: %10d\n", negativeGaps);
+
+	free(line);
+	fclose(fileInBionanoGaps);
 }
 
 void printBionanpGap(TrimContext *ctx, int contigA, int contigB, BionanoGap *g)
@@ -1315,6 +1318,8 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 	printf("[INFO]  #ContigBreaksPartOfAGap: %4d\n", numContigBreaksPartOfAGap);
 	printf("[INFO]  #ContigBreaksNotClosable: %3d\n", numContigBreaksNotClosable);
 
+	free(line);
+	fclose(fileInBionanoGaps);
 }
 
 void getDBFastaHeader(TrimContext *ctx, char *fullDBPath)
@@ -1786,6 +1791,8 @@ void trim_contigs(TrimContext *ctx)
 		int i, j, k, l;
 		j = k = 0;
 
+		int trimmedContigs=0;
+
 		while (j < ctx->numTrimEvidence)
 		{
 			while (k < ctx->numTrimEvidence - 1 && ctx->trimEvid[j].contigA == ctx->trimEvid[k + 1].contigA)
@@ -1801,13 +1808,19 @@ void trim_contigs(TrimContext *ctx)
 				for (l = 0; l < te->nBioNanoGaps; l++)
 				{
 					if (te->gaps[l].bionanoGapSize < ctx->minBionanoGapLen)
+					{
+
+						// todo: remember min and max cut positions
+						//trimmedContigs++;
+
 						printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + l);
+					}
 				}
 			}
 			k++;
 			j = k;
 		}
-		printf("[INFO] num trim evidence: %d\n", ctx->numTrimEvidence);
+		printf("[INFO] num trim evidence: %d: \n", ctx->numTrimEvidence);
 	}
 }
 
