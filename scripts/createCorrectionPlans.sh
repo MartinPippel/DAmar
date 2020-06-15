@@ -315,7 +315,7 @@ then
         fi
 
         echo "if [[ -f ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}.db ]]; then ${MARVEL_PATH}/bin/DBrm ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}; fi" > corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.plan
-        echo "find ${FIX_FILT_OUTDIR}/${COR_DIR}/reads/ -name \"${FIX_DB%.db}.[0-9]*.[0-9]*.fasta\" > ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}.fofn"
+        echo "find ${FIX_FILT_OUTDIR}/${COR_DIR}/reads/ -name \"${FIX_DB%.db}.[0-9]*.[0-9]*.fasta\" > ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}.fofn" >> corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.plan
         echo "${MARVEL_PATH}/bin/FA2db -x0 -c source -c correctionq -c postrace -f ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}.fofn ${FIX_FILT_OUTDIR}/${COR_DIR}/${COR_DB%.db}" >> corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.plan
         echo "MARVEL $(git --git-dir=${MARVEL_SOURCE_PATH}/.git rev-parse --short HEAD)" > corr_03_createDB_single_${FIX_DB%.db}.${slurmID}.version            
     elif [[ ${currentStep} -eq 4 ]]
