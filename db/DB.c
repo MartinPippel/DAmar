@@ -107,9 +107,9 @@ void *Malloc(int64 size, char *mesg)
 	if ((p = malloc(size)) == NULL)
 	{
 		if (mesg == NULL)
-			EPRINTF(EPLACE, "%s: Out of memory\n", Prog_Name);
+			EPRINTF(EPLACE, "%s: Out of memory (size: %lld)\n", Prog_Name, size);
 		else
-			EPRINTF(EPLACE, "%s: Out of memory (%s)\n", Prog_Name, mesg);
+			EPRINTF(EPLACE, "%s: Out of memory (size: %lld) (%s)\n", Prog_Name, size, mesg);
 	}
 	return (p);
 }
@@ -121,9 +121,9 @@ void *Realloc(void *p, int64 size, char *mesg)
 	if ((p = realloc(p, size)) == NULL)
 	{
 		if (mesg == NULL)
-			EPRINTF(EPLACE, "%s: Out of memory\n", Prog_Name);
+			EPRINTF(EPLACE, "%s: Out of memory (size: %lld)\n", Prog_Name, size);
 		else
-			EPRINTF(EPLACE, "%s: Out of memory (%s)\n", Prog_Name, mesg);
+			EPRINTF(EPLACE, "%s: Out of memory (size: %lld) (%s)\n", Prog_Name, size, mesg);
 	}
 	return (p);
 }
