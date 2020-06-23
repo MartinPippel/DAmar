@@ -1913,12 +1913,11 @@ void trim_contigs(TrimContext *ctx)
 	}
 
 	fprintf(statsContigs, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
+	char *read = New_Read_Buffer(ctx->db);
 
 	for (i = 0; i < DB_NREADS(ctx->db); i++)
 	{
-		// debug report trim positions
-		int nContigs = DB_NREADS(ctx->db);
-		char *read = New_Read_Buffer(ctx->db);
+		// debug report trim position
 
 		TrimCoordinates *tc = ctx->trimCoord + i;
 		int aLen = DB_READ_LEN(ctx->db, i);
@@ -1981,7 +1980,7 @@ void trim_contigs(TrimContext *ctx)
 	fclose(trimmedContigs);
 	fclose(removedContigParts);
 	fclose(statsContigs);
-
+	free(read -1);
 }
 
 void usage()
