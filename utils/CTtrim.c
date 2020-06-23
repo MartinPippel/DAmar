@@ -1815,7 +1815,7 @@ void trim_contigs(TrimContext *ctx)
 			int n = k - j + 1;
 
 			int aLen = DB_READ_LEN(ctx->db, ctx->trimEvid[j].contigA);
-			int maxStart = 0;
+			int maxStart = 1;
 			int minEnd =  aLen;
 			int tmp = 0;
 			for (i = 0; i < n; i++)
@@ -1823,7 +1823,7 @@ void trim_contigs(TrimContext *ctx)
 				TrimEvidence *te = ctx->trimEvid + j + i;
 				for (l = 0; l < te->nBioNanoGaps; l++)
 				{
-					if (te->gaps[l].bionanoGapSize < ctx->minBionanoGapLen && te->gaps[l].agpGapSize < 0)
+					if (te->gaps[l].bionanoGapSize < ctx->minBionanoGapLen)
 					{
 
 						// todo: remember min and max cut positions
@@ -1832,7 +1832,7 @@ void trim_contigs(TrimContext *ctx)
 						printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + l);
 						if(te->gaps[l].aEnd == 1)
 						{
-							tmp = (1+abs(te->gaps[l].agpGapSize)/2+ctx->trimOffset);
+							tmp = (1+abs(te->gaps[l].bionanoGapSize)/2+ctx->trimOffset);
 							if(tmp > maxStart)
 							{
 								maxStart = tmp;
@@ -1840,7 +1840,7 @@ void trim_contigs(TrimContext *ctx)
 						}
 						else if(te->gaps[l].aEnd == aLen)
 						{
-							tmp = aLen - (1+abs(te->gaps[l].agpGapSize)/2+ctx->trimOffset);
+							tmp = aLen - (1+abs(te->gaps[l].bionanoGapSize)/2+ctx->trimOffset);
 							if(tmp < minEnd)
 							{
 								minEnd = tmp;
@@ -1850,7 +1850,7 @@ void trim_contigs(TrimContext *ctx)
 					}
 				}
 			}
-			if(maxStart != 0 || minEnd != aLen)
+			if(maxStart > 1 || minEnd < aLen)
 			printf("CUT POSITIONS (%d - %d, %d): %d, %d\n", ctx->trimEvid[j].contigA, 0 , aLen, maxStart, minEnd);
 			k++;
 			j = k;
