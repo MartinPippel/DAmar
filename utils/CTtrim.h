@@ -82,6 +82,10 @@ typedef struct
 
 	int statsTrimmedContigs;
 	int statsTrimmedBases;
+
+	int statsRemovedContigParts;
+	int statsRemovedContigPartBases;
+
 	int statsBionanoTrimmedContigs;
 	int statsBionanoGapsMissed;
 	int statsBionanoTrimmedBases;
