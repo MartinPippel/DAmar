@@ -1918,7 +1918,7 @@ void trim_contigs(TrimContext *ctx)
 	for (i = 0; i < DB_NREADS(ctx->db); i++)
 	{
 		// debug report trim position
-
+		Load_Read(ctx->db, i, read, 2);
 		TrimCoordinates *tc = ctx->trimCoord + i;
 		int aLen = DB_READ_LEN(ctx->db, i);
 
