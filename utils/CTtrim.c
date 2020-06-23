@@ -1850,7 +1850,7 @@ void trim_contigs(TrimContext *ctx)
 					}
 				}
 			}
-			if(maxStart != 1 || minEnd != aLen)
+			if(maxStart != 0 || minEnd != aLen)
 			printf("CUT POSITIONS (%d - %d, %d): %d, %d\n", ctx->trimEvid[j].contigA, 0 , aLen, maxStart, minEnd);
 			k++;
 			j = k;
