@@ -1977,11 +1977,11 @@ void trim_contigs(TrimContext *ctx)
 				fprintf(removedContigParts, "%.*s\n", aLen - k, read + k);
 
 		}
-
-		fclose(trimmedContigs);
-		fclose(removedContigParts);
-		fclose(statsContigs);
 	}
+	fclose(trimmedContigs);
+	fclose(removedContigParts);
+	fclose(statsContigs);
+
 }
 
 void usage()
