@@ -1911,7 +1911,7 @@ void trim_contigs(TrimContext *ctx)
 		fprintf(stderr, "[ERROR] - could not open file %s\n", fout);
 		exit(1);
 	}
-
+	free(fout);
 	fprintf(statsContigs, "#ContigID\tContigName\tnewContigLength\ttrimBegin\ttrimEnd\tcomments\n");
 	char *read = New_Read_Buffer(ctx->db);
 
