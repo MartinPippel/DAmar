@@ -51,6 +51,12 @@ typedef struct
 	BionanoGap *gaps;
 } TrimEvidence;
 
+typedef struct
+{
+		int* coord;			// from_1, to_1, from_2, to_2,  ... from_N, to_N
+		int  numCoordPairs;
+} TrimCoordinates;
+
 int TrimEvidence_cmp(const void *x, const void *y)
 {
 	TrimEvidence *te1 = (TrimEvidence*) x;
@@ -90,6 +96,8 @@ typedef struct
 	int maxTrimEvidence;
 	TrimEvidence *trimEvid;
 
+	TrimCoordinates *trimCoord; 	// number must agree with number of contigs
+
 	// db and I/O files
 	HITS_DB *db;
 	HITS_TRACK *trackDust;
@@ -98,14 +106,6 @@ typedef struct
 	char *fileOutPattern;
 
 	ovl_header_twidth twidth;
-
-	// vector to store overlapping contigs: length: #contigs x #contigs
-	//int *LAStrimMatrix;
-	// bionano AGP vector!
-
-	//int *BionanoAGPMatrix;
-	// bionano Gap length information
-	//int *BionanoGapMatrix;
 
 	// other options
 	int verbose;
@@ -122,6 +122,8 @@ typedef struct
 	char **flist;
 	char **hlist;
 	int *findx;
+
+
 } TrimContext;
 
 /*

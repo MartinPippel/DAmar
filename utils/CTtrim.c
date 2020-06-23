@@ -347,6 +347,18 @@ static void trim_pre(PassContext *pctx, TrimContext *tctx)
 	tctx->trimEvid = (TrimEvidence*) malloc(sizeof(TrimEvidence) * tctx->maxTrimEvidence);
 	assert(tctx->trimEvid != NULL);
 	bzero(tctx->trimEvid, sizeof(TrimEvidence) * tctx->maxTrimEvidence);
+
+	int i;
+	tctx->trimCoord = (TrimCoordinates*)malloc(sizeof(TrimCoordinates)*DB_NREADS(tctx->db));
+	bzero(tctx->trimCoord, sizeof(TrimCoordinates)*DB_NREADS(tctx->db));
+	for (i=0; i<DB_NREADS(tctx->db);i++)
+	{
+		TrimCoordinates *tc = tctx->trimCoord + i;
+		tc->numCoordPairs = 1;
+		tc->coord = malloc(sizeof(int)*tc->numCoordPairs*2);
+		tc->coord[0] = 0;
+		tc->coord[1] = DB_READ_LEN(tctx->db, i);
+	}
 }
 
 static void trim_post(TrimContext *ctx)
@@ -1802,21 +1814,44 @@ void trim_contigs(TrimContext *ctx)
 
 			int n = k - j + 1;
 
+			int aLen = DB_READ_LEN(ctx->db, ctx->trimEvid[j].contigA);
+			int maxStart = 0;
+			int minEnd =  aLen;
+			int tmp = 0;
 			for (i = 0; i < n; i++)
 			{
 				TrimEvidence *te = ctx->trimEvid + j + i;
 				for (l = 0; l < te->nBioNanoGaps; l++)
 				{
-					if (te->gaps[l].bionanoGapSize < ctx->minBionanoGapLen)
+					if (te->gaps[l].bionanoGapSize < ctx->minBionanoGapLen && te->gaps[l].agpGapSize < 0)
 					{
 
 						// todo: remember min and max cut positions
 						//trimmedContigs++;
 
 						printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + l);
+						if(te->gaps[l].aEnd == 1)
+						{
+							tmp = (1+te->gaps[l].agpGapSize/2+ctx->trimOffset);
+							if(tmp > maxStart)
+							{
+								maxStart = tmp;
+							}
+						}
+						else if(te->gaps[l].aEnd == aLen)
+						{
+							tmp = aLen - (1+te->gaps[l].agpGapSize/2+ctx->trimOffset);
+							if(tmp < minEnd)
+							{
+								minEnd = tmp;
+							}
+						}
+
 					}
 				}
 			}
+			if(maxStart != 1 || minEnd != aLen)
+			printf("CUT POSITIONS: %d, %d\n", maxStart, minEnd);
 			k++;
 			j = k;
 		}
@@ -2087,5 +2122,10 @@ int main(int argc, char *argv[])
 	free(tctx.hlist);
 	free(tctx.findx - 1);
 
+	for (i=0; i<DB_NREADS(tctx.db);i++)
+	{
+		free(tctx.trimCoord[i].coord);
+	}
+	free(tctx.trimCoord);
 	return 0;
 }
