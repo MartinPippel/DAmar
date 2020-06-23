@@ -1832,7 +1832,7 @@ void trim_contigs(TrimContext *ctx)
 						printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + l);
 						if(te->gaps[l].aEnd == 1)
 						{
-							tmp = (1+te->gaps[l].agpGapSize/2+ctx->trimOffset);
+							tmp = (1+abs(te->gaps[l].agpGapSize)/2+ctx->trimOffset);
 							if(tmp > maxStart)
 							{
 								maxStart = tmp;
@@ -1840,7 +1840,7 @@ void trim_contigs(TrimContext *ctx)
 						}
 						else if(te->gaps[l].aEnd == aLen)
 						{
-							tmp = aLen - (1+te->gaps[l].agpGapSize/2+ctx->trimOffset);
+							tmp = aLen - (1+abs(te->gaps[l].agpGapSize)/2+ctx->trimOffset);
 							if(tmp < minEnd)
 							{
 								minEnd = tmp;
