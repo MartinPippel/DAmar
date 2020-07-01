@@ -1202,6 +1202,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 			}
 			else
 			{
+				Prev_PartNum = PartNum;
 				contigB = getDBcontigID(ctx, CompntId_GapLength, &from, &to);
 				strcpy(contigNameB, CompntId_GapLength);
 
