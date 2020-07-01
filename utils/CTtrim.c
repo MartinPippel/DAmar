@@ -1803,8 +1803,6 @@ void trim_contigs(TrimContext *ctx)
 	{
 		j = k = 0;
 
-		int trimmedContigs = 0;
-
 		while (j < ctx->numTrimEvidence)
 		{
 			while (k < ctx->numTrimEvidence - 1 && ctx->trimEvid[j].contigA == ctx->trimEvid[k + 1].contigA)
@@ -1863,6 +1861,63 @@ void trim_contigs(TrimContext *ctx)
 	}
 	else if (ctx->purgeOpt == 1)
 	{
+
+		j = k = 0;
+
+		while (j < ctx->numTrimEvidence)
+		{
+			while (k < ctx->numTrimEvidence - 1 && ctx->trimEvid[j].contigA == ctx->trimEvid[k + 1].contigA)
+			{
+				k++;
+			}
+
+			int n = k - j + 1;
+
+			int aLen = DB_READ_LEN(ctx->db, ctx->trimEvid[j].contigA);
+			int maxStart = 1;
+			int minEnd = aLen;
+			int tmp = 0;
+			for (i = 0; i < n; i++)
+			{
+				TrimEvidence *te = ctx->trimEvid + j + i;
+				for (l = 0; l < te->nBioNanoGaps; l++)
+				{
+					if (te->gaps[l].bionanoGapSize < ctx->minBionanoGapLen)
+					{
+						printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + l);
+						if (te->gaps[l].aEnd == 1)
+						{
+							tmp = (1 + abs(te->gaps[l].bionanoGapSize) / 2 + ctx->trimOffset);
+							if (tmp > maxStart)
+							{
+								maxStart = tmp;
+							}
+						}
+						else if (te->gaps[l].aEnd == aLen)
+						{
+							tmp = aLen - (1 + abs(te->gaps[l].bionanoGapSize) / 2 + ctx->trimOffset);
+							if (tmp < minEnd)
+							{
+								minEnd = tmp;
+							}
+						}
+						else
+						{
+							printf("found another gap type!!!\n");
+						}
+					}
+				}
+			}
+			if (maxStart > 1 || minEnd < aLen)
+			{
+				printf("CUT POSITIONS (%d - %d, %d): %d, %d\n", ctx->trimEvid[j].contigA, 0, aLen, maxStart, minEnd);
+				ctx->trimCoord[ctx->trimEvid[j].contigA].coord[0] =  maxStart;
+				ctx->trimCoord[ctx->trimEvid[j].contigA].coord[1] =  minEnd;
+			}
+			k++;
+			j = k;
+		}
+		printf("[INFO] num trim evidence: %d: \n", ctx->numTrimEvidence);
 
 	}
 	else if (ctx->purgeOpt == 2)
