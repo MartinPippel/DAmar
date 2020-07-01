@@ -1275,6 +1275,12 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 		}
 	}
 
+	if(Prev_PartNum == 1)
+	{
+		printf(" SINGLETON ContigA %d prev: %s cur: %s\n", prevContigID, Prev_Obj_Name, Obj_Name);
+	}
+
+
 	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", numInvalidLines);
 
 	int numGaps = 0;
