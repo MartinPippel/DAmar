@@ -30,7 +30,7 @@ class Track(object):
 
             if len(chunk) == 0:
                 break
-
+            
             (clen, ) = struct.unpack(Track.STRUCT_CHUNK_HEADER, chunk)
 
             chunk = fin.read(clen)

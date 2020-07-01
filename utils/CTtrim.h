@@ -55,6 +55,8 @@ typedef struct
 {
 		int* coord;			// from_1, to_1, from_2, to_2,  ... from_N, to_N
 		int  numCoordPairs;
+		int  maxCoordPairs;
+		int  flag;			// 1 ... not part of a scaffold, 2 ... splitted from bionano
 } TrimCoordinates;
 
 int TrimEvidence_cmp(const void *x, const void *y)

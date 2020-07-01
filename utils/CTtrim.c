@@ -355,6 +355,7 @@ static void trim_pre(PassContext *pctx, TrimContext *tctx)
 	{
 		TrimCoordinates *tc = tctx->trimCoord + i;
 		tc->numCoordPairs = 1;
+		tc->maxCoordPairs = 1;
 		tc->coord = malloc(sizeof(int) * tc->numCoordPairs * 2);
 		tc->coord[0] = 0;
 		tc->coord[1] = DB_READ_LEN(tctx->db, i);
@@ -1187,6 +1188,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					fromA = from;
 					toA = to;
 				}
+				printf("1: fromA: %d, toA: %d\n", fromA, toA);
 			}
 			else
 			{
@@ -1233,6 +1235,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					toB = to;
 				}
 
+				printf("2: fromA: %d, toA: %d\n", fromA, toA);
 				assert(gapLen > -1);
 
 				// add trim evidence symmetrically: i.e. contigA-gap-contigB and contigB-gap-contigA
@@ -1874,45 +1877,88 @@ void trim_contigs(TrimContext *ctx)
 			int n = k - j + 1;
 
 			int aLen = DB_READ_LEN(ctx->db, ctx->trimEvid[j].contigA);
-			int maxStart = 1;
-			int minEnd = aLen;
+			int newStart = -1;
+			int newEnd = -aLen;
 			int tmp = 0;
+
+			// ensure that buffer for cut positions is always big enough
+			if(ctx->trimEvid[j].nBioNanoGaps > 1)
+			{
+				int tmp = (1+ctx->trimEvid[j].nBioNanoGaps);
+				ctx->trimCoord[ctx->trimEvid[j].contigA].coord = (int*) realloc(ctx->trimCoord[ctx->trimEvid[j].contigA].coord, sizeof(int)*2*tmp);
+				for (j=1; j<tmp; j++)
+				{
+					ctx->trimCoord[ctx->trimEvid[j].contigA].coord[2*j]=1;
+					ctx->trimCoord[ctx->trimEvid[j].contigA].coord[2*j+1]=aLen;
+				}
+				ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs = tmp;
+			}
+
 			for (i = 0; i < n; i++)
 			{
 				TrimEvidence *te = ctx->trimEvid + j + i;
+
 				for (l = 0; l < te->nBioNanoGaps; l++)
 				{
-					if (te->gaps[l].bionanoGapSize < ctx->minBionanoGapLen)
+
+					// normal gap, i.e. bionano did not cut the contigs before scaffolding them
+					if(((te->gaps[l].aEnd == 1) || (te->gaps[l].aEnd == aLen)) && ((te->gaps[l].bBeg == 1) || (te->gaps[l].aBeg == aLen)))
 					{
-						printBionanpGap(ctx, te->contigA, te->contigB, te->gaps + l);
-						if (te->gaps[l].aEnd == 1)
+						// check for negative gap
+						if (te->gaps[l].bionanoGapSize < ctx->minBionanoGapLen)
 						{
-							tmp = (1 + abs(te->gaps[l].bionanoGapSize) / 2 + ctx->trimOffset);
-							if (tmp > maxStart)
+							if (te->gaps[l].aEnd == 1)
 							{
-								maxStart = tmp;
+								tmp = (1 + abs(te->gaps[l].bionanoGapSize) / 2 + ctx->trimOffset);
+								// newStart
+								int m;
+								for (m=0; m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs; m++)
+								{
+									if(intersect(
+											abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2]),
+											abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2+1]),
+											te->gaps[l].aEnd, te->gaps[l].aBeg)
+									)
+									{
+										 break;
+									}
+								}
+								assert(m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs);
+								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2] = tmp;
+								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2+1] = te->gaps[l].aBeg;
 							}
-						}
-						else if (te->gaps[l].aEnd == aLen)
-						{
-							tmp = aLen - (1 + abs(te->gaps[l].bionanoGapSize) / 2 + ctx->trimOffset);
-							if (tmp < minEnd)
+							else if (te->gaps[l].aEnd == aLen)
 							{
-								minEnd = tmp;
+								tmp = aLen - (1 + abs(te->gaps[l].bionanoGapSize) / 2 + ctx->trimOffset);
+								// newEnd
+								int m;
+								for (m=0; m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs; m++)
+								{
+									if(intersect(
+											abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2]),
+											abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2+1]),
+											te->gaps[l].aBeg, te->gaps[l].aEnd)
+									)
+									{
+										 break;
+									}
+								}
+								assert(m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs);
+								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2] = te->gaps[l].aBeg;
+								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2+1] = tmp;
 							}
-						}
-						else
-						{
-							printf("found another gap type!!!\n");
+							else // should not occur
+							{
+								assert(0);
+							}
 						}
 					}
+					else // at least one contig at current gap was split before the scaffolding
+					{
+
+
+					}
 				}
-			}
-			if (maxStart > 1 || minEnd < aLen)
-			{
-				printf("CUT POSITIONS (%d - %d, %d): %d, %d\n", ctx->trimEvid[j].contigA, 0, aLen, maxStart, minEnd);
-				ctx->trimCoord[ctx->trimEvid[j].contigA].coord[0] =  maxStart;
-				ctx->trimCoord[ctx->trimEvid[j].contigA].coord[1] =  minEnd;
 			}
 			k++;
 			j = k;
