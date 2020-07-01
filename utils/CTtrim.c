@@ -1150,7 +1150,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 			{
 				if(Prev_PartNum == 1)
 				{
-					printf(" SINGLETON ContigA[%d,%s]\n", prevContigID, Prev_Obj_Name, oriA);
+					printf(" SINGLETON ContigA %d prev: %s cur: %s\n", prevContigID, Prev_Obj_Name, Obj_Name);
 				}
 
 				strcpy(Prev_Obj_Name, Obj_Name);
