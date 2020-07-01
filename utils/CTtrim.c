@@ -1117,6 +1117,9 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 	int numInvalidLines = 0;
 
+	int prevContigID = -1;
+	int Prev_PartNum = -1;
+
 	while ((len = getline(&line, &maxline, fileInBionanoGaps)) > 0)
 	{
 		nline++;
@@ -1145,6 +1148,11 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 			if (strcmp(Prev_Obj_Name, Obj_Name) != 0)
 			{
+				if(Prev_PartNum == 1)
+				{
+					printf(" SINGLETON ContigA[%d,%s]\n", prevContigID, Prev_Obj_Name, oriA);
+				}
+
 				strcpy(Prev_Obj_Name, Obj_Name);
 				contigA = getDBcontigID(ctx, CompntId_GapLength, &from, &to);
 				strcpy(contigNameA, CompntId_GapLength);
@@ -1188,7 +1196,9 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					fromA = from;
 					toA = to;
 				}
-				printf("1: fromA: %d, toA: %d\n", fromA, toA);
+
+				Prev_PartNum = PartNum;
+				prevContigID = contigA;
 			}
 			else
 			{
@@ -1251,6 +1261,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 				//fprintf(stdout, "Assign B to A: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 			}
+
 		}
 		else if (Compnt_Type == 'N')
 		{
@@ -1261,7 +1272,6 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				//fprintf(stderr, "[ERROR] invalid AGP file format %s. Negative gap length: %s in line %d\n", pathInBionanoAGP, CompntId_GapLength, nline);
 			}
 		}
-
 	}
 
 	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", numInvalidLines);
