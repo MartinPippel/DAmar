@@ -2386,7 +2386,7 @@ int main(int argc, char *argv[])
 		int i,j;
 		for (i=0; i<DB_NREADS(&db);i++)
 		{
-			printf("CONTIG %4d", i);
+			printf("CONTIG %4d initial length [%10d]", i, DB_READ_LEN(&db,i));
 			for(j=0;j<tctx.trimCoord[i].numCoordPairs; j++)
 				printf(" [%d, %d, %d]", tctx.trimCoord[i].coord[j*3], tctx.trimCoord[i].coord[j*3+1], tctx.trimCoord[i].coord[j*3+2]);
 			printf("\n");
