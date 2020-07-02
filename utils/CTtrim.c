@@ -1130,6 +1130,7 @@ void addBionanoContigCoordinates(TrimContext *ctx, int contig, int from, int to)
 		tc->coord[i*3] = from;
 		tc->coord[i*3+1] = to;
 		tc->coord[i*3+2] = 0;
+		tc->numCoordPairs++;
 	}
 
 }
