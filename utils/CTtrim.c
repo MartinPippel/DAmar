@@ -1120,7 +1120,7 @@ void addBionanoContigCoordinates(TrimContext *ctx, int contig, int from, int to)
 
 	if(i==tc->numCoordPairs)
 	{
-		printf("append new trim Coordninates to position %d [%d, %d, %d]", i, from, to, 0);
+		printf("append new trim Coordinates to position %d [%d, %d, %d]", i, from, to, 0);
 
 		if(tc->numCoordPairs + 1 >= tc->maxCoordPairs)
 		{
@@ -2381,6 +2381,16 @@ int main(int argc, char *argv[])
 	if (pathInBionanoAGP)
 	{
 		parseBionanoAGPfile(&tctx, pathInBionanoAGP);
+
+		printf("------ OUTPUT CUT COORDINATES\n");
+		int i,j;
+		for (i=0; i<DB_NREADS(&db);i++)
+		{
+			printf("CONTIG %4d", i);
+			for(j=0;j<tctx.trimCoord[i].numCoordPairs; j++)
+				printf(" [%d, %d, %d]", tctx.trimCoord[i].coord[j*3], tctx.trimCoord[i].coord[j*3+1], tctx.trimCoord[i].coord[j*3+2]);
+			printf("\n");
+		}
 	}
 	if (pathInBionanoGAP)
 	{
