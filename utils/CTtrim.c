@@ -1092,8 +1092,8 @@ void addBionanoContigCoordinates(TrimContext *ctx, int contig, int from, int to)
 	assert(contig >= 0);
 	assert(contig < DB_NREADS(ctx->db));
 
-	assert(from < 0);
-	assert(to > DB_READ_LEN(ctx->db, contig));
+	assert(from >= 0);
+	assert(to <= DB_READ_LEN(ctx->db, contig));
 
 	TrimCoordinates *tc = ctx->trimCoord + contig;
 
