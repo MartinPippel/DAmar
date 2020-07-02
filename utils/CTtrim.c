@@ -356,9 +356,10 @@ static void trim_pre(PassContext *pctx, TrimContext *tctx)
 		TrimCoordinates *tc = tctx->trimCoord + i;
 		tc->numCoordPairs = 1;
 		tc->maxCoordPairs = 1;
-		tc->coord = malloc(sizeof(int) * tc->numCoordPairs * 2);
+		tc->coord = malloc(sizeof(int) * tc->numCoordPairs * 3);
 		tc->coord[0] = 0;
 		tc->coord[1] = DB_READ_LEN(tctx->db, i);
+		tc->coord[2] = 0;
 	}
 }
 
@@ -1074,6 +1075,63 @@ void printLASchain(TrimContext *ctx, int contigA, int contigB, LASchain *c)
 	printf("LASchain: %3d (%s) vs %3d (%s): #alnBases: %6d #unalnBases: %6d eRate: %5.2f trimPosOfA: %6d\n", contigA, aName, contigB, bName, c->alnLen, c->unalignedBases, c->eRate, c->trimPos);
 }
 
+void addBionanoContigCoordinates(TrimContext *ctx, int contig, int from, int to)
+{
+	// some sanity checks
+	int i;
+	if (from > to)
+	{
+		i = from;
+		from = to;
+		to = i;
+	}
+
+	assert(ctx != NULL);
+	assert(contig >= 0);
+	assert(contig < DB_NREADS(ctx->db));
+
+	assert(from < 0);
+	assert(to > DB_READ_LEN(ctx->db, contig));
+
+	TrimCoordinates *tc = ctx->trimCoord + contig;
+
+	// ignore full contig lengths
+	if (to - from + 1 >= DB_READ_LEN(ctx->db, contig))
+	{
+		printf("[WARNING]: Ignore full contig: %d %d %d\n", contig, from, to);
+		return;
+	}
+
+
+	// check if coordinates are already present
+	for (i = 0; i < tc->numCoordPairs; i++)
+	{
+		int its=intersect(tc->coord[i*3],tc->coord[i*3+1], from, to);
+		if(its)
+		{
+			printf("replace trim coordinates at %d [%d, %d, %d] with [%d, %d, %d] overlap: %d\n", i, tc->coord[i*3], tc->coord[i*3+1], tc->coord[i*3+2], from, to, 0, its);
+			tc->coord[i*3] = from;
+			tc->coord[i*3+1] = to;
+			break;
+		}
+	}
+
+	if(i==tc->numCoordPairs)
+	{
+		printf("append new trim Coordninates to position %d [%d, %d, %d]", i, from, to, 0);
+
+		if(tc->numCoordPairs + 1 >= tc->maxCoordPairs)
+		{
+			tc->maxCoordPairs = tc->numCoordPairs + 1;
+			tc->coord = (int *) realloc(tc->coord, sizeof(int)*3*tc->maxCoordPairs);
+		}
+		tc->coord[i*3] = from;
+		tc->coord[i*3+1] = to;
+		tc->coord[i*3+2] = 0;
+	}
+
+}
+
 void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 {
 	FILE *fileInBionanoGaps = NULL;
@@ -1148,7 +1206,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 			if (strcmp(Prev_Obj_Name, Obj_Name) != 0)
 			{
-				if(Prev_PartNum == 1)
+				if (Prev_PartNum == 1)
 				{
 					printf(" SINGLETON ContigA %d prev: %s cur: %s\n", prevContigID, Prev_Obj_Name, Obj_Name);
 				}
@@ -1199,6 +1257,9 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 
 				Prev_PartNum = PartNum;
 				prevContigID = contigA;
+
+				// add trim coordinates
+				addBionanoContigCoordinates(ctx, contigA, fromA, toA);
 			}
 			else
 			{
@@ -1246,7 +1307,7 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 					toB = to;
 				}
 
-				printf("2: fromA: %d, toA: %d\n", fromA, toA);
+				printf("2: fromB: %d, toB: %d\n", fromB, toB);
 				assert(gapLen > -1);
 
 				// add trim evidence symmetrically: i.e. contigA-gap-contigB and contigB-gap-contigA
@@ -1260,6 +1321,8 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				// reset gap size
 				gapLen = -1;
 
+				// add trim coordinates
+				addBionanoContigCoordinates(ctx, contigB, fromB, toB);
 				//fprintf(stdout, "Assign B to A: ContigA[%d,%s,%d,%d,%d] - GAP [%d] - ContigB[%d,%s,%d,%d,%d]\n", contigA, contigNameA, oriA, fromA, toA, gapLen, contigB, contigNameB, oriB, fromB, toB);
 			}
 
@@ -1275,11 +1338,10 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 		}
 	}
 
-	if(Prev_PartNum == 1)
+	if (Prev_PartNum == 1)
 	{
 		printf(" SINGLETON ContigA %d prev: %s cur: %s\n", prevContigID, Prev_Obj_Name, Obj_Name);
 	}
-
 
 	printf("[INFO]  Number of invalid lines: %d (either format issues, or AGP contig names could not be matched to DB contig names.)\n", numInvalidLines);
 
@@ -1871,8 +1933,8 @@ void trim_contigs(TrimContext *ctx)
 			if (maxStart > 1 || minEnd < aLen)
 			{
 				printf("CUT POSITIONS (%d - %d, %d): %d, %d\n", ctx->trimEvid[j].contigA, 0, aLen, maxStart, minEnd);
-				ctx->trimCoord[ctx->trimEvid[j].contigA].coord[0] =  maxStart;
-				ctx->trimCoord[ctx->trimEvid[j].contigA].coord[1] =  minEnd;
+				ctx->trimCoord[ctx->trimEvid[j].contigA].coord[0] = maxStart;
+				ctx->trimCoord[ctx->trimEvid[j].contigA].coord[1] = minEnd;
 			}
 			k++;
 			j = k;
@@ -1899,14 +1961,15 @@ void trim_contigs(TrimContext *ctx)
 			int tmp = 0;
 
 			// ensure that buffer for cut positions is always big enough
-			if(ctx->trimEvid[j].nBioNanoGaps > 1)
+			if (ctx->trimEvid[j].nBioNanoGaps > 1)
 			{
-				int tmp = (1+ctx->trimEvid[j].nBioNanoGaps);
-				ctx->trimCoord[ctx->trimEvid[j].contigA].coord = (int*) realloc(ctx->trimCoord[ctx->trimEvid[j].contigA].coord, sizeof(int)*2*tmp);
-				for (j=1; j<tmp; j++)
+				int tmp = (1 + ctx->trimEvid[j].nBioNanoGaps);
+				ctx->trimCoord[ctx->trimEvid[j].contigA].coord = (int*) realloc(ctx->trimCoord[ctx->trimEvid[j].contigA].coord, sizeof(int) * 3 * tmp);
+				for (j = 1; j < tmp; j++)
 				{
-					ctx->trimCoord[ctx->trimEvid[j].contigA].coord[2*j]=1;
-					ctx->trimCoord[ctx->trimEvid[j].contigA].coord[2*j+1]=aLen;
+					ctx->trimCoord[ctx->trimEvid[j].contigA].coord[3 * j] = 1;
+					ctx->trimCoord[ctx->trimEvid[j].contigA].coord[3 * j + 1] = aLen;
+					ctx->trimCoord[ctx->trimEvid[j].contigA].coord[3 * j + 2] = 0;
 				}
 				ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs = tmp;
 			}
@@ -1919,7 +1982,7 @@ void trim_contigs(TrimContext *ctx)
 				{
 
 					// normal gap, i.e. bionano did not cut the contigs before scaffolding them
-					if(((te->gaps[l].aEnd == 1) || (te->gaps[l].aEnd == aLen)) && ((te->gaps[l].bBeg == 1) || (te->gaps[l].aBeg == aLen)))
+					if (((te->gaps[l].aEnd == 1) || (te->gaps[l].aEnd == aLen)) && ((te->gaps[l].bBeg == 1) || (te->gaps[l].aBeg == aLen)))
 					{
 						// check for negative gap
 						if (te->gaps[l].bionanoGapSize < ctx->minBionanoGapLen)
@@ -1929,40 +1992,32 @@ void trim_contigs(TrimContext *ctx)
 								tmp = (1 + abs(te->gaps[l].bionanoGapSize) / 2 + ctx->trimOffset);
 								// newStart
 								int m;
-								for (m=0; m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs; m++)
+								for (m = 0; m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs; m++)
 								{
-									if(intersect(
-											abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2]),
-											abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2+1]),
-											te->gaps[l].aEnd, te->gaps[l].aBeg)
-									)
+									if (intersect(abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m * 2]), abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m * 2 + 1]), te->gaps[l].aEnd, te->gaps[l].aBeg))
 									{
-										 break;
+										break;
 									}
 								}
 								assert(m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs);
-								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2] = tmp;
-								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2+1] = te->gaps[l].aBeg;
+								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m * 2] = tmp;
+								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m * 2 + 1] = te->gaps[l].aBeg;
 							}
 							else if (te->gaps[l].aEnd == aLen)
 							{
 								tmp = aLen - (1 + abs(te->gaps[l].bionanoGapSize) / 2 + ctx->trimOffset);
 								// newEnd
 								int m;
-								for (m=0; m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs; m++)
+								for (m = 0; m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs; m++)
 								{
-									if(intersect(
-											abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2]),
-											abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2+1]),
-											te->gaps[l].aBeg, te->gaps[l].aEnd)
-									)
+									if (intersect(abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m * 2]), abs(ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m * 2 + 1]), te->gaps[l].aBeg, te->gaps[l].aEnd))
 									{
-										 break;
+										break;
 									}
 								}
 								assert(m < ctx->trimCoord[ctx->trimEvid[j].contigA].maxCoordPairs);
-								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2] = te->gaps[l].aBeg;
-								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m*2+1] = tmp;
+								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m * 2] = te->gaps[l].aBeg;
+								ctx->trimCoord[ctx->trimEvid[j].contigA].coord[m * 2 + 1] = tmp;
 							}
 							else // should not occur
 							{
@@ -1972,7 +2027,6 @@ void trim_contigs(TrimContext *ctx)
 					}
 					else // at least one contig at current gap was split before the scaffolding
 					{
-
 
 					}
 				}
@@ -2064,25 +2118,25 @@ void trim_contigs(TrimContext *ctx)
 
 		for (j = 0; j < tc->numCoordPairs; j++)
 		{
-			int index = j*2;
-			ctx->statsTrimmedBases += tc->coord[index+1] - tc->coord[index];
+			int index = j * 2;
+			ctx->statsTrimmedBases += tc->coord[index + 1] - tc->coord[index];
 			ctx->statsTrimmedContigs++;
-			fprintf(trimmedContigs, ">%s part=%d,%d\n", ctx->flist[amap], tc->coord[index], tc->coord[index+1]);
-			for (k = tc->coord[index]; k + ctx->lineWidth < tc->coord[index+1]; k += ctx->lineWidth)
+			fprintf(trimmedContigs, ">%s part=%d,%d\n", ctx->flist[amap], tc->coord[index], tc->coord[index + 1]);
+			for (k = tc->coord[index]; k + ctx->lineWidth < tc->coord[index + 1]; k += ctx->lineWidth)
 				fprintf(trimmedContigs, "%.*s\n", ctx->lineWidth, read + k);
-			if (k < tc->coord[index+1])
-				fprintf(trimmedContigs, "%.*s\n", tc->coord[index+1] - k, read + k);
+			if (k < tc->coord[index + 1])
+				fprintf(trimmedContigs, "%.*s\n", tc->coord[index + 1] - k, read + k);
 
-			if (j+1 < tc->numCoordPairs)
+			if (j + 1 < tc->numCoordPairs)
 			{
-				assert(tc->coord[index+2] > tc->coord[index+1]);
-				ctx->statsRemovedContigPartBases += tc->coord[index+2]-tc->coord[index+1];
+				assert(tc->coord[index + 2] > tc->coord[index + 1]);
+				ctx->statsRemovedContigPartBases += tc->coord[index + 2] - tc->coord[index + 1];
 				ctx->statsRemovedContigParts++;
-				fprintf(removedContigParts, ">%s part=%d,%d\n", ctx->flist[amap], tc->coord[index+1], tc->coord[index]);
-				for (k = tc->coord[index+1]; k + ctx->lineWidth < tc->coord[index+2]; k += ctx->lineWidth)
+				fprintf(removedContigParts, ">%s part=%d,%d\n", ctx->flist[amap], tc->coord[index + 1], tc->coord[index]);
+				for (k = tc->coord[index + 1]; k + ctx->lineWidth < tc->coord[index + 2]; k += ctx->lineWidth)
 					fprintf(removedContigParts, "%.*s\n", ctx->lineWidth, read + k);
-				if (k < tc->coord[index+2])
-					fprintf(removedContigParts, "%.*s\n", tc->coord[index+2] - k, read + k);
+				if (k < tc->coord[index + 2])
+					fprintf(removedContigParts, "%.*s\n", tc->coord[index + 2] - k, read + k);
 			}
 		}
 
@@ -2102,276 +2156,276 @@ void trim_contigs(TrimContext *ctx)
 	fclose(trimmedContigs);
 	fclose(removedContigParts);
 	fclose(statsContigs);
-	free(read -1);
+	free(read - 1);
 }
 
 void usage()
 {
-fprintf(stderr, "[-v] [-GTLOFwt <int>] [-ago <file>] [-dt <track>] <db> <contigs_out_prefix>\n");
+	fprintf(stderr, "[-v] [-GTLOFwt <int>] [-ago <file>] [-dt <track>] <db> <contigs_out_prefix>\n");
 
-fprintf(stderr, "options: -v        verbose\n");
-fprintf(stderr, "         -d <trc>  low complexity track (e.g. dust)\n");
-fprintf(stderr, "         -t <trc>  tandem repeat track  (e,f, tan)\n");
-fprintf(stderr, "         -a <file> bionano agp file");
-fprintf(stderr, "                   If a bionano-agp file is given, then only gaps up the minimum gaps size of (default: %d) and a valid overlap chain are trimmed\n", MIN_BIONANO_GAP_SIZE);
-fprintf(stderr, "         -g <file> bionano gap file");
-fprintf(stderr, "         -o <file> overlap file that was filtered with LAfilterChain");
-fprintf(stderr, "         -G <int>  min Bionano gap size (default: %d)\n", MIN_BIONANO_GAP_SIZE);
-fprintf(stderr, "         -T <int>  maximum trim length (default: -1)\n");
-fprintf(stderr, "         -L <int>  maximum tandem repeat overlap fraction (in %%) (default: %d, valid range: [0,100])\n", MAX_TANDEMTRIM_PERC);
-fprintf(stderr, "         -O <int>  trim offset in bases (default %d), i.e. in best case (if we have single overlap between 2 contigs) a gap of size 2xtrim_offset is created )\n", TRIM_OFFSET);
-fprintf(stderr, "                   in case a valid alignment chain consisting of multiple alignments is present (representing heterozygous variations). The first last and the last alignment are used, (- trimOffset and + trimOffset, accordingly) \n");
-fprintf(stderr, "                   (- trimOffset and + trimOffset, accordingly) creates a larger gap size, but heopefully removes the heterozygous difference.\n");
-fprintf(stderr, "         -F <int>  number of fuzzy bases for chaining. For sanity check only, must correspond to -f of LAfilterChain. (default: %d)\n", FUZZY_BASES);
-fprintf(stderr, "         -w <int>  specify number of characters per fasta line (default: %d)\n", FASTA_LINEWIDTH);
-fprintf(stderr, "         -p <int>  trim Options, as follows:\n");
-fprintf(stderr, "         					0: only trim negative bionano gaps (requires bionano AGP and GAP files)\n");
-fprintf(stderr, "         					1: -t 0 AND split and trim contigs if bionano AGP file reports a contig break (requires bionano AGP and GAP files)\n");
-fprintf(stderr, "         					2: trimming based on LAS chains only (requires a chain filtered overlap file)\n");
-fprintf(stderr, "         					3: -t 2 BUT tandem induced contig overlap are not trimmed (requires chain filtered overlap file and tandem repeat track) - \n");
-fprintf(stderr, "         					4: intersection of -t 0 and -t 2, i.e. LAS chains based trimming only if negative Bionano gaps support them + small negative Bionano gaps that are below the minimum daligner alignment length cutoff\n");
-fprintf(stderr, "         					5: -t 4 AND LAS chain based trimming of small contigs that are below the bionano minimum length threshold (<150K)\n");
+	fprintf(stderr, "options: -v        verbose\n");
+	fprintf(stderr, "         -d <trc>  low complexity track (e.g. dust)\n");
+	fprintf(stderr, "         -t <trc>  tandem repeat track  (e,f, tan)\n");
+	fprintf(stderr, "         -a <file> bionano agp file");
+	fprintf(stderr, "                   If a bionano-agp file is given, then only gaps up the minimum gaps size of (default: %d) and a valid overlap chain are trimmed\n", MIN_BIONANO_GAP_SIZE);
+	fprintf(stderr, "         -g <file> bionano gap file");
+	fprintf(stderr, "         -o <file> overlap file that was filtered with LAfilterChain");
+	fprintf(stderr, "         -G <int>  min Bionano gap size (default: %d)\n", MIN_BIONANO_GAP_SIZE);
+	fprintf(stderr, "         -T <int>  maximum trim length (default: -1)\n");
+	fprintf(stderr, "         -L <int>  maximum tandem repeat overlap fraction (in %%) (default: %d, valid range: [0,100])\n", MAX_TANDEMTRIM_PERC);
+	fprintf(stderr, "         -O <int>  trim offset in bases (default %d), i.e. in best case (if we have single overlap between 2 contigs) a gap of size 2xtrim_offset is created )\n", TRIM_OFFSET);
+	fprintf(stderr, "                   in case a valid alignment chain consisting of multiple alignments is present (representing heterozygous variations). The first last and the last alignment are used, (- trimOffset and + trimOffset, accordingly) \n");
+	fprintf(stderr, "                   (- trimOffset and + trimOffset, accordingly) creates a larger gap size, but heopefully removes the heterozygous difference.\n");
+	fprintf(stderr, "         -F <int>  number of fuzzy bases for chaining. For sanity check only, must correspond to -f of LAfilterChain. (default: %d)\n", FUZZY_BASES);
+	fprintf(stderr, "         -w <int>  specify number of characters per fasta line (default: %d)\n", FASTA_LINEWIDTH);
+	fprintf(stderr, "         -p <int>  trim Options, as follows:\n");
+	fprintf(stderr, "         					0: only trim negative bionano gaps (requires bionano AGP and GAP files)\n");
+	fprintf(stderr, "         					1: -t 0 AND split and trim contigs if bionano AGP file reports a contig break (requires bionano AGP and GAP files)\n");
+	fprintf(stderr, "         					2: trimming based on LAS chains only (requires a chain filtered overlap file)\n");
+	fprintf(stderr, "         					3: -t 2 BUT tandem induced contig overlap are not trimmed (requires chain filtered overlap file and tandem repeat track) - \n");
+	fprintf(stderr, "         					4: intersection of -t 0 and -t 2, i.e. LAS chains based trimming only if negative Bionano gaps support them + small negative Bionano gaps that are below the minimum daligner alignment length cutoff\n");
+	fprintf(stderr, "         					5: -t 4 AND LAS chain based trimming of small contigs that are below the bionano minimum length threshold (<150K)\n");
 }
 
 int main(int argc, char *argv[])
 {
-HITS_DB db;
-TrimContext tctx;
-PassContext *pctx = NULL;
+	HITS_DB db;
+	TrimContext tctx;
+	PassContext *pctx = NULL;
 
-FILE *fileOvlIn = NULL;
+	FILE *fileOvlIn = NULL;
 
-bzero(&tctx, sizeof(TrimContext));
+	bzero(&tctx, sizeof(TrimContext));
 
-tctx.db = &db;
+	tctx.db = &db;
 
 // args
 
-char *pcTrackDust = NULL;
-char *pcTrackTan = NULL;
+	char *pcTrackDust = NULL;
+	char *pcTrackTan = NULL;
 
-char *pathInBionanoAGP = NULL;
-char *pathInBionanoGAP = NULL;
+	char *pathInBionanoAGP = NULL;
+	char *pathInBionanoGAP = NULL;
 
-char *pcPathReadsIn = NULL;
-char *pcPathOverlapsIn = NULL;
+	char *pcPathReadsIn = NULL;
+	char *pcPathOverlapsIn = NULL;
 
-int c, tmp;
+	int c, tmp;
 
-tctx.minBionanoGapLen = MIN_BIONANO_GAP_SIZE;
-tctx.maxTrimLength = -1;
-tctx.maxLowCompTrimPerc = MAX_TANDEMTRIM_PERC;
-tctx.trimOffset = TRIM_OFFSET;
-tctx.maxFuzzyBases = FUZZY_BASES;
-tctx.lineWidth = FASTA_LINEWIDTH;
+	tctx.minBionanoGapLen = MIN_BIONANO_GAP_SIZE;
+	tctx.maxTrimLength = -1;
+	tctx.maxLowCompTrimPerc = MAX_TANDEMTRIM_PERC;
+	tctx.trimOffset = TRIM_OFFSET;
+	tctx.maxFuzzyBases = FUZZY_BASES;
+	tctx.lineWidth = FASTA_LINEWIDTH;
 
-opterr = 0;
-while ((c = getopt(argc, argv, "vd:t:a:g:o:G:T:L:O:F:w:p:")) != -1)
-{
-switch (c)
-{
-case 'v':
-	tctx.verbose++;
-	break;
-case 'd':
-	pcTrackDust = optarg;
-	break;
-case 't':
-	pcTrackTan = optarg;
-	break;
-case 'a':
-	pathInBionanoAGP = optarg;
-	break;
-case 'g':
-	pathInBionanoGAP = optarg;
-	break;
-case 'o':
-	pcPathOverlapsIn = optarg;
-	break;
-case 'G':
-	tctx.minBionanoGapLen = atoi(optarg);
-	break;
-case 'T':
-	tctx.maxTrimLength = atoi(optarg);
-	break;
-case 'L':
-	tmp = atoi(optarg);
-	if (tmp < 0 || tmp > 100)
+	opterr = 0;
+	while ((c = getopt(argc, argv, "vd:t:a:g:o:G:T:L:O:F:w:p:")) != -1)
 	{
-		fprintf(stderr, "[ERROR] Invalid range for tandem repeat fraction %d. Must be in [0,100]\n", tmp);
+		switch (c)
+		{
+			case 'v':
+				tctx.verbose++;
+				break;
+			case 'd':
+				pcTrackDust = optarg;
+				break;
+			case 't':
+				pcTrackTan = optarg;
+				break;
+			case 'a':
+				pathInBionanoAGP = optarg;
+				break;
+			case 'g':
+				pathInBionanoGAP = optarg;
+				break;
+			case 'o':
+				pcPathOverlapsIn = optarg;
+				break;
+			case 'G':
+				tctx.minBionanoGapLen = atoi(optarg);
+				break;
+			case 'T':
+				tctx.maxTrimLength = atoi(optarg);
+				break;
+			case 'L':
+				tmp = atoi(optarg);
+				if (tmp < 0 || tmp > 100)
+				{
+					fprintf(stderr, "[ERROR] Invalid range for tandem repeat fraction %d. Must be in [0,100]\n", tmp);
+					exit(1);
+				}
+				tctx.maxLowCompTrimPerc = tmp;
+				break;
+			case 'O':
+				tctx.trimOffset = atoi(optarg);
+				break;
+			case 'F':
+				tctx.maxFuzzyBases = atoi(optarg);
+				break;
+			case 'w':
+				tctx.lineWidth = atoi(optarg);
+				break;
+			case 'p':
+				tctx.purgeOpt = atoi(optarg);
+				break;
+
+			default:
+				fprintf(stderr, "unknown option %c\n", optopt);
+				usage();
+				exit(1);
+		}
+	}
+
+	if (argc - optind != 2)
+	{
+		usage();
 		exit(1);
 	}
-	tctx.maxLowCompTrimPerc = tmp;
-	break;
-case 'O':
-	tctx.trimOffset = atoi(optarg);
-	break;
-case 'F':
-	tctx.maxFuzzyBases = atoi(optarg);
-	break;
-case 'w':
-	tctx.lineWidth = atoi(optarg);
-	break;
-case 'p':
-	tctx.purgeOpt = atoi(optarg);
-	break;
 
-default:
-	fprintf(stderr, "unknown option %c\n", optopt);
-	usage();
-	exit(1);
-}
-}
+	pcPathReadsIn = argv[optind++];
+	tctx.fileOutPattern = argv[optind++];
 
-if (argc - optind != 2)
-{
-usage();
-exit(1);
-}
+	if (pcPathOverlapsIn)
+	{
+		if ((fileOvlIn = fopen(pcPathOverlapsIn, "r")) == NULL)
+		{
+			fprintf(stderr, "[ERROR] - could not open %s\n", pcPathOverlapsIn);
+			exit(1);
+		}
+	}
 
-pcPathReadsIn = argv[optind++];
-tctx.fileOutPattern = argv[optind++];
+	if (Open_DB(pcPathReadsIn, &db))
+	{
+		fprintf(stderr, "[ERROR] - could not open %s\n", pcPathReadsIn);
+		exit(1);
+	}
 
-if (pcPathOverlapsIn)
-{
-if ((fileOvlIn = fopen(pcPathOverlapsIn, "r")) == NULL)
-{
-fprintf(stderr, "[ERROR] - could not open %s\n", pcPathOverlapsIn);
-exit(1);
-}
-}
+	if (pcTrackDust)
+	{
+		tctx.trackDust = track_load(&db, pcTrackDust);
+		if (!tctx.trackDust)
+		{
+			fprintf(stderr, "[ERROR] - could not load track %s\n", pcTrackDust);
+			exit(1);
+		}
+	}
 
-if (Open_DB(pcPathReadsIn, &db))
-{
-fprintf(stderr, "[ERROR] - could not open %s\n", pcPathReadsIn);
-exit(1);
-}
-
-if (pcTrackDust)
-{
-tctx.trackDust = track_load(&db, pcTrackDust);
-if (!tctx.trackDust)
-{
-fprintf(stderr, "[ERROR] - could not load track %s\n", pcTrackDust);
-exit(1);
-}
-}
-
-if (pcTrackTan)
-{
-tctx.trackTan = track_load(&db, pcTrackTan);
-if (!tctx.trackTan)
-{
-fprintf(stderr, "[ERROR] - could not load track %s\n", pcTrackTan);
-exit(1);
-}
-}
+	if (pcTrackTan)
+	{
+		tctx.trackTan = track_load(&db, pcTrackTan);
+		if (!tctx.trackTan)
+		{
+			fprintf(stderr, "[ERROR] - could not load track %s\n", pcTrackTan);
+			exit(1);
+		}
+	}
 
 	// check if purge options are valid
-if (tctx.purgeOpt == 0 || tctx.purgeOpt == 1)
-{
-if (pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
-{
-fprintf(stderr, "[ERROR] - trim option -p 0 and -p 1: requires a bionano.agp and bionano.gap file\n");
-exit(1);
-}
-}
-else if (tctx.purgeOpt == 2 || tctx.purgeOpt == 3)
-{
-if (fileOvlIn == NULL)
-{
-fprintf(stderr, "[ERROR] - trim option -p 2 and -p 3: requires a chain filtered LAS file\n");
-exit(1);
-}
-if (tctx.purgeOpt == 3 && tctx.trackTan == NULL)
-{
-fprintf(stderr, "[ERROR] - trim option -p 3: requires a chain filtered LAS file and a tandem repeat file!\n");
-exit(1);
-}
-}
-else if (tctx.purgeOpt == 4 || tctx.purgeOpt == 5)
-{
-if (fileOvlIn == NULL || pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
-{
-fprintf(stderr, "[ERROR] - trim option -p 4 and -p 5: requires a chain filtered LAS file and a bionano.agp and a bionano.gap file\n");
-exit(1);
-}
-}
-else
-{
-fprintf(stderr, "[ERROR] - unknown trim option -p %d\n", tctx.purgeOpt);
-usage();
-exit(1);
-}
+	if (tctx.purgeOpt == 0 || tctx.purgeOpt == 1)
+	{
+		if (pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
+		{
+			fprintf(stderr, "[ERROR] - trim option -p 0 and -p 1: requires a bionano.agp and bionano.gap file\n");
+			exit(1);
+		}
+	}
+	else if (tctx.purgeOpt == 2 || tctx.purgeOpt == 3)
+	{
+		if (fileOvlIn == NULL)
+		{
+			fprintf(stderr, "[ERROR] - trim option -p 2 and -p 3: requires a chain filtered LAS file\n");
+			exit(1);
+		}
+		if (tctx.purgeOpt == 3 && tctx.trackTan == NULL)
+		{
+			fprintf(stderr, "[ERROR] - trim option -p 3: requires a chain filtered LAS file and a tandem repeat file!\n");
+			exit(1);
+		}
+	}
+	else if (tctx.purgeOpt == 4 || tctx.purgeOpt == 5)
+	{
+		if (fileOvlIn == NULL || pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
+		{
+			fprintf(stderr, "[ERROR] - trim option -p 4 and -p 5: requires a chain filtered LAS file and a bionano.agp and a bionano.gap file\n");
+			exit(1);
+		}
+	}
+	else
+	{
+		fprintf(stderr, "[ERROR] - unknown trim option -p %d\n", tctx.purgeOpt);
+		usage();
+		exit(1);
+	}
 
-if (fileOvlIn)
-{
-	// passes
+	if (fileOvlIn)
+	{
+		// passes
 
-pctx = pass_init(fileOvlIn, NULL);
+		pctx = pass_init(fileOvlIn, NULL);
 
-pctx->split_b = 1;
-pctx->load_trace = 1;
-pctx->unpack_trace = 1;
-pctx->data = &tctx;
-pctx->write_overlaps = 0;
-pctx->purge_discarded = 0;
-}
+		pctx->split_b = 1;
+		pctx->load_trace = 1;
+		pctx->unpack_trace = 1;
+		pctx->data = &tctx;
+		pctx->write_overlaps = 0;
+		pctx->purge_discarded = 0;
+	}
 
-trim_pre(pctx, &tctx);
+	trim_pre(pctx, &tctx);
 
-getDBFastaHeader(&tctx, pcPathReadsIn);
+	getDBFastaHeader(&tctx, pcPathReadsIn);
 
-if (pathInBionanoAGP)
-{
-parseBionanoAGPfile(&tctx, pathInBionanoAGP);
-}
-if (pathInBionanoGAP)
-{
-parseBionanoGAPfile(&tctx, pathInBionanoGAP);
-}
+	if (pathInBionanoAGP)
+	{
+		parseBionanoAGPfile(&tctx, pathInBionanoAGP);
+	}
+	if (pathInBionanoGAP)
+	{
+		parseBionanoGAPfile(&tctx, pathInBionanoGAP);
+	}
 
-if (fileOvlIn)
-{
-pass(pctx, trim_handler);
-}
+	if (fileOvlIn)
+	{
+		pass(pctx, trim_handler);
+	}
 
-trim_contigs(&tctx);
+	trim_contigs(&tctx);
 
-trim_post(&tctx);
+	trim_post(&tctx);
 
-if (fileOvlIn)
-{
-pass_free(pctx);
-fclose(fileOvlIn);
-}
+	if (fileOvlIn)
+	{
+		pass_free(pctx);
+		fclose(fileOvlIn);
+	}
 
-Close_DB(&db);
+	Close_DB(&db);
 
-int i;
-for (i = 0; i < tctx.nfiles; i++)
-{
-free(tctx.flist[i]);
-free(tctx.hlist[i]);
-}
+	int i;
+	for (i = 0; i < tctx.nfiles; i++)
+	{
+		free(tctx.flist[i]);
+		free(tctx.hlist[i]);
+	}
 
-for (i = 0; i < tctx.numTrimEvidence; i++)
-{
-if (tctx.trimEvid->nLASchains)
-free(tctx.trimEvid[i].chains);
-if (tctx.trimEvid->nBioNanoGaps)
-free(tctx.trimEvid[i].gaps);
-}
-free(tctx.trimEvid);
+	for (i = 0; i < tctx.numTrimEvidence; i++)
+	{
+		if (tctx.trimEvid->nLASchains)
+			free(tctx.trimEvid[i].chains);
+		if (tctx.trimEvid->nBioNanoGaps)
+			free(tctx.trimEvid[i].gaps);
+	}
+	free(tctx.trimEvid);
 
-free(tctx.flist);
-free(tctx.hlist);
-free(tctx.findx - 1);
+	free(tctx.flist);
+	free(tctx.hlist);
+	free(tctx.findx - 1);
 
-for (i = 0; i < DB_NREADS(tctx.db); i++)
-{
-free(tctx.trimCoord[i].coord);
-}
-free(tctx.trimCoord);
-return 0;
+	for (i = 0; i < DB_NREADS(tctx.db); i++)
+	{
+		free(tctx.trimCoord[i].coord);
+	}
+	free(tctx.trimCoord);
+	return 0;
 }

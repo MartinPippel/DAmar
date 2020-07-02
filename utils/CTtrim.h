@@ -12,6 +12,14 @@
 #include "dalign/align.h"
 #include "dalign/filter.h"
 
+#define TRIM_BIONANO_SINGLETON        (1 << 0)      // was not incorporated from Bionano into a scffold
+#define TRIM_BIONANO_SPLIT						(1 << 1)      // Bionano split before contig
+#define TRIM_BIONANO_LEFTGAP       		(1 << 2)      //
+#define TRIM_BIONANO_RIGHTGAP       	(1 << 3)      //
+#define TRIM_LASCHAIN_LEFTGAP       	(1 << 4)      //
+#define TRIM_LASCHAIN_RIGHTGAP       	(1 << 5)      //
+#define TRIM_DISCARD       						(1 << 6)      //
+
 typedef struct
 {
 	int alnLen;
@@ -51,12 +59,12 @@ typedef struct
 	BionanoGap *gaps;
 } TrimEvidence;
 
+// trim coordinates for contigs, initialized from contig DB, updated from Bionano-AGP file and/or LAS chain overlaps (corresponding to given purgeOpt)
 typedef struct
 {
-		int* coord;			// from_1, to_1, from_2, to_2,  ... from_N, to_N
+		int *coord;			// from_1, to_1, flag_1, from_2, to_2, flag_2 ... from_N, to_N, flag_N,   where flag can be TRIM_BIONANO_SINGLETON, TRIM_BIONANO_SPLIT, ...
 		int  numCoordPairs;
 		int  maxCoordPairs;
-		int  flag;			// 1 ... not part of a scaffold, 2 ... splitted from bionano
 } TrimCoordinates;
 
 int TrimEvidence_cmp(const void *x, const void *y)
@@ -102,7 +110,7 @@ typedef struct
 	int maxTrimEvidence;
 	TrimEvidence *trimEvid;
 
-	TrimCoordinates *trimCoord; 	// number must agree with number of contigs
+	TrimCoordinates *trimCoord; 	// number must correspond to number of contigs
 
 	// db and I/O files
 	HITS_DB *db;
@@ -251,3 +259,8 @@ void printLASchain(TrimContext *ctx, int contigA, int contigB, LASchain *c);
  */
 char * getContigName(TrimContext *ctx, int id);
 
+
+/*
+ * add Bionano contig beg-end-coordinates
+ */
+void addBionanoContigCoordinates(TrimContext *ctx, int contig, int from, int to);
