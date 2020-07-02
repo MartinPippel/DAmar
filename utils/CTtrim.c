@@ -1086,6 +1086,8 @@ void addBionanoContigCoordinates(TrimContext *ctx, int contig, int from, int to)
 		to = i;
 	}
 
+	printf("call addBionanoContigCoordinates(TrimContext *ctx, %d, %d, %d)\n", contig, from, to);
+
 	assert(ctx != NULL);
 	assert(contig >= 0);
 	assert(contig < DB_NREADS(ctx->db));
