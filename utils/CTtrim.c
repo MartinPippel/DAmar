@@ -2391,6 +2391,13 @@ int main(int argc, char *argv[])
 			for(j=0;j<tctx.trimCoord[i].numCoordPairs; j++)
 				printf(" [%d, %d, %d]", tctx.trimCoord[i].coord[j*3], tctx.trimCoord[i].coord[j*3+1], tctx.trimCoord[i].coord[j*3+2]);
 			printf("\n");
+			printf("sort coordinates\n");
+			qsort(tctx.trimCoord[i].coord, tctx.trimCoord[i].numCoordPairs, sizeof(int)*3, TrimCoordinates_cmp);
+			printf("CONTIG %4d initial length [%10d]", i, DB_READ_LEN(&db,i));
+			for(j=0;j<tctx.trimCoord[i].numCoordPairs; j++)
+				printf(" [%d, %d, %d]", tctx.trimCoord[i].coord[j*3], tctx.trimCoord[i].coord[j*3+1], tctx.trimCoord[i].coord[j*3+2]);
+			printf("\n");
+			printf("sort coordinates\n");
 		}
 	}
 	if (pathInBionanoGAP)

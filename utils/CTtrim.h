@@ -78,6 +78,12 @@ int TrimEvidence_cmp(const void *x, const void *y)
 	return (te1->contigB - te2->contigB);
 }
 
+int TrimCoordinates_cmp(const void *x, const void *y)
+{
+   return ( *(int*)x - *(int*)y );
+}
+
+
 typedef struct
 {
 	// stats counters
