@@ -2137,14 +2137,14 @@ void trim_contigs(TrimContext *ctx)
 
 			if (j + 1 < tc->numCoordPairs)
 			{
-				assert(tc->coord[index + 2] > tc->coord[index + 1]);
-				ctx->statsRemovedContigPartBases += tc->coord[index + 2] - tc->coord[index + 1];
+				assert(tc->coord[index + 3] > tc->coord[index + 1]);
+				ctx->statsRemovedContigPartBases += tc->coord[index + 3] - tc->coord[index + 1];
 				ctx->statsRemovedContigParts++;
-				fprintf(removedContigParts, ">%s part=%d,%d\n", ctx->flist[amap], tc->coord[index + 1], tc->coord[index]);
-				for (k = tc->coord[index + 1]; k + ctx->lineWidth < tc->coord[index + 2]; k += ctx->lineWidth)
+				fprintf(removedContigParts, ">%s part=%d,%d\n", ctx->flist[amap], tc->coord[index + 1], tc->coord[index + 3]);
+				for (k = tc->coord[index + 1]; k + ctx->lineWidth < tc->coord[index + 3]; k += ctx->lineWidth)
 					fprintf(removedContigParts, "%.*s\n", ctx->lineWidth, read + k);
-				if (k < tc->coord[index + 2])
-					fprintf(removedContigParts, "%.*s\n", tc->coord[index + 2] - k, read + k);
+				if (k < tc->coord[index + 3])
+					fprintf(removedContigParts, "%.*s\n", tc->coord[index + 3] - k, read + k);
 			}
 		}
 
