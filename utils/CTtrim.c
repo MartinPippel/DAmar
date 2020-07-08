@@ -1884,7 +1884,12 @@ void trim_contigs(TrimContext *ctx)
 	int i, j, k, l;
 
 	// split bionano gaps only
-	if (ctx->purgeOpt == 0)
+	if (ctx->purgeOpt == 1)
+	{
+		// do nothing, but cut at the given Bionano split coordinates
+
+	}
+	else if (ctx->purgeOpt == 1)
 	{
 		j = k = 0;
 
@@ -1944,7 +1949,7 @@ void trim_contigs(TrimContext *ctx)
 		}
 		printf("[INFO] num trim evidence: %d: \n", ctx->numTrimEvidence);
 	}
-	else if (ctx->purgeOpt == 1)
+	else if (ctx->purgeOpt == 2)
 	{
 
 		j = k = 0;
@@ -2040,10 +2045,6 @@ void trim_contigs(TrimContext *ctx)
 		printf("[INFO] num trim evidence: %d: \n", ctx->numTrimEvidence);
 
 	}
-	else if (ctx->purgeOpt == 2)
-	{
-
-	}
 	else if (ctx->purgeOpt == 3)
 	{
 
@@ -2053,6 +2054,10 @@ void trim_contigs(TrimContext *ctx)
 
 	}
 	else if (ctx->purgeOpt == 5)
+	{
+
+	}
+	else if (ctx->purgeOpt == 6)
 	{
 
 	}
@@ -2182,12 +2187,13 @@ void usage()
 	fprintf(stderr, "         -F <int>  number of fuzzy bases for chaining. For sanity check only, must correspond to -f of LAfilterChain. (default: %d)\n", FUZZY_BASES);
 	fprintf(stderr, "         -w <int>  specify number of characters per fasta line (default: %d)\n", FASTA_LINEWIDTH);
 	fprintf(stderr, "         -p <int>  trim Options, as follows:\n");
-	fprintf(stderr, "         					0: only trim negative bionano gaps (requires bionano AGP and GAP files)\n");
-	fprintf(stderr, "         					1: -t 0 AND split and trim contigs if bionano AGP file reports a contig break (requires bionano AGP and GAP files)\n");
-	fprintf(stderr, "         					2: trimming based on LAS chains only (requires a chain filtered overlap file)\n");
-	fprintf(stderr, "         					3: -t 2 BUT tandem induced contig overlap are not trimmed (requires chain filtered overlap file and tandem repeat track) - \n");
-	fprintf(stderr, "         					4: intersection of -t 0 and -t 2, i.e. LAS chains based trimming only if negative Bionano gaps support them + small negative Bionano gaps that are below the minimum daligner alignment length cutoff\n");
-	fprintf(stderr, "         					5: -t 4 AND LAS chain based trimming of small contigs that are below the bionano minimum length threshold (<150K)\n");
+	fprintf(stderr, "         					0: split contigs at bionano split coordinates (requires bionano AGP file)\n");
+	fprintf(stderr, "         					1: only trim negative bionano gaps (requires bionano AGP and GAP files)\n");
+	fprintf(stderr, "         					2: -t 0 AND split and trim contigs if bionano AGP file reports a contig break (requires bionano AGP and GAP files)\n");
+	fprintf(stderr, "         					3: trimming based on LAS chains only (requires a chain filtered overlap file)\n");
+	fprintf(stderr, "         					4: -t 2 BUT tandem induced contig overlap are not trimmed (requires chain filtered overlap file and tandem repeat track) - \n");
+	fprintf(stderr, "         					5: intersection of -t 0 and -t 2, i.e. LAS chains based trimming only if negative Bionano gaps support them + small negative Bionano gaps that are below the minimum daligner alignment length cutoff\n");
+	fprintf(stderr, "         					6: -t 4 AND LAS chain based trimming of small contigs that are below the bionano minimum length threshold (<150K)\n");
 }
 
 int main(int argc, char *argv[])
@@ -2325,32 +2331,40 @@ int main(int argc, char *argv[])
 	}
 
 	// check if purge options are valid
-	if (tctx.purgeOpt == 0 || tctx.purgeOpt == 1)
+	if (tctx.purgeOpt == 0)
+	{
+		if (pathInBionanoAGP == NULL)
+		{
+			fprintf(stderr, "[ERROR] - trim option -p 0: requires a bionano.agp file\n");
+			exit(1);
+		}
+	}
+	if (tctx.purgeOpt == 1 || tctx.purgeOpt == 2)
 	{
 		if (pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
 		{
-			fprintf(stderr, "[ERROR] - trim option -p 0 and -p 1: requires a bionano.agp and bionano.gap file\n");
+			fprintf(stderr, "[ERROR] - trim option -p 1 and -p 2: requires a bionano.agp and bionano.gap file\n");
 			exit(1);
 		}
 	}
-	else if (tctx.purgeOpt == 2 || tctx.purgeOpt == 3)
+	else if (tctx.purgeOpt == 3 || tctx.purgeOpt == 4)
 	{
 		if (fileOvlIn == NULL)
 		{
-			fprintf(stderr, "[ERROR] - trim option -p 2 and -p 3: requires a chain filtered LAS file\n");
+			fprintf(stderr, "[ERROR] - trim option -p 3 and -p 4: requires a chain filtered LAS file\n");
 			exit(1);
 		}
-		if (tctx.purgeOpt == 3 && tctx.trackTan == NULL)
+		if (tctx.purgeOpt == 4 && tctx.trackTan == NULL)
 		{
-			fprintf(stderr, "[ERROR] - trim option -p 3: requires a chain filtered LAS file and a tandem repeat file!\n");
+			fprintf(stderr, "[ERROR] - trim option -p 4: requires a chain filtered LAS file and a tandem repeat file!\n");
 			exit(1);
 		}
 	}
-	else if (tctx.purgeOpt == 4 || tctx.purgeOpt == 5)
+	else if (tctx.purgeOpt == 5 || tctx.purgeOpt == 6)
 	{
 		if (fileOvlIn == NULL || pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
 		{
-			fprintf(stderr, "[ERROR] - trim option -p 4 and -p 5: requires a chain filtered LAS file and a bionano.agp and a bionano.gap file\n");
+			fprintf(stderr, "[ERROR] - trim option -p 5 and -p 6: requires a chain filtered LAS file and a bionano.agp and a bionano.gap file\n");
 			exit(1);
 		}
 	}
