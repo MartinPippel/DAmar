@@ -2141,7 +2141,7 @@ void trim_contigs(TrimContext *ctx)
 
 			if (j + 1 < tc->numCoordPairs)
 			{
-				assert(tc->coord[index + 3] > tc->coord[index + 1]);
+				assert(tc->coord[index + 3] >= tc->coord[index + 1]);
 				ctx->statsRemovedContigPartBases += tc->coord[index + 3] - tc->coord[index + 1];
 				ctx->statsRemovedContigParts++;
 				fprintf(removedContigParts, ">%s part=%d,%d\n", ctx->flist[amap], tc->coord[index + 1], tc->coord[index + 3]);
