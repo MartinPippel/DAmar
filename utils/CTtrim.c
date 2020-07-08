@@ -1314,7 +1314,8 @@ void parseBionanoAGPfile(TrimContext *ctx, char *pathInBionanoAGP)
 				assert(gapLen > -1);
 
 				// add trim evidence symmetrically: i.e. contigA-gap-contigB and contigB-gap-contigA
-				addBionanoAGPInfoToTrimEvidence(ctx, contigA, fromA, toA, contigB, fromB, toB, gapLen);
+				// change coordinate system from 1-based [1, x] to 0-based [0,x)
+				addBionanoAGPInfoToTrimEvidence(ctx, contigA, fromA-1, toA, contigB, fromB-1, toB, gapLen);
 
 				contigA = contigB;
 				strcpy(contigNameA, contigNameB);
