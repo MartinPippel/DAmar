@@ -1087,6 +1087,9 @@ void addBionanoContigCoordinates(TrimContext *ctx, int contig, int from, int to)
 	}
 
 	printf("call addBionanoContigCoordinates(TrimContext *ctx, %d, %d, %d)\n", contig, from, to);
+	from--;
+	printf("change coordinate system from 1-based [%d, %d, x] to 0-based [%d,%d)", from+1, to, from ,to);
+
 
 	assert(ctx != NULL);
 	assert(contig >= 0);
