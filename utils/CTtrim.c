@@ -2339,7 +2339,7 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 	}
-	if (tctx.purgeOpt == 1 || tctx.purgeOpt == 2)
+	else if (tctx.purgeOpt == 1 || tctx.purgeOpt == 2)
 	{
 		if (pathInBionanoAGP == NULL || pathInBionanoGAP == NULL)
 		{
