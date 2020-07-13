@@ -1,7 +1,7 @@
 # DAmar
 Long read QC, assembly and scaffolding pipelines
 
-DAmar, is a hybrid of our earlier [Marvel](https://github.com/schloi/MARVEL), [Dazzler](https://github.com/thegenemyers), and [Daccord](https://gitlab.com/german.tischler/daccord) systems. We aim to create a front-to-end assembler of pacbio or oxford nanopore long-read sequencing data. This pipeline produces a number of QC metrics at various stages as well as incorporating further technologies including Bionano, 10x and HiC data to scaffold the created contigs. The wrapper scripts included here rely on proprietary software (e.g. Bionano Solve) alongside a number of open-source software.
+DAmar, is a hybrid of our earlier [Marvel](https://github.com/schloi/MARVEL), [Dazzler](https://github.com/thegenemyers), and [Daccord](https://gitlab.com/german.tischler/daccord) systems. We aim to create a front-to-end assembler of PacBio or Oxford Nanopore long-read sequencing data. This pipeline produces a number of QC metrics at various stages as well as incorporating further technologies including Bionano, 10x and HiC data to scaffold the created contigs. The wrapper scripts included here rely on proprietary software (e.g. Bionano Solve) alongside a number of open-source software.
 Published code is accurate and runs at time of article submission. The code is currently undergoing refactoring. This will be completed soon.
 
 2020-07-13
